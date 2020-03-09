@@ -1,7 +1,6 @@
 /// baulk download utils
 //
-#include "baulk.hpp"
-#include "process.hpp"
+#include "../tools/baulk/process.cc"
 #include <bela/path.hpp>
 
 namespace baulk::net {

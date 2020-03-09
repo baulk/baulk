@@ -3,6 +3,7 @@
 add_executable(baulk
   7z.cc
   baulk.cc
+  bucket.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc
@@ -11,13 +12,12 @@ add_executable(baulk
   commands.upgrade.cc
   compiler.cc
   decompress.cc
-  download.cc
   fs.cc
   io.cc
   launcher.cc
   msi.cc
+  net.cc
   process.cc
-  windl.cc
   zip.cc
   baulk.rc
   baulk.manifest
@@ -27,6 +27,7 @@ target_link_libraries(baulk
   belawin
   winhttp
   Msi
+  XmlLite
 )
 
 add_executable(indicators_test
@@ -40,7 +41,7 @@ target_link_libraries(indicators_test
 
 add_executable(windl_test
   windl_test.cc
-  windl.cc
+  net.cc
 )
 
 target_link_libraries(windl_test

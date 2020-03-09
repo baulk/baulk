@@ -1,4 +1,4 @@
-// Windows download utils
+//
 #include <bela/base.hpp>
 #include <bela/env.hpp>
 #include <bela/finaly.hpp>
@@ -8,8 +8,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include "indicators.hpp"
+#include "net.hpp"
 
-namespace baulk {
+namespace baulk::net {
 inline void Free(HINTERNET &h) {
   if (h != nullptr) {
     WinHttpCloseHandle(h);
