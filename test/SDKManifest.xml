@@ -1,0 +1,13 @@
+<FileList
+  DisplayName = "Universal Windows"
+  PlatformIdentity = "UAP, Version=10.0.18362.0"      
+  TargetFramework = ".NETCore,version=v4.5.3;.NETFramework,version=v4.5.3"
+  MinVSVersion = "14.0"
+  MinOSVersion = "6.1"
+  MaxOSVersionTested = "10.0"
+  UnsupportedDowntarget = "Windows, version=8.1">
+
+  <File Reference = "Windows">
+    <ToolboxItems VSCategory = "Toolbox.Default"/>
+  </File>
+</FileList>
