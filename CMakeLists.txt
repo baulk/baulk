@@ -73,7 +73,7 @@ endif()
 
 add_definitions(-D_UNICODE -DUNICODE)
 
-include_directories("./include" "./bela/include")
+include_directories("./include" "./vendor/bela/include")
 
 add_subdirectory(vendor/bela)
 add_subdirectory(tools/baulk)
