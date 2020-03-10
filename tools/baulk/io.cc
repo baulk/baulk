@@ -8,19 +8,6 @@ namespace baulk::io {
 constexpr size_t MB = 1024ull * 1024;
 bool ReadAll(std::wstring_view file, std::wstring &out, bela::error_code &ec,
              uint64_t maxsize) {
-  HANDLE FileHandle =
-      CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                  nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (FileHandle == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  auto deleter = bela::finally([&] { CloseHandle(FileHandle); });
-  LARGE_INTEGER li;
-  if (GetFileSizeEx(FileHandle, &li) != TRUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
   bela::MapView mv;
   if (!mv.MappingView(file, ec, 1, maxsize)) {
     return false;

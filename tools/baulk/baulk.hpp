@@ -6,6 +6,8 @@
 
 namespace baulk {
 extern bool IsDebugMode;
+constexpr size_t UerAgentMaximumLength = 64;
+extern wchar_t UserAgent[UerAgentMaximumLength];
 template <typename... Args>
 bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {

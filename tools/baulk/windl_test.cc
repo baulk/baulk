@@ -1,6 +1,12 @@
 #include <bela/base.hpp>
 #include <bela/stdwriter.hpp>
 
+namespace baulk {
+bool IsDebugMode = false;
+constexpr size_t UerAgentMaximumLength = 64;
+wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
+} // namespace baulk
+
 namespace baulk::net {
 std::optional<std::wstring> WinGetInternal(std::wstring_view url,
                                            std::wstring_view workdir,

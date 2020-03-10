@@ -7,16 +7,11 @@
 #include <winhttp.h>
 #include <cstdio>
 #include <cstdlib>
+#include "baulk.hpp"
 #include "indicators.hpp"
 #include "net.hpp"
 
 namespace baulk::net {
-inline void Free(HINTERNET &h) {
-  if (h != nullptr) {
-    WinHttpCloseHandle(h);
-  }
-}
-
 class FilePart {
 public:
   FilePart() noexcept = default;
@@ -82,6 +77,147 @@ private:
     }
   }
 };
+
+inline void Free(HINTERNET &h) {
+  if (h != nullptr) {
+    WinHttpCloseHandle(h);
+  }
+}
+
+class HttpExecutor {
+public:
+  HttpExecutor() = default;
+  HttpExecutor(const HttpExecutor &) = delete;
+  HttpExecutor &operator=(const HttpExecutor &) = delete;
+  ~HttpExecutor() {
+    Free(hSession);
+    Free(hConnect);
+    Free(hRequest);
+  }
+  bool Initialize(bela::error_code &ec);
+  bool WriteBody(std::string_view body, bela::error_code &ec) {
+    const auto p = body.data();
+    size_t total = 0;
+    while (total < body.size()) {
+      DWORD written = 0;
+      if (WinHttpWriteData(hRequest, p + total, body.size() - total,
+                           &written) != TRUE) {
+        ec = bela::make_system_error_code();
+        return false;
+      }
+      total += written;
+    }
+    return true;
+  }
+  bool WriteBody(std::wstring_view body, bela::error_code &ec) {
+    return WriteBody(bela::ToNarrow(body), ec);
+  }
+  bool WriteHeader(std::wstring_view headers, bela::error_code &ec) {
+    if (WinHttpAddRequestHeaders(hRequest, headers.data(), headers.size(),
+                                 WINHTTP_ADDREQ_FLAG_ADD) != TRUE) {
+      ec = bela::make_system_error_code();
+      return false;
+    }
+    return true;
+  }
+  bool BodyLength(uint64_t &len);
+  bool Disposition(std::wstring &fn);
+  bool Send(std::wstring_view url, bela::error_code &ec);
+
+private:
+  HINTERNET hSession{nullptr};
+  HINTERNET hConnect{nullptr};
+  HINTERNET hRequest{nullptr};
+};
+
+bool HttpExecutor::Initialize(bela::error_code &ec) {
+  hSession = WinHttpOpen(baulk::UserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+                         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+  if (hSession == nullptr) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  // Enable Proxy
+  auto https_proxy_env = bela::GetEnv(L"HTTPS_PROXY");
+  if (!https_proxy_env.empty()) {
+    WINHTTP_PROXY_INFOW proxy;
+    proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+    proxy.lpszProxy = https_proxy_env.data();
+    proxy.lpszProxyBypass = nullptr;
+    WinHttpSetOption(hSession, WINHTTP_OPTION_PROXY, &proxy, sizeof(proxy));
+  }
+  DWORD secure_protocols(WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 |
+                         WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3);
+  WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols,
+                   sizeof(secure_protocols));
+  return true;
+}
+
+bool HttpExecutor::BodyLength(uint64_t &len) {
+  wchar_t conlen[32];
+  DWORD dwXsize = sizeof(conlen);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CONTENT_LENGTH,
+                          WINHTTP_HEADER_NAME_BY_INDEX, conlen, &dwXsize,
+                          WINHTTP_NO_HEADER_INDEX) == TRUE) {
+    return bela::SimpleAtoi({conlen, dwXsize / 2}, &len);
+  }
+  return false;
+}
+
+bool HttpExecutor::Disposition(std::wstring &fn) {
+  wchar_t diposition[MAX_PATH + 4];
+  DWORD dwXsize = sizeof(diposition);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CUSTOM,
+                          L"Content-Disposition", diposition, &dwXsize,
+                          WINHTTP_NO_HEADER_INDEX) != TRUE) {
+    return false;
+  }
+  std::vector<std::wstring_view> pvv =
+      bela::StrSplit(diposition, bela::ByChar(';'), bela::SkipEmpty());
+  constexpr std::wstring_view fns = L"filename=";
+  for (auto e : pvv) {
+    auto s = bela::StripAsciiWhitespace(e);
+    if (bela::ConsumePrefix(&s, fns)) {
+      bela::ConsumePrefix(&s, L"\"");
+      bela::ConsumeSuffix(&s, L"\"");
+      fn = s;
+      return true;
+    }
+  }
+  return false;
+}
+
+std::wstring flatten_http_headers(const headers_t &headers,
+                                  const std::vector<std::wstring> &cookies) {
+  std::wstring flattened_headers;
+  for (const auto &[key, value] : headers) {
+    flattened_headers.append(key);
+    flattened_headers.push_back(':');
+    flattened_headers.append(value);
+    flattened_headers.append(L"\r\n");
+  }
+  if (!cookies.empty()) {
+    bela::StrAppend(&flattened_headers, L"Cookie: ",
+                    bela::StrJoin(cookies, L"; "), L"\r\n");
+  }
+  return flattened_headers;
+}
+
+std::optional<Response> HttpClient::WinRest(std::wstring_view method,
+                                            std::wstring_view url,
+                                            std::wstring_view contenttype,
+                                            std::wstring_view body,
+                                            bela::error_code &ec) {
+  //
+  return std::nullopt;
+}
+
+std::optional<std::wstring> WinGet(std::wstring_view url,
+                                   std::wstring_view workdir,
+                                   bool forceoverwrite, bela::error_code ec) {
+  //
+  return std::nullopt;
+}
 
 inline std::wstring UrlPathName(std::wstring_view urlpath) {
   std::vector<std::wstring_view> pv = bela::SplitPath(urlpath);
@@ -252,4 +388,4 @@ std::optional<std::wstring> WinGetInternal(std::wstring_view url,
   bar.MarkCompleted();
   return std::make_optional(std::move(dest));
 }
-} // namespace baulk
+} // namespace baulk::net

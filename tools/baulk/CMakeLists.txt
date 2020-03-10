@@ -4,6 +4,7 @@ add_executable(baulk
   7z.cc
   baulk.cc
   bucket.cc
+  commands.b3sum.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc
@@ -13,6 +14,7 @@ add_executable(baulk
   compiler.cc
   decompress.cc
   fs.cc
+  hash.cc
   io.cc
   launcher.cc
   msi.cc
@@ -24,6 +26,7 @@ add_executable(baulk
 )
 
 target_link_libraries(baulk
+  blake3
   belawin
   winhttp
   Msi

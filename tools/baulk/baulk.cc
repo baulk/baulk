@@ -5,7 +5,8 @@
 
 namespace baulk {
 bool IsDebugMode = false;
-}
+wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
+} // namespace baulk
 
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
@@ -27,18 +28,22 @@ void Usage() {
   constexpr std::wstring_view usage =
       LR"(baulk - Minimal Package Manager for Windows
 Usage: baulk [option] command pkg ...
-  -h|--help      Show usage text and quit
-  -v|--version   Show version number and quit
-  -V|--verbose   Make the operation more talkative
-  --https-proxy  Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+  -h|--help        Show usage text and quit
+  -v|--version     Show version number and quit
+  -V|--verbose     Make the operation more talkative
+  -A|--user-agent  Send User-Agent <name> to server
+  --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+
 
 Command:
-  list           List all installed packages
-  search         Search for available packages, or specify package details
-  install        Install one or more packages
-  uninstall      Uninstall one or more packages
-  update         Update ports metadata
-  upgrade        Upgrade all upgradeable packages
+  list             List all installed packages
+  search           Search for available packages, or specify package details
+  install          Install one or more packages
+  uninstall        Uninstall one or more packages
+  update           Update ports metadata
+  upgrade          Upgrade all upgradeable packages
+  b3sum            Calculate the BLAKE3 hash of a file
+  sha256sum        X
 )";
   bela::FPrintF(stderr, L"%s\n", usage);
 }
@@ -53,6 +58,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"version", bela::no_argument, 'v')
       .Add(L"verbose", bela::no_argument, 'V')
       .Add(L"config", bela::required_argument, 'c')
+      .Add(L"user-agent", bela::required_argument, 'A')
       .Add(L"https-proxy", bela::required_argument, 1001);
   bela::error_code ec;
   auto result = pa.Execute(
@@ -66,6 +72,12 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           exit(0);
         case 'V':
           baulk::IsDebugMode = true;
+          break;
+        case 'A':
+          if (auto len = wcslen(oa); len < 256) {
+            wmemcmp(baulk::UserAgent, oa, len);
+            baulk::UserAgent[len] = 0;
+          }
           break;
         case 1001:
           SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
@@ -87,6 +99,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = pa.UnresolvedArgs().front();
   cmd.argv.assign(pa.UnresolvedArgs().begin() + 1, pa.UnresolvedArgs().end());
   constexpr command_map_t cmdmaps[] = {
+      {L"b3sum", baulk::commands::cmd_b3sum},
       {L"install", baulk::commands::cmd_install},
       {L"list", baulk::commands::cmd_list},
       {L"search", baulk::commands::cmd_search},

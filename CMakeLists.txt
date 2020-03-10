@@ -76,6 +76,7 @@ add_definitions(-D_UNICODE -DUNICODE)
 include_directories("./include" "./vendor/bela/include")
 
 add_subdirectory(vendor/bela)
+add_subdirectory(vendor/blake3)
 add_subdirectory(tools/baulk)
 
 if(BUILD_TEST)
