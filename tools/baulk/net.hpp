@@ -2,6 +2,8 @@
 #ifndef BAULK_NET_HPP
 #define BAULK_NET_HPP
 #include <bela/base.hpp>
+#include <bela/match.hpp>
+#include <bela/ascii.hpp>
 #include <bela/phmap.hpp>
 #include <chrono>
 
@@ -44,6 +46,7 @@ struct Response {
   headers_t hkv;
   std::wstring body;
   long statuscode{0};
+  void ParseHeadersString(std::wstring_view hdr);
   [[nodiscard]] bool IsSuccessStatusCode() const {
     return statuscode >= 200 && statuscode <= 299;
   }
