@@ -42,8 +42,8 @@ Command:
   uninstall        Uninstall one or more packages
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages
-  b3sum            Calculate the BLAKE3 hash of a file
-  sha256sum        X
+  b3sum            Calculate the BLAKE3 checksum of a file
+  sha256sum        Calculate the SHA256 checksum of a file
 )";
   bela::FPrintF(stderr, L"%s\n", usage);
 }
@@ -99,13 +99,14 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = pa.UnresolvedArgs().front();
   cmd.argv.assign(pa.UnresolvedArgs().begin() + 1, pa.UnresolvedArgs().end());
   constexpr command_map_t cmdmaps[] = {
-      {L"b3sum", baulk::commands::cmd_b3sum},
       {L"install", baulk::commands::cmd_install},
       {L"list", baulk::commands::cmd_list},
       {L"search", baulk::commands::cmd_search},
       {L"uninstall", baulk::commands::cmd_uninstall},
       {L"update", baulk::commands::cmd_update},
-      {L"upgrade", baulk::commands::cmd_upgrade}};
+      {L"upgrade", baulk::commands::cmd_upgrade},
+      {L"b3sum", baulk::commands::cmd_b3sum},
+      {L"sha256sum", baulk::commands::cmd_sha256sum}};
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {
       cmd.cmd = c.cmd;

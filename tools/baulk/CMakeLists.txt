@@ -4,13 +4,14 @@ add_executable(baulk
   7z.cc
   baulk.cc
   bucket.cc
-  commands.b3sum.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc
   commands.uninstall.cc
   commands.update.cc
   commands.upgrade.cc
+  commands.b3sum.cc
+  commands.sha256sum.cc
   compiler.cc
   decompress.cc
   fs.cc
