@@ -1,5 +1,7 @@
 #include <bela/base.hpp>
 #include <bela/stdwriter.hpp>
+#include <bela/comutils.hpp>
+#include <xml.hpp>
 #include "net.hpp"
 
 namespace baulk {
@@ -25,6 +27,23 @@ int download_atom() {
     bela::FPrintF(stderr, L"\x1b[33m%s\x1b[0m: %s\n", k, v);
   }
   bela::FPrintF(stderr, L"body:\n %s\n", resp->body);
+
+  baulk::xml::document doc;
+  auto result = doc.load_buffer(resp->body.data(), resp->body.size());
+  if (!result) {
+    bela::FPrintF(stderr, L"parse xml error: %s\n", result.description());
+    return false;
+  }
+  //
+  auto entry = doc.child("feed").child("entry");
+  std::string_view id{entry.child("id").text().as_string()};
+  if (auto pos = id.find('/'); pos != std::string_view::npos) {
+    bela::FPrintF(stderr, L"Commit: %s\n", id.substr(pos + 1));
+  } else {
+    bela::FPrintF(stderr, L"bucket invaild id: %s\n", id);
+  }
+  auto updated = entry.child("updated").text().as_string();
+  bela::FPrintF(stderr, L"Update: %s\n", updated);
   return true;
 }
 

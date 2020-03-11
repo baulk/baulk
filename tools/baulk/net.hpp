@@ -44,7 +44,7 @@ using headers_t =
                         StringCaseInsensitiveEq>;
 struct Response {
   headers_t hkv;
-  std::wstring body;
+  std::string body;
   long statuscode{0};
   void ParseHeadersString(std::wstring_view hdr);
   [[nodiscard]] bool IsSuccessStatusCode() const {

@@ -133,6 +133,7 @@ static inline void query_header_length(HINTERNET request_handle, DWORD header,
 }
 
 void Response::ParseHeadersString(std::wstring_view hdr) {
+  constexpr std::wstring_view content_type = L"Content-Type";
   std::vector<std::wstring_view> hlines =
       bela::StrSplit(hdr, bela::ByString(L"\r\n"), bela::SkipEmpty());
   for (const auto ln : hlines) {
@@ -220,9 +221,22 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     return std::nullopt;
   }
   Response resp;
-  std::string buffer;
-  std::vector<char> buf;
-  buf.reserve(64 * 1024);
+  DWORD headerBufferLength = 0;
+  query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
+                      headerBufferLength);
+  std::string hdbf;
+  hdbf.resize(headerBufferLength);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
+                          WINHTTP_HEADER_NAME_BY_INDEX, hdbf.data(),
+                          &headerBufferLength,
+                          WINHTTP_NO_HEADER_INDEX) != TRUE) {
+    ec = bela::make_system_error_code();
+    return std::nullopt;
+  }
+  resp.ParseHeadersString(std::wstring_view{
+      reinterpret_cast<const wchar_t *>(hdbf.data()), headerBufferLength / 2});
+  std::vector<char> readbuf;
+  readbuf.reserve(64 * 1024);
   DWORD dwSize = sizeof(resp.statuscode);
   if (WinHttpQueryHeaders(
           hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
@@ -236,31 +250,16 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
       ec = bela::make_system_error_code();
       return std::nullopt;
     }
-    if (buf.size() < dwSize) {
-      buf.resize(static_cast<size_t>(dwSize) * 2);
+    if (readbuf.size() < dwSize) {
+      readbuf.resize(static_cast<size_t>(dwSize) * 2);
     }
-    if (WinHttpReadData(hRequest, (LPVOID)buf.data(), dwSize,
+    if (WinHttpReadData(hRequest, (LPVOID)readbuf.data(), dwSize,
                         &downloaded_size) != TRUE) {
       ec = bela::make_system_error_code();
       return std::nullopt;
     }
-    buffer.append(buf.data(), dwSize);
+    resp.body.append(readbuf.data(), dwSize);
   } while (dwSize > 0);
-  resp.body = bela::ToWide(buffer);
-  DWORD headerBufferLength = 0;
-  query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
-                      headerBufferLength);
-  buffer.resize(headerBufferLength);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
-                          WINHTTP_HEADER_NAME_BY_INDEX, buffer.data(),
-                          &headerBufferLength,
-                          WINHTTP_NO_HEADER_INDEX) != TRUE) {
-    ec = bela::make_system_error_code();
-    return std::nullopt;
-  }
-  resp.ParseHeadersString(
-      std::wstring_view{reinterpret_cast<const wchar_t *>(buffer.data()),
-                        headerBufferLength / 2});
   return std::make_optional(std::move(resp));
 }
 
