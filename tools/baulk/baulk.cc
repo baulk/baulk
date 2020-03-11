@@ -54,6 +54,7 @@ void Version() {
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   bela::ParseArgv pa(argc, argv);
+  std::wstring_view profile;
   pa.Add(L"help", bela::no_argument, 'h')
       .Add(L"version", bela::no_argument, 'v')
       .Add(L"verbose", bela::no_argument, 'V')
@@ -70,6 +71,9 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
         case 'v':
           Version();
           exit(0);
+        case 'c':
+          profile = oa;
+          break;
         case 'V':
           baulk::IsDebugMode = true;
           break;
@@ -96,6 +100,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
     bela::FPrintF(stderr, L"baulk no command input\n");
     return false;
   }
+  // Initialize baulk env
+  baulk::InitializeBaulkEnv(argc, argv, profile);
   auto subcmd = pa.UnresolvedArgs().front();
   cmd.argv.assign(pa.UnresolvedArgs().begin() + 1, pa.UnresolvedArgs().end());
   constexpr command_map_t cmdmaps[] = {

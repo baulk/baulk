@@ -2,6 +2,7 @@
 #include "bucket.hpp"
 #include "net.hpp"
 #include <xml.hpp>
+#include "jsonex.hpp"
 
 namespace baulk::bucket {
 //

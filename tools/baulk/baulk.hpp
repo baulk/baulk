@@ -25,6 +25,12 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::FileWrite(stderr, fmt);
 }
 
+// Env functions
+bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
+                        std::wstring_view profile);
+std::wstring_view BaulkBucketUrl();
+std::wstring BaulkExpandEnv(std::wstring_view raw);
+// package base
 struct Package {
   std::wstring name;
   std::wstring description;
