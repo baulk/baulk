@@ -27,15 +27,13 @@ int download_atom() {
     bela::FPrintF(stderr, L"\x1b[33m%s\x1b[0m: %s\n", k, v);
   }
   bela::FPrintF(stderr, L"body:\n %s\n", resp->body);
-
-  baulk::xml::document doc;
-  auto result = doc.load_buffer(resp->body.data(), resp->body.size());
-  if (!result) {
-    bela::FPrintF(stderr, L"parse xml error: %s\n", result.description());
+  auto doc = baulk::xml::parse_string(resp->body, ec);
+  if (!doc) {
+    bela::FPrintF(stderr, L"parse xml error: %s\n", ec.message);
     return false;
   }
   //
-  auto entry = doc.child("feed").child("entry");
+  auto entry = doc->child("feed").child("entry");
   std::string_view id{entry.child("id").text().as_string()};
   if (auto pos = id.find('/'); pos != std::string_view::npos) {
     bela::FPrintF(stderr, L"Commit: %s\n", id.substr(pos + 1));

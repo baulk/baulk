@@ -11,14 +11,12 @@ std::optional<std::wstring> BuacketNewest(std::wstring_view rss,
   if (!resp) {
     return std::nullopt;
   }
-  baulk::xml::document doc;
-  auto result = doc.load_buffer(resp->body.data(), resp->body.size());
-  if (!result) {
-    ec = bela::make_error_code(1, bela::ToWide(result.description()));
+  auto doc = baulk::xml::parse_string(resp->body, ec);
+  if (!doc) {
     return std::nullopt;
   }
   // first entry child
-  auto entry = doc.child("feed").child("entry");
+  auto entry = doc->child("feed").child("entry");
   std::string_view id{entry.child("id").text().as_string()};
   if (auto pos = id.find('/'); pos != std::string_view::npos) {
     return std::make_optional(bela::ToWide(id.substr(pos + 1)));
