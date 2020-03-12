@@ -1,11 +1,12 @@
 // initialize baulk environment
 #include "baulk.hpp"
 #include <bela/env.hpp>
+#include "jsonex.hpp"
 
 namespace baulk {
 // https://github.com/baulk/bucket/commits/master.atom
 constexpr std::wstring_view DefaultBucket = L"https://github.com/baulk/bucket";
-constexpr std::wstring_view DefaultProfile = L"${HOME}/.baulk.json";
+constexpr std::wstring_view DefaultProfile = L"%LOCALAPPDATA%/baulk/baulk.json";
 class BaulkEnv {
 public:
   BaulkEnv(const BaulkEnv &) = delete;
@@ -16,27 +17,19 @@ public:
     static BaulkEnv baulkEnv;
     return baulkEnv;
   }
+  std::wstring_view BaulkRoot() const { return root; }
   std::wstring_view BucketUrl() const { return bucketUrl; }
-  std::wstring ExpandEnv(std::wstring_view raw) const {
-    std::wstring e;
-    dev.ExpandEnv(raw, e);
-    return e;
-  }
 
 private:
   BaulkEnv() = default;
+  std::wstring root;
   std::wstring bucketUrl{DefaultBucket};
-  bela::env::Derivator dev;
 };
 
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
                           std::wstring_view profile) {
-  dev.AddBashCompatible(argc, argv);
-  if (profile.empty()) {
-    profile = DefaultProfile;
-  }
-  std::wstring profile_;
-  dev.ExpandEnv(profile, profile_);
+  auto profile_ = bela::ExpandEnv(profile.empty() ? DefaultProfile : profile);
+  baulk::DbgPrint(L"Expand profile to '%s'\n", profile_);
   return true;
 }
 
@@ -45,8 +38,9 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
   return BaulkEnv::Instance().Initialize(argc, argv, profile);
 }
 
-std::wstring BaulkExpandEnv(std::wstring_view raw) {
-  return BaulkEnv::Instance().ExpandEnv(raw);
+std::wstring_view BaulkRoot() {
+  //
+  return BaulkEnv::Instance().BaulkRoot();
 }
 //
 std::wstring_view BaulkBucketUrl() {

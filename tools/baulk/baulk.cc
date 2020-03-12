@@ -6,16 +6,15 @@
 namespace baulk {
 bool IsDebugMode = false;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
-} // namespace baulk
-
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
   return 1;
 }
+} // namespace baulk
 
 struct baulkcommand_t {
   baulk::commands::argv_t argv;
-  decltype(baulk::commands::cmd_install) *cmd{cmd_uninitialized};
+  decltype(baulk::cmd_uninitialized) *cmd{baulk::cmd_uninitialized};
   int operator()() const { return this->cmd(this->argv); }
 };
 
@@ -31,6 +30,7 @@ Usage: baulk [option] command pkg ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
+  -P|--profile     Set profile path. default: %LOCALAPPDATA%/baulk/baulk.json
   -A|--user-agent  Send User-Agent <name> to server
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
@@ -58,7 +58,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   pa.Add(L"help", bela::no_argument, 'h')
       .Add(L"version", bela::no_argument, 'v')
       .Add(L"verbose", bela::no_argument, 'V')
-      .Add(L"config", bela::required_argument, 'c')
+      .Add(L"profile", bela::required_argument, 'P')
       .Add(L"user-agent", bela::required_argument, 'A')
       .Add(L"https-proxy", bela::required_argument, 1001);
   bela::error_code ec;

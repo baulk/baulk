@@ -256,7 +256,17 @@ ssize_t StrFormatInternal(wchar_t *buf, size_t sz, const wchar_t *fmt,
                           const FormatArg *args, size_t max_args);
 std::wstring StrFormatInternal(const wchar_t *fmt, const FormatArg *args,
                                size_t max_args);
+size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt,
+                               const FormatArg *args, size_t max_args);
 } // namespace format_internal
+
+size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt);
+template <typename... Args>
+size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt, Args... args) {
+  const format_internal::FormatArg arg_array[] = {args...};
+  return format_internal::StrAppendFormatInternal(buf, fmt, arg_array,
+                                                  sizeof...(args));
+}
 
 template <typename... Args>
 ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args) {

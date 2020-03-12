@@ -14,22 +14,26 @@ bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
     return 0;
   }
   const bela::format_internal::FormatArg arg_array[] = {args...};
-  auto str =
-      bela::format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
+  std::wstring str;
+  str.append(L"\x1b[33m");
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
+                                                 sizeof...(args));
+  str.append(L"\x1b[0m");
   return bela::FileWrite(stderr, str);
 }
 inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!IsDebugMode) {
     return 0;
   }
-  return bela::FileWrite(stderr, fmt);
+  return bela::FileWrite(stderr, bela::StringCat(L"\x1b[33m", fmt, L"\x1b[0m"));
 }
 
 // Env functions
 bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile);
+std::wstring_view BaulkRoot();
 std::wstring_view BaulkBucketUrl();
-std::wstring BaulkExpandEnv(std::wstring_view raw);
+
 // package base
 struct Package {
   std::wstring name;

@@ -291,6 +291,15 @@ bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, const FormatArg *args,
   return !w.overflow();
 }
 
+size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt,
+                               const FormatArg *args, size_t max_args) {
+  StringWriter sw(*buf);
+  if (!StrFormatInternal(sw, fmt, args, max_args)) {
+    return 0;
+  }
+  return static_cast<size_t>(buf->size());
+}
+
 std::wstring StrFormatInternal(const wchar_t *fmt, const FormatArg *args,
                                size_t max_args) {
   std::wstring s;
@@ -323,6 +332,17 @@ ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt) {
     }
   }
   return buffer_.overflow() ? -1 : static_cast<ssize_t>(buffer_.length());
+}
+
+size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt) {
+  const wchar_t *src = fmt;
+  for (; *src != 0; ++src) {
+    buf->push_back(*src);
+    if (src[0] == '%' && src[1] == '%') {
+      ++src;
+    }
+  }
+  return buf->size();
 }
 
 std::wstring StrFormat(const wchar_t *fmt) {
