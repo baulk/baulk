@@ -4,6 +4,7 @@
 #include <string_view>
 #include <bela/strcat.hpp>
 #include <bela/str_split.hpp>
+#include <bela/str_replace.hpp>
 #include <bela/pe.hpp>
 #include "io.hpp"
 
@@ -68,15 +69,39 @@ public:
     bela::StrAppend(&buffer, L"VALUE \"", name, L"\" L\"", value, L"\"\n");
     return *this;
   }
+  Writer &VersionEx(std::wstring_view name, std::wstring_view value,
+                    std::wstring_view dv) {
+    return Version(name, value.empty() ? dv : value);
+  }
   Writer &AfterVersion() {
     buffer.append(L"END\nEND\nBLOCK \"VarFileInfo\"\nBEGIN\nVALUE "
                   L"\"Translation\", 0x9, 1200\nEND\nEND\n\n");
     return *this;
   }
-  bool WriteVersion(bela::pe::VersionInfo &info, std::wstring_view file,
+  bool WriteVersion(bela::pe::VersionInfo &vi, std::wstring_view file,
                     bela::error_code &ec) {
-    //
-
+    Prefix();
+    auto fvp = MakeVersionPart(vi.FileVersion);
+    FileVersion(fvp.MajorPart, fvp.MinorPart, fvp.BuildPart, fvp.PrivatePart);
+    auto pvp = MakeVersionPart(vi.ProductVersion);
+    ProductVersion(pvp.MajorPart, pvp.MinorPart, pvp.BuildPart,
+                   pvp.PrivatePart);
+    PreVersion();
+    std::wstring legalCopyright;
+    if (vi.LegalCopyright.empty()) {
+      legalCopyright = L"No checked copyright";
+    } else {
+      legalCopyright = bela::StrReplaceAll(
+          vi.LegalCopyright, {{L"(c)", L"\xA9"}, {L"(C)", L"\xA9"}});
+    }
+    Version(L"CompanyName", vi.CompanyName);
+    Version(L"FileDescription", vi.FileDescription);
+    Version(L"InternalName", vi.InternalName);
+    Version(L"LegalCopyright", legalCopyright);
+    Version(L"OriginalFileName", vi.OriginalFileName);
+    Version(L"ProductName", vi.ProductName);
+    Version(L"ProductVersion", vi.ProductVersion);
+    AfterVersion();
     return baulk::io::WriteText(buffer, file, ec);
   }
 

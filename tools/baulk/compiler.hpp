@@ -12,6 +12,8 @@ public:
   bool Initialize(bela::error_code &ec);
   template <typename... Args>
   int Execute(std::wstring_view cwd, std::wstring_view cmd, Args... args) {
+    ec.message.clear();
+    ec.code = 0;
     baulk::Process process;
     process.SetEnvStrings(env);
     if (!cwd.empty()) {
