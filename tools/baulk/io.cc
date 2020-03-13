@@ -70,4 +70,62 @@ std::optional<std::wstring> ReadLine(std::wstring_view file,
   }
   return std::make_optional(std::move(line));
 }
+
+bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
+                    bela::error_code &ec) {
+  auto FileHandle = ::CreateFileW(
+      file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
+      nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  DWORD written = 0;
+  uint8_t u16lebom[] = {0xFF, 0xFE};
+  if (WriteFile(FileHandle, u16lebom, 2, &written, nullptr) != TRUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  auto p = reinterpret_cast<const char *>(text.data());
+  auto size = text.size() * sizeof(wchar_t);
+  while (size > 0) {
+    auto len = (std::min)(size, static_cast<size_t>(4096));
+    if (WriteFile(FileHandle, p, static_cast<DWORD>(len), &written, nullptr) !=
+        TRUE) {
+      ec = bela::make_system_error_code();
+      return false;
+    }
+    size -= written;
+    p += written;
+  }
+  return size == 0;
+}
+
+bool WriteText(std::string_view text, std::wstring_view file,
+               bela::error_code &ec) {
+  auto FileHandle = ::CreateFileW(
+      file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
+      nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  DWORD written = 0;
+  auto p = text.data();
+  auto size = text.size();
+  while (size > 0) {
+    auto len = (std::min)(size, static_cast<size_t>(4096));
+    if (WriteFile(FileHandle, p, static_cast<DWORD>(len), &written, nullptr) !=
+        TRUE) {
+      ec = bela::make_system_error_code();
+      break;
+    }
+    size -= written;
+    p += written;
+  }
+  return size == 0;
+}
+
 } // namespace baulk::io

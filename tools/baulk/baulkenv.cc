@@ -22,12 +22,17 @@ public:
   std::wstring_view BaulkRoot() const { return root; }
   std::wstring_view BucketUrl() const { return bucketUrl; }
   std::wstring_view Git() const { return git; }
+  baulk::compiler::Executor &BaulkExecutor() { return executor; }
+  bool InitializeExecutor(bela::error_code &ec) {
+    return executor.Initialize(ec);
+  }
 
 private:
   BaulkEnv() = default;
   std::wstring root;
   std::wstring bucketUrl{DefaultBucket};
   std::wstring git;
+  baulk::compiler::Executor executor;
 };
 
 bool InitializeGitPath(std::wstring &git) {
@@ -77,6 +82,13 @@ std::wstring_view BaulkBucketUrl() {
 std::wstring_view BaulkGit() {
   //
   return BaulkEnv::Instance().Git();
+}
+baulk::compiler::Executor &BaulkExecutor() {
+  return BaulkEnv::Instance().BaulkExecutor();
+}
+
+bool BaulkInitializeExecutor(bela::error_code &ec) {
+  return BaulkEnv::Instance().InitializeExecutor(ec);
 }
 
 } // namespace baulk

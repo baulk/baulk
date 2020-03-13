@@ -4,6 +4,8 @@
 #include <string_view>
 #include <bela/strcat.hpp>
 #include <bela/str_split.hpp>
+#include <bela/pe.hpp>
+#include "io.hpp"
 
 namespace baulk::rc {
 
@@ -51,7 +53,7 @@ public:
   }
   Writer &ProductVersion(int MajorPart, int MinorPart, int BuildPart,
                          int PrivatePart) {
-    bela::StrAppend(&buffer, L"FILEVERSION ", MajorPart, L", ", MinorPart,
+    bela::StrAppend(&buffer, L"PRODUCTVERSION ", MajorPart, L", ", MinorPart,
                     L", ", BuildPart, L", ", PrivatePart);
     return *this;
   }
@@ -71,9 +73,11 @@ public:
                   L"\"Translation\", 0x9, 1200\nEND\nEND\n\n");
     return *this;
   }
-  bool FlushFile(std::wstring_view file) const {
-    (void)file;
-    return true;
+  bool WriteVersion(bela::pe::VersionInfo &info, std::wstring_view file,
+                    bela::error_code &ec) {
+    //
+
+    return baulk::io::WriteText(buffer, file, ec);
   }
 
 private:

@@ -13,6 +13,18 @@ bool ReadAll(std::wstring_view file, std::wstring &out, bela::error_code &ec,
 std::optional<std::wstring> ReadLine(std::wstring_view file,
                                      bela::error_code &ec,
                                      uint64_t maxline = MaximumLineLength);
+bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
+                    bela::error_code &ec);
+bool WriteText(std::string_view text, std::wstring_view file,
+               bela::error_code &ec);
+inline bool WriteText(std::wstring_view text, std::wstring_view file,
+                      bela::error_code &ec) {
+  return WriteText(bela::ToNarrow(text), file, ec);
+}
+inline bool WriteText(std::u16string_view text, std::wstring_view file,
+                      bela::error_code &ec) {
+  return WriteText(bela::ToNarrow(text), file, ec);
+}
 class FilePart {
 public:
   FilePart() noexcept = default;

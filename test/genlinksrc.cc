@@ -2,6 +2,7 @@
 #include <bela/subsitute.hpp>
 #include <bela/stdwriter.hpp>
 #include <cstdio>
+#include "../tools/baulk/io.cc"
 
 namespace baulk {
 //
@@ -157,7 +158,12 @@ int wmain(int argc, wchar_t **argv) {
   }
   auto s1 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::CUI);
   auto s2 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::GUI);
-  FlushFile(s1, L"genfile_console.cc");
-  FlushFile(s2, L"genfile_windows.cc");
+  bela::error_code ec;
+  if (!baulk::io::WriteText(s1, L"genfile_console.cc", ec)) {
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+  }
+  if (!baulk::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+  }
   return 0;
 }

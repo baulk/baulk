@@ -3,6 +3,7 @@
 #define BAULK_HPP
 #include <bela/base.hpp>
 #include <bela/stdwriter.hpp>
+#include "compiler.hpp"
 
 namespace baulk {
 extern bool IsDebugMode;
@@ -54,6 +55,8 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
 std::wstring_view BaulkRoot();
 std::wstring_view BaulkBucketUrl();
 std::wstring_view BaulkGit();
+baulk::compiler::Executor &BaulkExecutor();
+bool BaulkInitializeExecutor(bela::error_code &ec);
 // package base
 struct Package {
   std::wstring name;

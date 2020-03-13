@@ -1,8 +1,8 @@
 //
-#include <bela/pe.hpp>
 #include <bela/subsitute.hpp>
 #include <bela/finaly.hpp>
 #include <bela/path.hpp>
+#include <bela/pe.hpp>
 #include "baulk.hpp"
 #include "fs.hpp"
 #include "rcwriter.hpp"
@@ -142,50 +142,20 @@ std::wstring GenerateLinkSource(std::wstring_view target,
   return bela::Substitute(internal::windowstemplate, escapetarget);
 }
 
-// write UTF8
-bool LinkSourceStore(std::wstring_view path, std::string_view source,
-                     bela::error_code &ec) {
-  auto FileHandle = ::CreateFileW(
-      path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
-      nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (FileHandle == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  DWORD written = 0;
-  auto p = source.data();
-  auto size = source.size();
-  while (size > 0) {
-    auto len = (std::min)(size, static_cast<size_t>(4096));
-    if (WriteFile(FileHandle, p, static_cast<DWORD>(len), &written, nullptr) !=
-        TRUE) {
-      ec = bela::make_system_error_code();
-      break;
-    }
-    size -= written;
-    p += written;
-  }
-  CloseHandle(FileHandle);
-  return size == 0;
-}
-
-// ConvertToUTF8
-bool LinkSourceStore(std::wstring_view path, std::wstring_view source,
-                     bela::error_code &ec) {
-  auto u8source = bela::ToNarrow(source);
-  return LinkSourceStore(path, u8source, ec);
-}
-
 class LinkExecutor {
 public:
   LinkExecutor() = default;
   LinkExecutor(const LinkExecutor &) = delete;
   LinkExecutor &operator=(const LinkExecutor &) = delete;
   ~LinkExecutor() {
-    //
+    if (!baulktemp.empty()) {
+      std::error_code ec;
+      std::filesystem::remove_all(baulktemp, ec);
+    }
   }
-  bool Initialize(const baulk::Package &pkg, bela::error_code &ec);
-  bool Compile(std::wstring_view root, bela::error_code &ec);
+  bool Initialize(bela::error_code &ec);
+  bool Compile(std::wstring_view source, std::wstring_view linkdir,
+               bela::error_code &ec);
 
 private:
   std::wstring baulktemp;
@@ -213,26 +183,45 @@ std::wstring MakeTempDir(bela::error_code ec) {
   return L"";
 }
 
-bool LinkExecutor::Initialize(const baulk::Package &pkg, bela::error_code &ec) {
+bool LinkExecutor::Initialize(bela::error_code &ec) {
   if (baulktemp = MakeTempDir(ec); baulktemp.empty()) {
     return false;
   }
   if (!baulk::fs::MakeDir(baulktemp, ec)) {
     return false;
   }
-  // --------------> write
-  return false;
+  return true;
 }
 
-bool LinkExecutor::Compile(std::wstring_view root, bela::error_code &ec) {
-  //
+bool LinkExecutor::Compile(std::wstring_view source, std::wstring_view linkdir,
+                           bela::error_code &ec) {
+  //      bela::FPrintF(stderr,L"link '%s' to '%s' success\n",source,linkdir);
+  auto pe = bela::pe::Expose(source, ec);
+  if (!pe) {
+    return false;
+  }
+  auto exename = baulk::fs::FileName(source);
+  auto cxxsrc = bela::StringCat(baulktemp, exename, L".cc");
+  auto rcsrc = bela::StringCat(baulktemp, exename, L".rc");
   return false;
 }
 
 bool MakeLaunchers(std::wstring_view root, const baulk::Package &pkg,
                    bool forceoverwrite, bela::error_code &ec) {
-  auto pkgroot = bela::StringCat(root, L"\\pkg\\", pkg.name);
-  return false;
+  auto pkgroot = bela::StringCat(root, L"bin\\pkg\\", pkg.name);
+  auto linkdir = bela::StringCat(root, L"bin\\.linked");
+  LinkExecutor executor;
+  if (!executor.Initialize(ec)) {
+    return false;
+  }
+  for (const auto &n : pkg.launchers) {
+    auto source = bela::PathCat(pkgroot, n);
+    if (!executor.Compile(source, linkdir, ec)) {
+      bela::FPrintF(stderr, L"'%s' unable create launcher: \x1b[31m%s\x1b[0m\n",
+                    source, ec.message);
+    }
+  }
+  return true;
 }
 
 // create symlink

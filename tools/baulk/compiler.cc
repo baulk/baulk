@@ -253,6 +253,7 @@ bool Executor::Initialize(bela::error_code &ec) {
     return false;
   }
   env = searcher.CleanupEnv();
+  initialized = true;
   return true;
 }
 } // namespace baulk::compiler

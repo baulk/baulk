@@ -10,11 +10,13 @@ public:
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
   bool Initialize(bela::error_code &ec);
-  void Chdir(std::wstring_view dir) { cwd = dir; }
-  template <typename... Args> int Execute(std::wstring_view cmd, Args... args) {
+  template <typename... Args>
+  int Execute(std::wstring_view cwd, std::wstring_view cmd, Args... args) {
     baulk::Process process;
     process.SetEnvStrings(env);
-    process.Chdir(cwd);
+    if (!cwd.empty()) {
+      process.Chdir(cwd);
+    }
     if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...);
         exitcode != 0) {
       ec = process.ErrorCode();
@@ -22,11 +24,13 @@ public:
     }
     return 0;
   }
+  const bela::error_code &LastErrorCode() const { return ec; }
+  bool Initialized() const { return initialized; }
 
 private:
-  std::wstring cwd;
   std::wstring env;
   bela::error_code ec;
+  bool initialized{false};
 };
 } // namespace baulk::compiler
 

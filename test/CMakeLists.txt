@@ -6,7 +6,7 @@ add_executable(parsejson_test parsejson.cc)
 
 target_link_libraries(parsejson_test belawin)
 
-add_executable(regsdk_test regsdk.cc ../baulk/io.cc)
+add_executable(regsdk_test regsdk.cc ../tools/baulk/io.cc)
 
 target_link_libraries(regsdk_test belawin)
 
