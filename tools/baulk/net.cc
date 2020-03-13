@@ -153,7 +153,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
   HINTERNET hSession = nullptr;
   HINTERNET hConnect = nullptr;
   HINTERNET hRequest = nullptr;
-  auto deleter = bela::final_act([&] {
+  auto closer = bela::final_act([&] {
     Free(hSession);
     Free(hConnect);
     Free(hRequest);
@@ -269,7 +269,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   HINTERNET hSession = nullptr;
   HINTERNET hConnect = nullptr;
   HINTERNET hRequest = nullptr;
-  auto deleter = bela::final_act([&] {
+  auto closer = bela::final_act([&] {
     Free(hSession);
     Free(hConnect);
     Free(hRequest);
