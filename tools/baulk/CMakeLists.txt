@@ -36,6 +36,11 @@ target_link_libraries(baulk
   XmlLite
 )
 
+if(lto_supported)
+  set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+
 add_executable(indicators_test
   indicators_test.cc
 )
