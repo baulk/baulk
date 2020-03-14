@@ -9,3 +9,7 @@ target_link_libraries(belashl
   Comctl32
   Ole32
 )
+
+if(BELA_ENABLE_LTO)
+  set_property(TARGET belashl PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()

@@ -14,3 +14,8 @@ target_link_libraries(belawin
   bela
   version
 )
+
+
+if(BELA_ENABLE_LTO)
+  set_property(TARGET belawin PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()

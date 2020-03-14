@@ -13,6 +13,7 @@ Please delete them.")
 endif()
 
 option(ENABLE_TEST "Enable test" OFF)
+option(BELA_ENABLE_LTO "bela enable LTO" OFF)
 
 if(NOT (DEFINED CMAKE_CXX_STANDARD))
     set(CMAKE_CXX_STANDARD 20) # /std:c++latest

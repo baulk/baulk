@@ -1,6 +1,7 @@
-##
+#
 
-add_executable(baulk
+add_executable(
+  baulk
   7z.cc
   baulk.cc
   baulkenv.cc
@@ -25,37 +26,26 @@ add_executable(baulk
   process.cc
   zip.cc
   baulk.rc
-  baulk.manifest
-)
+  baulk.manifest)
 
-target_link_libraries(baulk
+target_link_libraries(
+  baulk
   blake3
   belawin
   winhttp
   Msi
-  XmlLite
-)
+  XmlLite)
 
-if(lto_supported)
+if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+if(BUILD_TEST)
+  add_executable(indicators_test indicators_test.cc)
 
-add_executable(indicators_test
-  indicators_test.cc
-)
+  target_link_libraries(indicators_test belawin winhttp)
 
-target_link_libraries(indicators_test
-  belawin
-  winhttp
-)
+  add_executable(windl_test windl_test.cc net.cc)
 
-add_executable(windl_test
-  windl_test.cc
-  net.cc
-)
-
-target_link_libraries(windl_test
-  belawin
-  winhttp
-)
+  target_link_libraries(windl_test belawin winhttp)
+endif(BUILD_TEST)
