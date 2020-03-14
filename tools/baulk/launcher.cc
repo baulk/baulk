@@ -269,7 +269,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
   }
   if (rcwrited) {
     if (!baulk::BaulkExecutor().Execute(baulktemp, L"rc", L"-nologo",
-                                        rcsrcname)) {
+                                        L"-c65001", rcsrcname)) {
       rcwrited = false;
     }
   }

@@ -6,12 +6,33 @@
 #include <bela/finaly.hpp>
 #include <bela/path.hpp>
 #include <bela/str_split.hpp>
+#include <bela/env.hpp>
 #include <filesystem>
 #include <json.hpp>
 #include <cstdio>
 #include <cerrno>
 
 namespace fs = std::filesystem;
+bool IsDebugMode = false;
+template <typename... Args>
+bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+  if (!IsDebugMode) {
+    return 0;
+  }
+  const bela::format_internal::FormatArg arg_array[] = {args...};
+  std::wstring str;
+  str.append(L"\x1b[33m* ");
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
+                                                 sizeof...(args));
+  str.append(L"\x1b[0m");
+  return bela::FileWrite(stderr, str);
+}
+inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
+  if (!IsDebugMode) {
+    return 0;
+  }
+  return bela::FileWrite(stderr, bela::StringCat(L"\x1b[33m", fmt, L"\x1b[0m"));
+}
 
 bool IsSubsytemConsole(std::wstring_view exe) {
   bela::error_code ec;
@@ -63,14 +84,20 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
   return std::nullopt;
 }
 
+inline bool IsTrue(std::wstring_view b) {
+  return bela::EqualsIgnoreCase(b, L"true") ||
+         bela::EqualsIgnoreCase(b, L"yes") || b == L"1";
+}
+
 int wmain(int argc, wchar_t **argv) {
+  IsDebugMode = IsTrue(bela::GetEnv(L"BAULK_DEBUG"));
   bela::error_code ec;
   auto target = ResolveTarget(argv[0], ec);
   if (!target) {
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
     return 1;
   }
-  bela::FPrintF(stderr, L"target: %s\n", *target);
+  DbgPrint(L"resolve target: %s\n", *target);
   auto isconsole = IsSubsytemConsole(*target);
   bela::EscapeArgv ea;
   ea.Assign(*target);
