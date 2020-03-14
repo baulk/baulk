@@ -78,6 +78,7 @@ include_directories("./include" "./vendor/bela/include")
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)
 add_subdirectory(tools/baulk)
+add_subdirectory(tools/baulkcli)
 
 if(BUILD_TEST)
   add_subdirectory(test)

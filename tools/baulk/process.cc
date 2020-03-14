@@ -20,9 +20,9 @@ int Process::ExecuteInternal(wchar_t *cmdline) {
     ec = bela::make_system_error_code();
     return -1;
   }
+  CloseHandle(pi.hThread);
   SetConsoleCtrlHandler(nullptr, TRUE);
   auto closer = bela::finally([&] {
-    //
     SetConsoleCtrlHandler(nullptr, FALSE);
     CloseHandle(pi.hProcess);
   });

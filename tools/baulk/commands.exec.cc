@@ -1,6 +1,4 @@
-//
-
-//
+// exec command
 #include <bela/stdwriter.hpp>
 #include "commands.hpp"
 #include "fs.hpp"
