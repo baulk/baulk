@@ -5,6 +5,7 @@ add_executable(baulk
   baulk.cc
   baulkenv.cc
   bucket.cc
+  commands.exec.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc

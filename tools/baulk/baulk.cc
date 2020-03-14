@@ -1,5 +1,5 @@
-#include <bela/parseargv.hpp>
 #include "baulk.hpp"
+#include "baulkargv.hpp"
 #include "commands.hpp"
 #include "version.h"
 
@@ -36,6 +36,7 @@ Usage: baulk [option] command pkg ...
 
 
 Command:
+  exec             Execute a command
   list             List all installed packages
   search           Search for available packages, or specify package details
   install          Install one or more packages
@@ -53,16 +54,17 @@ void Version() {
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
-  bela::ParseArgv pa(argc, argv);
+  baulk::cli::BaulkArgv ba(argc, argv);
   std::wstring_view profile;
-  pa.Add(L"help", bela::no_argument, 'h')
-      .Add(L"version", bela::no_argument, 'v')
-      .Add(L"verbose", bela::no_argument, 'V')
-      .Add(L"profile", bela::required_argument, 'P')
-      .Add(L"user-agent", bela::required_argument, 'A')
-      .Add(L"https-proxy", bela::required_argument, 1001);
+  ba.Add(L"help", baulk::cli::no_argument, 'h')
+      .Add(L"version", baulk::cli::no_argument, 'v')
+      .Add(L"verbose", baulk::cli::no_argument, 'V')
+      .Add(L"profile", baulk::cli::required_argument, 'P')
+      .Add(L"user-agent", baulk::cli::required_argument, 'A')
+      .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
+      .Add(L"exec");                                            // subcommand
   bela::error_code ec;
-  auto result = pa.Execute(
+  auto result = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
@@ -96,15 +98,16 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
     bela::FPrintF(stderr, L"baulk ParseArgv error: %s\n", ec.message);
     return false;
   }
-  if (pa.UnresolvedArgs().empty()) {
+  if (ba.Argv().empty()) {
     bela::FPrintF(stderr, L"baulk no command input\n");
     return false;
   }
   // Initialize baulk env
   baulk::InitializeBaulkEnv(argc, argv, profile);
-  auto subcmd = pa.UnresolvedArgs().front();
-  cmd.argv.assign(pa.UnresolvedArgs().begin() + 1, pa.UnresolvedArgs().end());
+  auto subcmd = ba.Argv().front();
+  cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
+      {L"exec", baulk::commands::cmd_exec},
       {L"install", baulk::commands::cmd_install},
       {L"list", baulk::commands::cmd_list},
       {L"search", baulk::commands::cmd_search},

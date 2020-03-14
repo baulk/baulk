@@ -119,6 +119,10 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   return 0;
 }
 )";
+constexpr std::wstring_view batchconsoletemplate = LR"(@echo off
+"$0" %*)";
+constexpr std::wstring_view batchwindowstemplate = LR"(@echo off
+start "$0" %*)";
 } // namespace internal
 
 // GenerateLinkSource generate link sources
@@ -137,6 +141,13 @@ std::wstring GenerateLinkSource(std::wstring_view target,
     return bela::Substitute(internal::consoletemplete, escapetarget);
   }
   return bela::Substitute(internal::windowstemplate, escapetarget);
+}
+std::wstring GenerateBatLinkSource(std::wstring_view target,
+                                   bela::pe::Subsystem subs) {
+  if (subs == bela::pe::Subsystem::CUI) {
+    return bela::Substitute(internal::batchconsoletemplate, target);
+  }
+  return bela::Substitute(internal::batchwindowstemplate, target);
 }
 } // namespace baulk
 
@@ -158,11 +169,15 @@ int wmain(int argc, wchar_t **argv) {
   }
   auto s1 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::CUI);
   auto s2 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::GUI);
+  auto s3 = baulk::GenerateBatLinkSource(argv[1], bela::pe::Subsystem::GUI);
   bela::error_code ec;
   if (!baulk::io::WriteText(s1, L"genfile_console.cc", ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
   }
   if (!baulk::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+  }
+  if (!baulk::io::WriteText(s3, L"genfile.bat", ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
   }
   return 0;

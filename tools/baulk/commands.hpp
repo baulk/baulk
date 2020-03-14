@@ -6,6 +6,8 @@
 
 namespace baulk::commands {
 using argv_t = std::vector<std::wstring_view>;
+int cmd_exec(const argv_t &argv);
+//
 int cmd_install(const argv_t &argv);
 int cmd_list(const argv_t &argv);
 int cmd_search(const argv_t &argv);

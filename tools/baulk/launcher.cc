@@ -122,6 +122,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   return 0;
 }
 )";
+
+constexpr std::wstring_view batchtemplate = LR"(@echo off
+baulk exec "$0" %*)";
 } // namespace internal
 
 // GenerateLinkSource generate link sources
@@ -305,6 +308,12 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     return false;
   }
   linkexes.emplace_back(std::move(exename));
+  return true;
+}
+
+bool MakeBatchLauncher(std::wstring_view root, const baulk::Package &pkg,
+                       bool forceoverwrite, bela::error_code &ec) {
+
   return true;
 }
 
