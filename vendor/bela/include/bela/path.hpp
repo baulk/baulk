@@ -16,7 +16,7 @@ inline constexpr bool IsPathSeparator(wchar_t c) {
 }
 std::vector<std::wstring_view> SplitPath(std::wstring_view sv);
 void PathStripName(std::wstring &s);
-
+std::wstring PathAbsolute(std::wstring_view p);
 namespace path_internal {
 std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces);
 } // namespace path_internal

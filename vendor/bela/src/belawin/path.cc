@@ -114,6 +114,34 @@ std::wstring getcurrentdir() {
   return s;
 }
 
+std::wstring PathJoinInternal(std::vector<std::wstring_view> &pv, bool unc,
+                              bool full, wchar_t uncchar, wchar_t latter) {
+  std::wstring s;
+  size_t alsize = unc ? 4 : 0;
+  if (full) {
+    alsize += 2;
+  }
+  for (const auto p : pv) {
+    alsize += p.size() + 1;
+  }
+  s.reserve(alsize);
+  if (unc) {
+    s.append(L"\\\\").push_back(uncchar);
+    s.push_back(L'\\');
+  }
+  if (full) {
+    s.push_back(latter);
+    s.push_back(L':');
+  }
+  for (const auto p : pv) {
+    if (!s.empty()) {
+      s.push_back(L'\\');
+    }
+    s.append(p);
+  }
+  return s;
+}
+
 std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces) {
   if (pieces.empty()) {
     return L"";
@@ -137,33 +165,30 @@ std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces) {
       return L"";
     }
   }
-  std::wstring s;
-  size_t alsize = isextend ? 4 : 0;
-  if (haslatter) {
-    alsize += 2;
-  }
-  for (const auto p : pv) {
-    alsize += p.size() + 1;
-  }
-  s.reserve(alsize);
-  if (isextend) {
-    s.append(L"\\\\").push_back(exch);
-    s.push_back(L'\\');
-  }
-  if (haslatter) {
-    s.push_back(latter);
-    s.push_back(L':');
-  }
-  for (const auto p : pv) {
-    if (!s.empty()) {
-      s.push_back(L'\\');
-    }
-    s.append(p);
-  }
-  return s;
+  return PathJoinInternal(pv, isextend, haslatter, exch, latter);
 }
 
 } // namespace path_internal
+
+std::wstring PathAbsolute(std::wstring_view p) {
+  if (p.empty()) {
+    return L".";
+  }
+  wchar_t exch = 0;
+  auto isextend = PathStripExtended(p, exch);
+  wchar_t latter = 0;
+  auto haslatter = PathStripDriveLatter(p, latter);
+  std::vector<std::wstring_view> pv;
+  std::wstring cwd;
+  if (!isextend && !haslatter) {
+    cwd = path_internal::getcurrentdir();
+    SplitPathInternal(cwd, pv);
+  }
+  if (!SplitPathInternal(p, pv)) {
+    return L"";
+  }
+  return path_internal::PathJoinInternal(pv, isextend, haslatter, exch, latter);
+}
 
 bool PathExists(std::wstring_view src, FileAttribute fa) {
   // GetFileAttributesExW()
@@ -224,7 +249,7 @@ bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
     exts.assign(std::begin(defaultexts), std::end(defaultexts));
   }
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
-    auto ncmd = bela::PathCat(cmd);
+    auto ncmd = bela::PathAbsolute(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
   auto cwdfile = bela::PathCat(L".", cmd);

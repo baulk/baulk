@@ -14,5 +14,12 @@ int wmain() {
   bela::FPrintF(stderr, L"PathCat: %s\n", p4);
   auto p5 = bela::PathCat(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathCat: %s\n", p5);
+  //
+  auto a1 = bela::PathAbsolute(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
+  bela::FPrintF(stderr, L"PathAbsolute: %s\n", a1);
+  auto a2 = bela::PathAbsolute(L"..\\..\\clangbuilder\\bin");
+  bela::FPrintF(stderr, L"PathAbsolute: %s\n", a2);
+  auto a3 = bela::PathAbsolute(L"\\\\?\\C:\\Windows/System32\\..\\notepad.exe");
+  bela::FPrintF(stderr, L"PathAbsolute: %s\n", a3);
   return 0;
 }
