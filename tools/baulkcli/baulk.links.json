@@ -1,0 +1,8 @@
+{
+    "links": {
+        "7z.exe": "7z@7z.exe",
+        "nvim.exe": "neovim@bin\\nvim.exe",
+        "nvim-qt.exe": "neovim@bin\\nvim-qt.exe",
+        "xxd.exe": "neovim@bin\\xxd.exe"
+    }
+}
