@@ -59,7 +59,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
     /* code */
     FILE *fd{nullptr};
     if (auto eno = _wfopen_s(&fd, linkjson.data(), L"rb"); eno != 0) {
-      ec = bela::make_error_code(1, L"errno: ", eno);
+      ec = bela::make_stdc_error_code(eno);
       return std::nullopt;
     }
     auto closer = bela::finally([&] { fclose(fd); });

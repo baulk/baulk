@@ -73,29 +73,13 @@ bela::error_code make_error_code(long code, const AlphaNum &a,
   return ec;
 }
 
-inline std::wstring system_error_dump(DWORD ec) {
-  LPWSTR buf = nullptr;
-  auto rl = FormatMessageW(
-      FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, ec,
-      MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), (LPWSTR)&buf, 0, nullptr);
-  if (rl == 0) {
-    return L"FormatMessageW error";
-  }
-  if (buf[rl - 1] == '\n') {
-    rl--;
-  }
-  if (rl > 0 && buf[rl - 1] == '\r') {
-    rl--;
-  }
-  std::wstring msg(buf, rl);
-  LocalFree(buf);
-  return msg;
-}
+std::wstring resolve_system_error_code(DWORD ec);
+error_code make_stdc_error_code(errno_t eno);
 
 inline error_code make_system_error_code() {
   error_code ec;
   ec.code = GetLastError();
-  ec.message = system_error_dump(ec.code);
+  ec.message = resolve_system_error_code(ec.code);
   return ec;
 }
 

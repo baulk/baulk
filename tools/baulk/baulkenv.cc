@@ -13,11 +13,10 @@ class BaulkEnv {
 public:
   BaulkEnv(const BaulkEnv &) = delete;
   BaulkEnv &operator=(const BaulkEnv &) = delete;
-  bool Initialize(int argc, wchar_t *const *argv, std::wstring_view profile);
-
-  static BaulkEnv &Instance() {
-    static BaulkEnv baulkEnv;
-    return baulkEnv;
+  bool Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_);
+  bool InitializeFallback() {
+    buckets.emplace_back(L"Baulk default bucket", L"Baulk", DefaultBucket);
+    return true;
   }
   std::wstring_view BaulkRoot() const { return root; }
   Buckets &BaulkBuckets() { return buckets; }
@@ -34,11 +33,17 @@ public:
     }
     return false;
   }
+  //
+  static BaulkEnv &Instance() {
+    static BaulkEnv baulkEnv;
+    return baulkEnv;
+  }
 
 private:
   BaulkEnv() = default;
   std::wstring root;
   std::wstring git;
+  std::wstring profile;
   Buckets buckets;
   std::vector<std::wstring> freezepkgs;
   baulk::compiler::Executor executor;
@@ -74,7 +79,7 @@ std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
 }
 
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
-                          std::wstring_view profile) {
+                          std::wstring_view profile_) {
   bela::error_code ec;
   if (auto exedir = bela::ExecutablePath(ec); exedir) {
     root = std::filesystem::path(*exedir).parent_path().wstring();
@@ -82,12 +87,38 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
     bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
     root = L".";
   }
-  auto profile_ = ProfileResolve(profile, root);
-  baulk::DbgPrint(L"Expand profile to '%s'\n", profile_);
+  profile = ProfileResolve(profile_, root);
+  baulk::DbgPrint(L"Expand profile to '%s'\n", profile);
   if (!InitializeGitPath(git)) {
     git.clear();
   }
-
+  FILE *fd = nullptr;
+  if (auto eo = _wfopen_s(&fd, profile.data(), L"rb"); eo != 0) {
+    auto ec = bela::make_stdc_error_code(eo);
+    DbgPrint(L"unable open bucket: %s %s\n", profile, ec.message);
+    return InitializeFallback();
+  }
+  auto closer = bela::finally([&] { fclose(fd); });
+  try {
+    auto json = nlohmann::json::parse(fd);
+    const auto &bks = json["bucket"];
+    for (auto &b : bks) {
+      auto desc = bela::ToWide(b["description"].get<std::string_view>());
+      auto name = bela::ToWide(b["name"].get<std::string_view>());
+      auto url = bela::ToWide(b["url"].get<std::string_view>());
+      DbgPrint(L"Add bucket: %s '%s@%s'\n", url, name, desc);
+      buckets.emplace_back(std::move(desc), std::move(name), std::move(url));
+    }
+    if (auto it = json.find("freeze"); it != json.end()) {
+      for (const auto &freeze : it.value()) {
+        freezepkgs.emplace_back(
+            bela::ToWide(freeze.get_ref<const std::string &>()));
+        DbgPrint(L"Freeze package %s\n", freezepkgs.back());
+      }
+    }
+  } catch (const std::exception &) {
+    return InitializeFallback();
+  }
   return true;
 }
 

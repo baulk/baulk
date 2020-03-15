@@ -1,6 +1,7 @@
 # bela base libaray
 
 add_library(bela STATIC
+  errno.cc
   ascii.cc
   ucwidth.cc
   codecvt.cc
