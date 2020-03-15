@@ -20,7 +20,7 @@ public:
     return baulkEnv;
   }
   std::wstring_view BaulkRoot() const { return root; }
-  Buckets BaulkBuckets() { return buckets; }
+  Buckets &BaulkBuckets() { return buckets; }
   std::wstring_view BucketUrl() const { return bucketUrl; }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
