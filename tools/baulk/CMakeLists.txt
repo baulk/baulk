@@ -41,6 +41,8 @@ if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+install(TARGETS baulk DESTINATION bin)
+
 if(BUILD_TEST)
   add_executable(indicators_test indicators_test.cc)
 

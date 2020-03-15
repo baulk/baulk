@@ -7,6 +7,7 @@
 
 namespace baulk {
 extern bool IsDebugMode;
+extern bool IsForceMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 template <typename... Args>
@@ -61,6 +62,7 @@ using Buckets = std::vector<Bucket>;
 bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile);
 bool InitializeBaulkBuckets();
+bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
 Buckets &BaulkBuckets();
 std::wstring_view BaulkGit();

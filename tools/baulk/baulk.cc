@@ -5,6 +5,7 @@
 
 namespace baulk {
 bool IsDebugMode = false;
+bool IsForceMode = false;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
@@ -30,7 +31,8 @@ Usage: baulk [option] command pkg ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
-  -P|--profile     Set profile path. default: %LOCALAPPDATA%/baulk/baulk.json
+  -F|--force       Turn on force mode. such as force update frozen package
+  -P|--profile     Set profile path. default: $Executable/baulk.json
   -A|--user-agent  Send User-Agent <name> to server
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
@@ -61,6 +63,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   ba.Add(L"help", baulk::cli::no_argument, 'h')
       .Add(L"version", baulk::cli::no_argument, 'v')
       .Add(L"verbose", baulk::cli::no_argument, 'V')
+      .Add(L"force", baulk::cli::no_argument, L'F')
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
@@ -80,6 +83,9 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           break;
         case 'V':
           baulk::IsDebugMode = true;
+          break;
+        case 'F':
+          baulk::IsForceMode = true;
           break;
         case 'A':
           if (auto len = wcslen(oa); len < 256) {

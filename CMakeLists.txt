@@ -81,6 +81,10 @@ add_definitions(-D_UNICODE -DUNICODE)
 
 include_directories("./include" "./vendor/bela/include")
 
+configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
+
+install(FILES "config/baulk.json" DESTINATION config)
+
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)
 add_subdirectory(tools/baulk)

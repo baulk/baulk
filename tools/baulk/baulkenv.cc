@@ -2,13 +2,13 @@
 #include "baulk.hpp"
 #include <bela/env.hpp>
 #include <bela/path.hpp>
+#include <filesystem>
 #include "jsonex.hpp"
 #include "regutils.hpp"
 
 namespace baulk {
 // https://github.com/baulk/bucket/commits/master.atom
 constexpr std::wstring_view DefaultBucket = L"https://github.com/baulk/bucket";
-constexpr std::wstring_view DefaultProfile = L"%LOCALAPPDATA%/baulk/baulk.json";
 class BaulkEnv {
 public:
   BaulkEnv(const BaulkEnv &) = delete;
@@ -21,19 +21,26 @@ public:
   }
   std::wstring_view BaulkRoot() const { return root; }
   Buckets &BaulkBuckets() { return buckets; }
-  std::wstring_view BucketUrl() const { return bucketUrl; }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
   bool InitializeExecutor(bela::error_code &ec) {
     return executor.Initialize(ec);
   }
+  bool IsFrozen(std::wstring_view pkg) const {
+    for (const auto &p : freezepkgs) {
+      if (pkg == p) {
+        return true;
+      }
+    }
+    return false;
+  }
 
 private:
   BaulkEnv() = default;
   std::wstring root;
-  std::wstring bucketUrl{DefaultBucket};
   std::wstring git;
   Buckets buckets;
+  std::vector<std::wstring> freezepkgs;
   baulk::compiler::Executor executor;
 };
 
@@ -55,9 +62,27 @@ bool InitializeGitPath(std::wstring &git) {
   return false;
 }
 
+std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
+  if (!profile.empty()) {
+    return bela::ExpandEnv(profile);
+  }
+  auto p = bela::StringCat(root, L"\\config\\baulk.json");
+  if (bela::PathExists(p)) {
+    return p;
+  }
+  return bela::ExpandEnv(L"%LOCALAPPDATA%\\baulk\\baulk.json");
+}
+
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
                           std::wstring_view profile) {
-  auto profile_ = bela::ExpandEnv(profile.empty() ? DefaultProfile : profile);
+  bela::error_code ec;
+  if (auto exedir = bela::ExecutablePath(ec); exedir) {
+    root = std::filesystem::path(*exedir).parent_path().wstring();
+  } else {
+    bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
+    root = L".";
+  }
+  auto profile_ = ProfileResolve(profile, root);
   baulk::DbgPrint(L"Expand profile to '%s'\n", profile_);
   if (!InitializeGitPath(git)) {
     git.clear();
@@ -73,6 +98,11 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
 bool InitializeBaulkBuckets() {
   //
   return true;
+}
+
+bool BaulkIsFrozenPkg(std::wstring_view pkg) {
+  //
+  return BaulkEnv::Instance().IsFrozen(pkg);
 }
 
 std::wstring_view BaulkRoot() {

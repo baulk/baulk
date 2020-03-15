@@ -25,4 +25,5 @@ std::optional<std::wstring> BuacketNewest(std::wstring_view rss,
   ec = bela::make_error_code(1, L"bucket invaild id: ", bela::ToWide(id));
   return std::nullopt;
 }
+
 } // namespace baulk::bucket

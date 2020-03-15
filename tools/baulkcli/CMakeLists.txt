@@ -6,3 +6,5 @@ target_link_libraries(baulkcli belawin)
 if(BAULK_ENABLE_LTO)
   set_property(TARGET baulkcli PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
+
+install(TARGETS baulk DESTINATION bin)
