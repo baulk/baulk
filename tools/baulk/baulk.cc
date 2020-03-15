@@ -43,6 +43,8 @@ Command:
   uninstall        Uninstall one or more packages
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages
+  freeze           Freeze some package
+  unfreeze         UnFreeze some package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
 )";
@@ -114,6 +116,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       {L"uninstall", baulk::commands::cmd_uninstall},
       {L"update", baulk::commands::cmd_update},
       {L"upgrade", baulk::commands::cmd_upgrade},
+      {L"freeze", baulk::commands::cmd_freeze},
+      {L"unfreeze", baulk::commands::cmd_unfreeze},
       {L"b3sum", baulk::commands::cmd_b3sum},
       {L"sha256sum", baulk::commands::cmd_sha256sum}};
   for (const auto &c : cmdmaps) {

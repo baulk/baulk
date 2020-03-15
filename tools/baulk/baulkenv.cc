@@ -20,6 +20,7 @@ public:
     return baulkEnv;
   }
   std::wstring_view BaulkRoot() const { return root; }
+  Buckets BaulkBuckets() { return buckets; }
   std::wstring_view BucketUrl() const { return bucketUrl; }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
@@ -32,6 +33,7 @@ private:
   std::wstring root;
   std::wstring bucketUrl{DefaultBucket};
   std::wstring git;
+  Buckets buckets;
   baulk::compiler::Executor executor;
 };
 
@@ -68,15 +70,18 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile) {
   return BaulkEnv::Instance().Initialize(argc, argv, profile);
 }
+bool InitializeBaulkBuckets() {
+  //
+  return true;
+}
 
 std::wstring_view BaulkRoot() {
   //
   return BaulkEnv::Instance().BaulkRoot();
 }
-//
-std::wstring_view BaulkBucketUrl() {
-  // bucket url
-  return BaulkEnv::Instance().BucketUrl();
+Buckets &BaulkBuckets() {
+  //
+  return BaulkEnv::Instance().BaulkBuckets();
 }
 
 std::wstring_view BaulkGit() {

@@ -49,11 +49,20 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
       stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", fmt, L"\x1b[0m"));
 }
 
+struct Bucket {
+  std::wstring description;
+  std::wstring name;
+  std::wstring url;
+  std::wstring latest;
+};
+using Buckets = std::vector<Bucket>;
+
 // Env functions
 bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile);
+bool InitializeBaulkBuckets();
 std::wstring_view BaulkRoot();
-std::wstring_view BaulkBucketUrl();
+Buckets &BaulkBuckets();
 std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
 bool BaulkInitializeExecutor(bela::error_code &ec);

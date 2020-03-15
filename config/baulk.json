@@ -1,4 +1,10 @@
 {
-    "bucket": "https://github.com/baulk/bucket",
+    "bucket": [
+        {
+            "description": "Baulk default bucket",
+            "name": "main",
+            "url": "https://github.com/baulk/bucket"
+        }
+    ],
     "channel": "insider"
 }

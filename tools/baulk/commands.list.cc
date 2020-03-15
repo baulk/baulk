@@ -1,4 +1,5 @@
 //
+#include "baulk.hpp"
 #include "commands.hpp"
 
 namespace baulk::commands {
