@@ -57,7 +57,7 @@ public:
   static std::optional<FilePart> MakeFilePart(std::wstring_view p,
                                               bela::error_code &ec) {
     FilePart file;
-    file.path = bela::PathCat(p); // Path cleanup
+    file.path = bela::PathAbsolute(p); // Path cleanup
     auto part = bela::StringCat(file.path, L".part");
     file.FileHandle = ::CreateFileW(
         part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,

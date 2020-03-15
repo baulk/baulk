@@ -27,7 +27,7 @@ int cmd_exec(const argv_t &argv) {
   std::wstring target;
   auto arg0 = argv[0];
   if (!bela::ExecutableExistsInPath(arg0, target)) {
-    bela::FPrintF(stderr, L"unable found target: '%s' '%s'\n", arg0);
+    bela::FPrintF(stderr, L"unable found target: '%s'\n", arg0);
     return 1;
   }
   baulk::DbgPrint(L"Find %s ==> %s\n", arg0, target);

@@ -4,6 +4,7 @@
 #include <bela/strip.hpp>
 #include <bela/strcat.hpp>
 #include <bela/str_split.hpp>
+#include <bela/stdwriter.hpp>
 #include <bela/ascii.hpp>
 #include <bela/base.hpp>
 #include <bela/env.hpp>
@@ -11,38 +12,56 @@
 namespace bela {
 // https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file
 // https://googleprojectzero.blogspot.com/2016/02/the-definitive-guide-on-win32-to-nt.html
-inline bool PathStripExtended(std::wstring_view &sv, wchar_t &ch) {
-  if (sv.size() < 4) {
-    return false;
-  }
-  if (sv[0] == '\\' && sv[1] == '\\' && (sv[2] == '?' || sv[2] == '.') &&
-      sv[3] == '\\') {
-    ch = sv[2];
-    sv.remove_prefix(4);
-    return true;
+bool IsReservedName(std::wstring_view name) {
+  constexpr std::wstring_view reservednames[] = {
+      L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4",
+      L"COM5", L"COM6", L"COM7", L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3",
+      L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
+  for (const auto r : reservednames) {
+    if (bela::EqualsIgnoreCase(r, name)) {
+      return true;
+    }
   }
   return false;
 }
 
-inline bool PathStripDriveLatter(std::wstring_view &sv, wchar_t &dl) {
-  if (sv.size() < 2) {
-    return false;
-  }
-  if (sv[1] == L':') {
-    auto ch = sv[0];
-    if (ch > 'a' && ch <= 'z') {
-      dl = tolower(ch);
-      sv.remove_prefix(2);
-      return true;
+std::wstring PathAbsolute(std::wstring_view p) {
+  DWORD dwlen = MAX_PATH;
+  std::wstring buf;
+  for (;;) {
+    buf.resize(dwlen);
+    dwlen = GetFullPathNameW(p.data(), dwlen, buf.data(), nullptr);
+    if (dwlen == 0) {
+      return L"";
     }
-    if (ch >= 'A' && ch <= 'Z') {
-      dl = ch;
-      sv.remove_prefix(2);
-      return true;
+    if (dwlen < buf.size()) {
+      buf.resize(dwlen);
+      break;
     }
   }
+  return buf;
+}
 
-  return false;
+std::wstring_view BaseName(std::wstring_view name) {
+  if (name.empty()) {
+    return L".";
+  }
+  if (name.size() == 2 && name[1] == ':') {
+    return L".";
+  }
+  if (name.size() > 2 && name[1] == ':') {
+    name.remove_prefix(2);
+  }
+  auto i = name.size() - 1;
+  for (; i != 0 && bela::IsPathSeparator(name[i]); i--) {
+    name.remove_suffix(1);
+  }
+  if (name.size() == 1 && bela::IsPathSeparator(name[0])) {
+    return L".";
+  }
+  for (; i != 0 && !bela::IsPathSeparator(name[i - 1]); i--) {
+  }
+  return name.substr(i);
 }
 
 bool SplitPathInternal(std::wstring_view sv,
@@ -102,37 +121,83 @@ void PathStripName(std::wstring &s) {
 
 namespace path_internal {
 
-std::wstring getcurrentdir() {
-  auto l = GetCurrentDirectoryW(0, nullptr);
-  if (l == 0) {
-    return L"";
+size_t PathRootLen(std::wstring_view p) {
+  if (p.size() < 2) {
+    return 0;
   }
-  std::wstring s;
-  s.resize(l);
-  auto N = GetCurrentDirectoryW(l, s.data());
-  s.resize(N);
-  return s;
+  auto ch = p[0];
+  if (p[1] == ':' && ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z')) {
+    return 2;
+  }
+  if (p.size() >= 4 && bela::IsPathSeparator(p[0]) &&
+      bela::IsPathSeparator(p[1]) && !bela::IsPathSeparator(p[2]) &&
+      (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
+    if (p.size() >= 6) {
+      auto ch = p[4];
+      if (p[5] == ':' && ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z')) {
+        return 6;
+      }
+      return 4;
+    }
+  }
+  if (auto l = p.size(); l >= 5 && bela::IsPathSeparator(p[0]) &&
+                         bela::IsPathSeparator(p[1]) &&
+                         !bela::IsPathSeparator(p[2]) && p[2] != '.') {
+    // first, leading `\\` and next shouldn't be `\`. its server name.
+    for (size_t n = 3; n < l - 1; n++) {
+      // second, next '\' shouldn't be repeated.
+      if (bela::IsPathSeparator(p[n])) {
+        n++;
+        // third, following something characters. its share name.
+        if (!bela::IsPathSeparator(p[n])) {
+          if (p[n] == '.') {
+            break;
+          }
+          for (; n < l; n++) {
+            if (bela::IsPathSeparator(p[n])) {
+              break;
+            }
+          }
+          return n;
+        }
+        break;
+      }
+    }
+  }
+  return 0;
 }
 
-std::wstring PathJoinInternal(std::vector<std::wstring_view> &pv, bool unc,
-                              bool full, wchar_t uncchar, wchar_t latter) {
-  std::wstring s;
-  size_t alsize = unc ? 4 : 0;
-  if (full) {
-    alsize += 2;
+std::wstring_view PathStripRootName(std::wstring_view &p) {
+  auto rlen = PathRootLen(p);
+  if (rlen != 0) {
+    auto root = p.substr(0, rlen);
+    p.remove_prefix(rlen);
+    return root;
   }
+  return L"";
+}
+
+std::wstring PathAbsoluteCatPieces(bela::Span<std::wstring_view> pieces) {
+  if (pieces.empty()) {
+    return L"";
+  }
+  auto p0 = bela::PathAbsolute(pieces[0]);
+  std::wstring_view p0s = p0;
+  auto root = PathStripRootName(p0s);
+  std::vector<std::wstring_view> pv;
+  SplitPathInternal(p0s, pv);
+  for (size_t i = 1; i < pieces.size(); i++) {
+    if (!SplitPathInternal(pieces[i], pv)) {
+      return L".";
+    }
+  }
+  std::wstring s;
+  auto alsize = root.size();
   for (const auto p : pv) {
     alsize += p.size() + 1;
   }
-  s.reserve(alsize);
-  if (unc) {
-    s.append(L"\\\\").push_back(uncchar);
-    s.push_back(L'\\');
-  }
-  if (full) {
-    s.push_back(latter);
-    s.push_back(L':');
-  }
+  s.reserve(alsize + 1);
+  s.assign(root);
   for (const auto p : pv) {
     if (!s.empty()) {
       s.push_back(L'\\');
@@ -143,52 +208,34 @@ std::wstring PathJoinInternal(std::vector<std::wstring_view> &pv, bool unc,
 }
 
 std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces) {
-  if (pieces.empty()) {
-    return L"";
-  }
-  auto p0 = pieces[0];
-  std::wstring p0raw;
-  if (p0 == L".") {
-    p0raw = getcurrentdir();
-    p0 = p0raw;
-  }
-  wchar_t exch = 0;
-  auto isextend = PathStripExtended(p0, exch);
-  wchar_t latter = 0;
-  auto haslatter = PathStripDriveLatter(p0, latter);
+  std::wstring_view p0s = pieces[0];
+  auto root = PathStripRootName(p0s);
   std::vector<std::wstring_view> pv;
-  if (!SplitPathInternal(p0, pv)) {
-    return L"";
-  }
+  SplitPathInternal(p0s, pv);
   for (size_t i = 1; i < pieces.size(); i++) {
     if (!SplitPathInternal(pieces[i], pv)) {
-      return L"";
+      return L".";
     }
   }
-  return PathJoinInternal(pv, isextend, haslatter, exch, latter);
+  std::wstring s;
+  auto alsize = root.size();
+  for (const auto p : pv) {
+    alsize += p.size() + 1;
+  }
+  s.reserve(alsize + 1);
+  if (!root.empty()) {
+    s.assign(root);
+  }
+  for (const auto p : pv) {
+    if (!s.empty()) {
+      s.push_back(L'\\');
+    }
+    s.append(p);
+  }
+  return s;
 }
 
 } // namespace path_internal
-
-std::wstring PathAbsolute(std::wstring_view p) {
-  if (p.empty()) {
-    return L".";
-  }
-  wchar_t exch = 0;
-  auto isextend = PathStripExtended(p, exch);
-  wchar_t latter = 0;
-  auto haslatter = PathStripDriveLatter(p, latter);
-  std::vector<std::wstring_view> pv;
-  std::wstring cwd;
-  if (!isextend && !haslatter) {
-    cwd = path_internal::getcurrentdir();
-    SplitPathInternal(cwd, pv);
-  }
-  if (!SplitPathInternal(p, pv)) {
-    return L"";
-  }
-  return path_internal::PathJoinInternal(pv, isextend, haslatter, exch, latter);
-}
 
 bool PathExists(std::wstring_view src, FileAttribute fa) {
   // GetFileAttributesExW()
@@ -252,7 +299,7 @@ bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
     auto ncmd = bela::PathAbsolute(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
-  auto cwdfile = bela::PathCat(L".", cmd);
+  auto cwdfile = bela::PathAbsolute(cmd);
   if (FindExecutable(cwdfile, exts, exe)) {
     return true;
   }

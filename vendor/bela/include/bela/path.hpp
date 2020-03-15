@@ -14,12 +14,39 @@ constexpr const size_t PathMax = 0x8000;
 inline constexpr bool IsPathSeparator(wchar_t c) {
   return c == PathSeparator || c == PathUnixSeparator;
 }
+std::wstring_view BaseName(std::wstring_view name);
 std::vector<std::wstring_view> SplitPath(std::wstring_view sv);
 void PathStripName(std::wstring &s);
 std::wstring PathAbsolute(std::wstring_view p);
 namespace path_internal {
 std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces);
+std::wstring PathAbsoluteCatPieces(bela::Span<std::wstring_view> pieces);
 } // namespace path_internal
+
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a) {
+  std::wstring_view pv[] = {a.Piece()};
+  return path_internal::PathAbsoluteCatPieces(pv);
+}
+
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a,
+                                                  const AlphaNum &b) {
+  std::wstring_view pv[] = {a.Piece(), b.Piece()};
+  return path_internal::PathAbsoluteCatPieces(pv);
+}
+
+[[nodiscard]] inline std::wstring
+PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
+  std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece()};
+  return path_internal::PathAbsoluteCatPieces(pv);
+}
+
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a,
+                                                  const AlphaNum &b,
+                                                  const AlphaNum &c,
+                                                  const AlphaNum &d) {
+  std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece(), d.Piece()};
+  return path_internal::PathAbsoluteCatPieces(pv);
+}
 
 [[nodiscard]] inline std::wstring PathCat(const AlphaNum &a) {
   std::wstring_view pv[] = {a.Piece()};
