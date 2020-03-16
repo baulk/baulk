@@ -39,9 +39,4 @@ Test-AddPathEx -Path "$BaulkRoot\bin\pkgs\.linked"
 
 ShuffleEnv
 
-if ($null -ne "$env:WT_SESSION") {
-    $Host.UI.RawUI.WindowTitle = "Baulk 💘 Utility" 
-}
-else {
-    $Host.UI.RawUI.WindowTitle = "Baulk Utility" 
-}
+$Host.UI.RawUI.WindowTitle = "Baulk 💘 Utility" 
