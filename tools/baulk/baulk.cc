@@ -1,3 +1,5 @@
+#include <bela/subsitute.hpp>
+#include <bela/path.hpp>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"
@@ -32,7 +34,7 @@ Usage: baulk [option] command pkg ...
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
   -F|--force       Turn on force mode. such as force update frozen package
-  -P|--profile     Set profile path. default: $Executable/baulk.json
+  -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
@@ -49,8 +51,18 @@ Command:
   unfreeze         UnFreeze some package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+
 )";
-  bela::FPrintF(stderr, L"%s\n", usage);
+  bela::error_code ec;
+  auto exepath = bela::ExecutablePath(ec);
+  if (!exepath) {
+    auto msg = bela::Substitute(usage, L"$Prefix");
+    bela::FileWrite(stderr, msg);
+    return;
+  }
+  bela::PathStripName(*exepath);
+  auto msg = bela::Substitute(usage, *exepath);
+  bela::FileWrite(stderr, msg);
 }
 void Version() {
   //
