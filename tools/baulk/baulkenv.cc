@@ -82,11 +82,13 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
                           std::wstring_view profile_) {
   bela::error_code ec;
   if (auto exedir = bela::ExecutablePath(ec); exedir) {
-    root = std::filesystem::path(*exedir).parent_path().wstring();
+    root.assign(std::move(*exedir));
+    bela::PathStripName(root);
   } else {
     bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
     root = L".";
   }
+  baulk::DbgPrint(L"Expand root '%s'\n", root);
   profile = ProfileResolve(profile_, root);
   baulk::DbgPrint(L"Expand profile to '%s'\n", profile);
   if (!InitializeGitPath(git)) {
