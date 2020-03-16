@@ -42,13 +42,13 @@ Usage: baulk [option] command pkg ...
 Command:
   exec             Execute a command
   list             List all installed packages
-  search           Search for available packages, or specify package details
-  install          Install one or more packages
-  uninstall        Uninstall one or more packages
+  search           Search for available packages, or specific package details
+  install          Install specific packages. which is installed upgrade it.
+  uninstall        Uninstall specific packages
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages
-  freeze           Freeze some package
-  unfreeze         UnFreeze some package
+  freeze           Freeze specific package
+  unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
 
