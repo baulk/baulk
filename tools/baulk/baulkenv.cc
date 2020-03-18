@@ -38,6 +38,7 @@ public:
     static BaulkEnv baulkEnv;
     return baulkEnv;
   }
+  std::wstring_view Profile() const { return profile; }
 
 private:
   BaulkEnv() = default;
@@ -151,6 +152,12 @@ std::wstring_view BaulkGit() {
   //
   return BaulkEnv::Instance().Git();
 }
+
+std::wstring_view BaulkProfile() {
+  //
+  return BaulkEnv::Instance().Profile();
+}
+
 baulk::compiler::Executor &BaulkExecutor() {
   return BaulkEnv::Instance().BaulkExecutor();
 }
