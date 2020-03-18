@@ -51,7 +51,7 @@ private:
 
 bool InitializeGitPath(std::wstring &git) {
   if (bela::ExecutableExistsInPath(L"git.exe", git)) {
-    baulk::DbgPrint(L"Found git in path '%s'\n", git);
+    baulk::DbgPrint(L"Found git in path '%s'", git);
     return true;
   }
   bela::error_code ec;
@@ -61,7 +61,7 @@ bool InitializeGitPath(std::wstring &git) {
   }
   git = bela::StringCat(*installPath, L"\\cmd\\git.exe");
   if (bela::PathExists(git)) {
-    baulk::DbgPrint(L"Found installed git '%s'\n", git);
+    baulk::DbgPrint(L"Found installed git '%s'", git);
     return true;
   }
   return false;
@@ -90,7 +90,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
   }
   baulk::DbgPrint(L"Expand root '%s'\n", root);
   profile = ProfileResolve(profile_, root);
-  baulk::DbgPrint(L"Expand profile to '%s'\n", profile);
+  baulk::DbgPrint(L"Expand profile to '%s'", profile);
   if (!InitializeGitPath(git)) {
     git.clear();
   }
@@ -108,14 +108,14 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
       auto desc = bela::ToWide(b["description"].get<std::string_view>());
       auto name = bela::ToWide(b["name"].get<std::string_view>());
       auto url = bela::ToWide(b["url"].get<std::string_view>());
-      DbgPrint(L"Add bucket: %s '%s@%s'\n", url, name, desc);
+      DbgPrint(L"Add bucket: %s '%s@%s'", url, name, desc);
       buckets.emplace_back(std::move(desc), std::move(name), std::move(url));
     }
     if (auto it = json.find("freeze"); it != json.end()) {
       for (const auto &freeze : it.value()) {
         freezepkgs.emplace_back(
             bela::ToWide(freeze.get_ref<const std::string &>()));
-        DbgPrint(L"Freeze package %s\n", freezepkgs.back());
+        DbgPrint(L"Freeze package %s", freezepkgs.back());
       }
     }
   } catch (const std::exception &) {

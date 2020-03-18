@@ -30,7 +30,7 @@ int cmd_exec(const argv_t &argv) {
     bela::FPrintF(stderr, L"unable found target: '%s'\n", arg0);
     return 1;
   }
-  baulk::DbgPrint(L"Find %s ==> %s\n", arg0, target);
+  baulk::DbgPrint(L"Find %s ==> %s", arg0, target);
   auto isconsole = IsSubsytemConsole(target);
   bela::EscapeArgv ea;
   ea.Assign(target);

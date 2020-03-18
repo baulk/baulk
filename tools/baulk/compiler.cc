@@ -1,6 +1,7 @@
 #include <bela/env.hpp>
 #include <bela/path.hpp>
 #include "compiler.hpp"
+#include "baulk.hpp"
 #include "fs.hpp"
 #include "jsonex.hpp"
 #include "regutils.hpp"
@@ -155,6 +156,8 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
+  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s",
+                  winsdk->ProductVersion, winsdk->InstallationFolder);
   constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt",
                                         L"\\shared", L"\\winrt"};
   for (auto i : incs) {
@@ -191,10 +194,13 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
     // Visual Studio not install
     return false;
   }
+  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s",
+                  vsi->installationVersion, vsi->installationPath);
   auto vcver = LookupVisualCppVersion(vsi->installationPath, ec);
   if (!vcver) {
     return false;
   }
+  baulk::DbgPrint(L"Visual C++ %s", *vcver);
   // Libs
   TestJoin(bela::StringCat(vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
                            LR"(\ATLMFC\include)"),

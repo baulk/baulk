@@ -311,8 +311,8 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
   return true;
 }
 
-bool MakeBatchLauncher(std::wstring_view root, const baulk::Package &pkg,
-                       bool forceoverwrite, bela::error_code &ec) {
+bool MakeSimulatedLauncher(std::wstring_view root, const baulk::Package &pkg,
+                           bool forceoverwrite, bela::error_code &ec) {
 
   return true;
 }
@@ -361,9 +361,12 @@ bool MakeLinks(std::wstring_view root, const baulk::Package &pkg,
   if (!pkg.links.empty() && !MakeSymlinks(root, pkg, forceoverwrite, ec)) {
     return false;
   }
-  if (!pkg.launchers.empty() && !MakeLaunchers(root, pkg, forceoverwrite, ec)) {
-    return false;
+  if (pkg.launchers.empty()) {
+    return true;
   }
-  return true;
+  if (!baulk::BaulkExecutor().Initialized()) {
+    return MakeSimulatedLauncher(root, pkg, forceoverwrite, ec);
+  }
+  return MakeLaunchers(root, pkg, forceoverwrite, ec);
 }
 } // namespace baulk
