@@ -42,7 +42,7 @@ private:
   WIN32_FIND_DATAW wfd;
 };
 
-std::optional<std::wstring> SearchUniqueSubdir(std::wstring_view dir) {
+std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
   Finder finder;
   bela::error_code ec;
   if (!finder.First(dir, L"*", ec)) {
@@ -54,19 +54,19 @@ std::optional<std::wstring> SearchUniqueSubdir(std::wstring_view dir) {
     if (finder.Ignore()) {
       continue;
     }
-    auto p = bela::StringCat(dir, L"\\", finder.Name());
-    count++;
     if (!finder.IsDir()) {
       return std::nullopt;
     }
+    count++;
     if (count == 1) {
       subdir = bela::StringCat(dir, L"\\", finder.Name());
     }
   } while (finder.Next());
-  if (count == 1) {
-    return std::make_optional(std::move(subdir));
+
+  if (count != 1) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return std::make_optional(std::move(subdir));
 }
 
 bool IsExecutableSuffix(std::wstring_view name) {
@@ -117,19 +117,27 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
   return std::nullopt;
 }
 
-bool UniqueSubdirMoveTo(std::wstring_view dir, std::wstring_view dest,
-                        bela::error_code &ec) {
-  auto subdir = SearchUniqueSubdir(dir);
-  if (!subdir) {
+bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
+                           bela::error_code &ec) {
+  auto subfirst = UniqueSubdirectory(dir);
+  if (!subfirst) {
     return true;
+  }
+  std::wstring currentdir = *subfirst;
+  for (int i = 0; i < 10; i++) {
+    auto subdir_ = UniqueSubdirectory(currentdir);
+    if (!subdir_) {
+      break;
+    }
+    currentdir.assign(std::move(*subdir_));
   }
   std::error_code e;
   std::filesystem::path destpath(dest);
-  for (auto &p : std::filesystem::directory_iterator(*subdir)) {
+  for (const auto &p : std::filesystem::directory_iterator(currentdir)) {
     auto newpath = destpath / p.path().filename();
     std::filesystem::rename(p.path(), newpath, e);
   }
-  if (!std::filesystem::remove_all(*subdir, e)) {
+  if (!std::filesystem::remove_all(*subfirst, e)) {
     ec = bela::from_std_error_code(e);
     return false;
   }

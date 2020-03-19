@@ -233,7 +233,7 @@ bool Regularize(std::wstring_view path) {
     if (!bela::PathExists(sd)) {
       continue;
     }
-    if (baulk::fs::UniqueSubdirMoveTo(sd, path, ec)) {
+    if (baulk::fs::FlatPackageInitialize(sd, path, ec)) {
       return !ec;
     }
   }

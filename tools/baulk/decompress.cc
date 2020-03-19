@@ -9,7 +9,7 @@ namespace standard {
 bool Regularize(std::wstring_view path) {
   bela::error_code ec;
   // TODO some zip code
-  return baulk::fs::UniqueSubdirMoveTo(path, path, ec);
+  return baulk::fs::FlatPackageInitialize(path, path, ec);
 }
 } // namespace standard
 
