@@ -4,6 +4,7 @@
 #include <bela/path.hpp>
 #include <bela/pe.hpp>
 #include <bela/narrow/strcat.hpp>
+#include <time.hpp>
 #include "launcher.hpp"
 #include "fs.hpp"
 #include "rcwriter.hpp"
@@ -52,6 +53,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> metas, const Package &pkg,
       linkobj[bela::ToNarrow(lm.exe)] = meta; // "7z.exe":"7z.exe@7z@19.01"
     }
     obj["links"] = linkobj;
+    obj["updated"] = baulk::time::TimeNow();
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
@@ -106,6 +108,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
                       e.message());
       }
     }
+    obj["updated"] = baulk::time::TimeNow();
     obj["links"] = newlinkobj;
     newjson = obj.dump(4);
   } catch (const std::exception &e) {

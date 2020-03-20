@@ -1,5 +1,6 @@
 #include <bela/stdwriter.hpp>
 #include <bela/finaly.hpp>
+#include <time.hpp>
 #include "commands.hpp"
 #include "fs.hpp"
 #include "baulk.hpp"
@@ -62,6 +63,7 @@ int cmd_freeze(const argv_t &argv) {
       }
     }
     json["freeze"] = pkgs;
+    json["updated"] = baulk::time::TimeNow();
     auto jsontext = json.dump(4);
     if (!BaulkStore(jsontext, ec)) {
       bela::FPrintF(stderr, L"unable store baulk freeze package: %s\n",
@@ -108,6 +110,7 @@ int cmd_unfreeze(const argv_t &argv) {
       }
     }
     json["freeze"] = pkgs;
+    json["updated"] = baulk::time::TimeNow();
     auto jsontext = json.dump(4);
     if (!BaulkStore(jsontext, ec)) {
       bela::FPrintF(stderr, L"unable store baulk profile: %s\n", ec.message);
