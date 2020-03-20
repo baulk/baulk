@@ -24,9 +24,8 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   return true;
 }
 
-inline bool BaulkStore(nlohmann::json &json, bela::error_code &ec) {
-  auto msg = json.dump(4);
-  return baulk::io::WriteTextAtomic(json, baulk::BaulkProfile(), ec);
+inline bool BaulkStore(std::string_view jsontext, bela::error_code &ec) {
+  return baulk::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
 }
 
 int cmd_freeze(const argv_t &argv) {
@@ -40,12 +39,12 @@ int cmd_freeze(const argv_t &argv) {
     bela::FPrintF(stderr, L"unable load baulk profile: %s\n", ec.message);
     return 1;
   }
-  std::vector<std::string> pkg;
+  std::vector<std::string> pkgs;
   for (auto p : argv) {
-    pkg.emplace_back(bela::ToNarrow(p));
+    pkgs.emplace_back(bela::ToNarrow(p));
   }
   auto contains = [&](std::string_view p_) {
-    for (const auto &p : pkg) {
+    for (const auto &p : pkgs) {
       if (p == p_) {
         return true;
       }
@@ -58,12 +57,13 @@ int cmd_freeze(const argv_t &argv) {
       for (const auto &freeze : it.value()) {
         auto p = freeze.get<std::string_view>();
         if (!contains(p)) {
-          pkg.emplace_back(p);
+          pkgs.emplace_back(p);
         }
       }
     }
-    json["freeze"] = pkg;
-    if (!BaulkStore(json, ec)) {
+    json["freeze"] = pkgs;
+    auto jsontext = json.dump(4);
+    if (!BaulkStore(jsontext, ec)) {
       bela::FPrintF(stderr, L"unable store baulk freeze package: %s\n",
                     ec.message);
       return 1;
@@ -73,7 +73,7 @@ int cmd_freeze(const argv_t &argv) {
     return 1;
   }
   bela::FPrintF(stderr, L"baulk freeze package success, freezed: %d\n",
-                pkg.size());
+                pkgs.size());
   return 0;
 }
 int cmd_unfreeze(const argv_t &argv) {
@@ -96,19 +96,20 @@ int cmd_unfreeze(const argv_t &argv) {
     }
     return false;
   };
-  std::vector<std::string> pkg;
+  std::vector<std::string> pkgs;
   try {
     auto it = json.find("freeze");
     if (it != json.end()) {
       for (const auto &freeze : it.value()) {
         auto p = freeze.get<std::string_view>();
         if (!contains(p)) {
-          pkg.emplace_back(p);
+          pkgs.emplace_back(p);
         }
       }
     }
-    json["freeze"] = pkg;
-    if (!BaulkStore(json, ec)) {
+    json["freeze"] = pkgs;
+    auto jsontext = json.dump(4);
+    if (!BaulkStore(jsontext, ec)) {
       bela::FPrintF(stderr, L"unable store baulk profile: %s\n", ec.message);
       return 1;
     }
@@ -117,7 +118,7 @@ int cmd_unfreeze(const argv_t &argv) {
     return 1;
   }
   bela::FPrintF(stderr, L"baulk unfreeze package success, freezed: %d\n",
-                pkg.size());
+                pkgs.size());
   return 0;
 }
 
