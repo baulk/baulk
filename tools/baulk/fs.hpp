@@ -48,6 +48,7 @@ inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink,
 std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir);
 bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
                            bela::error_code &ec);
+std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec);
 } // namespace baulk::fs
 
 #endif

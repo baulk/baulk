@@ -14,6 +14,7 @@
 
 namespace fs = std::filesystem;
 bool IsDebugMode = false;
+// DbgPrint added newline
 template <typename... Args>
 bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
@@ -24,14 +25,22 @@ bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   str.append(L"\x1b[33m* ");
   bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
                                                  sizeof...(args));
-  str.append(L"\x1b[0m");
+  if (str.back() == '\n') {
+    str.pop_back();
+  }
+  str.append(L"\x1b[0m\n");
   return bela::FileWrite(stderr, str);
 }
 inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!IsDebugMode) {
     return 0;
   }
-  return bela::FileWrite(stderr, bela::StringCat(L"\x1b[33m", fmt, L"\x1b[0m"));
+  std::wstring_view msg(fmt);
+  if (!msg.empty() && msg.back() == '\n') {
+    msg.remove_suffix(1);
+  }
+  return bela::FileWrite(stderr,
+                         bela::StringCat(L"\x1b[33m", msg, L"\x1b[0m\n"));
 }
 
 bool IsSubsytemConsole(std::wstring_view exe) {
@@ -46,7 +55,7 @@ bool IsSubsytemConsole(std::wstring_view exe) {
 std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
                                           bela::error_code &ec) {
   // avoid commandline forged
-  constexpr std::wstring_view linkjsonfile = L"\\baulk.links.json";
+  constexpr std::wstring_view baulklinkmeta = L"\\baulk.linkmeta.json";
   auto exe = bela::Executable(ec); // GetModuleFileName
   if (!exe) {
     return std::nullopt;
@@ -54,11 +63,11 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
   fs::path p(*exe);
   auto launcher = p.filename().wstring();
   auto parent_path = p.parent_path();
-  auto linkjson = bela::StringCat(parent_path.wstring(), linkjsonfile);
+  auto linkmeta = bela::StringCat(parent_path.wstring(), baulklinkmeta);
   try {
     /* code */
     FILE *fd{nullptr};
-    if (auto eno = _wfopen_s(&fd, linkjson.data(), L"rb"); eno != 0) {
+    if (auto eno = _wfopen_s(&fd, linkmeta.data(), L"rb"); eno != 0) {
       ec = bela::make_stdc_error_code(eno);
       return std::nullopt;
     }

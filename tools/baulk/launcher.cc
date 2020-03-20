@@ -3,129 +3,13 @@
 #include <bela/finaly.hpp>
 #include <bela/path.hpp>
 #include <bela/pe.hpp>
-#include "baulk.hpp"
+#include "launcher.hpp"
 #include "fs.hpp"
 #include "rcwriter.hpp"
+#include "jsonex.hpp"
+#include "launcher.template.ipp"
 
 namespace baulk {
-// make launcher
-namespace internal {
-constexpr std::wstring_view consoletemplete = LR"(#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <winnt.h>
-inline constexpr size_t StringLength(const wchar_t *s) {
-  const wchar_t *a = s;
-  for (; *a != 0; a++) {
-    ;
-  }
-  return a - s;
-}
-inline void StringZero(wchar_t *p, size_t len) {
-  for (size_t i = 0; i < len; i++) {
-    p[i] = 0;
-  }
-}
-inline void *StringCopy(wchar_t *dest, const wchar_t *src, size_t n) {
-  auto d = dest;
-  for (; n; n--) {
-    *d++ = *src++;
-  }
-  return dest;
-}
-inline wchar_t *StringAllocate(size_t count) {
-  return reinterpret_cast<wchar_t *>(
-      HeapAlloc(GetProcessHeap(), 0, sizeof(wchar_t) * count));
-}
-inline wchar_t *StringDup(const wchar_t *s) {
-  auto l = StringLength(s);
-  auto ds = StringAllocate(l + 1);
-  StringCopy(ds, s, l);
-  ds[l] = 0;
-  return ds;
-}
-inline void StringFree(wchar_t *p) { HeapFree(GetProcessHeap(), 0, p); }
-int wmain() {
-  constexpr const wchar_t *target = L"$0";
-  STARTUPINFOW si;
-  PROCESS_INFORMATION pi;
-  SecureZeroMemory(&si, sizeof(si));
-  SecureZeroMemory(&pi, sizeof(pi));
-  si.cb = sizeof(si);
-  auto cmdline = StringDup(GetCommandLineW());
-  if (!CreateProcessW(target, cmdline, nullptr, nullptr, FALSE,
-                      CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si, &pi)) {
-    StringFree(cmdline);
-    return -1;
-  }
-  StringFree(cmdline);
-  CloseHandle(pi.hThread);
-  SetConsoleCtrlHandler(nullptr, TRUE);
-  WaitForSingleObject(pi.hProcess, INFINITE);
-  SetConsoleCtrlHandler(nullptr, FALSE);
-  DWORD exitCode;
-  GetExitCodeProcess(pi.hProcess, &exitCode);
-  CloseHandle(pi.hProcess);
-  return exitCode;
-}
-)";
-
-constexpr std::wstring_view windowstemplate = LR"(#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <cstddef>
-inline constexpr size_t StringLength(const wchar_t *s) {
-  const wchar_t *a = s;
-  for (; *a != 0; a++) {
-    ;
-  }
-  return a - s;
-}
-inline void StringZero(wchar_t *p, size_t len) {
-  for (size_t i = 0; i < len; i++) {
-    p[i] = 0;
-  }
-}
-inline void *StringCopy(wchar_t *dest, const wchar_t *src, size_t n) {
-  auto d = dest;
-  for (; n; n--) {
-    *d++ = *src++;
-  }
-  return dest;
-}
-inline wchar_t *StringAllocate(size_t count) {
-  return reinterpret_cast<wchar_t *>(
-      HeapAlloc(GetProcessHeap(), 0, sizeof(wchar_t) * count));
-}
-inline wchar_t *StringDup(const wchar_t *s) {
-  auto l = StringLength(s);
-  auto ds = StringAllocate(l + 1);
-  StringCopy(ds, s, l);
-  ds[l] = 0;
-  return ds;
-}
-inline void StringFree(wchar_t *p) { HeapFree(GetProcessHeap(), 0, p); }
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
-  constexpr const wchar_t *target = L"$0";
-  STARTUPINFOW si;
-  PROCESS_INFORMATION pi;
-  SecureZeroMemory(&si, sizeof(si));
-  SecureZeroMemory(&pi, sizeof(pi));
-  si.cb = sizeof(si);
-  auto cmdline = StringDup(GetCommandLineW());
-  if (!CreateProcessW(target, cmdline, nullptr, nullptr, FALSE,
-                      CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si, &pi)) {
-    StringFree(cmdline);
-    return -1;
-  }
-  StringFree(cmdline);
-  CloseHandle(pi.hThread);
-  CloseHandle(pi.hProcess);
-  return 0;
-}
-)";
-
-constexpr std::wstring_view batchtemplate = LR"(@echo off
-baulk exec "$0" %*)";
-} // namespace internal
 
 // GenerateLinkSource generate link sources
 std::wstring GenerateLinkSource(std::wstring_view target,
@@ -140,9 +24,9 @@ std::wstring GenerateLinkSource(std::wstring_view target,
     escapetarget.push_back(c);
   }
   if (subs == bela::pe::Subsystem::CUI) {
-    return bela::Substitute(internal::consoletemplete, escapetarget);
+    return bela::Substitute(launcher_internal::consoletemplete, escapetarget);
   }
-  return bela::Substitute(internal::windowstemplate, escapetarget);
+  return bela::Substitute(launcher_internal::windowstemplate, escapetarget);
 }
 
 class LinkExecutor {
@@ -166,35 +50,12 @@ private:
   std::vector<std::wstring> linkexes;
 };
 
-std::wstring MakeTempDir(bela::error_code ec) {
-  std::error_code e;
-  auto tmppath = std::filesystem::temp_directory_path(e);
-  if (e) {
-    ec = bela::from_std_error_code(e);
-    return L"";
-  }
-  auto tmpdir = tmppath.wstring();
-  auto len = tmpdir.size();
-  wchar_t X = 'A';
-  bela::AlphaNum an(GetCurrentThreadId());
-  for (wchar_t X = 'A'; X < 'Z'; X++) {
-    bela::StrAppend(&tmpdir, L"\\BaulkTemp", X, an);
-    if (std::filesystem::exists(tmpdir, e)) {
-      return tmpdir;
-    }
-    tmpdir.resize(len);
-  }
-  ec = bela::make_error_code(1, L"cannot create tempdir");
-  return L"";
-}
-
 bool LinkExecutor::Initialize(bela::error_code &ec) {
-  if (baulktemp = MakeTempDir(ec); baulktemp.empty()) {
+  auto bktemp = baulk::fs::BaulkMakeTempDir(ec);
+  if (!bktemp) {
     return false;
   }
-  if (!baulk::fs::MakeDir(baulktemp, ec)) {
-    return false;
-  }
+  baulktemp.assign(std::move(*bktemp));
   return true;
 }
 
@@ -213,7 +74,7 @@ inline std::wstring_view StripExtension(std::wstring_view filename) {
   return filename.substr(0, pos);
 }
 
-inline void StringIgnoreEmpty(std::wstring &s, std::wstring_view d) {
+inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
   if (s.empty()) {
     s = d;
   }
@@ -248,12 +109,12 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     if (vi->CompanyName.empty()) {
       vi->CompanyName = bela::StringCat(pkg.name, L" contributors");
     }
-    StringIgnoreEmpty(vi->FileDescription, pkg.description);
-    StringIgnoreEmpty(vi->FileVersion, pkg.version);
-    StringIgnoreEmpty(vi->ProductVersion, pkg.version);
-    StringIgnoreEmpty(vi->ProductName, pkg.name);
-    StringIgnoreEmpty(vi->OriginalFileName, exename);
-    StringIgnoreEmpty(vi->InternalName, exename);
+    StringNonEmpty(vi->FileDescription, pkg.description);
+    StringNonEmpty(vi->FileVersion, pkg.version);
+    StringNonEmpty(vi->ProductVersion, pkg.version);
+    StringNonEmpty(vi->ProductName, pkg.name);
+    StringNonEmpty(vi->OriginalFileName, exename);
+    StringNonEmpty(vi->InternalName, exename);
     rcwrited = w.WriteVersion(*vi, rcsrc, ec);
   } else {
     bela::pe::VersionInfo nvi;
@@ -319,8 +180,8 @@ bool MakeSimulatedLauncher(std::wstring_view root, const baulk::Package &pkg,
 
 bool MakeLaunchers(std::wstring_view root, const baulk::Package &pkg,
                    bool forceoverwrite, bela::error_code &ec) {
-  auto pkgroot = bela::StringCat(root, L"bin\\pkg\\", pkg.name);
-  auto linkdir = bela::StringCat(root, L"bin\\.linked");
+  auto pkgroot = bela::StringCat(root, L"\\", BaulkPkgsDir, L"\\", pkg.name);
+  auto linkdir = bela::StringCat(root, L"\\", BaulkLinkDir);
   LinkExecutor executor;
   if (!executor.Initialize(ec)) {
     return false;
@@ -338,12 +199,12 @@ bool MakeLaunchers(std::wstring_view root, const baulk::Package &pkg,
 // create symlink
 bool MakeSymlinks(std::wstring_view root, const baulk::Package &pkg,
                   bool forceoverwrite, bela::error_code &ec) {
-  auto pkgroot = bela::StringCat(root, L"\\bin\\pkg\\", pkg.name);
-  auto linked = bela::StringCat(root, L"\\bin\\pkg\\.linked\\");
+  auto pkgroot = bela::StringCat(root, L"\\", BaulkPkgsDir, L"\\", pkg.name);
+  auto linkdir = bela::StringCat(root, L"\\", BaulkLinkDir);
   for (const auto &lnk : pkg.links) {
     auto src = bela::PathCat(pkgroot, lnk);
     auto fn = baulk::fs::FileName(src);
-    auto lnk = bela::StringCat(linked, fn);
+    auto lnk = bela::StringCat(linkdir, L"\\", fn);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         baulk::fs::PathRemove(lnk, ec);

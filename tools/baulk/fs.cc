@@ -144,4 +144,27 @@ bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
   return true;
 }
 
+std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
+  std::error_code e;
+  auto tmppath = std::filesystem::temp_directory_path(e);
+  if (e) {
+    ec = bela::from_std_error_code(e);
+    return std::nullopt;
+  }
+  auto tmpdir = tmppath.wstring();
+  auto len = tmpdir.size();
+  wchar_t X = 'A';
+  bela::AlphaNum an(GetCurrentThreadId());
+  for (wchar_t X = 'A'; X < 'Z'; X++) {
+    bela::StrAppend(&tmpdir, L"\\BaulkTemp", X, an);
+    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) &&
+        baulk::fs::MakeDir(tmpdir, ec)) {
+      return std::make_optional(std::move(tmpdir));
+    }
+    tmpdir.resize(len);
+  }
+  ec = bela::make_error_code(1, L"cannot create tempdir");
+  return std::nullopt;
+}
+
 } // namespace baulk::fs

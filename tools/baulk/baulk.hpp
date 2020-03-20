@@ -10,7 +10,7 @@ extern bool IsDebugMode;
 extern bool IsForceMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
-// DbgPrint added endline
+// DbgPrint added newline
 template <typename... Args>
 bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
@@ -66,6 +66,8 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
       stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
+/// defines
+
 struct Bucket {
   Bucket() = default;
   Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u) {
@@ -100,8 +102,6 @@ struct Package {
   std::vector<std::wstring> links;
   std::vector<std::wstring> launchers;
 };
-bool MakeLinks(std::wstring_view root, const baulk::Package &pkg,
-               bool forceoverwrite, bela::error_code &ec);
 } // namespace baulk
 
 #endif
