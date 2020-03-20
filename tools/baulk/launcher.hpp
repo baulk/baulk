@@ -10,8 +10,9 @@ namespace baulk {
 [[maybe_unused]] constexpr std::wstring_view BaulkLinkMeta =
     L"bin\\linkbin\\baulk.linkmeta.json";
 
-bool MakeLinks(std::wstring_view root, const baulk::Package &pkg,
-               bool forceoverwrite, bela::error_code &ec);
+bool BaulkMakePkgLinks(const baulk::Package &pkg, bool forceoverwrite,
+                  bela::error_code &ec);
+bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec);
 } // namespace baulk
 
 #endif
