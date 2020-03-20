@@ -128,4 +128,26 @@ bool WriteText(std::string_view text, std::wstring_view file,
   return size == 0;
 }
 
+bool WriteTextAtomic(std::string_view text, std::wstring_view file,
+                     bela::error_code &ec) {
+  auto lock = bela::StringCat(file, L".lock");
+  if (!WriteText(text, lock, ec)) {
+    DeleteFileW(lock.data());
+    return false;
+  }
+  auto old = bela::StringCat(file, L".old");
+  if (MoveFileW(file.data(), old.data()) != TRUE) {
+    ec = bela::make_system_error_code();
+    DeleteFileW(lock.data());
+    return false;
+  }
+  if (MoveFileW(lock.data(), file.data()) != TRUE) {
+    ec = bela::make_system_error_code();
+    MoveFileW(old.data(), file.data());
+    return false;
+  }
+  DeleteFileW(old.data());
+  return true;
+}
+
 } // namespace baulk::io

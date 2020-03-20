@@ -17,6 +17,8 @@ bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
                     bela::error_code &ec);
 bool WriteText(std::string_view text, std::wstring_view file,
                bela::error_code &ec);
+bool WriteTextAtomic(std::string_view text, std::wstring_view file,
+                     bela::error_code &ec);
 inline bool WriteText(std::wstring_view text, std::wstring_view file,
                       bela::error_code &ec) {
   return WriteText(bela::ToNarrow(text), file, ec);

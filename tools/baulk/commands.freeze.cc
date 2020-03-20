@@ -4,6 +4,7 @@
 #include "fs.hpp"
 #include "baulk.hpp"
 #include "jsonex.hpp"
+#include "io.hpp"
 
 namespace baulk::commands {
 
@@ -23,35 +24,9 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   return true;
 }
 
-bool BaulkStore(nlohmann::json &json, bela::error_code &ec) {
-  FILE *fd = nullptr;
-  auto lock = bela::StringCat(baulk::BaulkProfile(), L".lock");
-  if (auto eo = _wfopen_s(&fd, lock.data(), L"a"); eo != 0) {
-    ec = bela::make_stdc_error_code(eo);
-    return false;
-  }
+inline bool BaulkStore(nlohmann::json &json, bela::error_code &ec) {
   auto msg = json.dump(4);
-  auto wlen = fwrite(msg.data(), 1, msg.size(), fd);
-  fclose(fd);
-  if (wlen != msg.size()) {
-    bela::make_error_code(1, L"write file failed, length ", msg.size(),
-                          L" fwrite return ", wlen);
-    DeleteFileW(lock.data());
-    return false;
-  }
-  auto old = bela::StringCat(baulk::BaulkProfile(), L".old");
-  if (MoveFileW(baulk::BaulkProfile().data(), old.data()) != TRUE) {
-    ec = bela::make_system_error_code();
-    DeleteFileW(lock.data());
-    return false;
-  }
-  if (MoveFileW(lock.data(), baulk::BaulkProfile().data()) != TRUE) {
-    ec = bela::make_system_error_code();
-    MoveFileW(old.data(), baulk::BaulkProfile().data());
-    return false;
-  }
-  DeleteFileW(old.data());
-  return true;
+  return baulk::io::WriteTextAtomic(json, baulk::BaulkProfile(), ec);
 }
 
 int cmd_freeze(const argv_t &argv) {

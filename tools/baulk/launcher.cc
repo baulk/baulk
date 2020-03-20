@@ -11,6 +11,52 @@
 
 namespace baulk {
 
+struct LinkMeta {
+  std::string exe;
+  std::string meta;
+};
+
+bool BaulkLinkMetaStore(const std::vector<LinkMeta> metas,
+                        bela::error_code &ec) {
+  if (metas.empty()) {
+    return true;
+  }
+  auto linkmeta =
+      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkLinkMeta);
+  nlohmann::json obj;
+  [&]() {
+    FILE *fd = nullptr;
+    if (auto eo = _wfopen_s(&fd, linkmeta.data(), L"rb"); eo != 0) {
+      return;
+    }
+    auto closer = bela::finally([&] { fclose(fd); });
+    try {
+      obj = nlohmann::json::parse(fd);
+    } catch (const std::exception &) {
+    }
+  }();
+  std::string newjson;
+  try {
+    auto links = obj.find("links");
+    nlohmann::json linkobj;
+    if (links != obj.end()) {
+      linkobj = links.value();
+    }
+    for (const auto &lm : metas) {
+      linkobj[lm.exe] = lm.meta;
+    }
+    obj["links"] = linkobj;
+    newjson = obj.dump(4);
+  } catch (const std::exception &e) {
+    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    return false;
+  }
+  if (newjson.empty()) {
+    return true;
+  }
+  return baulk::io::WriteTextAtomic(newjson, linkmeta, ec);
+}
+
 // GenerateLinkSource generate link sources
 std::wstring GenerateLinkSource(std::wstring_view target,
                                 bela::pe::Subsystem subs) {
