@@ -1,8 +1,8 @@
 #include <bela/pe.hpp>
 #include <bela/subsitute.hpp>
 #include <bela/stdwriter.hpp>
+#include <bela/io.hpp>
 #include <cstdio>
-#include "../tools/baulk/io.cc"
 
 namespace baulk {
 //
@@ -171,13 +171,13 @@ int wmain(int argc, wchar_t **argv) {
   auto s2 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::GUI);
   auto s3 = baulk::GenerateBatLinkSource(argv[1], bela::pe::Subsystem::GUI);
   bela::error_code ec;
-  if (!baulk::io::WriteText(s1, L"genfile_console.cc", ec)) {
+  if (!bela::io::WriteText(s1, L"genfile_console.cc", ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
   }
-  if (!baulk::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
+  if (!bela::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
   }
-  if (!baulk::io::WriteText(s3, L"genfile.bat", ec)) {
+  if (!bela::io::WriteText(s3, L"genfile.bat", ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
   }
   return 0;

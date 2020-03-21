@@ -6,10 +6,11 @@
 #include <bela/narrow/strcat.hpp>
 #include <bela/io.hpp>
 #include <time.hpp>
+#include <jsonex.hpp>
 #include "launcher.hpp"
 #include "fs.hpp"
 #include "rcwriter.hpp"
-#include "jsonex.hpp"
+
 #include "launcher.template.ipp"
 
 namespace baulk {

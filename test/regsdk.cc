@@ -1,11 +1,10 @@
 //
 #include <bela/stdwriter.hpp>
-#include "../tools/baulk/regutils.hpp"
-#include "../tools/baulk/jsonex.hpp"
+#include <bela/io.hpp>
 #include <bela/match.hpp>
 #include <filesystem>
-//
-#include "../tools/baulk/io.hpp"
+#include <regutils.hpp>
+#include <jsonex.hpp>
 
 bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
                       std::wstring &sdkversion) {
@@ -25,7 +24,7 @@ std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
                                                    bela::error_code &ec) {
   auto file = bela::StringCat(
       vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
-  auto line = baulk::io::ReadLine(file, ec);
+  auto line = bela::io::ReadLine(file, ec);
   if (!line) {
     return std::nullopt;
   }

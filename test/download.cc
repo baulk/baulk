@@ -1,6 +1,6 @@
 /// baulk download utils
 //
-#include "../tools/baulk/process.cc"
+#include <bela/process.hpp>
 #include <bela/path.hpp>
 
 namespace baulk::net {
@@ -11,7 +11,7 @@ bool CURLGet(std::wstring_view url, std::wstring_view dest,
   if (!bela::ExecutableExistsInPath(L"curl.exe", curlexe)) {
     return false;
   }
-  Process p;
+  bela::process::Process p;
   auto exitcode = p.Execute(curlexe, L"-A=Wget/5.0 (Baulk)", L"--progress-bar",
                             L"-fS", L"--connect-timeout", L"15", L"--retry",
                             L"3", L"-o", dest, L"-L", url);
@@ -28,7 +28,7 @@ bool WebGet(std::wstring_view url, std::wstring_view dest,
   if (!bela::ExecutableExistsInPath(L"wget.exe", wgetexe)) {
     return false;
   }
-  Process p;
+  bela::process::Process p;
   auto exitcode = p.Execute(wgetexe, url, L"-O", dest);
   if (exitcode != 0) {
     ec = bela::make_error_code(-1, L"wget exit code: ", exitcode);
