@@ -46,31 +46,26 @@ struct VisualStudioInstance {
   }
 };
 
-std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
-                                                   bela::error_code &ec) {
+inline std::optional<std::wstring>
+LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
   auto file = bela::StringCat(
       vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
-  auto line = bela::io::ReadLine(file, ec);
-  if (!line) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(*line));
+  return bela::io::ReadLine(file, ec);
 }
 
 // const fs::path vswhere_exe = program_files_32_bit / "Microsoft Visual Studio"
 // / "Installer" / "vswhere.exe";
-
 std::optional<std::wstring> LookupVsWhere() {
-  auto vswhere_exe =
-      bela::StringCat(bela::GetEnv(L"ProgramFiles(x86)"),
-                      L"/Microsoft Visual Studio/Installer/vswhere.exe");
-  if (bela::PathExists(vswhere_exe)) {
+  constexpr std::wstring_view relativevswhere =
+      L"/Microsoft Visual Studio/Installer/vswhere.exe";
+  if (auto vswhere_exe =
+          bela::StringCat(bela::GetEnv(L"ProgramFiles(x86)"), relativevswhere);
+      bela::PathExists(vswhere_exe)) {
     return std::make_optional(std::move(vswhere_exe));
   }
-  vswhere_exe =
-      bela::StringCat(bela::GetEnv(L"ProgramFiles"),
-                      L"/Microsoft Visual Studio/Installer/vswhere.exe");
-  if (bela::PathExists(vswhere_exe)) {
+  if (auto vswhere_exe =
+          bela::StringCat(bela::GetEnv(L"ProgramFiles"), relativevswhere);
+      bela::PathExists(vswhere_exe)) {
     return std::make_optional(std::move(vswhere_exe));
   }
   return std::nullopt;
