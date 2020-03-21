@@ -1,11 +1,12 @@
 #include <bela/env.hpp>
 #include <bela/path.hpp>
 #include <bela/io.hpp>
+#include <regutils.hpp>
 #include "compiler.hpp"
 #include "baulk.hpp"
 #include "fs.hpp"
 #include "jsonex.hpp"
-#include "regutils.hpp"
+
 
 // C:\Program Files (x86)\Microsoft Visual
 // Studio\2019\Community\VC\Auxiliary\Build
