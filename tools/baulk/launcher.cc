@@ -4,6 +4,7 @@
 #include <bela/path.hpp>
 #include <bela/pe.hpp>
 #include <bela/narrow/strcat.hpp>
+#include <bela/io.hpp>
 #include <time.hpp>
 #include "launcher.hpp"
 #include "fs.hpp"
@@ -62,7 +63,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> metas, const Package &pkg,
   if (newjson.empty()) {
     return true;
   }
-  return baulk::io::WriteTextAtomic(newjson, linkmeta, ec);
+  return bela::io::WriteTextAtomic(newjson, linkmeta, ec);
 }
 
 bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
@@ -118,7 +119,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
   if (newjson.empty()) {
     return true;
   }
-  return baulk::io::WriteTextAtomic(newjson, linkmeta, ec);
+  return bela::io::WriteTextAtomic(newjson, linkmeta, ec);
 }
 
 // GenerateLinkSource generate link sources
@@ -212,8 +213,8 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
   auto cxxsrc = bela::StringCat(baulktemp, L"\\", cxxsrcname);
   auto rcsrcname = bela::StringCat(name, L".rc");
   auto rcsrc = bela::StringCat(baulktemp, L"\\", rcsrcname);
-  if (baulk::io::WriteText(GenerateLinkSource(source, pe->subsystem), cxxsrc,
-                           ec)) {
+  if (bela::io::WriteText(GenerateLinkSource(source, pe->subsystem), cxxsrc,
+                          ec)) {
     return false;
   }
   bool rcwrited = false;

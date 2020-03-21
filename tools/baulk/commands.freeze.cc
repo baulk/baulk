@@ -1,11 +1,11 @@
 #include <bela/stdwriter.hpp>
 #include <bela/finaly.hpp>
+#include <bela/io.hpp>
 #include <time.hpp>
 #include "commands.hpp"
 #include "fs.hpp"
 #include "baulk.hpp"
 #include "jsonex.hpp"
-#include "io.hpp"
 
 namespace baulk::commands {
 
@@ -26,7 +26,7 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
 }
 
 inline bool BaulkStore(std::string_view jsontext, bela::error_code &ec) {
-  return baulk::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
+  return bela::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
 }
 
 int cmd_freeze(const argv_t &argv) {

@@ -1,11 +1,11 @@
 #include <bela/env.hpp>
 #include <bela/path.hpp>
+#include <bela/io.hpp>
 #include "compiler.hpp"
 #include "baulk.hpp"
 #include "fs.hpp"
 #include "jsonex.hpp"
 #include "regutils.hpp"
-#include "io.hpp"
 
 // C:\Program Files (x86)\Microsoft Visual
 // Studio\2019\Community\VC\Auxiliary\Build
@@ -51,7 +51,7 @@ std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
                                                    bela::error_code &ec) {
   auto file = bela::StringCat(
       vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
-  auto line = baulk::io::ReadLine(file, ec);
+  auto line = bela::io::ReadLine(file, ec);
   if (!line) {
     return std::nullopt;
   }
@@ -84,9 +84,9 @@ LookupVisualStudioInstance(bela::error_code &ec) {
     ec = bela::make_error_code(-1, L"vswhere not installed");
     return std::nullopt;
   }
-  baulk::ProcessCapture process;
+  bela::process::Process process;
   // Force -utf8 convert to UTF8
-  if (process.Execute(*vswhere_exe, L"-format", L"json", L"-utf8") != 0) {
+  if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8") != 0) {
     if (ec = process.ErrorCode(); !ec) {
       ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ",
                                  process.ExitCode());

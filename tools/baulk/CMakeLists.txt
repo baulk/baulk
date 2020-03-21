@@ -20,11 +20,9 @@ add_executable(
   decompress.cc
   fs.cc
   hash.cc
-  io.cc
   launcher.cc
   msi.cc
   net.cc
-  process.cc
   zip.cc
   baulk.rc
   baulk.manifest)

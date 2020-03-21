@@ -1,7 +1,7 @@
 //
 #ifndef BAULK_COMPILER_HPP
 #define BAULK_COMPILER_HPP
-#include "process.hpp"
+#include <bela/process.hpp>
 
 namespace baulk::compiler {
 class Executor {
@@ -14,7 +14,7 @@ public:
   int Execute(std::wstring_view cwd, std::wstring_view cmd, Args... args) {
     ec.message.clear();
     ec.code = 0;
-    baulk::Process process;
+    bela::process::Process process;
     process.SetEnvStrings(env);
     if (!cwd.empty()) {
       process.Chdir(cwd);

@@ -1,6 +1,6 @@
 //
 #include <bela/path.hpp>
-#include "process.hpp"
+#include <bela/process.hpp>
 #include "fs.hpp"
 
 namespace baulk::sevenzip {
@@ -29,7 +29,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
     ec = bela::make_error_code(ERROR_NOT_FOUND, L" 7z not install");
     return false;
   }
-  baulk::Process process;
+  bela::process::Process process;
   if (process.Execute(*s7z, L"e", L"-spf", L"-y", src,
                       bela::StringCat(L"-o", outdir)) != 0) {
     ec = process.ErrorCode();

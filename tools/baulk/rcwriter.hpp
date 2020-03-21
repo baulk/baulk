@@ -6,7 +6,7 @@
 #include <bela/str_split.hpp>
 #include <bela/str_replace.hpp>
 #include <bela/pe.hpp>
-#include "io.hpp"
+#include <bela/io.hpp>
 
 namespace baulk::rc {
 
@@ -102,7 +102,7 @@ public:
     Version(L"ProductName", vi.ProductName);
     Version(L"ProductVersion", vi.ProductVersion);
     AfterVersion();
-    return baulk::io::WriteText(buffer, file, ec);
+    return bela::io::WriteText(buffer, file, ec);
   }
 
 private:

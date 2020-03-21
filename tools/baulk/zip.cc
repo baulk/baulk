@@ -1,7 +1,7 @@
 ///
 #include <bela/base.hpp>
 #include <bela/path.hpp>
-#include "process.hpp"
+#include <bela/process.hpp>
 #include "fs.hpp"
 
 namespace baulk::zip {
@@ -25,7 +25,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
   }
   auto command = bela::StringCat(L"Expand-Archive -Path \"", src,
                                  L"\" -DestinationPath \"", outdir, L"\"");
-  baulk::Process process;
+  bela::process::Process process;
   if (process.Execute(*pwsh, L"-Command", command) != 0) {
     ec = process.ErrorCode();
     return false;

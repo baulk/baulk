@@ -10,7 +10,6 @@
 #include "baulk.hpp"
 #include "indicators.hpp"
 #include "net.hpp"
-#include "io.hpp"
 
 namespace baulk::net {
 inline void Free(HINTERNET &h) {
@@ -18,6 +17,72 @@ inline void Free(HINTERNET &h) {
     WinHttpCloseHandle(h);
   }
 }
+
+class FilePart {
+public:
+  FilePart() noexcept = default;
+  FilePart(const FilePart &) = delete;
+  FilePart &operator=(const FilePart &) = delete;
+  FilePart(FilePart &&o) noexcept { transfer_ownership(std::move(o)); }
+  FilePart &operator=(FilePart &&o) noexcept {
+    transfer_ownership(std::move(o));
+    return *this;
+  }
+  ~FilePart() noexcept { rollback(); }
+
+  bool Finish() {
+    if (FileHandle == INVALID_HANDLE_VALUE) {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return false;
+    }
+    CloseHandle(FileHandle);
+    FileHandle = INVALID_HANDLE_VALUE;
+    auto part = bela::StringCat(path, L".part");
+    return (MoveFileW(part.data(), path.data()) == TRUE);
+  }
+  bool Write(const char *data, DWORD len) {
+    DWORD dwlen = 0;
+    if (WriteFile(FileHandle, data, len, &dwlen, nullptr) != TRUE) {
+      return false;
+    }
+    return len == dwlen;
+  }
+  static std::optional<FilePart> MakeFilePart(std::wstring_view p,
+                                              bela::error_code &ec) {
+    FilePart file;
+    file.path = bela::PathAbsolute(p); // Path cleanup
+    auto part = bela::StringCat(file.path, L".part");
+    file.FileHandle = ::CreateFileW(
+        part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
+        nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file.FileHandle == INVALID_HANDLE_VALUE) {
+      ec = bela::make_system_error_code();
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(file));
+  }
+
+private:
+  HANDLE FileHandle{INVALID_HANDLE_VALUE};
+  std::wstring path;
+  void transfer_ownership(FilePart &&other) {
+    if (FileHandle != INVALID_HANDLE_VALUE) {
+      CloseHandle(FileHandle);
+    }
+    FileHandle = other.FileHandle;
+    other.FileHandle = INVALID_HANDLE_VALUE;
+    path = other.path;
+    other.path.clear();
+  }
+  void rollback() noexcept {
+    if (FileHandle != INVALID_HANDLE_VALUE) {
+      CloseHandle(FileHandle);
+      FileHandle = INVALID_HANDLE_VALUE;
+      auto part = bela::StringCat(path, L".part");
+      DeleteFileW(part.data());
+    }
+  }
+};
 
 struct UrlComponets {
   std::wstring host;
@@ -330,7 +395,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   DWORD dwSize = 0;
   std::vector<char> buf;
   buf.reserve(64 * 1024);
-  auto file = baulk::io::FilePart::MakeFilePart(dest, ec);
+  auto file = FilePart::MakeFilePart(dest, ec);
   bar.FileName(uc.filename);
   bar.Execute();
   auto finish = bela::finally([&] {

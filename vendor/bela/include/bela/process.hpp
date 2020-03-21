@@ -17,6 +17,10 @@ public:
   Process() = default;
   Process(const Process &) = delete;
   Process &operator=(const Process &) = delete;
+  Process &Chdir(std::wstring_view dir) {
+    cwd = dir;
+    return *this;
+  }
   Process &SetEnv(std::wstring_view key, std::wstring_view val,
                   bool force = false) {
     de.SetEnv(key, val, force);
