@@ -1,12 +1,14 @@
 # bela win libaray
 
 add_library(belawin STATIC
+  appexeclink.cc
   env.cc
+  io.cc
   path.cc
+  peimage.cc
+  process.cc
   realpath.cc
   reparsepoint.cc
-  appexeclink.cc
-  peimage.cc
   version.cc
 )
 
