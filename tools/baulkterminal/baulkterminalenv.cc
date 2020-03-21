@@ -1,15 +1,13 @@
-#include <bela/env.hpp>
-#include <bela/path.hpp>
+/// baulk terminal vsenv initialize
 #include <bela/io.hpp>
+#include <bela/process.hpp> // run vswhere
+#include <bela/path.hpp>
+#include <filesystem>
 #include <regutils.hpp>
 #include <jsonex.hpp>
-#include "compiler.hpp"
-#include "baulk.hpp"
-#include "fs.hpp"
+#include "baulkterminal.hpp"
 
-// C:\Program Files (x86)\Microsoft Visual
-// Studio\2019\Community\VC\Auxiliary\Build
-namespace baulk::compiler {
+namespace baulkterminal {
 #ifdef _M_X64
 // Always build x64 binary
 [[maybe_unused]] constexpr std::wstring_view arch = L"x64"; // Hostx64 x64
@@ -157,6 +155,19 @@ bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
   return true;
 }
 
+bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
+                      std::wstring &sdkversion) {
+  auto dir = bela::StringCat(sdkroot, L"\\Include");
+  for (auto &p : std::filesystem::directory_iterator(dir)) {
+    auto filename = p.path().filename().wstring();
+    if (bela::StartsWith(filename, sdkver)) {
+      sdkversion = filename;
+      return true;
+    }
+  }
+  return true;
+}
+
 bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   auto winsdk = baulk::regutils::LookupWindowsSDK(ec);
   if (!winsdk) {
@@ -168,8 +179,6 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s",
-                  winsdk->ProductVersion, winsdk->InstallationFolder);
   constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt",
                                         L"\\shared", L"\\winrt"};
   for (auto i : incs) {
@@ -198,13 +207,10 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
     // Visual Studio not install
     return false;
   }
-  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s",
-                  vsi->installationVersion, vsi->installationPath);
   auto vcver = LookupVisualCppVersion(vsi->installationPath, ec);
   if (!vcver) {
     return false;
   }
-  baulk::DbgPrint(L"Visual C++ %s", *vcver);
   // Libs
   JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\ATLMFC\include)");
@@ -239,18 +245,9 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   return true;
 }
 
-// $installationPath/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt
-
-bool Executor::Initialize(bela::error_code &ec) {
-  Searcher searcher;
-  if (!searcher.InitializeVisualStudioEnv(ec)) {
-    return false;
-  }
-  if (!searcher.InitializeWindowsKitEnv(ec)) {
-    return false;
-  }
-  env = searcher.CleanupEnv();
-  initialized = true;
-  return true;
+std::optional<std::wstring> MakeEnv(bool usevs) {
+  //
+  return std::nullopt;
 }
-} // namespace baulk::compiler
+
+} // namespace baulkterminal
