@@ -31,13 +31,13 @@ struct VisualStudioInstance {
         ec = bela::make_error_code(1, L"empty visual studio instance");
         return false;
       }
-      auto &j = j0[0];
-      baulk::json::BindTo(j, "installationPath", installationPath);
-      baulk::json::BindTo(j, "installationVersion", installationVersion);
-      baulk::json::BindTo(j, "instanceId", instanceId);
-      baulk::json::BindTo(j, "productId", productId);
-      baulk::json::BindTo(j, "isLaunchable", isLaunchable);
-      baulk::json::BindTo(j, "isLaunchable", isLaunchable);
+      baulk::json::JsonAssignor ja(j0[0]);
+      installationPath = ja.get("installationPath");
+      installationVersion = ja.get("installationVersion");
+      instanceId = ja.get("instanceId");
+      productId = ja.get("productId");
+      isLaunchable = ja.boolean("isLaunchable");
+      isPrerelease = ja.boolean("isPrerelease");
     } catch (const std::exception &e) {
       ec = bela::make_error_code(1, bela::ToWide(e.what()));
       return false;

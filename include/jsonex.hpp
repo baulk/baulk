@@ -6,32 +6,34 @@
 
 namespace baulk::json {
 //
-inline bool BindTo(nlohmann::json &j, std::string_view name,
-                   std::wstring &out) {
-  if (auto it = j.find(name); it != j.end()) {
-    out = bela::ToWide(it->get_ref<const std::string &>());
-    return true;
+class JsonAssignor {
+public:
+  JsonAssignor(const nlohmann::json &obj_) : obj(obj_) {}
+  JsonAssignor(const JsonAssignor &) = delete;
+  JsonAssignor &operator=(const JsonAssignor &) = delete;
+  std::wstring get(std::string_view name, std::wstring_view dv = L"") {
+    if (auto it = obj.find(name); it != obj.end()) {
+      return bela::ToWide(it->get_ref<const std::string &>());
+    }
+    return std::wstring(dv);
   }
-  return false;
-}
-
-inline bool BindTo(nlohmann::json &j, std::string_view name, bool &b) {
-  if (auto it = j.find(name); it != j.end()) {
-    b = it->get<bool>();
-    return true;
+  template <typename Integer>
+  Integer integer(std::string_view name, const Integer dv) {
+    if (auto it = obj.find(name); it != obj.end()) {
+      return it->get<Integer>();
+    }
+    return dv;
   }
-  return false;
-}
-
-template <typename Integer>
-inline Integer Acquire(nlohmann::json &j, std::string_view name,
-                       const Integer di) {
-  if (auto it = j.find(name); it != j.end()) {
-    return it->get<Integer>();
+  bool boolean(std::string_view name, bool dv = false) {
+    if (auto it = obj.find(name); it != obj.end()) {
+      return it->get<bool>();
+    }
+    return dv;
   }
-  return di;
-}
 
+private:
+  const nlohmann::json &obj;
+};
 } // namespace baulk::json
 
 #endif
