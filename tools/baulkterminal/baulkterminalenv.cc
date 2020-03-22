@@ -210,6 +210,13 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", arch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\",
           arch);
+#ifdef _M_X64
+  JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"),
+          LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
+#else
+  JoinEnv(paths, bela::GetEnv(L"ProgramFiles"),
+          LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\)");
+#endif
   // LIBPATHS
   auto unionmetadata = bela::StringCat(winsdk->InstallationFolder,
                                        L"\\UnionMetadata\\", sdkversion);
@@ -224,6 +231,18 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   dev.SetEnv(L"WindowsLibPath",
              bela::env::JoinEnv({unionmetadata, references}));
   dev.SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
+
+  // ExtensionSdkDir
+  if (auto ExtensionSdkDir = bela::ExpandEnv(
+          LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
+      bela::PathExists(ExtensionSdkDir)) {
+    dev.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
+  } else if (
+      auto ExtensionSdkDir = bela::ExpandEnv(
+          LR"(%ProgramFiles(x86)%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
+      bela::PathExists(ExtensionSdkDir)) {
+    dev.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
+  }
   return true;
 }
 
@@ -258,8 +277,15 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\bin\Host)", arch, L"\\", arch);
   // IDE tools
+  JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\VC\VCPackages)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\Tools)");
+// Performance Tools
+#ifdef _M_X64
+  JoinEnv(paths, vsi->installationPath, LR"(Team Tools\Performance Tools\x64)");
+#endif
+  JoinEnv(paths, vsi->installationPath, LR"(Team Tools\Performance Tools)");
+  //
   // Extension
   JoinEnv(paths, vsi->installationPath,
           LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
@@ -282,6 +308,11 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
           LR"(\lib\)", arch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\lib\x86\store\references)");
+  auto ifcpath = bela::StringCat(vsi->installationPath, LR"(\VC\Tools\MSVC\)",
+                                 *vcver, LR"(\ifc\)", arch);
+  if (bela::PathExists(ifcpath)) {
+    dev.SetEnv(L"IFCPATH", ifcpath);
+  }
   dev.SetEnv(L"VCIDEInstallDir",
              bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
   return true;
