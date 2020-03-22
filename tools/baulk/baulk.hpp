@@ -78,7 +78,6 @@ struct Bucket {
   std::wstring description;
   std::wstring name;
   std::wstring url;
-  std::wstring latest;
 };
 using Buckets = std::vector<Bucket>;
 
