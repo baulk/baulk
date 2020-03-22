@@ -18,6 +18,17 @@ inline std::string TimeNow() {
   return buffer;
 }
 
+inline std::wstring TimeWideNow() {
+  auto t = std::time(nullptr);
+  std::tm tm_;
+  localtime_s(&tm_, &t);
+  std::wstring buffer;
+  buffer.resize(64);
+  auto n = std::wcsftime(buffer.data(), 64, L"%Y-%m-%dT%H:%M:%S%z", &tm_);
+  buffer.resize(n);
+  return buffer;
+}
+
 } // namespace baulk::time
 
 #endif

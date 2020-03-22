@@ -1,7 +1,7 @@
 ///
-#include "fs.hpp"
 #include <bela/path.hpp>
 #include <bela/match.hpp>
+#include "fs.hpp"
 
 namespace baulk::fs {
 inline bool DirSkipFaster(const wchar_t *dir) {
@@ -30,7 +30,7 @@ public:
              bela::error_code &ec) {
     auto d = bela::StringCat(dir, L"\\", suffix);
     hFind = FindFirstFileW(d.data(), &wfd);
-    if (hFind = INVALID_HANDLE_VALUE) {
+    if (hFind == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
       return false;
     }
@@ -57,10 +57,10 @@ std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
     if (!finder.IsDir()) {
       return std::nullopt;
     }
-    count++;
-    if (count == 1) {
+    if (subdir.empty()) {
       subdir = bela::StringCat(dir, L"\\", finder.Name());
     }
+    count++;
   } while (finder.Next());
 
   if (count != 1) {

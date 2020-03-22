@@ -7,8 +7,10 @@
 #include "baulk.hpp"
 
 namespace baulk::bucket {
-std::optional<std::wstring> BuacketNewest(std::wstring_view rss,
-                                          bela::error_code &ec);
-}
+std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
+                                         bela::error_code &ec);
+bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
+                  bela::error_code &ec);
+} // namespace baulk::bucket
 
 #endif

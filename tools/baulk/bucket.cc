@@ -1,14 +1,19 @@
 //
+#include <bela/path.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
+#include "baulk.hpp"
 #include "bucket.hpp"
+#include "fs.hpp"
 #include "net.hpp"
-
+#include "decompress.hpp"
 
 namespace baulk::bucket {
 //
-std::optional<std::wstring> BuacketNewest(std::wstring_view rss,
-                                          bela::error_code &ec) {
+std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
+                                         bela::error_code &ec) {
+  auto rss = bela::StringCat(bucketurl, L"/commits/master.atom");
+  baulk::DbgPrint(L"Fetch RSS %s", rss);
   auto resp = baulk::net::RestGet(rss, ec);
   if (!resp) {
     return std::nullopt;
@@ -25,6 +30,36 @@ std::optional<std::wstring> BuacketNewest(std::wstring_view rss,
   }
   ec = bela::make_error_code(1, L"bucket invaild id: ", bela::ToWide(id));
   return std::nullopt;
+}
+
+bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
+                  bela::error_code &ec) {
+  // https://github.com/baulk/bucket/archive/master.zip
+  auto master = bela::StringCat(bucketurl, L"/archive/master.zip");
+  auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\",
+                                baulk::BucketsDirName, L"\\temp");
+  if (!bela::PathExists(outdir) && !baulk::fs::MakeDir(outdir, ec)) {
+    return false;
+  }
+  auto outfile = baulk::net::WinGet(master, outdir, true, ec);
+  if (!outfile) {
+    return false;
+  }
+  auto decompressdir = bela::StringCat(outdir, L"\\", name);
+  if (!baulk::zip::Decompress(*outfile, decompressdir, ec)) {
+    return false;
+  }
+  baulk::standard::Regularize(decompressdir);
+  auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\",
+                                   baulk::BucketsDirName, L"\\", name);
+  if (bela::PathExists(bucketdir)) {
+    baulk::fs::PathRemove(bucketdir, ec);
+  }
+  if (MoveFileW(decompressdir.data(), bucketdir.data()) != TRUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  return true;
 }
 
 } // namespace baulk::bucket

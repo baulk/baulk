@@ -67,7 +67,7 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
 }
 
 /// defines
-
+[[maybe_unused]] constexpr std::wstring_view BucketsDirName = L"buckets";
 struct Bucket {
   Bucket() = default;
   Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u) {

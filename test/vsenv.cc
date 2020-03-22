@@ -1,5 +1,9 @@
 #include "../tools/baulk/compiler.hpp"
-#include "../tools/baulk/process.hpp"
+#include <bela/stdwriter.hpp>
+
+namespace baulk {
+bool IsDebugMode = true;
+}
 
 int wmain() {
   baulk::compiler::Executor executor;

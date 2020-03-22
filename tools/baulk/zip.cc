@@ -23,7 +23,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
   if (!pwsh) {
     return false;
   }
-  auto command = bela::StringCat(L"Expand-Archive -Path \"", src,
+  auto command = bela::StringCat(L"Expand-Archive -Force -Path \"", src,
                                  L"\" -DestinationPath \"", outdir, L"\"");
   bela::process::Process process;
   if (process.Execute(*pwsh, L"-Command", command) != 0) {
