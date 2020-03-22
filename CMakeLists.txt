@@ -82,9 +82,7 @@ add_definitions(-D_UNICODE -DUNICODE)
 include_directories("./include" "./vendor/bela/include")
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
-configure_file("script/baulk.ps1" "${PROJECT_BINARY_DIR}/script/baulk.ps1" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)
-install(FILES "script/baulk.ps1" DESTINATION script)
 
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)

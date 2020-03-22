@@ -25,7 +25,9 @@ Usage: baulkterminal [option] ...
   -V|--vs          
                Load Visual Studio related environment variables
   -S|--shell       
-               The shell you want to start
+               The shell you want to start. allowed: pwsh, bash, cmd, wsl
+  -W|--cwd
+               Set the shell startup directory
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -42,6 +44,7 @@ struct Options {
   bool conhost{false};
   bool clang{false};
   std::wstring shell;
+  std::wstring cwd;
   bool Parse(bela::error_code &ec);
   std::wstring BaulkShell();
 };
@@ -60,6 +63,7 @@ bool Options::Parse(bela::error_code &ec) {
       .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
       .Add(L"vs", bela::no_argument, L'V') // load visual studio environment
       .Add(L"shell", bela::required_argument, L'S')
+      .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"conhost", bela::no_argument, 1001)
       .Add(L"clang", bela::no_argument, 1002); // disable windows termainl
   auto result = pa.Execute(
@@ -81,6 +85,9 @@ bool Options::Parse(bela::error_code &ec) {
           break;
         case 'S':
           shell = oa;
+          break;
+        case 'W':
+          cwd = oa;
           break;
         case 1001:
           conhost = true;
@@ -199,9 +206,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
     return 1;
   }
   bela::EscapeArgv ea;
+
   if (!opt.conhost) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Append(*wt);
+      if (!opt.cwd.empty()) {
+        ea.Append(L"--startingDirectory");
+        ea.Append(opt.cwd);
+      }
     }
   }
   ea.Append(opt.BaulkShell());
@@ -216,10 +228,10 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT,
-                     baulkterminal::string_nullable(*env), nullptr, &si,
-                     &pi) != TRUE) {
+  if (CreateProcessW(
+          nullptr, ea.data(), nullptr, nullptr, FALSE,
+          CREATE_UNICODE_ENVIRONMENT, baulkterminal::string_nullable(*env),
+          baulkterminal::string_nullable(opt.cwd), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(),
                          nullptr, bela::mbs_t::FATAL);
