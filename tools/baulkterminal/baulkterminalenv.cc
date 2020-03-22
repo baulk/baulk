@@ -141,7 +141,6 @@ struct Searcher {
     if (!libpaths.empty()) {
       dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
     }
-    // dev.SetEnv(L"Path", bela::env::InsertEnv(L"Path", paths));
     return dev.CleanupEnv(bela::env::JoinEnv(paths));
   }
 
@@ -170,6 +169,24 @@ struct Searcher {
   bool InitializeBaulk(bela::error_code &ec);
   bool InitializeGit(bool cleanup, bela::error_code &ec);
 };
+
+std::optional<std::wstring> FrameworkDir() {
+#ifdef _M_X64
+  auto dir = bela::ExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
+#else
+  auto dir = bela::ExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
+#endif
+  for (auto &p : std::filesystem::directory_iterator(dir)) {
+    if (p.is_directory()) {
+      auto dotnet = p.path().wstring();
+      auto ngen = bela::StringCat(dotnet, L"\\ngen.exe");
+      if (bela::PathExists(ngen)) {
+        return std::make_optional(std::move(dotnet));
+      }
+    }
+  }
+  return std::nullopt;
+}
 
 bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
                       std::wstring &sdkversion) {
@@ -217,6 +234,9 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   JoinEnv(paths, bela::GetEnv(L"ProgramFiles"),
           LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\)");
 #endif
+  if (auto frameworkdir = FrameworkDir(); frameworkdir) {
+    JoinEnv(paths, *frameworkdir);
+  }
   // LIBPATHS
   auto unionmetadata = bela::StringCat(winsdk->InstallationFolder,
                                        L"\\UnionMetadata\\", sdkversion);
@@ -224,7 +244,6 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   auto references = bela::StringCat(winsdk->InstallationFolder,
                                     L"\\References\\", sdkversion);
   JoinEnv(libpaths, references);
-
   // WindowsLibPath
   // C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.19041.0
   // C:\Program Files (x86)\Windows Kits\10\References\10.0.19041.0
