@@ -32,13 +32,13 @@
 
 #define BAULK_APPLINK                                                          \
   L"For more information about this tool. \nVisit: <a "                        \
-  L"href=\"https://github.com/baulk/baulk\">BAULK</"                           \
+  L"href=\"https://github.com/baulk/baulk\">Baulk</"                           \
   L"a>\nVisit: <a "                                                            \
   L"href=\"https://forcemz.net/\">forcemz.net</a>"
 
 #define BAULK_APPLINKE                                                         \
   L"Ask for help with this issue. \nVisit: <a "                                \
-  L"href=\"https://github.com/baulk/baulk/issues\">BAULK "                     \
+  L"href=\"https://github.com/baulk/baulk/issues\">Baulk "                     \
   L"Issues</a>"
 
 #define BAULK_APPVERSION                                                       \

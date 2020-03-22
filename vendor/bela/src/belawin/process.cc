@@ -81,10 +81,10 @@ struct process_capture_helper {
       return false;
     }
     si.hStdError = si.hStdOutput;
-    if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, TRUE,
-                       IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT,
-                       string_nullable(env), string_nullable(cwd), &si,
-                       &pi) != TRUE) {
+    if (CreateProcessW(
+            nullptr, cmdline, nullptr, nullptr, TRUE,
+            IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW,
+            string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
       ec = bela::make_system_error_code();
       CloseHandle(child_stdout);
       CloseHandle(si.hStdOutput);

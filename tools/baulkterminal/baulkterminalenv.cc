@@ -132,28 +132,45 @@ struct Searcher {
   }
   std::wstring CleanupEnv() const {
     bela::env::Derivator dev;
-    dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
-    dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
-    dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
+    if (!libs.empty()) {
+      dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
+    }
+    if (!includes.empty()) {
+      dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
+    }
+    if (!libpaths.empty()) {
+      dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
+    }
     // dev.SetEnv(L"Path", bela::env::InsertEnv(L"Path", paths));
     return dev.CleanupEnv(bela::env::JoinEnv(paths));
   }
+
+  std::wstring MakeEnv() const {
+    bela::env::Derivator dev;
+    if (!libs.empty()) {
+      dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
+    }
+    if (!includes.empty()) {
+      dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
+    }
+    if (!libpaths.empty()) {
+      dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
+    }
+    auto oldpath = bela::GetEnv(L"path");
+    std::vector<std::wstring_view> ov = bela::StrSplit(
+        oldpath, bela::ByChar(bela::env::Separator), bela::SkipEmpty());
+    auto newpath =
+        bela::StringCat(bela::env::JoinEnv(paths), bela::env::Separators,
+                        bela::env::JoinEnv(ov));
+    dev.SetEnv(L"path", newpath);
+    return dev.MakeEnv();
+  }
+
   bool InitializeWindowsKitEnv(bela::error_code &ec);
   bool InitializeVisualStudioEnv(bela::error_code &ec);
+  bool InitializeBaulk(bela::error_code &ec);
+  bool InitializeGit(bool cleanup, bela::error_code &ec);
 };
-
-bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
-                      std::wstring &sdkversion) {
-  auto dir = bela::StringCat(sdkroot, L"\\Include");
-  for (auto &p : std::filesystem::directory_iterator(dir)) {
-    auto filename = p.path().filename().wstring();
-    if (bela::StartsWith(filename, sdkver)) {
-      sdkversion = filename;
-      return true;
-    }
-  }
-  return true;
-}
 
 bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
                       std::wstring &sdkversion) {
@@ -245,9 +262,70 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   return true;
 }
 
-std::optional<std::wstring> MakeEnv(bool usevs) {
-  //
-  return std::nullopt;
+bool Searcher::InitializeBaulk(bela::error_code &ec) {
+  auto exepath = bela::ExecutablePath(ec);
+  if (!exepath) {
+    return false;
+  }
+  auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
+  if (bela::PathExists(baulkexe)) {
+    JoinEnv(paths, *exepath);
+    JoinEnv(paths, *exepath, L"\\linkbin");
+    return true;
+  }
+  std::wstring baulkroot(*exepath);
+  for (size_t i = 0; i < 5; i++) {
+    auto baulkexe = bela::StringCat(baulkroot, L"\\bin\\baulk.exe");
+    if (bela::PathExists(baulkexe)) {
+      JoinEnv(paths, baulkroot, L"\\bin");
+      JoinEnv(paths, baulkroot, L"\\bin\\linkbin");
+      return true;
+    }
+    bela::PathStripName(baulkroot);
+  }
+  ec = bela::make_error_code(1, L"unable found baulk.exe");
+  return false;
+}
+bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
+  std::wstring git;
+  if (bela::ExecutableExistsInPath(L"git.exe", git)) {
+    if (cleanup) {
+      bela::PathStripName(git);
+      JoinEnv(paths, git);
+    }
+    return true;
+  }
+  auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
+  if (!installPath) {
+    return false;
+  }
+  git = bela::StringCat(*installPath, L"\\cmd\\git.exe");
+  if (!bela::PathExists(git)) {
+    return false;
+  }
+  JoinEnv(paths, *installPath, L"\\cmd");
+  return true;
+}
+
+std::optional<std::wstring> MakeEnv(bool usevs, bool cleanup,
+                                    bela::error_code &ec) {
+  Searcher searcher;
+  if (!searcher.InitializeBaulk(ec)) {
+    return std::nullopt;
+  }
+  searcher.InitializeGit(cleanup, ec);
+  if (usevs) {
+    if (!searcher.InitializeVisualStudioEnv(ec)) {
+      return std::nullopt;
+    }
+    if (!searcher.InitializeWindowsKitEnv(ec)) {
+      return std::nullopt;
+    }
+  }
+  if (cleanup) {
+    return std::make_optional(searcher.CleanupEnv());
+  }
+  return std::make_optional(searcher.MakeEnv());
 }
 
 } // namespace baulkterminal

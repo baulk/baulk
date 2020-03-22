@@ -2,7 +2,7 @@
 //
 #include "windows.h"
 
-ICON_MAIN ICON baulkterminal.ico
+IDI_BAULK_TERMINAL_ICON ICON baulkterminal.ico
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION 1,0,0,0

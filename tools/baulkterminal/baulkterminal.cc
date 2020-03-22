@@ -3,8 +3,93 @@
 #include <bela/path.hpp>
 #include <bela/env.hpp>
 #include <bela/escapeargv.hpp>
+#include <bela/parseargv.hpp>
 #include <bela/finaly.hpp>
 #include <bela/picker.hpp>
+#include <bela/str_replace.hpp>
+#include <shellapi.h>
+#include "baulkterminal.hpp"
+#include "../baulk/version.h"
+
+namespace baulkterminal {
+
+void BaulkMessage() {
+  constexpr wchar_t usage[] = LR"(baulkterminal - Baulk Terminal Launcher
+Usage: baulkterminal [option] ...
+  -h|--help        
+               Show usage text and quit
+  -v|--version     
+               Show version number and quit
+  -C|--cleanup     
+               Create clean environment variables to avoid interference
+  -V|--vs          
+               Load Visual Studio related environment variables
+  -S|--shell       
+               The shell you want to start
+)";
+  bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
+                       BAULK_APPLINK, bela::mbs_t::ABOUT);
+}
+
+//
+struct Options {
+  bool cleanup{false};
+  bool enablevs{false};
+  bool conhost{false};
+  std::wstring shell;
+  bool Parse(bela::error_code &ec);
+  std::wstring BaulkShell();
+};
+
+bool Options::Parse(bela::error_code &ec) {
+  int Argc = 0;
+  auto Argv = CommandLineToArgvW(GetCommandLineW(), &Argc);
+  if (Argv == nullptr) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  auto closer = bela::finally([&] { LocalFree(Argv); });
+  bela::ParseArgv pa(Argc, Argv);
+  pa.Add(L"help", bela::no_argument, L'h')
+      .Add(L"version", bela::no_argument, L'v')
+      .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
+      .Add(L"vs", bela::no_argument, L'V') // load visual studio environment
+      .Add(L"shell", bela::required_argument, L'S')
+      .Add(L"conhost", bela::no_argument, 1001); // disable windows termainl
+  auto result = pa.Execute(
+      [this](int val, const wchar_t *oa, const wchar_t *) {
+        switch (val) {
+        case 'h':
+          BaulkMessage();
+          ExitProcess(0);
+        case 'v':
+          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher",
+                               BAULK_APPVERSION, BAULK_APPLINK,
+                               bela::mbs_t::ABOUT);
+          ExitProcess(0);
+        case 'C':
+          cleanup = true;
+          break;
+        case 'V':
+          enablevs = true;
+          break;
+        case 'S':
+          shell = oa;
+          break;
+        case 1001:
+          conhost = true;
+          break;
+        default:
+          break;
+        }
+        return true;
+      },
+      ec);
+  if (!result) {
+    return false;
+  }
+  return true;
+}
 
 bool LookupPwshCore(std::wstring &ps) {
   bool success = false;
@@ -58,6 +143,22 @@ std::wstring PwshExePath() {
   return L"";
 }
 
+std::wstring Options::BaulkShell() {
+  if (shell.empty() || bela::EqualsIgnoreCase(L"pwsh", shell)) {
+    return PwshExePath();
+  }
+  if (bela::EqualsIgnoreCase(L"bash", shell)) {
+    // git for windows
+  }
+  if (bela::EqualsIgnoreCase(L"wsl", shell)) {
+    //
+    return L"wsl.exe";
+  }
+  return L"cmd.exe";
+}
+
+} // namespace baulkterminal
+
 std::optional<std::wstring> FindWindowsTerminal() {
   auto wt = bela::ExpandEnv(L"%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe");
   if (!bela::PathExists(wt)) {
@@ -66,49 +167,49 @@ std::optional<std::wstring> FindWindowsTerminal() {
   return std::make_optional(std::move(wt));
 }
 
+class dotcom_global_initializer {
+public:
+  dotcom_global_initializer() {
+    auto hr = CoInitialize(NULL);
+    if (FAILED(hr)) {
+      auto ec = bela::make_system_error_code();
+      MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);
+      exit(1);
+    }
+  }
+  ~dotcom_global_initializer() { CoUninitialize(); }
+};
+
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
-  auto pwshexe = PwshExePath();
-  if (pwshexe.empty()) {
-    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal",
-                         L"no windows terminal installed", nullptr,
-                         bela::mbs_t::FATAL);
+  dotcom_global_initializer di;
+  baulkterminal::Options options;
+  bela::error_code ec;
+  if (!options.Parse(ec)) {
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(),
+                         BAULK_APPLINKE, bela::mbs_t::FATAL);
     return 1;
   }
-  bela::error_code ec;
-  auto exepath = bela::ExecutablePath(ec);
-  if (!exepath) {
-    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(),
+  bela::EscapeArgv ea;
+  if (!options.conhost) {
+    if (auto wt = FindWindowsTerminal(); wt) {
+      ea.Append(*wt);
+    }
+  }
+  ea.Append(options.BaulkShell());
+  auto env = baulkterminal::MakeEnv(options.enablevs, options.cleanup, ec);
+  if (!env) {
+    bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(),
                          nullptr, bela::mbs_t::FATAL);
     return 1;
   }
-  auto targetFile = bela::StringCat(*exepath, L"\\script\\baulk.ps1");
-  if (!bela::PathExists(targetFile)) {
-    bela::PathStripName(*exepath);
-    targetFile = bela::StringCat(*exepath, L"\\script\\baulk.ps1");
-    if (!bela::PathExists(targetFile)) {
-      bela::BelaMessageBox(nullptr, L"unable find baulk.ps1",
-                           L"please check $prefix baulk.ps1", nullptr,
-                           bela::mbs_t::FATAL);
-      return 1;
-    }
-  }
-  bela::EscapeArgv ea;
-  auto wt = FindWindowsTerminal();
-  if (wt) {
-    ea.Append(*wt);
-  }
-  ea.Append(pwshexe)
-      .Append(L"-NoLogo")
-      .Append(L"-NoExit")
-      .Append(L"-File")
-      .Append(targetFile);
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
+                     CREATE_UNICODE_ENVIRONMENT,
+                     baulkterminal::string_nullable(*env), nullptr, &si,
                      &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(),
