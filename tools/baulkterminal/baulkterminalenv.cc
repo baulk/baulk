@@ -96,6 +96,7 @@ LookupVisualStudioInstance(bela::error_code &ec) {
 
 struct Searcher {
   using vector_t = std::vector<std::wstring>;
+  bela::env::Derivator dev;
   vector_t paths;
   vector_t libs;
   vector_t includes;
@@ -130,8 +131,7 @@ struct Searcher {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  std::wstring CleanupEnv() const {
-    bela::env::Derivator dev;
+  std::wstring CleanupEnv() {
     if (!libs.empty()) {
       dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
     }
@@ -145,8 +145,7 @@ struct Searcher {
     return dev.CleanupEnv(bela::env::JoinEnv(paths));
   }
 
-  std::wstring MakeEnv() const {
-    bela::env::Derivator dev;
+  std::wstring MakeEnv() {
     if (!libs.empty()) {
       dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
     }
@@ -167,7 +166,7 @@ struct Searcher {
   }
 
   bool InitializeWindowsKitEnv(bela::error_code &ec);
-  bool InitializeVisualStudioEnv(bela::error_code &ec);
+  bool InitializeVisualStudioEnv(bool clang, bela::error_code &ec);
   bool InitializeBaulk(bela::error_code &ec);
   bool InitializeGit(bool cleanup, bela::error_code &ec);
 };
@@ -212,13 +211,23 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\",
           arch);
   // LIBPATHS
-  JoinEnv(libpaths, winsdk->InstallationFolder, L"\\UnionMetadata\\",
-          sdkversion);
-  JoinEnv(libpaths, winsdk->InstallationFolder, L"\\References\\", sdkversion);
+  auto unionmetadata = bela::StringCat(winsdk->InstallationFolder,
+                                       L"\\UnionMetadata\\", sdkversion);
+  JoinEnv(libpaths, unionmetadata);
+  auto references = bela::StringCat(winsdk->InstallationFolder,
+                                    L"\\References\\", sdkversion);
+  JoinEnv(libpaths, references);
+
+  // WindowsLibPath
+  // C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.19041.0
+  // C:\Program Files (x86)\Windows Kits\10\References\10.0.19041.0
+  dev.SetEnv(L"WindowsLibPath",
+             bela::env::JoinEnv({unionmetadata, references}));
+  dev.SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
   return true;
 }
 
-bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
+bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   auto vsi = LookupVisualStudioInstance(ec);
   if (!vsi) {
     // Visual Studio not install
@@ -227,6 +236,13 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   auto vcver = LookupVisualCppVersion(vsi->installationPath, ec);
   if (!vcver) {
     return false;
+  }
+  std::vector<std::wstring_view> vv = bela::StrSplit(
+      vsi->installationVersion, bela::ByChar('.'), bela::SkipEmpty());
+  if (vv.size() > 2) {
+    // VS160COMNTOOLS
+    auto key = bela::StringCat(L"VS", vv[0], L"0COMNTOOLS");
+    auto p = bela::StringCat(vsi->installationPath, LR"(\Common7\IDE\Tools\)");
   }
   // Libs
   JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
@@ -241,9 +257,6 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   // Paths
   JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\bin\Host)", arch, L"\\", arch);
-  // if constexpr (arch == L"x64") {
-  // } else {
-  // }
   // IDE tools
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\Tools)");
@@ -252,6 +265,16 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
           LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
   JoinEnv(paths, vsi->installationPath,
           LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
+#ifdef _M_X64
+  JoinEnv(paths, vsi->installationPath, LR"(\MSBuild\Current\Bin\amd64)");
+#else
+  // msbuild
+  JoinEnv(paths, vsi->installationPath, LR"(\MSBuild\Current\Bin)");
+#endif
+  if (clang) {
+    // VC\Tools\Llvm\bin
+    JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\Llvm\bin)");
+  }
   // add libpaths
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\ATLMFC\lib\)", arch);
@@ -259,6 +282,8 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
           LR"(\lib\)", arch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\lib\x86\store\references)");
+  dev.SetEnv(L"VCIDEInstallDir",
+             bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
   return true;
 }
 
@@ -307,7 +332,7 @@ bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
   return true;
 }
 
-std::optional<std::wstring> MakeEnv(bool usevs, bool cleanup,
+std::optional<std::wstring> MakeEnv(bool usevs, bool clang, bool cleanup,
                                     bela::error_code &ec) {
   Searcher searcher;
   if (!searcher.InitializeBaulk(ec)) {
@@ -315,7 +340,7 @@ std::optional<std::wstring> MakeEnv(bool usevs, bool cleanup,
   }
   searcher.InitializeGit(cleanup, ec);
   if (usevs) {
-    if (!searcher.InitializeVisualStudioEnv(ec)) {
+    if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
       return std::nullopt;
     }
     if (!searcher.InitializeWindowsKitEnv(ec)) {

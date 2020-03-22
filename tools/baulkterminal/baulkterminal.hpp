@@ -11,7 +11,7 @@ constexpr const wchar_t *string_nullable(std::wstring_view str) {
 constexpr wchar_t *string_nullable(std::wstring &str) {
   return str.empty() ? nullptr : str.data();
 }
-std::optional<std::wstring> MakeEnv(bool usevs, bool cleanup,
+std::optional<std::wstring> MakeEnv(bool usevs,bool clang, bool cleanup,
                                     bela::error_code &ec);
 } // namespace baulkterminal
 

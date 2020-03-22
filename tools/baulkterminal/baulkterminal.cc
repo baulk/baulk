@@ -26,6 +26,10 @@ Usage: baulkterminal [option] ...
                Load Visual Studio related environment variables
   -S|--shell       
                The shell you want to start
+  --conhost
+               Use conhost not Windows terminal
+  --clang
+               Use 
 )";
   bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
                        BAULK_APPLINK, bela::mbs_t::ABOUT);
@@ -36,6 +40,7 @@ struct Options {
   bool cleanup{false};
   bool enablevs{false};
   bool conhost{false};
+  bool clang{false};
   std::wstring shell;
   bool Parse(bela::error_code &ec);
   std::wstring BaulkShell();
@@ -55,7 +60,8 @@ bool Options::Parse(bela::error_code &ec) {
       .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
       .Add(L"vs", bela::no_argument, L'V') // load visual studio environment
       .Add(L"shell", bela::required_argument, L'S')
-      .Add(L"conhost", bela::no_argument, 1001); // disable windows termainl
+      .Add(L"conhost", bela::no_argument, 1001)
+      .Add(L"clang", bela::no_argument, 1002); // disable windows termainl
   auto result = pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
@@ -78,6 +84,9 @@ bool Options::Parse(bela::error_code &ec) {
           break;
         case 1001:
           conhost = true;
+          break;
+        case 1002:
+          clang = true;
           break;
         default:
           break;
@@ -182,21 +191,21 @@ public:
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   dotcom_global_initializer di;
-  baulkterminal::Options options;
+  baulkterminal::Options opt;
   bela::error_code ec;
-  if (!options.Parse(ec)) {
+  if (!opt.Parse(ec)) {
     bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(),
                          BAULK_APPLINKE, bela::mbs_t::FATAL);
     return 1;
   }
   bela::EscapeArgv ea;
-  if (!options.conhost) {
+  if (!opt.conhost) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Append(*wt);
     }
   }
-  ea.Append(options.BaulkShell());
-  auto env = baulkterminal::MakeEnv(options.enablevs, options.cleanup, ec);
+  ea.Append(opt.BaulkShell());
+  auto env = baulkterminal::MakeEnv(opt.enablevs, opt.clang, opt.cleanup, ec);
   if (!env) {
     bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(),
                          nullptr, bela::mbs_t::FATAL);
