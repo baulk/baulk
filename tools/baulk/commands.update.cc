@@ -69,7 +69,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
                   ec.message);
     return false;
   }
-  bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\n", bucket.name,
+  bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name,
                 *latest);
   status[bucket.name] = bucket_metadata{*latest, baulk::time::TimeNow()};
   return true;

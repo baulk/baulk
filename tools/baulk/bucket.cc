@@ -45,9 +45,9 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
   if (!outfile) {
     return false;
   }
-  auto closer = bela::finally([&] {
+  auto deleter = bela::finally([&] {
     bela::error_code ec_;
-    baulk::fs::PathRemove(outfile, ec_);
+    baulk::fs::PathRemove(*outfile, ec_);
   });
   auto decompressdir = bela::StringCat(outdir, L"\\", name);
   if (!baulk::zip::Decompress(*outfile, decompressdir, ec)) {
