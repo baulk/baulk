@@ -9,11 +9,17 @@ int wmain() {
     return 1;
   }
   bela::FPrintF(stderr, L"Executable: '%s'\n", *e);
-  auto p = bela::ExecutablePath(ec);
+  auto p = bela::ExecutableParent(ec);
   if (!p) {
     bela::FPrintF(stderr, L"FAILED: ExecutablePath: %s\n", ec.message);
     return 1;
   }
-  bela::FPrintF(stderr, L"ExecutablePath: '%s'\n", *p);
+  bela::FPrintF(stderr, L"ExecutableParent: '%s'\n", *p);
+  auto fp = bela::ExecutableFinalPath(ec);
+  if (!fp) {
+    bela::FPrintF(stderr, L"FAILED: ExecutableFinalPath: %s\n", ec.message);
+    return 1;
+  }
+  bela::FPrintF(stderr, L"ExecutableFinalPath: '%s'\n", *fp);
   return 0;
 }

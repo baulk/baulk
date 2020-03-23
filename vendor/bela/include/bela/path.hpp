@@ -120,7 +120,8 @@ enum class FileAttribute : DWORD {
 // std::wstring_view ::data() must Null-terminated string
 bool PathExists(std::wstring_view src, FileAttribute fa = FileAttribute::None);
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
-bool LookupRealPath(std::wstring_view src, std::wstring &target);
+std::optional<std::wstring> RealPath(std::wstring_view src,
+                                     bela::error_code &ec);
 struct AppExecTarget {
   std::wstring pkid;
   std::wstring appuserid;
@@ -128,8 +129,24 @@ struct AppExecTarget {
 };
 bool LookupAppExecLinkTarget(std::wstring_view src, AppExecTarget &ae);
 std::optional<std::wstring> Executable(bela::error_code &ec);
-std::optional<std::wstring> ExecutablePath(bela::error_code &ec);
-
+inline std::optional<std::wstring> ExecutableParent(bela::error_code &ec) {
+  auto exe = bela::Executable(ec);
+  if (!exe) {
+    return std::nullopt;
+  }
+  bela::PathStripName(*exe);
+  return exe;
+}
+std::optional<std::wstring> ExecutableFinalPath(bela::error_code &ec);
+inline std::optional<std::wstring>
+ExecutableParentFinalPath(bela::error_code &ec) {
+  auto exe = bela::ExecutableFinalPath(ec);
+  if (!exe) {
+    return std::nullopt;
+  }
+  bela::PathStripName(*exe);
+  return exe;
+}
 } // namespace bela
 
 #endif

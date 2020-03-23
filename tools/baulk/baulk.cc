@@ -54,14 +54,14 @@ Command:
 
 )";
   bela::error_code ec;
-  auto exepath = bela::ExecutablePath(ec);
-  if (!exepath) {
+  auto exeparent = bela::ExecutableParent(ec);
+  if (!exeparent) {
     auto msg = bela::Substitute(usage, L"$Prefix");
     bela::FileWrite(stderr, msg);
     return;
   }
-  bela::PathStripName(*exepath);
-  auto msg = bela::Substitute(usage, *exepath);
+  bela::PathStripName(*exeparent);
+  auto msg = bela::Substitute(usage, *exeparent);
   bela::FileWrite(stderr, msg);
 }
 void Version() {

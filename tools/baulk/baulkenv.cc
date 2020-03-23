@@ -82,7 +82,7 @@ std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
                           std::wstring_view profile_) {
   bela::error_code ec;
-  if (auto exedir = bela::ExecutablePath(ec); exedir) {
+  if (auto exedir = bela::ExecutableParent(ec); exedir) {
     root.assign(std::move(*exedir));
     bela::PathStripName(root);
   } else {

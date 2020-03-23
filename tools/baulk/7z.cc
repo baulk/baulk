@@ -11,7 +11,7 @@ inline std::optional<std::wstring> lookup_sevenzip() {
     return std::make_optional(std::move(s7z));
   }
   bela::error_code ec;
-  auto self = bela::ExecutablePath(ec);
+  auto self = bela::ExecutableParent(ec);
   if (!self) {
     return std::nullopt;
   }

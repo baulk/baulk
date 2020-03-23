@@ -314,40 +314,4 @@ bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
   }
   return false;
 }
-
-std::optional<std::wstring> Executable(bela::error_code &ec) {
-  std::wstring buffer;
-  buffer.resize(MAX_PATH);
-  auto X = GetModuleFileNameW(nullptr, buffer.data(), MAX_PATH);
-  if (X == 0) {
-    ec = bela::make_system_error_code();
-    return std::nullopt;
-  }
-  if (X <= MAX_PATH) {
-    buffer.resize(X);
-    return std::make_optional(std::move(buffer));
-  }
-  buffer.resize(X);
-  auto Y = GetModuleFileNameW(nullptr, buffer.data(), X);
-  if (Y == 0) {
-    ec = bela::make_system_error_code();
-    return std::nullopt;
-  }
-  if (Y <= X) {
-    buffer.resize(Y);
-    return std::make_optional(std::move(buffer));
-  }
-  ec = bela::make_error_code(-1, L"Executable unable allocate more buffer");
-  return std::nullopt;
-}
-
-std::optional<std::wstring> ExecutablePath(bela::error_code &ec) {
-  auto exe = Executable(ec);
-  if (!exe) {
-    return std::nullopt;
-  }
-  PathStripName(*exe);
-  return std::make_optional(std::move(*exe));
-}
-
 } // namespace bela

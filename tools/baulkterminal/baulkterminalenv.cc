@@ -338,7 +338,7 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
 }
 
 bool Searcher::InitializeBaulk(bela::error_code &ec) {
-  auto exepath = bela::ExecutablePath(ec);
+  auto exepath = bela::ExecutableParentFinalPath(ec);
   if (!exepath) {
     return false;
   }
