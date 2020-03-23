@@ -1,6 +1,5 @@
 //////////
 #include <bela/base.hpp>
-#include <bela/finaly.hpp>
 #include <bela/match.hpp>
 
 namespace bela {

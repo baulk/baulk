@@ -1,5 +1,5 @@
 //
-#include <bela/finaly.hpp>
+#include <bela/base.hpp>
 #include <bela/endian.hpp>
 #include <bela/match.hpp>
 #include <blake3.h>

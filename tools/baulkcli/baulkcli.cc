@@ -3,7 +3,6 @@
 #include <bela/escapeargv.hpp>
 #include <bela/pe.hpp>
 #include <bela/stdwriter.hpp>
-#include <bela/finaly.hpp>
 #include <bela/path.hpp>
 #include <bela/str_split.hpp>
 #include <bela/env.hpp>

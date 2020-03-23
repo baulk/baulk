@@ -1,7 +1,7 @@
 // exec command
 #include <bela/stdwriter.hpp>
 #include <bela/pe.hpp>
-#include <bela/finaly.hpp>
+#include <bela/base.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/path.hpp>
 #include <filesystem>

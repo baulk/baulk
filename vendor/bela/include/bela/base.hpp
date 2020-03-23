@@ -16,6 +16,7 @@
 #include <string_view>
 #include <vector>
 #include <system_error>
+#include <memory>
 #include "strcat.hpp"
 
 namespace bela {
@@ -122,6 +123,39 @@ using secure_wstring = std::basic_string<wchar_t, std::char_traits<wchar_t>,
 //! `bela::secure_string` will be securely zeroed before deallocation.
 using secure_string = std::basic_string<char, std::char_traits<char>,
                                         bela::secure_allocator<char>>;
+
+// final_act
+// https://github.com/microsoft/gsl/blob/ebe7ebfd855a95eb93783164ffb342dbd85cbc27\
+// /include/gsl/gsl_util#L85-L89
+
+template <class F> class final_act {
+public:
+  explicit final_act(F f) noexcept : f_(std::move(f)), invoke_(true) {}
+
+  final_act(final_act &&other) noexcept
+      : f_(std::move(other.f_)), invoke_(std::exchange(other.invoke_, false)) {}
+
+  final_act(const final_act &) = delete;
+  final_act &operator=(const final_act &) = delete;
+  ~final_act() noexcept {
+    if (invoke_) {
+      f_();
+    }
+  }
+
+private:
+  F f_;
+  bool invoke_{true};
+};
+
+// finally() - convenience function to generate a final_act
+template <class F> inline final_act<F> finally(const F &f) noexcept {
+  return final_act<F>(f);
+}
+
+template <class F> inline final_act<F> finally(F &&f) noexcept {
+  return final_act<F>(std::forward<F>(f));
+}
 
 } // namespace bela
 

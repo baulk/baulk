@@ -1,6 +1,5 @@
 //
 #include <bela/path.hpp>
-#include <bela/finaly.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
 #include "baulk.hpp"

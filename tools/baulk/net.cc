@@ -1,7 +1,6 @@
 //
 #include <bela/base.hpp>
 #include <bela/env.hpp>
-#include <bela/finaly.hpp>
 #include <bela/path.hpp>
 #include <bela/strip.hpp>
 #include <winhttp.h>

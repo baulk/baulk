@@ -4,7 +4,6 @@
 #include <bela/env.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/parseargv.hpp>
-#include <bela/finaly.hpp>
 #include <bela/picker.hpp>
 #include <bela/str_replace.hpp>
 #include <shellapi.h>
@@ -16,22 +15,22 @@ namespace baulkterminal {
 void BaulkMessage() {
   constexpr wchar_t usage[] = LR"(baulkterminal - Baulk Terminal Launcher
 Usage: baulkterminal [option] ...
-  -h|--help        
+  -h|--help
                Show usage text and quit
-  -v|--version     
+  -v|--version
                Show version number and quit
-  -C|--cleanup     
+  -C|--cleanup
                Create clean environment variables to avoid interference
-  -V|--vs          
+  -V|--vs
                Load Visual Studio related environment variables
-  -S|--shell       
+  -S|--shell
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
   --conhost
                Use conhost not Windows terminal
   --clang
-               Use 
+               Use
 )";
   bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
                        BAULK_APPLINK, bela::mbs_t::ABOUT);

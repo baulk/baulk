@@ -3,7 +3,6 @@
 #include <bela/base.hpp>
 #include <bela/env.hpp>
 #include <bela/strcat.hpp>
-#include <bela/finaly.hpp>
 
 namespace bela {
 namespace env_internal {

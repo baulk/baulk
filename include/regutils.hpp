@@ -2,7 +2,6 @@
 #ifndef BAULK_REGUTILS_HPP
 #define BAULK_REGUTILS_HPP
 #include <bela/base.hpp>
-#include <bela/finaly.hpp>
 
 namespace baulk::regutils {
 struct WindowsSDK {

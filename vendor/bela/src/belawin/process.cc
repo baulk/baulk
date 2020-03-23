@@ -1,6 +1,5 @@
 //
 #include <bela/process.hpp>
-#include <bela/finaly.hpp>
 
 namespace bela::process {
 int Process::ExecuteInternal(wchar_t *cmdline) {
