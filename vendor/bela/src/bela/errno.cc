@@ -191,13 +191,13 @@ constexpr std::wstring_view errorlist[] = {
 };
 } // namespace errno_internal
 
-std::wstring resolve_system_error_code(DWORD ec) {
+std::wstring resolve_system_error_code(DWORD ec, std::wstring_view prefix) {
   LPWSTR buf = nullptr;
   auto rl = FormatMessageW(
       FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, ec,
       MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), (LPWSTR)&buf, 0, nullptr);
   if (rl == 0) {
-    return L"FormatMessageW error";
+    return bela::StringCat(prefix, L" code: ", ec);
   }
   if (buf[rl - 1] == '\n') {
     rl--;
@@ -205,16 +205,16 @@ std::wstring resolve_system_error_code(DWORD ec) {
   if (rl > 0 && buf[rl - 1] == '\r') {
     rl--;
   }
-  std::wstring msg(buf, rl);
+  auto msg = bela::StringCat(prefix, std::wstring_view(buf, rl));
   LocalFree(buf);
   return msg;
 }
 
-bela::error_code make_stdc_error_code(errno_t eno) {
+bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
   constexpr auto n = std::size(errno_internal::errorlist);
   auto msg = eno >= n ? errno_internal::errorlist[n - 1]
                       : errno_internal::errorlist[eno];
-  return bela::error_code{std::wstring(msg), eno};
+  return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 
 } // namespace bela
