@@ -1,0 +1,8 @@
+{
+    "bucket": "Baulk",
+    "version": "7.69.1",
+    "links": [
+        "bin/curl.exe",
+        "bin/curl-ca-bundle.crt"
+    ]
+}
