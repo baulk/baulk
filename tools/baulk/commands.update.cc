@@ -1,6 +1,7 @@
 ///
 #include <bela/phmap.hpp>
 #include <bela/path.hpp>
+#include <filesystem>
 #include <jsonex.hpp>
 #include <time.hpp>
 #include "net.hpp"
@@ -73,10 +74,6 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
                 *latest);
   status[bucket.name] = bucket_metadata{*latest, baulk::time::TimeNow()};
   return true;
-}
-bool PackageUpdatableScan(bela::error_code &ec) {
-  //
-  return false;
 }
 
 int cmd_update(const argv_t &argv) {
