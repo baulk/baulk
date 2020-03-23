@@ -64,7 +64,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
     return true;
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
-  if (!baulk::bucket::BucketUpdate(bucket.url, bucket.name, ec)) {
+  if (!baulk::bucket::BucketUpdate(bucket.url, bucket.name, *latest, ec)) {
     bela::FPrintF(stderr, L"bucke: %s download data error: %s\n", bucket.name,
                   ec.message);
     return false;

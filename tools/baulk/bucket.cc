@@ -1,5 +1,6 @@
 //
 #include <bela/path.hpp>
+#include <bela/finaly.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
 #include "baulk.hpp"
@@ -33,9 +34,9 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
 }
 
 bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
-                  bela::error_code &ec) {
+                  std::wstring_view id, bela::error_code &ec) {
   // https://github.com/baulk/bucket/archive/master.zip
-  auto master = bela::StringCat(bucketurl, L"/archive/master.zip");
+  auto master = bela::StringCat(bucketurl, L"/archive/", id, L".zip");
   auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\",
                                 baulk::BucketsDirName, L"\\temp");
   if (!bela::PathExists(outdir) && !baulk::fs::MakeDir(outdir, ec)) {
@@ -45,6 +46,10 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
   if (!outfile) {
     return false;
   }
+  auto closer = bela::finally([&] {
+    bela::error_code ec_;
+    baulk::fs::PathRemove(outfile, ec_);
+  });
   auto decompressdir = bela::StringCat(outdir, L"\\", name);
   if (!baulk::zip::Decompress(*outfile, decompressdir, ec)) {
     return false;
