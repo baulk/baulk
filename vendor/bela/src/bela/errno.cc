@@ -197,7 +197,7 @@ std::wstring resolve_system_error_code(DWORD ec, std::wstring_view prefix) {
       FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, ec,
       MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), (LPWSTR)&buf, 0, nullptr);
   if (rl == 0) {
-    return bela::StringCat(prefix, L" code: ", ec);
+    return bela::StringCat(prefix, L"GetLastError(): ", ec);
   }
   if (buf[rl - 1] == '\n') {
     rl--;
