@@ -139,7 +139,7 @@ inline std::optional<std::wstring> ExecutableParent(bela::error_code &ec) {
 }
 std::optional<std::wstring> ExecutableFinalPath(bela::error_code &ec);
 inline std::optional<std::wstring>
-ExecutableParentFinalPath(bela::error_code &ec) {
+ExecutableFinalPathParent(bela::error_code &ec) {
   auto exe = bela::ExecutableFinalPath(ec);
   if (!exe) {
     return std::nullopt;
