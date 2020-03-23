@@ -73,7 +73,12 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
                 *latest);
   status[bucket.name] = bucket_metadata{*latest, baulk::time::TimeNow()};
   return true;
-} // namespace baulk::commands
+}
+bool PackageUpdatableScan(bela::error_code &ec) {
+  //
+  return false;
+}
+
 int cmd_update(const argv_t &argv) {
   BucketUpdater updater;
   if (!updater.Initialize()) {
