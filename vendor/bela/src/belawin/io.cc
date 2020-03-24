@@ -3,6 +3,7 @@
 #include <bela/mapview.hpp>
 #include <bela/endian.hpp>
 #include <bela/io.hpp>
+#include <bela/path.hpp>
 
 namespace bela::io {
 constexpr size_t MB = 1024ull * 1024;
@@ -130,6 +131,9 @@ bool WriteText(std::string_view text, std::wstring_view file,
 
 bool WriteTextAtomic(std::string_view text, std::wstring_view file,
                      bela::error_code &ec) {
+  if (!bela::PathExists(file)) {
+    return WriteTextInternal("", text, file, ec);
+  }
   auto lock = bela::StringCat(file, L".lock");
   if (!WriteText(text, lock, ec)) {
     DeleteFileW(lock.data());

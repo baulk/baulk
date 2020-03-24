@@ -66,6 +66,7 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
   return true;
 }
 
+// search all available packages
 bool Scanner::Initialize() {
   auto bucketsDir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
