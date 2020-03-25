@@ -30,7 +30,7 @@ Usage: baulkterminal [option] ...
   --conhost
                Use conhost not Windows terminal
   --clang
-               Use
+               Add Visual Studio's built-in clang to the PATH environment variable
 )";
   bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
                        BAULK_APPLINK, bela::mbs_t::ABOUT);
