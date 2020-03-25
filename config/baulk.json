@@ -3,7 +3,8 @@
         {
             "description": "Baulk default bucket",
             "name": "Baulk",
-            "url": "https://github.com/baulk/bucket"
+            "url": "https://github.com/baulk/bucket",
+            "weights": 100
         }
     ],
     "freeze": [

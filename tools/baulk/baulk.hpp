@@ -70,15 +70,19 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
 [[maybe_unused]] constexpr std::wstring_view BucketsDirName = L"buckets";
 struct Bucket {
   Bucket() = default;
-  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u) {
+  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u,
+         int weights_ = 99) {
     description = desc;
     name = n;
     url = u;
+    weights = weights_;
   }
   std::wstring description;
   std::wstring name;
   std::wstring url;
+  int weights{99};
 };
+
 using Buckets = std::vector<Bucket>;
 
 // Env functions
@@ -98,6 +102,7 @@ struct Package {
   std::wstring description;
   std::wstring url;
   std::wstring version;
+  std::wstring bucket;
   std::vector<std::wstring> links;
   std::vector<std::wstring> launchers;
 };

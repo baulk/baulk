@@ -70,19 +70,20 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
 bool Scanner::Initialize() {
   auto bucketsDir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
-  for (const auto &p : std::filesystem::directory_iterator(bucketsDir)) {
-    auto dir = p.path().wstring();
-    auto bk = bela::StringCat(dir, L"\\bucket");
-    if (bela::PathExists(bk)) {
-      buckets.emplace_back(std::move(dir));
-    }
+  for (const auto &bk : baulk::BaulkBuckets()) {
+    //
   }
   return true;
 }
 
 bool Scanner::IsUpdatable(std::wstring_view pkgname, std::wstring_view path,
                           std::wstring &version) {
-
+  for (const auto &b : buckets) {
+    auto pkgmeta = bela::StringCat(b, L"\\bucket\\", b, L".json");
+    if (!bela::PathExists(pkgmeta)) {
+      continue;
+    }
+  }
   return false;
 }
 

@@ -109,13 +109,17 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
       auto desc = bela::ToWide(b["description"].get<std::string_view>());
       auto name = bela::ToWide(b["name"].get<std::string_view>());
       auto url = bela::ToWide(b["url"].get<std::string_view>());
+      int weights = 100;
+      if (auto it = b.find("weights"); it != b.end()) {
+        weights = it.value().get<int>();
+      }
       DbgPrint(L"Add bucket: %s '%s@%s'", url, name, desc);
-      buckets.emplace_back(std::move(desc), std::move(name), std::move(url));
+      buckets.emplace_back(std::move(desc), std::move(name), std::move(url),
+                           weights);
     }
     if (auto it = json.find("freeze"); it != json.end()) {
       for (const auto &freeze : it.value()) {
-        freezepkgs.emplace_back(
-            bela::ToWide(freeze.get_ref<const std::string &>()));
+        freezepkgs.emplace_back(bela::ToWide(freeze.get<std::string_view>()));
         DbgPrint(L"Freeze package %s", freezepkgs.back());
       }
     }
