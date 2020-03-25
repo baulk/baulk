@@ -23,7 +23,7 @@ struct LinkMeta {
   std::wstring relative;
 };
 
-bool BaulkLinkMetaStore(const std::vector<LinkMeta> metas, const Package &pkg,
+bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
                         bela::error_code &ec) {
   if (metas.empty()) {
     return true;
