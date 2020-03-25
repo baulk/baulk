@@ -2,6 +2,7 @@
 #include <bela/path.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
+#include <version.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
 #include "fs.hpp"
@@ -9,7 +10,6 @@
 #include "decompress.hpp"
 
 namespace baulk::bucket {
-//
 std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
                                          bela::error_code &ec) {
   auto rss = bela::StringCat(bucketurl, L"/commits/master.atom");
@@ -78,11 +78,13 @@ bool Scanner::Initialize() {
 
 bool Scanner::IsUpdatable(std::wstring_view pkgname, std::wstring_view path,
                           std::wstring &version) {
+  //baulk::version::version latest;
   for (const auto &b : buckets) {
     auto pkgmeta = bela::StringCat(b, L"\\bucket\\", b, L".json");
     if (!bela::PathExists(pkgmeta)) {
       continue;
     }
+    // parse version
   }
   return false;
 }

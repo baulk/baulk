@@ -156,8 +156,8 @@ constexpr const CharT *from_chars(const CharT *first, const CharT *last,
     for (; first != last && is_digit(*first); ++first) {
       t = t * 10 + to_digit(*first);
     }
-    if (t <= (std::numeric_limits<std::uint8_t>::max)()) {
-      d = static_cast<std::uint8_t>(t);
+    if (t <= (std::numeric_limits<std::uint16_t>::max)()) {
+      d = static_cast<std::uint16_t>(t);
       return first;
     }
   }
@@ -193,14 +193,15 @@ struct version {
   std::uint16_t major = 0;
   std::uint16_t minor = 1;
   std::uint16_t patch = 0;
+  std::uint16_t build = 0;
   prerelease prerelease_type = prerelease::none;
   std::uint16_t prerelease_number = 0;
 
   constexpr version(std::uint16_t major, std::uint16_t minor,
-                    std::uint16_t patch,
+                    std::uint16_t patch, std::uint16_t build,
                     prerelease prerelease_type = prerelease::none,
                     std::uint8_t prerelease_number = 0) noexcept
-      : major{major}, minor{minor}, patch{patch},
+      : major{major}, minor{minor}, patch{patch}, build{build},
         prerelease_type{prerelease_type}, prerelease_number{
                                               prerelease_type ==
                                                       prerelease::none
@@ -208,12 +209,12 @@ struct version {
                                                   : prerelease_number} {}
 
   constexpr version(std::string_view str)
-      : version(0, 0, 0, prerelease::none, 0) {
+      : version(0, 0, 0, 0, prerelease::none, 0) {
     from_string_noexcept(str);
   }
 
   constexpr version(std::wstring_view str)
-      : version(0, 0, 0, prerelease::none, 0) {
+      : version(0, 0, 0, 0, prerelease::none, 0) {
     from_string_noexcept(str);
   }
 
@@ -238,6 +239,9 @@ struct version {
         next = detail::to_chars(next, prerelease_number);
       }
       next = detail::to_chars(next, prerelease_type);
+    }
+    if (build != 0) {
+      next = detail::to_chars(next, build);
     }
     next = detail::to_chars(next, patch);
     next = detail::to_chars(next, minor);
@@ -277,6 +281,11 @@ struct version {
           prerelease_type = prerelease::none;
           prerelease_number = 0;
           return {next, std::errc{}};
+        }
+        if (detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
+          if (next = detail::from_chars(++next, last, build); next == last) {
+            return {next, std::errc{}};
+          }
         }
         if (detail::check_delimiter(next, last, static_cast<CharT>('-'))) {
           if (next = detail::from_chars(next, last, prerelease_type);
@@ -328,6 +337,9 @@ struct version {
     if (patch != other.patch) {
       return patch - other.patch;
     }
+    if (build != other.build) {
+      return build - other.build;
+    }
     if (prerelease_type != other.prerelease_type) {
       return static_cast<std::uint8_t>(prerelease_type) -
              static_cast<std::uint8_t>(other.prerelease_type);
@@ -340,9 +352,9 @@ struct version {
 
 private:
   constexpr std::uint16_t chars_length() const noexcept {
-    // (<major>) + 1(.) + (<minor>) + 1(.) + (<patch>)
+    // (<major>) + 1(.) + (<minor>) + 1(.) + (<patch>)+ 1(.) + (<build>)
     std::uint16_t length = detail::length(major) + detail::length(minor) +
-                           detail::length(patch) + 2;
+                           detail::length(patch) + detail::length(build) + 3;
     if (prerelease_type != prerelease::none) {
       // + 1(-) + (<prerelease>)
       length += detail::length(prerelease_type) + 1;
@@ -388,14 +400,14 @@ inline std::wstring to_wstring(const version &v) { return v.to_wstring(); }
 
 constexpr std::optional<version>
 from_string_noexcept(std::string_view str) noexcept {
-  if (version v{0, 0, 0}; v.from_string_noexcept_t(str)) {
+  if (version v{0, 0, 0, 0}; v.from_string_noexcept_t(str)) {
     return v;
   }
   return std::nullopt;
 }
 constexpr std::optional<version>
 from_string_noexcept(std::wstring_view str) noexcept {
-  if (version v{0, 0, 0}; v.from_string_noexcept_t(str)) {
+  if (version v{0, 0, 0, 0}; v.from_string_noexcept_t(str)) {
     return v;
   }
   return std::nullopt;
