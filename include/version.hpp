@@ -14,7 +14,7 @@
 #include <system_error>
 
 namespace baulk::version {
-enum struct prerelease : std::uint16_t {
+enum struct prerelease : std::uint8_t {
   alpha = 0, // alpha
   beta = 1,
   rc = 2,
@@ -79,7 +79,7 @@ template <typename CharT> constexpr bool is_digit(CharT c) noexcept {
 template <typename CharT> constexpr std::uint8_t to_digit(CharT c) noexcept {
   return static_cast<std::uint8_t>(c - '0');
 }
-constexpr std::uint8_t length(std::uint16_t x) noexcept {
+constexpr std::uint8_t length(std::uint32_t x) noexcept {
   if (x < 10) {
     return 1;
   }
@@ -89,10 +89,25 @@ constexpr std::uint8_t length(std::uint16_t x) noexcept {
   if (x < 1000) {
     return 3;
   }
-  if (x < 10000) {
+  if (x < 10'000) {
     return 4;
   }
-  return 5;
+  if (x < 100'000) {
+    return 5;
+  }
+  if (x < 1000'0000) {
+    return 6;
+  }
+  if (x < 10'000'000) {
+    return 7;
+  }
+  if (x < 100'000'000) {
+    return 8;
+  }
+  if (x < 1000'000'000) {
+    return 9;
+  }
+  return 10;
 }
 
 constexpr std::uint8_t length(prerelease t) noexcept {
@@ -120,7 +135,7 @@ constexpr bool equals(const CharT *first, const CharT *last,
 }
 
 template <typename CharT>
-constexpr CharT *to_chars(CharT *str, std::uint16_t x,
+constexpr CharT *to_chars(CharT *str, std::uint32_t x,
                           bool dot = true) noexcept {
   do {
     *(--str) = static_cast<CharT>('0' + (x % 10));
@@ -150,14 +165,14 @@ constexpr CharT *to_chars(CharT *str, prerelease t) noexcept {
 
 template <typename CharT>
 constexpr const CharT *from_chars(const CharT *first, const CharT *last,
-                                  std::uint16_t &d) noexcept {
+                                  std::uint32_t &d) noexcept {
   if (first != last && is_digit(*first)) {
-    std::int32_t t = 0;
+    std::int64_t t = 0;
     for (; first != last && is_digit(*first); ++first) {
       t = t * 10 + to_digit(*first);
     }
-    if (t <= (std::numeric_limits<std::uint16_t>::max)()) {
-      d = static_cast<std::uint16_t>(t);
+    if (t <= (std::numeric_limits<std::uint32_t>::max)()) {
+      d = static_cast<std::uint32_t>(t);
       return first;
     }
   }
@@ -190,15 +205,15 @@ constexpr bool check_delimiter(const CharT *first, const CharT *last,
 } // namespace detail
 
 struct version {
-  std::uint16_t major = 0;
-  std::uint16_t minor = 1;
-  std::uint16_t patch = 0;
-  std::uint16_t build = 0;
+  std::uint32_t major = 0;
+  std::uint32_t minor = 0;
+  std::uint32_t patch = 0;
+  std::uint32_t build = 0;
   prerelease prerelease_type = prerelease::none;
-  std::uint16_t prerelease_number = 0;
+  std::uint32_t prerelease_number = 0;
 
-  constexpr version(std::uint16_t major, std::uint16_t minor,
-                    std::uint16_t patch, std::uint16_t build,
+  constexpr version(std::uint32_t major, std::uint32_t minor,
+                    std::uint32_t patch, std::uint32_t build,
                     prerelease prerelease_type = prerelease::none,
                     std::uint8_t prerelease_number = 0) noexcept
       : major{major}, minor{minor}, patch{patch}, build{build},
@@ -228,8 +243,7 @@ struct version {
 
   template <typename CharT>
   [[nodiscard]] constexpr detail::to_chars_result<CharT>
-  to_chars(CharT *first, CharT *last) const noexcept {
-    const auto length = chars_length();
+  to_chars(CharT *first, CharT *last, std::uint16_t length) const noexcept {
     if (first == nullptr || last == nullptr || (last - first) < length) {
       return {last, std::errc::value_too_large};
     }
@@ -250,16 +264,18 @@ struct version {
   }
 
   [[nodiscard]] std::wstring to_wstring() const {
-    auto str = std::wstring(chars_length(), '\0');
-    if (!to_chars(str.data(), str.data() + str.length())) {
+    auto len = chars_length();
+    auto str = std::wstring(len, '\0');
+    if (!to_chars(str.data(), str.data() + str.length(), len)) {
       return L"";
     }
     return str;
   }
 
   [[nodiscard]] std::string to_string() const {
-    auto str = std::string(chars_length(), '\0');
-    if (!to_chars(str.data(), str.data() + str.length())) {
+    auto len = chars_length();
+    auto str = std::string(len, '\0');
+    if (!to_chars(str.data(), str.data() + str.length(), len)) {
       return "";
     }
     return str;
@@ -287,17 +303,17 @@ struct version {
             return {next, std::errc{}};
           }
         }
-        if (detail::check_delimiter(next, last, static_cast<CharT>('-'))) {
-          if (next = detail::from_chars(next, last, prerelease_type);
+      }
+      if (detail::check_delimiter(next, last, static_cast<CharT>('-'))) {
+        if (next = detail::from_chars(next, last, prerelease_type);
+            next == last) {
+          prerelease_number = 0;
+          return {next, std::errc{}};
+        }
+        if (detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
+          if (next = detail::from_chars(++next, last, prerelease_number);
               next == last) {
-            prerelease_number = 0;
             return {next, std::errc{}};
-          }
-          if (detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
-            if (next = detail::from_chars(++next, last, prerelease_number);
-                next == last) {
-              return {next, std::errc{}};
-            }
           }
         }
       }
@@ -354,7 +370,10 @@ private:
   constexpr std::uint16_t chars_length() const noexcept {
     // (<major>) + 1(.) + (<minor>) + 1(.) + (<patch>)+ 1(.) + (<build>)
     std::uint16_t length = detail::length(major) + detail::length(minor) +
-                           detail::length(patch) + detail::length(build) + 3;
+                           detail::length(patch) + 2;
+    if (build != 0) {
+      length += detail::length(build) + 1;
+    }
     if (prerelease_type != prerelease::none) {
       // + 1(-) + (<prerelease>)
       length += detail::length(prerelease_type) + 1;
