@@ -18,7 +18,9 @@ int wmain() {
                                   L"0.49",
                                   L"v7.5.0",
                                   L"10.0.19041.153",
-                                  L"7.69.1"};
+                                  L"7.69.1",
+                                  L"1.0-rc.1",
+                                  L"1.2.3-rc.4"};
   for (auto v : vs) {
     baulk::version::version sv(cleanup_version(v));
     bela::FPrintF(stderr, L"resolve version: %s to %s\n", v, sv.to_wstring());
