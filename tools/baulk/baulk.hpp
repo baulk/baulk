@@ -100,12 +100,16 @@ bool BaulkInitializeExecutor(bela::error_code &ec);
 struct Package {
   std::wstring name;
   std::wstring description;
-  std::wstring url;
   std::wstring version;
   std::wstring bucket;
+  std::wstring url;
+  std::wstring checksum;
+  std::wstring extension;
   std::vector<std::wstring> links;
   std::vector<std::wstring> launchers;
+  int weights{0}; // Weights derived from bucket
 };
+
 } // namespace baulk
 
 #endif
