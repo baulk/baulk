@@ -48,6 +48,26 @@ struct Options {
   std::wstring BaulkShell();
 };
 
+template <size_t Len = 256> std::wstring PWD() {
+  std::wstring s;
+  s.resize(Len);
+  auto len = GetCurrentDirectoryW(Len, s.data());
+  if (len == 0) {
+    return L"";
+  }
+  if (len < Len) {
+    s.resize(len);
+    return s;
+  }
+  s.resize(len);
+  auto nlen = GetCurrentDirectoryW(len, s.data());
+  if (nlen == 0 || nlen > len) {
+    return L"";
+  }
+  s.resize(nlen);
+  return s;
+}
+
 bool Options::Parse(bela::error_code &ec) {
   int Argc = 0;
   auto Argv = CommandLineToArgvW(GetCommandLineW(), &Argc);
@@ -102,6 +122,9 @@ bool Options::Parse(bela::error_code &ec) {
       ec);
   if (!result) {
     return false;
+  }
+  if (cwd.empty()) {
+    cwd = PWD();
   }
   return true;
 }

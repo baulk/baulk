@@ -108,43 +108,27 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
     pkg.extension = ja.get("extension");
     // load version
 #ifdef _M_X64
-    if (auto it = j.find("url64"); it != j.end()) {
-      pkg.url = bela::ToWide(it.value().get<std::string_view>());
-      if (auto h = j.find("url64.hash"); h != j.end()) {
-        pkg.checksum = bela::ToWide(it.value().get<std::string_view>());
-      }
-    } else if (auto it = j.find("url"); it != j.end()) {
-      pkg.url = bela::ToWide(it.value().get<std::string_view>());
-      if (auto h = j.find("url.hash"); h != j.end()) {
-        pkg.checksum = bela::ToWide(it.value().get<std::string_view>());
-      }
+    pkg.url = ja.get("url64");
+    if (!pkg.url.empty()) {
+      pkg.checksum = ja.get("url64.hash");
+    } else {
+      pkg.url = ja.get("url");
+      pkg.checksum = ja.get("url.hash");
     }
 // AMD64 code
 #else
-    if (auto it = j.find("url"); it != j.end()) {
-      pkg.url = bela::ToWide(it.value().get<std::string_view>());
-      if (auto h = j.find("url.hash"); h != j.end()) {
-        pkg.checksum = bela::ToWide(it.value().get<std::string_view>());
-      }
-    }
+    pkg.url = ja.get("url");
+    pkg.checksum = ja.get("url.hash");
 #endif
-    if (pkg.url.empty()) {
-      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
-      return std::nullopt;
-    }
-    if (auto it = j.find("links"); it != j.end()) {
-      for (const auto &o : it.value()) {
-        pkg.links.emplace_back(bela::ToWide(o.get<std::string_view>()));
-      }
-    }
-    if (auto it = j.find("launchers"); it != j.end()) {
-      for (const auto &o : it.value()) {
-        pkg.launchers.emplace_back(bela::ToWide(o.get<std::string_view>()));
-      }
-    }
+    ja.array("links", pkg.links);
+    ja.array("launchers", pkg.launchers);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package meta json: ",
                                bela::ToWide(e.what()));
+    return std::nullopt;
+  }
+  if (pkg.url.empty()) {
+    ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
     return std::nullopt;
   }
   return std::make_optional(std::move(pkg));
