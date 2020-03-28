@@ -31,7 +31,7 @@ struct STORAGESIGNATURE {
 };
 #pragma pack()
 // LE endian
-static inline PVOID belarva(PVOID m, PVOID b) {
+[[maybe_unused]] inline PVOID belarva(PVOID m, PVOID b) {
   return reinterpret_cast<PVOID>(reinterpret_cast<ULONG_PTR>(b) +
                                  reinterpret_cast<ULONG_PTR>(m));
 }

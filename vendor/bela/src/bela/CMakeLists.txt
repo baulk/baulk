@@ -7,6 +7,7 @@ add_library(bela STATIC
   codecvt.cc
   escaping.cc
   fmt.cc
+  fnmatch.cc
   match.cc
   memutil.cc
   numbers.cc

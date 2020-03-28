@@ -286,7 +286,6 @@ std::wstring CEscape(std::wstring_view src) {
   dest.reserve(src.size() * 3 / 2);
   bool last_hex_escape = false;
   for (auto c : src) {
-    bool is_hex_escape = false;
     switch (c) {
     case L'\n':
       dest += L"\\n";
@@ -317,13 +316,12 @@ std::wstring CEscape(std::wstring_view src) {
         dest += L"\\x";
         dest += uhc[ch / 16];
         dest += uhc[ch % 16];
-        is_hex_escape = true;
+        last_hex_escape = true;
         continue;
       }
       dest += c;
       break;
     }
-    last_hex_escape = is_hex_escape;
   }
   return dest;
 }

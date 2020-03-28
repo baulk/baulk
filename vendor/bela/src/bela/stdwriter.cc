@@ -89,7 +89,7 @@ ConsoleMode GetConsoleModeEx(HANDLE hFile) {
   }
   if (ft != FILE_TYPE_CHAR) {
     if (IsCygwinPipe(hFile)) {
-      ConsoleMode::PTY; // cygwin is pipe
+      return ConsoleMode::PTY; // cygwin is pipe
     }
     return ConsoleMode::File; // cygwin is pipe
   }
@@ -128,7 +128,7 @@ public:
   std::wstring FileTypeName(FILE *file) const;
   bool IsTerminal(FILE *file) const;
   ssize_t FileWriteConsole(HANDLE hFile, std::wstring_view sv,
-                          ConsoleMode cm) const {
+                           ConsoleMode cm) const {
     if (cm == ConsoleMode::Conhost) {
       return BelaWriteAnsi(hFile, sv);
     }

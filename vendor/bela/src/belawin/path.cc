@@ -120,21 +120,18 @@ void PathStripName(std::wstring &s) {
 }
 
 namespace path_internal {
-
 size_t PathRootLen(std::wstring_view p) {
   if (p.size() < 2) {
     return 0;
   }
-  auto ch = p[0];
-  if (p[1] == ':' && ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z')) {
+  if (p[1] == ':' && bela::ascii_isalpha(p[0])) {
     return 2;
   }
   if (p.size() >= 4 && bela::IsPathSeparator(p[0]) &&
       bela::IsPathSeparator(p[1]) && !bela::IsPathSeparator(p[2]) &&
       (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
     if (p.size() >= 6) {
-      auto ch = p[4];
-      if (p[5] == ':' && ('a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z')) {
+      if (p[5] == ':' && bela::ascii_isalpha(p[4])) {
         return 6;
       }
       return 4;

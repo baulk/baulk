@@ -101,7 +101,7 @@ struct process_capture_helper {
   }
   unsigned int wait_and_close_handles() {
     CloseHandle(pi.hThread);
-    const DWORD result = WaitForSingleObject(pi.hProcess, INFINITE);
+    WaitForSingleObject(pi.hProcess, INFINITE);
     DWORD exit_code = 0;
     GetExitCodeProcess(pi.hProcess, &exit_code);
     CloseHandle(pi.hProcess);

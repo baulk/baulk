@@ -4,8 +4,8 @@
 #include "base.hpp"
 
 namespace bela::io {
-[[maybe_unused]] constexpr auto MaximumRead = 1024ull * 1024 * 8;
-[[maybe_unused]] constexpr auto MaximumLineLength = 1024ull * 64;
+[[maybe_unused]] constexpr auto MaximumRead = 1024ull * 1024 * 8; // 8MB
+[[maybe_unused]] constexpr auto MaximumLineLength = 1024ull * 64; // 64KB
 bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
               uint64_t maxsize = MaximumRead);
 bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec,

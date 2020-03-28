@@ -208,3 +208,4 @@ bela base Visual C++: charconv
 bela Use parallel-hashmap https://github.com/greg7mdp/parallel-hashmap
 bela Use semver https://github.com/Neargye/semver
 bela TOML port from https://github.com/skystrife/cpptoml
+bela Use musl fnmatch(MIT) https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c

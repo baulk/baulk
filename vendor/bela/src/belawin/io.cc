@@ -6,7 +6,6 @@
 #include <bela/path.hpp>
 
 namespace bela::io {
-constexpr size_t MB = 1024ull * 1024;
 bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
               uint64_t maxsize) {
   bela::MapView mv;

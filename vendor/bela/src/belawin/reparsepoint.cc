@@ -17,6 +17,7 @@ struct Distributor {
 
 static bool NtSymbolicLink(const ReparseBuffer *buf, facv_t &av,
                            bela::error_code &ec) {
+  (void)ec;
   std::wstring target;
   auto wstr =
       buf->SymbolicLinkReparseBuffer.PathBuffer +
@@ -109,14 +110,16 @@ static bool MountPoint(const ReparseBuffer *buf, facv_t &av,
   return true;
 }
 
-static bool AFUnix(const ReparseBuffer *buf, facv_t &av, bela::error_code &ec) {
+static bool AFUnix(const ReparseBuffer *buf, facv_t &av, bela::error_code &) {
   //
+  (void)buf;
   av.emplace_back(L"Description", L"AF_UNIX");
   return true;
 }
 
 static bool LxSymbolicLink(const ReparseBuffer *buf, facv_t &av,
-                           bela::error_code &ec) {
+                           bela::error_code &) {
+  (void)buf;
   // Not implemented
   av.emplace_back(L"Description", L"LxSymbolicLink");
   return true;

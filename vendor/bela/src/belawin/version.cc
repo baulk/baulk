@@ -57,7 +57,7 @@ public:
 
     return false;
   }
-  bool VerQuery(VersionInfo &vi, bela::error_code &ec) {
+  void VerQuery(VersionInfo &vi) {
     LPVOID info{nullptr};
     UINT ilen{0};
     VerQueryValueW(buffer, L"\\VarFileInfo\\Translation", &info, &ilen);
@@ -103,7 +103,6 @@ public:
     query(L"LegalTrademarks", vi.LegalTrademarks);
     query(L"PrivateBuild", vi.PrivateBuild);
     query(L"SpecialBuild", vi.SpecialBuild);
-    return true;
   }
 
 private:
@@ -117,9 +116,7 @@ std::optional<VersionInfo> ExposeVersion(std::wstring_view file,
     return std::nullopt;
   }
   VersionInfo vi;
-  if (!exposer.VerQuery(vi, ec)) {
-    return std::nullopt;
-  }
+  exposer.VerQuery(vi);
   return std::make_optional(std::move(vi));
 }
 } // namespace bela::pe

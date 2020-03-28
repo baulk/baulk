@@ -84,5 +84,7 @@ int wmain() {
   bela::FPrintF(stderr, L"FullPath: %s\n", a5);
   auto a6 = bela::PathAbsolute(L"cmd");
   bela::FPrintF(stderr, L"PathAbsolute: %s\n", a6);
+  auto a7 = FullPath(L".");
+  bela::FPrintF(stderr, L"FullPath: %s\n", a7);
   return 0;
 }

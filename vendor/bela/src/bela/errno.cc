@@ -212,8 +212,9 @@ std::wstring resolve_system_error_code(DWORD ec, std::wstring_view prefix) {
 
 bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
   constexpr auto n = std::size(errno_internal::errorlist);
-  auto msg = eno >= n ? errno_internal::errorlist[n - 1]
-                      : errno_internal::errorlist[eno];
+  auto msg = (static_cast<std::size_t>(eno) >= n)
+                 ? errno_internal::errorlist[n - 1]
+                 : errno_internal::errorlist[eno];
   return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 
