@@ -66,28 +66,6 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
   return true;
 }
 
-bool PackageInstalled(std::wstring_view pkglock, baulk::Package &pkg) {
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, pkglock.data(), L"rb"); en != 0) {
-    auto ec = bela::make_stdc_error_code(en);
-    bela::FPrintF(stderr, L"unable load %s error: %s\n", pkglock, ec.message);
-    return false;
-  }
-  auto closer = bela::finally([&] { fclose(fd); });
-  try {
-    auto j = nlohmann::json::parse(fd);
-    pkg.version = bela::ToWide(j["version"].get<std::string_view>());
-    pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
-    if (auto it = j.find("weights"); it != j.end()) {
-      it.value().get_to(pkg.weights);
-    }
-  } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
-    return false;
-  }
-  return true;
-}
-
 std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
                                           bela::error_code &ec) {
   if (!bela::PathExists(pkgmeta)) {
@@ -134,24 +112,46 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
   return std::make_optional(std::move(pkg));
 }
 
-bool PackageIsUpdatable(std::wstring_view pkgname, std::wstring_view path,
-                        baulk::Package &pkg) {
-  if (!PackageInstalled(path, pkg)) {
-    return false;
+// installed package meta;
+std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
+                                               bela::error_code &ec) {
+  auto pkglock =
+      bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
+  FILE *fd = nullptr;
+  if (auto en = _wfopen_s(&fd, pkglock.data(), L"rb"); en != 0) {
+    ec = bela::make_stdc_error_code(en);
+    return std::nullopt;
   }
+  auto closer = bela::finally([&] { fclose(fd); });
+  baulk::Package pkg;
+  try {
+    auto j = nlohmann::json::parse(fd);
+    pkg.version = bela::ToWide(j["version"].get<std::string_view>());
+    pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
+    if (auto it = j.find("weights"); it != j.end()) {
+      it.value().get_to(pkg.weights);
+    }
+  } catch (const std::exception &e) {
+    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(pkg));
+}
+
+bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   // initialize version from installed version
-  baulk::version::version pkgversion(pkg.version);
+  baulk::version::version pkgversion(opkg.version);
   bool hasnewest{false};
   auto bucketsDir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   for (const auto &bk : baulk::BaulkBuckets()) {
     auto pkgmeta =
-        bela::StringCat(bucketsDir, L"\\", bk.name, L"\\", pkgname, L".json");
+        bela::StringCat(bucketsDir, L"\\", bk.name, L"\\", opkg.name, L".json");
     bela::error_code ec;
     auto pkgN = PackageMeta(pkgmeta, ec);
     if (!pkgN) {
       if (ec) {
-        bela::FPrintF(stderr, L"Parse package: %s %s error: %s\n", pkgname,
+        bela::FPrintF(stderr, L"Parse package: %s %s error: %s\n", opkg.name,
                       pkgmeta, ec.message);
       }
       continue;
@@ -168,6 +168,35 @@ bool PackageIsUpdatable(std::wstring_view pkgname, std::wstring_view path,
     }
   }
   return hasnewest;
+}
+// package metadata
+std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
+                                            bela::error_code &ec) {
+  auto bucketsDir =
+      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+  for (const auto &bk : baulk::BaulkBuckets()) {
+    auto pkgmeta =
+        bela::StringCat(bucketsDir, L"\\", bk.name, L"\\", pkgname, L".json");
+    bela::error_code ec;
+    if (auto pkgN = PackageMeta(pkgmeta, ec); pkgN) {
+
+      return pkgN;
+    }
+    if (ec) {
+      bela::FPrintF(stderr, L"Parse package: %s %s error: %s\n", pkgname,
+                    pkgmeta, ec.message);
+    }
+  }
+  return std::nullopt;
+}
+
+bool PackageIsUpdatable(std::wstring_view pkgname, baulk::Package &pkg) {
+  bela::error_code ec;
+  auto opkg = PackageLocalMeta(pkgname, ec);
+  if (!opkg) {
+    return false;
+  }
+  return PackageUpdatableMeta(*opkg, pkg);
 }
 
 } // namespace baulk::bucket
