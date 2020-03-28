@@ -181,7 +181,7 @@ bool PackageScanUpdatable() {
   if (pkgu.names.empty()) {
     return true;
   }
-  bela::FPrintF(stderr, L"\x1b[33m%d packages can be updated.\x1b[0m\n%s\n",
+  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n%s\n",
                 pkgu.names.size(), pkgu.Pretty());
   return true;
 }

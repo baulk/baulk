@@ -124,6 +124,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
   }
   auto closer = bela::finally([&] { fclose(fd); });
   baulk::Package pkg;
+  pkg.name = pkgname;
   try {
     auto j = nlohmann::json::parse(fd);
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
@@ -142,23 +143,23 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   // initialize version from installed version
   baulk::version::version pkgversion(opkg.version);
   bool hasnewest{false};
-  auto bucketsDir =
+  auto bucketsdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   for (const auto &bk : baulk::BaulkBuckets()) {
-    auto pkgmeta =
-        bela::StringCat(bucketsDir, L"\\", bk.name, L"\\", opkg.name, L".json");
+    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
+                                   opkg.name, L".json");
     bela::error_code ec;
     auto pkgN = PackageMeta(pkgmeta, ec);
     if (!pkgN) {
       if (ec) {
-        bela::FPrintF(stderr, L"Parse package: %s %s error: %s\n", opkg.name,
-                      pkgmeta, ec.message);
+        bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgmeta, ec.message);
       }
       continue;
     }
     pkgN->bucket = bk.name;
     pkgN->weights = bk.weights;
     baulk::version::version newversion(pkgN->version);
+
     if (newversion > pkgversion ||
         (newversion == pkgversion && pkg.version != pkgN->version &&
          pkg.weights < pkgN->weights)) {
@@ -172,19 +173,17 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
 // package metadata
 std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
                                             bela::error_code &ec) {
-  auto bucketsDir =
+  auto bucketsdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   for (const auto &bk : baulk::BaulkBuckets()) {
-    auto pkgmeta =
-        bela::StringCat(bucketsDir, L"\\", bk.name, L"\\", pkgname, L".json");
+    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
+                                   pkgname, L".json");
     bela::error_code ec;
     if (auto pkgN = PackageMeta(pkgmeta, ec); pkgN) {
-
       return pkgN;
     }
     if (ec) {
-      bela::FPrintF(stderr, L"Parse package: %s %s error: %s\n", pkgname,
-                    pkgmeta, ec.message);
+      bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgmeta, ec.message);
     }
   }
   return std::nullopt;
