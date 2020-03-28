@@ -133,10 +133,6 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile) {
   return BaulkEnv::Instance().Initialize(argc, argv, profile);
 }
-bool InitializeBaulkBuckets() {
-  //
-  return true;
-}
 
 bool BaulkIsFrozenPkg(std::wstring_view pkg) {
   //

@@ -89,7 +89,6 @@ using Buckets = std::vector<Bucket>;
 bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
                         std::wstring_view profile);
 std::wstring_view BaulkProfile();
-bool InitializeBaulkBuckets();
 bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
 Buckets &BaulkBuckets();

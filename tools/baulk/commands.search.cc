@@ -1,3 +1,4 @@
+#include <bela/fnmatch.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
 #include <version.hpp>
@@ -14,16 +15,18 @@ int cmd_search_all() {
 }
 
 int cmd_search(const argv_t &argv) {
-  if (!baulk::InitializeBaulkBuckets()) {
-    return 1;
-  }
-  //
   if (argv.empty()) {
     return cmd_search_all();
   }
-  for (const auto pkg : argv) {
-    //
-  }
+  // Package is matched
+  auto PkgMatch = [&](std::wstring_view pkgname) {
+    for (const auto a : argv) {
+      if (bela::FnMatch(a, pkgname)) {
+        return true;
+      }
+    }
+    return false;
+  };
   return 0;
 }
 } // namespace baulk::commands

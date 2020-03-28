@@ -52,6 +52,31 @@ int cmd_list(const argv_t &argv) {
   if (argv.empty()) {
     return cmd_list_all();
   }
+  auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
+  size_t upgradable = 0;
+  bela::error_code ec;
+  for (const auto a : argv) {
+    auto opkg = baulk::bucket::PackageLocalMeta(a, ec);
+    if (!opkg) {
+      baulk::DbgPrint(L"list package '%s' error: %s", a, ec.message);
+      continue;
+    }
+    baulk::Package pkg;
+    if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
+      upgradable++;
+      bela::FPrintF(
+          stderr,
+          L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
+          L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+          opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
+          baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
+      continue;
+    }
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
+                  opkg->name, opkg->bucket, opkg->version);
+  }
+  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
+                upgradable);
   return 0;
 }
 } // namespace baulk::commands
