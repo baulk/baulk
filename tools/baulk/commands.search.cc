@@ -3,14 +3,10 @@
 #include <version.hpp>
 
 namespace baulk::commands {
+// lldb/kali-rolling 1:9.0-49.1 amd64
+//   Next generation, high-performance debugger
 
-std::wstring VersionAlignment(std::wstring_view ver, size_t maxlen = 10) {
-  if (ver.size() > maxlen) {
-    baulk::version::version v(ver);
-    return v.to_wstring();
-  }
-  return std::wstring(ver);
-}
+// package
 
 int cmd_search_all() {
   //

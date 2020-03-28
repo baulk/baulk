@@ -33,7 +33,8 @@ int cmd_list_all() {
             L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
             L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
             opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-            baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
+            baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m"
+                                             : L"");
         continue;
       }
       bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
