@@ -92,6 +92,7 @@ std::wstring_view BaulkProfile();
 bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
 Buckets &BaulkBuckets();
+int BaulkBucketWeights(std::wstring_view bucket);
 std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
 bool BaulkInitializeExecutor(bela::error_code &ec);

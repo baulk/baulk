@@ -1,7 +1,6 @@
 {
     "version": "19.00",
     "bucket": "Baulk",
-    "weights": 100,
     "links": [
         "7z.exe"
     ]

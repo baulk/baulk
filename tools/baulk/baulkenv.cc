@@ -20,6 +20,14 @@ public:
   }
   std::wstring_view BaulkRoot() const { return root; }
   Buckets &BaulkBuckets() { return buckets; }
+  int BaulkBucketWeights(std::wstring_view bucket) {
+    for (const auto &bk : buckets) {
+      if (bela::EqualsIgnoreCase(bk.name, bucket)) {
+        return bk.weights;
+      }
+    }
+    return 0;
+  }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
   bool InitializeExecutor(bela::error_code &ec) {
@@ -160,6 +168,10 @@ std::wstring_view BaulkProfile() {
 
 baulk::compiler::Executor &BaulkExecutor() {
   return BaulkEnv::Instance().BaulkExecutor();
+}
+
+int BaulkBucketWeights(std::wstring_view bucket) {
+  return BaulkEnv::Instance().BaulkBucketWeights(bucket);
 }
 
 bool BaulkInitializeExecutor(bela::error_code &ec) {

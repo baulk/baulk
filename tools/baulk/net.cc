@@ -488,4 +488,15 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   bar.MarkCompleted();
   return std::make_optional(std::move(dest));
 }
+
+std::wstring_view BestURL(std::vector<std::wstring> &urls) {
+  if (urls.empty()) {
+    return L"";
+  }
+  if (urls.size() == 1) {
+    return urls.front();
+  }
+  return L"";
+}
+
 } // namespace baulk::net

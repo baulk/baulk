@@ -92,6 +92,8 @@ inline std::optional<Response> RestGet(std::wstring_view url,
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code ec);
+std::wstring_view BestURL(std::vector<std::wstring> &urls);
+
 } // namespace baulk::net
 
 #endif

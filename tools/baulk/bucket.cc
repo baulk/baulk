@@ -135,9 +135,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
     auto j = nlohmann::json::parse(fd);
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
     pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
-    if (auto it = j.find("weights"); it != j.end()) {
-      it.value().get_to(pkg.weights);
-    }
+    pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
     return std::nullopt;
