@@ -1,6 +1,8 @@
 #include <bela/base.hpp>
 #include <bela/stdwriter.hpp>
 #include <bela/comutils.hpp>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <xml.hpp>
 #include "net.hpp"
 
@@ -59,6 +61,8 @@ int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
     return download_atom();
   }
+  auto resptime = baulk::net::UrlResponseTime(argv[1]);
+  bela::FPrintF(stderr, L"RespTimeout %d ms\n", resptime / 1000'000);
   bela::error_code ec;
   auto file = baulk::net::WinGet(argv[1], L".", true, ec);
   if (!file) {

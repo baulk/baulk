@@ -490,6 +490,23 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   return std::make_optional(std::move(dest));
 }
 
+constexpr auto MaximumTime = (std::numeric_limits<std::uint64_t>::max)();
+
+std::uint64_t UrlResponseTime(std::wstring_view url) {
+  UrlComponets uc;
+  if (!CrackUrl(url, uc)) {
+    return MaximumTime;
+  }
+  auto begin = std::chrono::steady_clock::now();
+  bela::error_code ec;
+  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10, ec); !conn) {
+    return MaximumTime;
+  }
+  auto cur = std::chrono::steady_clock::now();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(cur - begin)
+      .count();
+}
+
 std::wstring_view BestURL(const std::vector<std::wstring> &urls) {
   if (urls.empty()) {
     return L"";
@@ -497,17 +514,24 @@ std::wstring_view BestURL(const std::vector<std::wstring> &urls) {
   if (urls.size() == 1) {
     return urls.front();
   }
-  std::uint64_t elapsed = (std::numeric_limits<std::uint64_t>::max)();
+  auto elapsed = MaximumTime;
   size_t pos = 0;
-  auto localesuffix = bela::StringCat(L"#", baulk::BaulkLocale());
-  for (; pos < urls.size(); pos++) {
-    if (bela::EndsWithIgnoreCase(urls[pos], localesuffix)) {
-      // eg:
-      // https://npm.taobao.org/mirrors/git-for-windows/v2.26.0.windows.1/MinGit-2.26.0-busybox-64-bit.zip#zh-CN
-      return std::wstring_view{urls[pos].data(),
-                               urls[pos].size() - localesuffix.size()};
+  auto suffix = bela::StringCat(L"#", baulk::BaulkLocale());
+  // The first round to determine whether there is a mirror image of the area
+  for (const auto &u : urls) {
+    std::wstring_view url(u);
+    if (bela::EndsWithIgnoreCase(url, suffix)) {
+      // eg: https://npm.taobao.org/.../MinGit-2.26.0-busybox-64-bit.zip#zh-CN
+      return url.substr(0, url.size() - suffix.size());
     }
+  }
+  // Second round of analysis of network connection establishment time
+  for (size_t i = 0; i < urls.size(); i++) {
     // connect url to get elapsed timeout
+    auto resptime = UrlResponseTime(urls[i]);
+    if (resptime < elapsed) {
+      pos = i;
+    }
   }
   return urls[pos];
 }

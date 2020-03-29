@@ -23,6 +23,7 @@ add_executable(
   launcher.cc
   msi.cc
   net.cc
+  tcp.cc
   zip.cc
   baulk.rc
   baulk.manifest)
@@ -32,6 +33,7 @@ target_link_libraries(
   blake3
   belawin
   winhttp
+  ws2_32
   Msi
   XmlLite)
 
@@ -46,7 +48,7 @@ if(BUILD_TEST)
 
   target_link_libraries(indicators_test belawin winhttp)
 
-  add_executable(windl_test windl_test.cc net.cc)
+  add_executable(windl_test windl_test.cc net.cc tcp.cc)
 
-  target_link_libraries(windl_test belawin winhttp)
+  target_link_libraries(windl_test belawin winhttp ws2_32)
 endif(BUILD_TEST)
