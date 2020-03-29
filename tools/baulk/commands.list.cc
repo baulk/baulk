@@ -40,9 +40,7 @@ int cmd_list_all() {
       bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
                     opkg->name, opkg->bucket, opkg->version);
     } while (finder.Next());
-    return true;
   }
-
   bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
                 upgradable);
   return 0;

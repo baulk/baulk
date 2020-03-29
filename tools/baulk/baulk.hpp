@@ -101,9 +101,9 @@ struct Package {
   std::wstring description;
   std::wstring version;
   std::wstring bucket;
-  std::wstring url;
   std::wstring checksum;
   std::wstring extension;
+  std::vector<std::wstring> urls;
   std::vector<std::wstring> links;
   std::vector<std::wstring> launchers;
   int weights{0}; // Weights derived from bucket

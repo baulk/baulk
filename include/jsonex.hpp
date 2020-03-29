@@ -17,6 +17,23 @@ public:
     }
     return std::wstring(dv);
   }
+  bool get(std::string_view name, std::vector<std::wstring> &a) {
+    if (auto it = obj.find(name); it != obj.end()) {
+      if (it->is_string()) {
+        a.emplace_back(bela::ToWide(it->get<std::string_view>()));
+        return true;
+      }
+      if (it->is_array()) {
+        for (const auto &o : it.value()) {
+          a.emplace_back(bela::ToWide(o.get<std::string_view>()));
+        }
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
   void array(std::string_view name, std::vector<std::wstring> &arr) {
     if (auto it = obj.find(name); it != obj.end()) {
       for (const auto &o : it.value()) {

@@ -67,6 +67,8 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
 }
 
 std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
+                                          std::wstring_view pkgname,
+                                          std::wstring_view bucket,
                                           bela::error_code &ec) {
   if (!bela::PathExists(pkgmeta)) {
     return std::nullopt;
@@ -78,6 +80,8 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
   }
   auto closer = bela::finally([&] { fclose(fd); });
   baulk::Package pkg;
+  pkg.name = pkgname;
+  pkg.bucket = bucket;
   try {
     auto j = nlohmann::json::parse(fd);
     baulk::json::JsonAssignor ja(j);
@@ -86,17 +90,22 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
     pkg.extension = ja.get("extension");
     // load version
 #ifdef _M_X64
-    pkg.url = ja.get("url64");
-    if (!pkg.url.empty()) {
+    if (ja.get("url64", pkg.urls)) {
       pkg.checksum = ja.get("url64.hash");
-    } else {
-      pkg.url = ja.get("url");
+    } else if (ja.get("url", pkg.urls)) {
       pkg.checksum = ja.get("url.hash");
+    } else {
+      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      return std::nullopt;
     }
 // AMD64 code
 #else
-    pkg.url = ja.get("url");
-    pkg.checksum = ja.get("url.hash");
+    if (ja.get("url", pkg.urls)) {
+      pkg.checksum = ja.get("url.hash");
+    } else {
+      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      return std::nullopt;
+    }
 #endif
     ja.array("links", pkg.links);
     ja.array("launchers", pkg.launchers);
@@ -105,10 +114,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
                                bela::ToWide(e.what()));
     return std::nullopt;
   }
-  if (pkg.url.empty()) {
-    ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
-    return std::nullopt;
-  }
+
   return std::make_optional(std::move(pkg));
 }
 
@@ -149,7 +155,7 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
                                    opkg.name, L".json");
     bela::error_code ec;
-    auto pkgN = PackageMeta(pkgmeta, ec);
+    auto pkgN = PackageMeta(pkgmeta, opkg.name, bk.name, ec);
     if (!pkgN) {
       if (ec) {
         bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgmeta, ec.message);
@@ -159,7 +165,8 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     pkgN->bucket = bk.name;
     pkgN->weights = bk.weights;
     baulk::version::version newversion(pkgN->version);
-
+    // compare version newversion is > oldversion
+    // newversion == oldversion and strversion not equail compare weights
     if (newversion > pkgversion ||
         (newversion == pkgversion && pkg.version != pkgN->version &&
          pkg.weights < pkgN->weights)) {
@@ -179,7 +186,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
     auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
                                    pkgname, L".json");
     bela::error_code ec;
-    if (auto pkgN = PackageMeta(pkgmeta, ec); pkgN) {
+    if (auto pkgN = PackageMeta(pkgmeta, pkgname, bk.name, ec); pkgN) {
       return pkgN;
     }
     if (ec) {
