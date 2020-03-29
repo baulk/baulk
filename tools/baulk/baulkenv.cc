@@ -47,12 +47,14 @@ public:
     return baulkEnv;
   }
   std::wstring_view Profile() const { return profile; }
+  std::wstring_view Locale() const { return locale; }
 
 private:
   BaulkEnv() = default;
   std::wstring root;
   std::wstring git;
   std::wstring profile;
+  std::wstring locale; // mirrors
   Buckets buckets;
   std::vector<std::wstring> freezepkgs;
   baulk::compiler::Executor executor;
@@ -89,6 +91,14 @@ std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
 
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
                           std::wstring_view profile_) {
+  //
+  locale.resize(64);
+  if (auto n = GetUserDefaultLocaleName(locale.data(), 64); n != 0 && n < 64) {
+    locale.resize(n);
+  } else {
+    locale.clear();
+  }
+  baulk::DbgPrint(L"Baulk locale name %s\n", locale);
   bela::error_code ec;
   if (auto exedir = bela::ExecutableParent(ec); exedir) {
     root.assign(std::move(*exedir));
@@ -164,6 +174,10 @@ std::wstring_view BaulkGit() {
 std::wstring_view BaulkProfile() {
   //
   return BaulkEnv::Instance().Profile();
+}
+std::wstring_view BaulkLocale() {
+  //
+  return BaulkEnv::Instance().Locale();
 }
 
 baulk::compiler::Executor &BaulkExecutor() {

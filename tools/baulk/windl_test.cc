@@ -8,6 +8,8 @@ namespace baulk {
 bool IsDebugMode = false;
 constexpr size_t UerAgentMaximumLength = 64;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
+std::wstring locale;
+std::wstring_view BaulkLocale() { return locale; }
 } // namespace baulk
 
 namespace baulk::net {
@@ -46,6 +48,14 @@ int download_atom() {
 }
 
 int wmain(int argc, wchar_t **argv) {
+
+  baulk::locale.resize(64);
+  if (auto n = GetUserDefaultLocaleName(baulk::locale.data(), 64);
+      n != 0 && n < 64) {
+    baulk::locale.resize(n);
+  } else {
+    baulk::locale.clear();
+  }
   if (argc < 2) {
     return download_atom();
   }

@@ -6,6 +6,7 @@
 #include <winhttp.h>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 #include "baulk.hpp"
 #include "indicators.hpp"
 #include "net.hpp"
@@ -489,14 +490,26 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   return std::make_optional(std::move(dest));
 }
 
-std::wstring_view BestURL(std::vector<std::wstring> &urls) {
+std::wstring_view BestURL(const std::vector<std::wstring> &urls) {
   if (urls.empty()) {
     return L"";
   }
   if (urls.size() == 1) {
     return urls.front();
   }
-  return L"";
+  std::uint64_t elapsed = (std::numeric_limits<std::uint64_t>::max)();
+  size_t pos = 0;
+  auto localesuffix = bela::StringCat(L"#", baulk::BaulkLocale());
+  for (; pos < urls.size(); pos++) {
+    if (bela::EndsWithIgnoreCase(urls[pos], localesuffix)) {
+      // eg:
+      // https://npm.taobao.org/mirrors/git-for-windows/v2.26.0.windows.1/MinGit-2.26.0-busybox-64-bit.zip#zh-CN
+      return std::wstring_view{urls[pos].data(),
+                               urls[pos].size() - localesuffix.size()};
+    }
+    // connect url to get elapsed timeout
+  }
+  return urls[pos];
 }
 
 } // namespace baulk::net

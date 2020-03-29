@@ -91,6 +91,7 @@ bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
 std::wstring_view BaulkProfile();
 bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
+std::wstring_view BaulkLocale();
 Buckets &BaulkBuckets();
 int BaulkBucketWeights(std::wstring_view bucket);
 std::wstring_view BaulkGit();
