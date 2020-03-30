@@ -499,7 +499,8 @@ std::uint64_t UrlResponseTime(std::wstring_view url) {
   }
   auto begin = std::chrono::steady_clock::now();
   bela::error_code ec;
-  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10, ec); !conn) {
+  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10000, ec);
+      !conn) {
     return MaximumTime;
   }
   auto cur = std::chrono::steady_clock::now();

@@ -28,6 +28,18 @@ private:
   bool initialized{false};
 };
 
+inline constexpr bool InProgress(int rv) {
+  return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS;
+}
+
+inline error_code make_wsa_error_code(int code,
+                                      std::wstring_view prefix = L"") {
+  error_code ec;
+  ec.code = code;
+  ec.message = bela::resolve_system_error_code(ec.code, prefix);
+  return ec;
+}
+
 Conn::~Conn() {
   if (sock != BAULK_INVALID_SOCKET) {
     closesocket(sock);
@@ -41,16 +53,52 @@ void Conn::Move(Conn &&other) {
   other.sock = BAULK_INVALID_SOCKET;
 }
 
-inline constexpr bool InProgress(int rv) {
-  return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS;
+ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
+  WSABUF wsabuf{static_cast<ULONG>(len),
+                const_cast<char *>(reinterpret_cast<const char *>(data))};
+  DWORD dwbytes = 0;
+  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
+      rv != SOCKET_ERROR) {
+    return static_cast<ssize_t>(dwbytes);
+  }
+  if (auto rv = WSAGetLastError(); !InProgress(rv)) {
+    return -1;
+  }
+  WSAPOLLFD pfd;
+  pfd.fd = sock;
+  pfd.events = POLLOUT;
+  if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
+    return -1;
+  }
+  rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
+  if (rv != SOCKET_ERROR) {
+    return dwbytes;
+  }
+  return -1;
 }
+ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) {
+  WSABUF wsabuf{static_cast<ULONG>(len), buf};
+  DWORD dwbytes = 0;
+  DWORD flags = 0;
 
-inline error_code make_wsa_error_code(int code,
-                                      std::wstring_view prefix = L"") {
-  error_code ec;
-  ec.code = code;
-  ec.message = bela::resolve_system_error_code(ec.code, prefix);
-  return ec;
+  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr);
+      rv != SOCKET_ERROR) {
+    return dwbytes;
+  }
+  if (auto rv = WSAGetLastError(); InProgress(rv)) {
+    return -1;
+  }
+  WSAPOLLFD pfd;
+  pfd.fd = sock;
+  pfd.events = POLLIN;
+  if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
+    return -1;
+  }
+  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbyes, &flags, nullptr, nullptr);
+      rv != SOCKET_ERROR) {
+    return dwbyes;
+  }
+  return -1;
 }
 
 bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
@@ -72,7 +120,7 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
   WSAPOLLFD pfd;
   pfd.fd = sock;
   pfd.events = POLLOUT;
-  auto rc = WSAPoll(&pfd, 1, sec * 1000);
+  auto rc = WSAPoll(&pfd, 1, timeout);
   if (rc == 0) {
     // timeout error DialTimeout make it
     return false;

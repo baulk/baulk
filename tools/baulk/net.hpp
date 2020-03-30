@@ -10,6 +10,7 @@
 namespace baulk::net {
 using BAULKSOCK = UINT_PTR;
 constexpr auto BAULK_INVALID_SOCKET = (BAULKSOCK)(~0);
+using ssize_t = intptr_t;
 class Conn {
 public:
   Conn() = default;
@@ -22,11 +23,14 @@ public:
   Conn(const Conn &) = delete;
   Conn &operator=(const Conn &) = delete;
   ~Conn();
+  ssize_t WriteTimeout(const void *data, uint32_t len, int timeout);
+  ssize_t ReadTimeout(char *buf, size_t len, int timeout);
 
 private:
   BAULKSOCK sock{BAULK_INVALID_SOCKET};
   void Move(Conn &&other);
 };
+// timeout milliseconds
 std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
                                             int timeout,
                                             bela::error_code &ec); // second
