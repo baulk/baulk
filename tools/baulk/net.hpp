@@ -22,9 +22,11 @@ public:
   }
   Conn(const Conn &) = delete;
   Conn &operator=(const Conn &) = delete;
-  ~Conn();
+  ~Conn() { Close(); }
+  void Close();
   ssize_t WriteTimeout(const void *data, uint32_t len, int timeout);
   ssize_t ReadTimeout(char *buf, size_t len, int timeout);
+  BAULKSOCK FD() const { return sock; }
 
 private:
   BAULKSOCK sock{BAULK_INVALID_SOCKET};

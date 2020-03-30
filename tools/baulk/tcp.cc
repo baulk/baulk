@@ -40,15 +40,15 @@ inline error_code make_wsa_error_code(int code,
   return ec;
 }
 
-Conn::~Conn() {
+void Conn::Close() {
   if (sock != BAULK_INVALID_SOCKET) {
     closesocket(sock);
+    sock = BAULK_INVALID_SOCKET;
   }
 }
+
 void Conn::Move(Conn &&other) {
-  if (sock != BAULK_INVALID_SOCKET) {
-    closesocket(sock);
-  }
+  Close();
   sock = other.sock;
   other.sock = BAULK_INVALID_SOCKET;
 }
