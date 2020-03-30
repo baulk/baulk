@@ -6,6 +6,10 @@
 #include "net.hpp"
 
 namespace baulk::net {
+// WSAConnectByName
+// https://docs.microsoft.com/zh-cn/windows/win32/api/winsock2/nf-winsock2-wsaconnectbynamew
+// RIO
+// https://docs.microsoft.com/zh-cn/windows/win32/api/mswsock/ns-mswsock-rio_extension_function_table
 class Winsock {
 public:
   Winsock() {
@@ -132,6 +136,20 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
   return true;
 }
 
+// typedef struct _QueryContext {
+//   OVERLAPPED QueryOverlapped;
+//   PADDRINFOEX QueryResults;
+//   HANDLE CompleteEvent;
+// } QUERY_CONTEXT, *PQUERY_CONTEXT;
+//
+// bool ResolveName(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW
+// *hints,
+//                  PADDRINFOW *rhints) {
+//
+//   return false;
+// }
+//   https://github.com/mnkeddy/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
+
 std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
                                             int timeout, bela::error_code &ec) {
   static Winsock winsock_;
@@ -141,6 +159,7 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
+  // TODO Support timeout
   if (GetAddrInfoW(address.data(), bela::AlphaNum(port).data(), &hints,
                    &rhints) != 0) {
     ec = make_wsa_error_code(L"GetAddrInfoW() ");
