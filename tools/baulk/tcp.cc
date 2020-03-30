@@ -36,9 +36,9 @@ inline constexpr bool InProgress(int rv) {
   return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS;
 }
 
-inline error_code make_wsa_error_code(int code,
-                                      std::wstring_view prefix = L"") {
-  error_code ec;
+inline bela::error_code make_wsa_error_code(int code,
+                                            std::wstring_view prefix = L"") {
+  bela::error_code ec;
   ec.code = code;
   ec.message = bela::resolve_system_error_code(ec.code, prefix);
   return ec;
@@ -74,8 +74,8 @@ ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
   if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
     return -1;
   }
-  rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
-  if (rv != SOCKET_ERROR) {
+  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
+      rv != SOCKET_ERROR) {
     return dwbytes;
   }
   return -1;
@@ -98,14 +98,14 @@ ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) {
   if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
     return -1;
   }
-  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbyes, &flags, nullptr, nullptr);
+  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr);
       rv != SOCKET_ERROR) {
-    return dwbyes;
+    return dwbytes;
   }
   return -1;
 }
 
-bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
+bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout,
                          bela::error_code &ec) {
   ULONG flags = 1;
   if (ioctlsocket(sock, FIONBIO, &flags) == SOCKET_ERROR) {
@@ -136,33 +136,79 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
   return true;
 }
 
-// typedef struct _QueryContext {
-//   OVERLAPPED QueryOverlapped;
-//   PADDRINFOEX QueryResults;
-//   HANDLE CompleteEvent;
-// } QUERY_CONTEXT, *PQUERY_CONTEXT;
-//
-// bool ResolveName(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW
-// *hints,
-//                  PADDRINFOW *rhints) {
-//
-//   return false;
-// }
-//   https://github.com/mnkeddy/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
+typedef struct _QueryContext {
+  OVERLAPPED QueryOverlapped;
+  PADDRINFOEX QueryResults{nullptr};
+  HANDLE CompleteEvent{nullptr};
+} QUERY_CONTEXT, *PQUERY_CONTEXT;
+
+void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes,
+                                  _In_ LPOVERLAPPED Overlapped) {
+  PQUERY_CONTEXT QueryContext = nullptr;
+  PADDRINFOEX QueryResults = nullptr;
+
+  UNREFERENCED_PARAMETER(Bytes);
+
+  QueryContext = CONTAINING_RECORD(Overlapped, QUERY_CONTEXT, QueryOverlapped);
+  //
+  //  Notify caller that the query completed
+  //
+  SetEvent(QueryContext->CompleteEvent);
+  return;
+}
+// query dns timeout use IOCP
+// https://github.com/microsoft/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
+bool ResolveTcpName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
+                    bela::error_code &ec) {
+  ADDRINFOEX4 hints = {0};
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_EXTENDED | AI_FQDN | AI_CANONNAME | AI_RESOLUTION_HANDLE;
+  hints.ai_version = ADDRINFOEX_VERSION_4;
+  DWORD QueryTimeout = 5 * 1000; // 5 seconds
+  QUERY_CONTEXT QueryContext;
+  HANDLE CancelHandle = NULL;
+  ZeroMemory(&QueryContext, sizeof(QueryContext));
+  if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+      QueryContext.CompleteEvent == nullptr) {
+    ec = bela::make_system_error_code(L"ResolveTcpName.CreateEvent() ");
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
+  if (auto error = GetAddrInfoExW(
+          host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
+          reinterpret_cast<const ADDRINFOEXW *>(&hints),
+          &QueryContext.QueryResults, NULL, &QueryContext.QueryOverlapped,
+          QueryCompleteCallback, &CancelHandle);
+      error != WSA_IO_PENDING) {
+    ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
+    QueryCompleteCallback(error, 0, &QueryContext.QueryOverlapped);
+    return false;
+  }
+  if (WaitForSingleObject(QueryContext.CompleteEvent, QueryTimeout) ==
+      WAIT_TIMEOUT) {
+    GetAddrInfoExCancel(&CancelHandle);
+    WaitForSingleObject(QueryContext.CompleteEvent, INFINITE);
+    if (QueryContext.QueryResults != nullptr) {
+      FreeAddrInfoExW(QueryContext.QueryResults);
+    }
+    ec = bela::make_error_code(1, L"GetAddrInfoEx() timeout");
+    return false;
+  }
+  if (QueryContext.QueryResults == nullptr) {
+    ec = bela::make_error_code(1, L"GetAddrInfoEx() failed");
+    return false;
+  }
+  *rhints = reinterpret_cast<PADDRINFOEX4>(QueryContext.QueryResults);
+  return true;
+}
 
 std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
                                             int timeout, bela::error_code &ec) {
   static Winsock winsock_;
-  ADDRINFOW *rhints = NULL;
-  ADDRINFOW hints;
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-  // TODO Support timeout
-  if (GetAddrInfoW(address.data(), bela::AlphaNum(port).data(), &hints,
-                   &rhints) != 0) {
-    ec = make_wsa_error_code(L"GetAddrInfoW() ");
+  PADDRINFOEX4 rhints = nullptr;
+  if (!ResolveTcpName(address, port, &rhints, ec)) {
+    bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);
     return std::nullopt;
   }
   auto hi = rhints;
@@ -184,10 +230,10 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
     if (!ec) {
       ec = bela::make_error_code(1, L"connect to ", address, L" timeout");
     }
-    FreeAddrInfoW(rhints); /// Release
+    FreeAddrInfoExW(reinterpret_cast<ADDRINFOEXW *>(rhints)); /// Release
     return std::nullopt;
   }
-  FreeAddrInfoW(rhints); /// Release
+  FreeAddrInfoExW(reinterpret_cast<ADDRINFOEXW *>(rhints)); /// Release
   return std::make_optional<baulk::net::Conn>(sock);
 }
 } // namespace baulk::net

@@ -18,6 +18,8 @@ namespace baulk::net {
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code ec);
+bool ResolveTcpName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
+                    bela::error_code &ec);
 } // namespace baulk::net
 int download_atom() {
   bela::error_code ec;
@@ -48,9 +50,29 @@ int download_atom() {
   bela::FPrintF(stderr, L"Update: %s\n", updated);
   return true;
 }
+#define MAX_ADDRESS_STRING_LENGTH 64
+bool resolve_dns() {
+  PADDRINFOEX4 rhints = nullptr;
+  bela::error_code ec;
+  WCHAR AddrString[MAX_ADDRESS_STRING_LENGTH];
+  DWORD AddressStringLength;
+  if (!baulk::net::ResolveTcpName(L"github.com", 443, &rhints, ec)) {
+    bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);
+    return false;
+  }
+  auto p = rhints;
+  while (p) {
+    AddressStringLength = MAX_ADDRESS_STRING_LENGTH;
+    WSAAddressToString(p->ai_addr, (DWORD)p->ai_addrlen, nullptr, AddrString,
+                       &AddressStringLength);
+    bela::FPrintF(stderr, L"IP Address: %s\n", AddrString);
+    p = p->ai_next;
+  }
+  FreeAddrInfoExW(reinterpret_cast<ADDRINFOEXW *>(rhints)); /// Release
+  return true;
+}
 
 int wmain(int argc, wchar_t **argv) {
-
   baulk::locale.resize(64);
   if (auto n = GetUserDefaultLocaleName(baulk::locale.data(), 64);
       n != 0 && n < 64) {
@@ -69,6 +91,7 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"download: %s error: %s\n", argv[1], ec.message);
     return 1;
   }
+  resolve_dns();
   bela::FPrintF(stderr, L"download: %s => %s\n", argv[1], *file);
   return 0;
 }
