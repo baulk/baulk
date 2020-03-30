@@ -41,44 +41,44 @@ void Conn::Move(Conn &&other) {
   other.sock = BAULK_INVALID_SOCKET;
 }
 
-constexpr int POLL_SUCCESS = 0;
-constexpr int POLL_TIMEOUT = 1;
-
-int BaulkPoll(SOCKET sock, int nes, bool for_read) {
-  WSAPOLLFD pfd;
-  pfd.fd = sock;
-  pfd.events = for_read ? POLLIN : POLLOUT;
-  int rc = 0;
-  do {
-    rc = WSAPoll(&pfd, 1, nes * 1000);
-  } while (rc == -1 && errno == EINTR);
-  if (rc == 0) {
-    return POLL_TIMEOUT;
-  }
-  if (rc > 0) {
-    return POLL_SUCCESS;
-  }
-  return -errno;
+inline constexpr bool InProgress(int rv) {
+  return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS;
 }
 
-bool ConnectEx(SOCKET sock, const struct sockaddr *name, int namelen, int nes) {
+inline error_code make_wsa_error_code(int code,
+                                      std::wstring_view prefix = L"") {
+  error_code ec;
+  ec.code = code;
+  ec.message = bela::resolve_system_error_code(ec.code, prefix);
+  return ec;
+}
+
+bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOW *hi, int timeout,
+                         bela::error_code &ec) {
   ULONG flags = 1;
   if (ioctlsocket(sock, FIONBIO, &flags) == SOCKET_ERROR) {
+    ec = make_wsa_error_code(WSAGetLastError(), L"ioctlsocket() ");
     return false;
   }
-  if (connect(sock, name, namelen) != SOCKET_ERROR) {
+  if (connect(sock, hi->ai_addr, static_cast<int>(hi->ai_addrlen)) !=
+      SOCKET_ERROR) {
+    // success
     return true;
   }
-  auto rv = WSAGetLastError();
-  if (rv != WSAEWOULDBLOCK && rv != WSAEINPROGRESS) {
+  if (auto rv = WSAGetLastError(); !InProgress(rv)) {
+    ec = make_wsa_error_code(rv, L"connect() ");
     return false;
   }
-  rv = BaulkPoll(sock, nes, false);
-  if (rv != POLL_SUCCESS) {
+  WSAPOLLFD pfd;
+  pfd.fd = sock;
+  pfd.events = POLLOUT;
+  auto rc = WSAPoll(&pfd, 1, sec * 1000);
+  if (rc == 0) {
+    // timeout error DialTimeout make it
     return false;
   }
-  rv = WSAGetLastError();
-  if (rv != 0 && rv != WSAEISCONN) {
+  if (rc < 0) {
+    ec = make_wsa_error_code(WSAGetLastError(), L"connect() ");
     return false;
   }
   return true;
@@ -95,7 +95,7 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
   hints.ai_protocol = IPPROTO_TCP;
   if (GetAddrInfoW(address.data(), bela::AlphaNum(port).data(), &hints,
                    &rhints) != 0) {
-    ec = bela::make_system_error_code(L"GetAddrInfoW() ");
+    ec = make_wsa_error_code(L"GetAddrInfoW() ");
     return std::nullopt;
   }
   auto hi = rhints;
@@ -103,9 +103,10 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
   do {
     sock = socket(rhints->ai_family, SOCK_STREAM, 0);
     if (sock == BAULK_INVALID_SOCKET) {
+      ec = make_wsa_error_code(WSAGetLastError(), L"socket() ");
       continue;
     }
-    if (ConnectEx(sock, hi->ai_addr, (int)hi->ai_addrlen, timeout)) {
+    if (DialTimeoutInternal(sock, hi, timeout, ec)) {
       break;
     }
     closesocket(sock);
@@ -113,7 +114,9 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
   } while ((hi = hi->ai_next) != nullptr);
 
   if (sock == BAULK_INVALID_SOCKET) {
-    ec = bela::make_error_code(1, L"connect to ", address, L" timeout");
+    if (!ec) {
+      ec = bela::make_error_code(1, L"connect to ", address, L" timeout");
+    }
     FreeAddrInfoW(rhints); /// Release
     return std::nullopt;
   }
