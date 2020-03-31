@@ -18,7 +18,7 @@ namespace baulk::net {
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code ec);
-bool ResolveTcpName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
+bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
                     bela::error_code &ec);
 } // namespace baulk::net
 int download_atom() {
@@ -56,7 +56,7 @@ bool resolve_dns() {
   bela::error_code ec;
   WCHAR AddrString[MAX_ADDRESS_STRING_LENGTH];
   DWORD AddressStringLength;
-  if (!baulk::net::ResolveTcpName(L"github.com", 443, &rhints, ec)) {
+  if (!baulk::net::ResolveName(L"github.com", 443, &rhints, ec)) {
     bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);
     return false;
   }

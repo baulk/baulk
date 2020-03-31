@@ -44,6 +44,72 @@ inline bela::error_code make_wsa_error_code(int code,
   return ec;
 }
 
+typedef struct _QueryContext {
+  OVERLAPPED QueryOverlapped;
+  PADDRINFOEX QueryResults{nullptr};
+  HANDLE CompleteEvent{nullptr};
+} QUERY_CONTEXT, *PQUERY_CONTEXT;
+
+void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes,
+                                  _In_ LPOVERLAPPED Overlapped) {
+  PQUERY_CONTEXT QueryContext = nullptr;
+  PADDRINFOEX QueryResults = nullptr;
+
+  UNREFERENCED_PARAMETER(Bytes);
+
+  QueryContext = CONTAINING_RECORD(Overlapped, QUERY_CONTEXT, QueryOverlapped);
+  //
+  //  Notify caller that the query completed
+  //
+  SetEvent(QueryContext->CompleteEvent);
+  return;
+}
+// query dns timeout use IOCP
+// https://github.com/microsoft/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
+bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
+                 bela::error_code &ec) {
+  ADDRINFOEX4 hints = {0};
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_EXTENDED | AI_FQDN | AI_CANONNAME | AI_RESOLUTION_HANDLE;
+  hints.ai_version = ADDRINFOEX_VERSION_4;
+  DWORD QueryTimeout = 5 * 1000; // 5 seconds
+  QUERY_CONTEXT QueryContext;
+  HANDLE CancelHandle = NULL;
+  ZeroMemory(&QueryContext, sizeof(QueryContext));
+  if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+      QueryContext.CompleteEvent == nullptr) {
+    ec = bela::make_system_error_code(L"ResolveName.CreateEvent() ");
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
+  if (auto error = GetAddrInfoExW(
+          host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
+          reinterpret_cast<const ADDRINFOEXW *>(&hints),
+          &QueryContext.QueryResults, NULL, &QueryContext.QueryOverlapped,
+          QueryCompleteCallback, &CancelHandle);
+      error != WSA_IO_PENDING) {
+    ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
+    QueryCompleteCallback(error, 0, &QueryContext.QueryOverlapped);
+    return false;
+  }
+  if (WaitForSingleObject(QueryContext.CompleteEvent, QueryTimeout) ==
+      WAIT_TIMEOUT) {
+    GetAddrInfoExCancel(&CancelHandle);
+    WaitForSingleObject(QueryContext.CompleteEvent, INFINITE);
+    if (QueryContext.QueryResults != nullptr) {
+      FreeAddrInfoExW(QueryContext.QueryResults);
+    }
+    ec = bela::make_error_code(1, L"GetAddrInfoEx() timeout");
+    return false;
+  }
+  if (QueryContext.QueryResults == nullptr) {
+    ec = bela::make_error_code(1, L"GetAddrInfoEx() failed");
+    return false;
+  }
+  *rhints = reinterpret_cast<PADDRINFOEX4>(QueryContext.QueryResults);
+  return true;
+}
+
 void Conn::Close() {
   if (sock != BAULK_INVALID_SOCKET) {
     closesocket(sock);
@@ -136,78 +202,11 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout,
   return true;
 }
 
-typedef struct _QueryContext {
-  OVERLAPPED QueryOverlapped;
-  PADDRINFOEX QueryResults{nullptr};
-  HANDLE CompleteEvent{nullptr};
-} QUERY_CONTEXT, *PQUERY_CONTEXT;
-
-void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes,
-                                  _In_ LPOVERLAPPED Overlapped) {
-  PQUERY_CONTEXT QueryContext = nullptr;
-  PADDRINFOEX QueryResults = nullptr;
-
-  UNREFERENCED_PARAMETER(Bytes);
-
-  QueryContext = CONTAINING_RECORD(Overlapped, QUERY_CONTEXT, QueryOverlapped);
-  //
-  //  Notify caller that the query completed
-  //
-  SetEvent(QueryContext->CompleteEvent);
-  return;
-}
-// query dns timeout use IOCP
-// https://github.com/microsoft/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
-bool ResolveTcpName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
-                    bela::error_code &ec) {
-  ADDRINFOEX4 hints = {0};
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_EXTENDED | AI_FQDN | AI_CANONNAME | AI_RESOLUTION_HANDLE;
-  hints.ai_version = ADDRINFOEX_VERSION_4;
-  DWORD QueryTimeout = 5 * 1000; // 5 seconds
-  QUERY_CONTEXT QueryContext;
-  HANDLE CancelHandle = NULL;
-  ZeroMemory(&QueryContext, sizeof(QueryContext));
-  if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-      QueryContext.CompleteEvent == nullptr) {
-    ec = bela::make_system_error_code(L"ResolveTcpName.CreateEvent() ");
-    return false;
-  }
-  auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
-  if (auto error = GetAddrInfoExW(
-          host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
-          reinterpret_cast<const ADDRINFOEXW *>(&hints),
-          &QueryContext.QueryResults, NULL, &QueryContext.QueryOverlapped,
-          QueryCompleteCallback, &CancelHandle);
-      error != WSA_IO_PENDING) {
-    ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
-    QueryCompleteCallback(error, 0, &QueryContext.QueryOverlapped);
-    return false;
-  }
-  if (WaitForSingleObject(QueryContext.CompleteEvent, QueryTimeout) ==
-      WAIT_TIMEOUT) {
-    GetAddrInfoExCancel(&CancelHandle);
-    WaitForSingleObject(QueryContext.CompleteEvent, INFINITE);
-    if (QueryContext.QueryResults != nullptr) {
-      FreeAddrInfoExW(QueryContext.QueryResults);
-    }
-    ec = bela::make_error_code(1, L"GetAddrInfoEx() timeout");
-    return false;
-  }
-  if (QueryContext.QueryResults == nullptr) {
-    ec = bela::make_error_code(1, L"GetAddrInfoEx() failed");
-    return false;
-  }
-  *rhints = reinterpret_cast<PADDRINFOEX4>(QueryContext.QueryResults);
-  return true;
-}
-
 std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
                                             int timeout, bela::error_code &ec) {
   static Winsock winsock_;
   PADDRINFOEX4 rhints = nullptr;
-  if (!ResolveTcpName(address, port, &rhints, ec)) {
+  if (!ResolveName(address, port, &rhints, ec)) {
     bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);
     return std::nullopt;
   }
