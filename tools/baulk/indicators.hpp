@@ -133,7 +133,7 @@ private:
     auto w = bela::TerminalWidth();
     if (w != 0 && w <= MAX_BARLENGTH && w != width) {
       width = w;
-      bela::FPrintF(stderr, L"\r\x1b[0m%s\x1b[0m",
+      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[0m%s\x1b[0m",
                     MakeSpace((std::min)(w, MAX_BARLENGTH)));
     }
     if (width < 80) {
@@ -165,7 +165,7 @@ private:
       // '<=>'
       auto s0 = MakeSpace(pos);
       auto s1 = MakeSpace(barwidth - pos - 3);
-      bela::FPrintF(stderr, L"\r\x1b[01;%dm%s [%s%s%s] %s %s/s    \x1b[0m",
+      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s [%s%s%s] %s %s/s\x1b[0m",
                     (uint32_t)state, MakeFileName(), s0, bounce, s1, strtotal,
                     speed);
       return;
@@ -174,7 +174,7 @@ private:
     auto progress = scale * barwidth / 100;
     auto ps = MakeRate(static_cast<size_t>(progress));
     auto sps = MakeSpace(static_cast<size_t>(barwidth - progress));
-    bela::FPrintF(stderr, L"\r\x1b[01;%dm%s %d%% [%s%s] %s %s/s    \x1b[0m",
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s %d%% [%s%s] %s %s/s\x1b[0m",
                   (uint32_t)state, MakeFileName(), scale, ps, sps, strtotal,
                   speed);
   }
