@@ -16,7 +16,7 @@
 #pragma intrinsic(_BitScanForward)
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #define BELA_FORCE_INLINE __forceinline
 #else
 #define BELA_ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline))
@@ -44,14 +44,14 @@ BELA_FORCE_INLINE int CountLeadingZeros64Slow(uint64_t n) {
 }
 
 BELA_FORCE_INLINE int CountLeadingZeros64(uint64_t n) {
-#if defined(_MSC_VER) && defined(_M_X64)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
   // MSVC does not have __buitin_clzll. Use _BitScanReverse64.
   unsigned long result = 0; // NOLINT(runtime/int)
   if (_BitScanReverse64(&result, n)) {
     return 63 - result;
   }
   return 64;
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && !defined(__clang__)
   // MSVC does not have __buitin_clzll. Compose two calls to _BitScanReverse
   unsigned long result = 0; // NOLINT(runtime/int)
   if ((n >> 32) && _BitScanReverse(&result, n >> 32)) {
@@ -61,7 +61,7 @@ BELA_FORCE_INLINE int CountLeadingZeros64(uint64_t n) {
     return 63 - result;
   }
   return 64;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
   // Use __builtin_clzll, which uses the following instructions:
   //  x86: bsr
   //  ARM64: clz
@@ -94,13 +94,13 @@ BELA_FORCE_INLINE int CountLeadingZeros32Slow(uint64_t n) {
 }
 
 BELA_FORCE_INLINE int CountLeadingZeros32(uint32_t n) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
   unsigned long result = 0; // NOLINT(runtime/int)
   if (_BitScanReverse(&result, n)) {
     return 31 - result;
   }
   return 32;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
   // Use __builtin_clz, which uses the following instructions:
   //  x86: bsr
   //  ARM64: clz
@@ -143,11 +143,11 @@ BELA_FORCE_INLINE int CountTrailingZerosNonZero64Slow(uint64_t n) {
 }
 
 BELA_FORCE_INLINE int CountTrailingZerosNonZero64(uint64_t n) {
-#if defined(_MSC_VER) && defined(_M_X64)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
   unsigned long result = 0; // NOLINT(runtime/int)
   _BitScanForward64(&result, n);
   return result;
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && !defined(__clang__)
   unsigned long result = 0; // NOLINT(runtime/int)
   if (static_cast<uint32_t>(n) == 0) {
     _BitScanForward(&result, n >> 32);
@@ -155,7 +155,7 @@ BELA_FORCE_INLINE int CountTrailingZerosNonZero64(uint64_t n) {
   }
   _BitScanForward(&result, n);
   return result;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
   static_assert(sizeof(unsigned long long) == sizeof(n), // NOLINT(runtime/int)
                 "__builtin_ctzll does not take 64-bit arg");
   return __builtin_ctzll(n);
@@ -186,11 +186,11 @@ BELA_FORCE_INLINE int CountTrailingZerosNonZero32Slow(uint32_t n) {
 }
 
 BELA_FORCE_INLINE int CountTrailingZerosNonZero32(uint32_t n) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
   unsigned long result = 0; // NOLINT(runtime/int)
   _BitScanForward(&result, n);
   return result;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
   static_assert(sizeof(int) == sizeof(n),
                 "__builtin_ctz does not take 32-bit arg");
   return __builtin_ctz(n);
