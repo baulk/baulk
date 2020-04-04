@@ -29,12 +29,27 @@ int install_pkg(std::wstring_view name) {
   auto lpkg = baulk::bucket::PackageLocalMeta(name, ec);
   if (lpkg) {
     baulk::version::version pkgversion(pkg->version);
-    baulk::version::version oldversion(pkg->version);
+    baulk::version::version oldversion(lpkg->version);
     // new version less installed version or weights < weigths
     if (pkgversion < oldversion ||
         (pkgversion == oldversion && pkg->weights <= lpkg->weights)) {
       return Reconstruct(*pkg);
     }
+    if (baulk::BaulkIsFrozenPkg(name) && !baulk::IsForceMode) {
+      bela::FPrintF(stderr,
+                    L"baulk \x1b[31mcannot\x1b[0m upgrade \x1b[35m%s\x1b[0m "
+                    L"from \x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
+                    L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m. it has been "
+                    L"\x1b[31mfrozen\x1b[0m\n",
+                    name, lpkg->version, lpkg->bucket, pkg->version,
+                    pkg->bucket);
+      return 0;
+    }
+    bela::FPrintF(stderr,
+                  L"baulk will upgrade \x1b[35m%s\x1b[0m from "
+                  L"\x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
+                  L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m\n",
+                  name, lpkg->version, lpkg->bucket, pkg->version, pkg->bucket);
   }
   // Install package
   return 0;
