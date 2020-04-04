@@ -43,7 +43,7 @@ Command:
   exec             Execute a command
   list             List all installed packages
   search           Search for available packages, or specific package details
-  install          Install specific packages. which is installed upgrade it.
+  install          Install specific packages. upgrade if already installed.
   uninstall        Uninstall specific packages
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages

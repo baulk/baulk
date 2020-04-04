@@ -4,9 +4,16 @@
 #include "baulk.hpp"
 
 namespace baulk::commands {
+// install subcommand
+void install_usage() {
+  bela::FPrintF(stderr, LR"(usage: baulk install package
+Install specific packages. upgrade or repair installation if already installed
+)");
+}
+
 int cmd_install(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk install package\n");
+    install_usage();
     return 1;
   }
   bela::error_code ec;
