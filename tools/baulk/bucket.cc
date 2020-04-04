@@ -146,7 +146,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
 bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   // initialize version from installed version
   baulk::version::version pkgversion(opkg.version);
-  bool hasnewest{false};
+  bool updated{false};
   auto bucketsdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   for (const auto &bk : baulk::BaulkBuckets()) {
@@ -166,32 +166,50 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
     if (newversion > pkgversion ||
-        (newversion == pkgversion && pkg.version != pkgN->version &&
-         pkg.weights < pkgN->weights)) {
+        (newversion == pkgversion && pkg.weights < pkgN->weights)) {
       pkg = std::move(*pkgN);
-      hasnewest = true;
-      continue;
+      pkgversion = newversion;
+      updated = true;
     }
   }
-  return hasnewest;
+  return updated;
 }
 // package metadata
 std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
                                             bela::error_code &ec) {
+  baulk::version::version pkgversion; // 0.0.0.0
+  baulk::Package pkg;
   auto bucketsdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+  size_t pkgsame = 0;
   for (const auto &bk : baulk::BaulkBuckets()) {
     auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
                                    pkgname, L".json");
     bela::error_code ec;
-    if (auto pkgN = PackageMeta(pkgmeta, pkgname, bk.name, ec); pkgN) {
-      return pkgN;
+    auto pkgN = PackageMeta(pkgmeta, pkgname, bk.name, ec);
+    if (!pkgN) {
+      if (ec) {
+        bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgmeta, ec.message);
+      }
+      continue;
     }
-    if (ec) {
-      bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgmeta, ec.message);
+    pkgsame++;
+    pkgN->bucket = bk.name;
+    pkgN->weights = bk.weights;
+    baulk::version::version newversion(pkgN->version);
+    // compare version newversion is > oldversion
+    // newversion == oldversion and strversion not equail compare weights
+    if (newversion > pkgversion ||
+        (newversion == pkgversion && pkg.weights < pkgN->weights)) {
+      pkg = std::move(*pkgN);
+      pkgversion = newversion;
     }
   }
-  return std::nullopt;
+  if (pkgsame == 0) {
+    ec = bela::make_error_code(1, L"'", pkgname, L"' not yet ported.");
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(pkg));
 }
 
 bool PackageIsUpdatable(std::wstring_view pkgname, baulk::Package &pkg) {
