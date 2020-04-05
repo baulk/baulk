@@ -37,6 +37,11 @@ int PackageMakeLinks(const baulk::Package &pkg) {
   return 0;
 }
 
+int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
+  //
+  return 0;
+}
+
 int BaulkInstall(const baulk::Package &pkg) {
   bela::error_code ec;
   auto pkglocal = baulk::bucket::PackageLocalMeta(pkg.name, ec);
@@ -77,8 +82,35 @@ int BaulkInstall(const baulk::Package &pkg) {
     auto filename = baulk::net::UrlFileName(url);
     baulk::DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version,
                     filename);
+    if (auto pkgfile = PackageCached(filename, pkg.checksum); pkgfile) {
+      return PackageExpand(pkg, *pkgfile);
+    }
   }
-
-  return 0;
+  auto pkgtmpdir =
+      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
+  auto pkgfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
+  if (!pkgfile) {
+    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
+                  ec.message);
+    return 1;
+  }
+  if (!pkg.checksum.empty() &&
+      !baulk::hash::HashEqual(*pkgfile, pkg.checksum, ec)) {
+    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
+                  ec.message);
+    // retry download
+    pkgfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
+    if (!pkgfile) {
+      bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
+                    ec.message);
+      return 1;
+    }
+    if (!baulk::hash::HashEqual(*pkgfile, pkg.checksum, ec)) {
+      bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
+                    ec.message);
+      return 1;
+    }
+  }
+  return PackageExpand(pkg, *pkgfile);
 }
 } // namespace baulk::package
