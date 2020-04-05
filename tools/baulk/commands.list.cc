@@ -61,7 +61,6 @@ int cmd_list(const argv_t &argv) {
     }
     baulk::Package pkg;
     if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
-      upgradable++;
       bela::FPrintF(
           stderr,
           L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
@@ -73,8 +72,6 @@ int cmd_list(const argv_t &argv) {
     bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
                   opkg->name, opkg->bucket, opkg->version);
   }
-  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
-                upgradable);
   return 0;
 }
 } // namespace baulk::commands
