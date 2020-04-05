@@ -7,6 +7,7 @@
 #include "pkg.hpp"
 #include "net.hpp"
 #include "hash.hpp"
+#include "fs.hpp"
 
 namespace baulk::package {
 // Package cached
@@ -88,6 +89,11 @@ int BaulkInstall(const baulk::Package &pkg) {
   }
   auto pkgtmpdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
+  if (!baulk::fs::MakeDir(pkgtmpdir, ec)) {
+    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir,
+                  ec.message);
+    return 1;
+  }
   auto pkgfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
   if (!pkgfile) {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
