@@ -124,69 +124,41 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   return true;
 }
 
-struct PackageU {
-  void Add(std::wstring_view name, std::wstring_view version,
-           std::wstring_view bucket) {
-    auto nw = bela::StringWidth(name);
-    namewidth.emplace_back(nw);
-    auto vw = bela::StringWidth(version) + 1 + bela::StringWidth(bucket);
-    versionwidth.emplace_back(vw);
-    namemax = (std::max)(nw, namemax);
-    versionmax = (std::max)(vw, versionmax);
-    names.emplace_back(name);
-    versions.emplace_back(version);
-    buckets.emplace_back(bucket);
-  }
-  std::wstring Pretty() {
-    std::wstring space;
-    space.resize((std::max)(versionmax, namemax) + 2, L' ');
-    std::wstring s;
-    for (size_t i = 0; i < names.size(); i++) {
-      auto frozen = baulk::BaulkIsFrozenPkg(names[i]);
-      bela::StrAppend(&s, names[i], space.substr(0, namemax + 2 - namewidth[i]),
-                      L"\x1b[32m", versions[i], L"\x1b[0m/\x1b[34m", buckets[i],
-                      L"\x1b[0m",
-                      space.substr(0, versionmax + 2 - versionwidth[i]),
-                      frozen ? L"\x1b[33mfrozen\x1b[0m\n" : L"\n");
-    }
-    return s;
-  }
-  std::vector<std::wstring> names;
-  std::vector<std::wstring> versions;
-  std::vector<std::wstring> buckets;
-  std::vector<size_t> namewidth;
-  std::vector<size_t> versionwidth;
-  size_t namemax{0};
-  size_t versionmax{0};
-};
-
 bool PackageScanUpdatable() {
-  PackageU pkgu;
   baulk::fs::Finder finder;
   bela::error_code ec;
   auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
-  if (!finder.First(locksdir, L"*.json", ec)) {
-    return true;
+  size_t upgradable = 0;
+  if (finder.First(locksdir, L"*.json", ec)) {
+    do {
+      if (finder.Ignore()) {
+        continue;
+      }
+      auto pkgname = finder.Name();
+      if (!bela::EndsWithIgnoreCase(pkgname, L".json")) {
+        continue;
+      }
+      pkgname.remove_suffix(5);
+      auto opkg = baulk::bucket::PackageLocalMeta(pkgname, ec);
+      if (!opkg) {
+        continue;
+      }
+      baulk::Package pkg;
+      if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
+        upgradable++;
+        bela::FPrintF(
+            stderr,
+            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
+            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+            opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
+            baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m"
+                                             : L"");
+        continue;
+      }
+    } while (finder.Next());
   }
-  do {
-    if (finder.Ignore()) {
-      continue;
-    }
-    auto name = finder.Name();
-    if (!bela::EndsWithIgnoreCase(name, L".json")) {
-      continue;
-    }
-    baulk::Package pkg;
-    name.remove_suffix(5);
-    if (baulk::bucket::PackageIsUpdatable(name, pkg)) {
-      pkgu.Add(pkg.name, pkg.version, pkg.bucket);
-    }
-  } while (finder.Next());
-  if (pkgu.names.empty()) {
-    return true;
-  }
-  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n%s\n",
-                pkgu.names.size(), pkgu.Pretty());
+  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
+                upgradable);
   return true;
 }
 
