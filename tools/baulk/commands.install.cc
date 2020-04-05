@@ -1,17 +1,12 @@
 //
 #include <bela/stdwriter.hpp>
 #include <version.hpp>
+#include "pkg.hpp"
 #include "commands.hpp"
 #include "baulk.hpp"
 #include "bucket.hpp"
 
 namespace baulk::commands {
-
-int Reconstruct(const baulk::Package &pkg) {
-  // check package is good installed
-  // rebuild launcher and links
-  return 0;
-}
 
 int install_pkg(std::wstring_view name) {
   bela::error_code ec;
@@ -26,35 +21,7 @@ int install_pkg(std::wstring_view name) {
   }
   baulk::DbgPrint(L"baulk '%s' version '%s' url: '%s'\n", pkg->name,
                   pkg->version, pkg->urls.front());
-  auto lpkg = baulk::bucket::PackageLocalMeta(name, ec);
-  if (lpkg) {
-    baulk::version::version pkgversion(pkg->version);
-    baulk::version::version oldversion(lpkg->version);
-    // new version less installed version or weights < weigths
-    if (pkgversion < oldversion ||
-        (pkgversion == oldversion && pkg->weights <= lpkg->weights)) {
-      return Reconstruct(*pkg);
-    }
-    if (baulk::BaulkIsFrozenPkg(name) && !baulk::IsForceMode) {
-      // Since the metadata has been updated, we cannot rebuild the frozen
-      // package launcher
-      bela::FPrintF(stderr,
-                    L"baulk \x1b[31mcannot\x1b[0m upgrade \x1b[35m%s\x1b[0m "
-                    L"from \x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
-                    L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m. it has been "
-                    L"\x1b[31mfrozen\x1b[0m\n",
-                    name, lpkg->version, lpkg->bucket, pkg->version,
-                    pkg->bucket);
-      return 0;
-    }
-    bela::FPrintF(stderr,
-                  L"baulk will upgrade \x1b[35m%s\x1b[0m from "
-                  L"\x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
-                  L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m\n",
-                  name, lpkg->version, lpkg->bucket, pkg->version, pkg->bucket);
-  }
-  // Install package
-  return 0;
+  return baulk::package::BaulkInstall(*pkg);
 }
 
 int cmd_install(const argv_t &argv) {

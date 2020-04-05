@@ -23,6 +23,7 @@ add_executable(
   launcher.cc
   msi.cc
   net.cc
+  pkg.cc
   tcp.cc
   zip.cc
   baulk.rc

@@ -221,4 +221,5 @@ bool PackageIsUpdatable(std::wstring_view pkgname, baulk::Package &pkg) {
   return PackageUpdatableMeta(*opkg, pkg);
 }
 
+
 } // namespace baulk::bucket
