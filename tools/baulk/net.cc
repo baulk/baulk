@@ -517,12 +517,12 @@ std::uint64_t UrlResponseTime(std::wstring_view url) {
       .count();
 }
 
-std::wstring_view BestUrl(const std::vector<std::wstring> &urls) {
+std::wstring_view BestUrlInternal(const std::vector<std::wstring> &urls) {
   if (urls.empty()) {
     return L"";
   }
   if (urls.size() == 1) {
-    return urls.front();
+    return urls[0];
   }
   auto elapsed = MaximumTime;
   size_t pos = 0;
@@ -532,7 +532,8 @@ std::wstring_view BestUrl(const std::vector<std::wstring> &urls) {
     std::wstring_view url(u);
     if (bela::EndsWithIgnoreCase(url, suffix)) {
       // eg: https://npm.taobao.org/.../MinGit-2.26.0-busybox-64-bit.zip#zh-CN
-      return url.substr(0, url.size() - suffix.size());
+      url.remove_suffix(suffix.size());
+      return url;
     }
   }
   // Second round of analysis of network connection establishment time
@@ -544,6 +545,14 @@ std::wstring_view BestUrl(const std::vector<std::wstring> &urls) {
     }
   }
   return urls[pos];
+}
+
+std::wstring_view BestUrl(const std::vector<std::wstring> &urls) {
+  auto url = BestUrlInternal(urls);
+  if (auto pos = url.find('#'); pos != std::wstring_view::npos) {
+    return url.substr(0, pos);
+  }
+  return url;
 }
 
 std::wstring_view UrlFileName(std::wstring_view url) {

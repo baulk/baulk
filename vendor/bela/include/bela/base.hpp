@@ -76,7 +76,7 @@ bela::error_code make_error_code(long code, const AlphaNum &a,
 
 error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix = L"");
 std::wstring resolve_system_error_message(DWORD ec,
-                                       std::wstring_view prefix = L"");
+                                          std::wstring_view prefix = L"");
 inline error_code make_system_error_code(std::wstring_view prefix = L"") {
   error_code ec;
   ec.code = GetLastError();
@@ -85,16 +85,19 @@ inline error_code make_system_error_code(std::wstring_view prefix = L"") {
 }
 
 std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
-                                       std::wstring_view prefix);
-
-inline error_code from_std_error_code(const std::error_code &e,
-                                      std::wstring_view prefix = L"") {
-  error_code ec;
-  ec.code = e.value();
-  ec.message = bela::StringCat(prefix, bela::ToWide(e.message()));
-  return ec;
+                                          std::wstring_view prefix);
+// bela::fromascii
+inline std::wstring fromascii(std::string_view sv) {
+  auto sz =
+      MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
+  std::wstring output;
+  output.resize(sz);
+  // C++17 must output.data()
+  MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), output.data(), sz);
+  return output;
 }
-
+error_code from_std_error_code(const std::error_code &e,
+                               std::wstring_view prefix = L"");
 // https://github.com/microsoft/wil/blob/master/include/wil/stl.h#L38
 template <typename T> struct secure_allocator : public std::allocator<T> {
   template <typename Other> struct rebind {

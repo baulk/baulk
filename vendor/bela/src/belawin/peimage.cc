@@ -76,16 +76,6 @@ BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva,
             static_cast<ULONG_PTR>(bela::swaple(section->VirtualAddress));
   return reinterpret_cast<PVOID>(va);
 }
-// DLL Name is CP_ACP
-std::wstring fromascii(std::string_view sv) {
-  auto sz =
-      MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
-  std::wstring output;
-  output.resize(sz);
-  // C++17 must output.data()
-  MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), output.data(), sz);
-  return output;
-}
 
 // Name: An ASCII string that contains the name to import. This is the string
 // that must be matched to the public name in the DLL. This string is case
@@ -107,7 +97,7 @@ inline std::wstring DllName(MemView mv, LPVOID nh, ULONG nva) {
     return L""; // BAD string table
   }
   std::string_view name(begin, it - begin);
-  return fromascii(name);
+  return bela::fromascii(name);
 }
 
 // https://docs.microsoft.com/zh-cn/previous-versions/ms809762(v=msdn.10)#pe-file-resources

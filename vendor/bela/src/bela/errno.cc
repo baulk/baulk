@@ -239,4 +239,12 @@ bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
   return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 
+bela::error_code from_std_error_code(const std::error_code &e,
+                                     std::wstring_view prefix) {
+  error_code ec;
+  ec.code = e.value();
+  ec.message = bela::StringCat(prefix, fromascii(e.message()));
+  return ec;
+}
+
 } // namespace bela
