@@ -19,8 +19,6 @@ int install_pkg(std::wstring_view name) {
     bela::FPrintF(stderr, L"baulk: '%s' empty urls\n", name);
     return 1;
   }
-  baulk::DbgPrint(L"baulk '%s' version '%s' url: '%s'\n", pkg->name,
-                  pkg->version, pkg->urls.front());
   return baulk::package::BaulkInstall(*pkg);
 }
 

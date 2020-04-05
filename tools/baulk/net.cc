@@ -517,7 +517,7 @@ std::uint64_t UrlResponseTime(std::wstring_view url) {
       .count();
 }
 
-std::wstring_view BestURL(const std::vector<std::wstring> &urls) {
+std::wstring_view BestUrl(const std::vector<std::wstring> &urls) {
   if (urls.empty()) {
     return L"";
   }
@@ -544,6 +544,21 @@ std::wstring_view BestURL(const std::vector<std::wstring> &urls) {
     }
   }
   return urls[pos];
+}
+
+std::wstring_view UrlFileName(std::wstring_view url) {
+  auto pos = url.find_last_not_of('/');
+  if (pos == std::wstring_view::npos) {
+    return L"";
+  }
+  url.remove_suffix(url.size() - pos - 1);
+  if (pos = url.rfind('/'); pos != std::wstring_view::npos) {
+    url.remove_prefix(pos + 1);
+  }
+  if (pos = url.find_first_of(L"?#"); pos != std::wstring::npos) {
+    return url.substr(0, pos);
+  }
+  return url;
 }
 
 } // namespace baulk::net

@@ -6,6 +6,12 @@
 #include "net.hpp"
 
 namespace baulk::package {
+// Pre-download compressed package
+std::optional<std::wstring> PredownloadPackage(std::wstring_view filename,
+                                               std::wstring_view hash) {
+  //
+  return std::nullopt;
+}
 
 int Reconstruct(const baulk::Package &pkg) {
   // check package is good installed
@@ -43,12 +49,16 @@ int BaulkInstall(const baulk::Package &pkg) {
                   pkg.name, pkglocal->version, pkglocal->bucket, pkg.version,
                   pkg.bucket);
   }
-  auto url = baulk::net::BestURL(pkg.urls);
+  auto url = baulk::net::BestUrl(pkg.urls);
   if (url.empty()) {
     bela::FPrintF(stderr, L"baulk: \x1b[31m%s\x1b[0m no valid url\n", pkg.name);
     return 1;
   }
+  baulk::DbgPrint(L"baulk '%s/%s' url: '%s'\n", pkg.name, pkg.version, url);
   if (!pkg.checksum.empty()) {
+    auto filename = baulk::net::UrlFileName(url);
+    baulk::DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version,
+                    filename);
   }
 
   return 0;
