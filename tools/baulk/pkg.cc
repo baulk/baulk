@@ -1,21 +1,39 @@
 //
 #include <bela/stdwriter.hpp>
+#include <bela/path.hpp>
 #include <version.hpp>
 #include "bucket.hpp"
+#include "launcher.hpp"
 #include "pkg.hpp"
 #include "net.hpp"
+#include "hash.hpp"
 
 namespace baulk::package {
-// Pre-download compressed package
-std::optional<std::wstring> PredownloadPackage(std::wstring_view filename,
-                                               std::wstring_view hash) {
-  //
-  return std::nullopt;
+// Package cached
+std::optional<std::wstring> PackageCached(std::wstring_view filename,
+                                          std::wstring_view hash) {
+  auto pkgfile = bela::StringCat(baulk::BaulkRoot(), L"\\",
+                                 baulk::BaulkPkgTmpDir, L"\\", filename);
+  if (!bela::PathExists(pkgfile)) {
+    return std::nullopt;
+  }
+  bela::error_code ec;
+  if (!baulk::hash::HashEqual(pkgfile, hash, ec)) {
+    bela::FPrintF(stderr, L"package file %s error: %s\n", filename, ec.message);
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(pkgfile));
 }
 
-int Reconstruct(const baulk::Package &pkg) {
+int PackageMakeLinks(const baulk::Package &pkg) {
   // check package is good installed
   // rebuild launcher and links
+  bela::error_code ec;
+  if (!baulk::BaulkMakePkgLinks(pkg, true, ec)) {
+    bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name,
+                  ec.message);
+    return 1;
+  }
   return 0;
 }
 
@@ -28,7 +46,7 @@ int BaulkInstall(const baulk::Package &pkg) {
     // new version less installed version or weights < weigths
     if (pkgversion < oldversion ||
         (pkgversion == oldversion && pkg.weights <= pkglocal->weights)) {
-      return Reconstruct(pkg);
+      return PackageMakeLinks(pkg);
     }
     if (baulk::BaulkIsFrozenPkg(pkg.name) && !baulk::IsForceMode) {
       // Since the metadata has been updated, we cannot rebuild the frozen
