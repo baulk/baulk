@@ -17,9 +17,9 @@ std::wstring_view BaulkLocale() { return locale; }
 namespace baulk::net {
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
-                                   bool forceoverwrite, bela::error_code ec);
+                                   bool forceoverwrite, bela::error_code &ec);
 bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
-                    bela::error_code &ec);
+                 bela::error_code &ec);
 } // namespace baulk::net
 int download_atom() {
   bela::error_code ec;
@@ -73,6 +73,13 @@ bool resolve_dns() {
 }
 
 int wmain(int argc, wchar_t **argv) {
+  auto s = bela::resolve_module_error_message(L"winhttp.dll",
+                                              ERROR_FILE_NOT_FOUND, L"dump ");
+  bela::FPrintF(stderr, L"%s\n", s);
+  s = bela::resolve_system_error_message(ERROR_FILE_NOT_FOUND, L"dump ");
+  bela::FPrintF(stderr, L"%s\n", s); // WSAEINPROGRESS
+  s = bela::resolve_system_error_message(WSAEINPROGRESS, L"dump ");
+  bela::FPrintF(stderr, L"%s\n", s); // WSAEINPROGRESS
   baulk::locale.resize(64);
   if (auto n = GetUserDefaultLocaleName(baulk::locale.data(), 64);
       n != 0 && n < 64) {

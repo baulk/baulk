@@ -74,16 +74,18 @@ bela::error_code make_error_code(long code, const AlphaNum &a,
   return ec;
 }
 
-std::wstring resolve_system_error_code(DWORD ec,
-                                       std::wstring_view prefix = L"");
 error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix = L"");
-
+std::wstring resolve_system_error_message(DWORD ec,
+                                       std::wstring_view prefix = L"");
 inline error_code make_system_error_code(std::wstring_view prefix = L"") {
   error_code ec;
   ec.code = GetLastError();
-  ec.message = resolve_system_error_code(ec.code, prefix);
+  ec.message = resolve_system_error_message(ec.code, prefix);
   return ec;
 }
+
+std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
+                                       std::wstring_view prefix);
 
 inline error_code from_std_error_code(const std::error_code &e,
                                       std::wstring_view prefix = L"") {

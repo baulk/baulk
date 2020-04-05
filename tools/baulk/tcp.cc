@@ -40,7 +40,7 @@ inline bela::error_code make_wsa_error_code(int code,
                                             std::wstring_view prefix = L"") {
   bela::error_code ec;
   ec.code = code;
-  ec.message = bela::resolve_system_error_code(ec.code, prefix);
+  ec.message = bela::resolve_system_error_message(ec.code, prefix);
   return ec;
 }
 

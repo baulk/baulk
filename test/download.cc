@@ -6,7 +6,7 @@
 namespace baulk::net {
 
 bool CURLGet(std::wstring_view url, std::wstring_view dest,
-             bela::error_code ec) {
+             bela::error_code &ec) {
   std::wstring curlexe;
   if (!bela::ExecutableExistsInPath(L"curl.exe", curlexe)) {
     return false;
@@ -23,7 +23,7 @@ bool CURLGet(std::wstring_view url, std::wstring_view dest,
 }
 
 bool WebGet(std::wstring_view url, std::wstring_view dest,
-            bela::error_code ec) {
+            bela::error_code &ec) {
   std::wstring wgetexe;
   if (!bela::ExecutableExistsInPath(L"wget.exe", wgetexe)) {
     return false;

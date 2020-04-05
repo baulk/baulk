@@ -119,7 +119,7 @@ inline std::optional<Response> RestGet(std::wstring_view url,
 // download some file to spec workdir
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
-                                   bool forceoverwrite, bela::error_code ec);
+                                   bool forceoverwrite, bela::error_code &ec);
 std::uint64_t UrlResponseTime(std::wstring_view url);
 std::wstring_view BestURL(const std::vector<std::wstring> &urls);
 } // namespace baulk::net

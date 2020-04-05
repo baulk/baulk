@@ -36,6 +36,8 @@ int install_pkg(std::wstring_view name) {
       return Reconstruct(*pkg);
     }
     if (baulk::BaulkIsFrozenPkg(name) && !baulk::IsForceMode) {
+      // Since the metadata has been updated, we cannot rebuild the frozen
+      // package launcher
       bela::FPrintF(stderr,
                     L"baulk \x1b[31mcannot\x1b[0m upgrade \x1b[35m%s\x1b[0m "
                     L"from \x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "

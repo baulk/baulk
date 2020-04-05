@@ -12,6 +12,15 @@
 #include "net.hpp"
 
 namespace baulk::net {
+
+inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
+  bela::error_code ec;
+  ec.code = GetLastError();
+  ec.message =
+      bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
+  return ec;
+}
+
 inline void Free(HINTERNET &h) {
   if (h != nullptr) {
     WinHttpCloseHandle(h);
@@ -288,26 +297,26 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
   });
   UrlComponets uc;
   if (!CrackUrl(url, uc)) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   hSession = WinHttpOpen(baulk::UserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
                          WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (hSession == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   EnableTlsProxy(hSession);
   hConnect = WinHttpConnect(hSession, uc.host.data(), uc.nPort, 0);
   if (hConnect == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   hRequest = WinHttpOpenRequest(hConnect, method.data(), uc.uri.data(), nullptr,
                                 WINHTTP_NO_REFERER,
                                 WINHTTP_DEFAULT_ACCEPT_TYPES, uc.TlsFlag());
   if (hRequest == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   if (!hkv.empty()) {
@@ -315,7 +324,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     if (WinHttpAddRequestHeaders(hRequest, flattened_headers.data(),
                                  static_cast<size_t>(flattened_headers.size()),
                                  WINHTTP_ADDREQ_FLAG_ADD) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
   }
@@ -326,26 +335,26 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     if (WinHttpAddRequestHeaders(
             hRequest, addheader.data(), static_cast<size_t>(addheader.size()),
             WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
     if (WinHttpSendRequest(
             hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
             const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())),
             body.size(), body.size(), 0) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
   } else {
     if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                            WINHTTP_NO_REQUEST_DATA, 0, 0, 0) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
   }
 
   if (WinHttpReceiveResponse(hRequest, nullptr) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   Response resp;
@@ -358,7 +367,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
                           WINHTTP_HEADER_NAME_BY_INDEX, hdbf.data(),
                           &headerBufferLength,
                           WINHTTP_NO_HEADER_INDEX) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   resp.ParseHeadersString(std::wstring_view{
@@ -369,13 +378,13 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
   if (WinHttpQueryHeaders(
           hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
           nullptr, &resp.statuscode, &dwSize, nullptr) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(hRequest, &dwSize) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
     if (readbuf.size() < dwSize) {
@@ -383,7 +392,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     }
     if (WinHttpReadData(hRequest, (LPVOID)readbuf.data(), dwSize,
                         &downloaded_size) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
     resp.body.append(readbuf.data(), dwSize);
@@ -393,7 +402,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
 
 std::optional<std::wstring> WinGet(std::wstring_view url,
                                    std::wstring_view workdir,
-                                   bool forceoverwrite, bela::error_code ec) {
+                                   bool forceoverwrite, bela::error_code &ec) {
   HINTERNET hSession = nullptr;
   HINTERNET hConnect = nullptr;
   HINTERNET hRequest = nullptr;
@@ -404,35 +413,35 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   });
   UrlComponets uc;
   if (!CrackUrl(url, uc)) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   hSession = WinHttpOpen(baulk::UserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
                          WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (hSession == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   EnableTlsProxy(hSession);
   hConnect = WinHttpConnect(hSession, uc.host.data(), uc.nPort, 0);
   if (hConnect == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   hRequest = WinHttpOpenRequest(hConnect, L"GET", uc.uri.data(), nullptr,
                                 WINHTTP_NO_REFERER,
                                 WINHTTP_DEFAULT_ACCEPT_TYPES, uc.TlsFlag());
   if (hRequest == nullptr) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                          WINHTTP_NO_REQUEST_DATA, 0, 0, 0) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   if (WinHttpReceiveResponse(hRequest, nullptr) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = make_net_error_code();
     return std::nullopt;
   }
   baulk::ProgressBar bar;
@@ -450,7 +459,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
       return std::nullopt;
     }
     if (DeleteFileW(dest.data()) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       return std::nullopt;
     }
   }
@@ -468,7 +477,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(hRequest, &dwSize) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       bar.MarkFault();
       return std::nullopt;
     }
@@ -477,7 +486,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
     }
     if (WinHttpReadData(hRequest, (LPVOID)buf.data(), dwSize,
                         &downloaded_size) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = make_net_error_code();
       bar.MarkFault();
       return std::nullopt;
     }

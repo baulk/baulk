@@ -191,11 +191,32 @@ constexpr std::wstring_view errorlist[] = {
 };
 } // namespace errno_internal
 
-std::wstring resolve_system_error_code(DWORD ec, std::wstring_view prefix) {
+std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix) {
   LPWSTR buf = nullptr;
   auto rl = FormatMessageW(
       FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, ec,
-      MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), (LPWSTR)&buf, 0, nullptr);
+      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&buf, 0, nullptr);
+  if (rl == 0) {
+    return bela::StringCat(prefix, L"GetLastError(): ", ec);
+  }
+  if (buf[rl - 1] == '\n') {
+    rl--;
+  }
+  if (rl > 0 && buf[rl - 1] == '\r') {
+    rl--;
+  }
+  auto msg = bela::StringCat(prefix, std::wstring_view(buf, rl));
+  LocalFree(buf);
+  return msg;
+}
+
+std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
+                                          std::wstring_view prefix) {
+  LPWSTR buf = nullptr;
+  auto rl = FormatMessageW(
+      FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+      GetModuleHandleW(module), ec, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPWSTR)&buf, 0, nullptr);
   if (rl == 0) {
     return bela::StringCat(prefix, L"GetLastError(): ", ec);
   }
