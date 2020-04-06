@@ -16,14 +16,6 @@
 
 namespace baulk {
 
-struct LinkMeta {
-  LinkMeta() = default;
-  LinkMeta(std::wstring_view exe_, std::wstring_view rexe_)
-      : exe(exe_), relative(rexe_) {}
-  std::wstring exe;
-  std::wstring relative;
-};
-
 bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
                         bela::error_code &ec) {
   if (metas.empty()) {
@@ -52,8 +44,8 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
     }
     for (const auto &lm : metas) {
       auto meta = bela::ToNarrow(
-          bela::StringCat(pkg.name, L"@", lm.relative, L"@", pkg.version));
-      linkobj[bela::ToNarrow(lm.exe)] = meta; // "7z.exe":"7z.exe@7z@19.01"
+          bela::StringCat(pkg.name, L"@", lm.path, L"@", pkg.version));
+      linkobj[bela::ToNarrow(lm.alias)] = meta; // "7z.exe":"7z.exe@7z@19.01"
     }
     obj["links"] = linkobj;
     obj["updated"] = baulk::time::TimeNow();
@@ -155,7 +147,7 @@ public:
   }
   bool Initialize(bela::error_code &ec);
   bool Compile(const baulk::Package &pkg, std::wstring_view source,
-               std::wstring_view linkdir, std::wstring_view relativeexe,
+               std::wstring_view linkdir, const LinkMeta &lm,
                bela::error_code &ec);
   const std::vector<LinkMeta> &LinkMetas() const { return linkmetas; }
 
@@ -195,8 +187,7 @@ inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
 }
 
 bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
-                           std::wstring_view linkdir,
-                           std::wstring_view relativeexe,
+                           std::wstring_view linkdir, const LinkMeta &lm,
                            bela::error_code &ec) {
   //      bela::FPrintF(stderr,L"link '%s' to '%s' success\n",source,linkdir);
   constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain",
@@ -209,8 +200,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     return false;
   }
   auto index = SubsystemIndex(pe->subsystem);
-  auto exename = baulk::fs::FileName(source);
-  auto name = StripExtension(exename);
+  auto name = StripExtension(lm.alias);
   auto cxxsrcname = bela::StringCat(name, L".cc");
   auto cxxsrc = bela::StringCat(baulktemp, L"\\", cxxsrcname);
   auto rcsrcname = bela::StringCat(name, L".rc");
@@ -229,8 +219,8 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     StringNonEmpty(vi->FileVersion, pkg.version);
     StringNonEmpty(vi->ProductVersion, pkg.version);
     StringNonEmpty(vi->ProductName, pkg.name);
-    StringNonEmpty(vi->OriginalFileName, exename);
-    StringNonEmpty(vi->InternalName, exename);
+    StringNonEmpty(vi->OriginalFileName, lm.alias);
+    StringNonEmpty(vi->InternalName, lm.alias);
     rcwrited = w.WriteVersion(*vi, rcsrc, ec);
   } else {
     bela::pe::VersionInfo nvi;
@@ -239,8 +229,8 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     nvi.FileVersion = pkg.version;
     nvi.ProductVersion = pkg.version;
     nvi.ProductName = pkg.name;
-    nvi.OriginalFileName = exename;
-    nvi.InternalName = exename;
+    nvi.OriginalFileName = lm.alias;
+    nvi.InternalName = lm.alias;
     baulk::rc::Writer w;
     rcwrited = w.WriteVersion(nvi, rcsrc, ec);
   }
@@ -261,20 +251,20 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
         baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
         L"-NODEFAULTLIB", subsystemnane[index], entry[index],
         bela::StringCat(name, L".obj"), bela::StringCat(name, L".res"),
-        L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", exename));
+        L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
   } else {
     exitcode = baulk::BaulkExecutor().Execute(
         baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
         L"-NODEFAULTLIB", subsystemnane[index], entry[index],
         bela::StringCat(cxxsrcname, L".obj"), L"kernel32.lib", L"user32.lib",
-        bela::StringCat(L"-OUT:", exename));
+        bela::StringCat(L"-OUT:", lm.alias));
   }
   if (exitcode != 0) {
     ec = baulk::BaulkExecutor().LastErrorCode();
     return false;
   }
-  auto target = bela::StringCat(linkdir, L"\\", exename);
-  auto newtarget = bela::StringCat(baulktemp, L"\\", exename);
+  auto target = bela::StringCat(linkdir, L"\\", lm.alias);
+  auto newtarget = bela::StringCat(baulktemp, L"\\", lm.alias);
   std::error_code e;
   if (std::filesystem::exists(target, e)) {
     std::filesystem::remove_all(target, e);
@@ -284,7 +274,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     ec = bela::from_std_error_code(e);
     return false;
   }
-  linkmetas.emplace_back(exename, relativeexe);
+  linkmetas.emplace_back(lm);
   return true;
 }
 
@@ -300,14 +290,13 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite,
       bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
   auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
   std::vector<LinkMeta> linkmetas;
-  for (const auto &lnk : pkg.links) {
-    auto src = bela::PathCat(pkgroot, L"\\", lnk);
+  for (const auto &lm : pkg.links) {
+    auto src = bela::PathCat(pkgroot, L"\\", lm.path);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
     }
-    auto fn = baulk::fs::FileName(src);
-    auto lnk = bela::StringCat(linkdir, L"\\", fn);
+    auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         baulk::fs::PathRemove(lnk, ec);
@@ -316,7 +305,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite,
     if (!baulk::fs::SymLink(src, lnk, ec)) {
       return false;
     }
-    linkmetas.emplace_back(baulkcli, lnk);
+    linkmetas.emplace_back(lm);
   }
   if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
@@ -337,9 +326,9 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite,
   if (!executor.Initialize(ec)) {
     return false;
   }
-  for (const auto &n : pkg.launchers) {
-    auto source = bela::PathCat(pkgroot, n);
-    if (!executor.Compile(pkg, source, linkdir, n, ec)) {
+  for (const auto &lm : pkg.launchers) {
+    auto source = bela::PathCat(pkgroot, L"\\", lm.path);
+    if (!executor.Compile(pkg, source, linkdir, lm, ec)) {
       bela::FPrintF(stderr, L"'%s' unable create launcher: \x1b[31m%s\x1b[0m\n",
                     source, ec.message);
     }
@@ -361,14 +350,13 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite,
       bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
   auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
   std::vector<LinkMeta> linkmetas;
-  for (const auto &lnk : pkg.links) {
-    auto src = bela::PathCat(pkgroot, L"\\", lnk);
+  for (const auto &lm : pkg.links) {
+    auto src = bela::PathCat(pkgroot, L"\\", lm.path);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
     }
-    auto fn = baulk::fs::FileName(src);
-    auto lnk = bela::StringCat(linkdir, L"\\", fn);
+    auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         baulk::fs::PathRemove(lnk, ec);
@@ -377,7 +365,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite,
     if (!baulk::fs::SymLink(src, lnk, ec)) {
       return false;
     }
-    linkmetas.emplace_back(fn, lnk);
+    linkmetas.emplace_back(lm);
   }
   if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,

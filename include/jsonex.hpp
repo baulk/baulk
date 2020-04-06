@@ -33,13 +33,14 @@ public:
     }
     return false;
   }
-
-  void array(std::string_view name, std::vector<std::wstring> &arr) {
+  template <typename T> bool array(std::string_view name, std::vector<T> &arr) {
     if (auto it = obj.find(name); it != obj.end()) {
       for (const auto &o : it.value()) {
         arr.emplace_back(bela::ToWide(o.get<std::string_view>()));
       }
+      return true;
     }
+    return false;
   }
   template <typename Integer>
   Integer integer(std::string_view name, const Integer dv) {

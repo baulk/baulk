@@ -3,6 +3,7 @@
 #define BAULK_HPP
 #include <bela/base.hpp>
 #include <bela/stdwriter.hpp>
+#include <bela/path.hpp>
 #include "compiler.hpp"
 
 namespace baulk {
@@ -98,6 +99,24 @@ std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
 bool BaulkInitializeExecutor(bela::error_code &ec);
 // package base
+
+struct LinkMeta {
+  LinkMeta() = default;
+  LinkMeta(std::wstring_view path_, std::wstring_view alias_)
+      : path(path_), alias(alias_) {}
+  LinkMeta(std::wstring_view sv) {
+    if (auto pos = sv.find('@'); pos != std::wstring_view::npos) {
+      path.assign(sv.data(), pos);
+      alias.assign(sv.substr(pos + 1));
+      return;
+    }
+    path.assign(sv);
+    alias.assign(bela::BaseName(path));
+  }
+  std::wstring path;
+  std::wstring alias;
+};
+
 struct Package {
   std::wstring name;
   std::wstring description;
@@ -106,8 +125,8 @@ struct Package {
   std::wstring checksum;
   std::wstring extension;
   std::vector<std::wstring> urls;
-  std::vector<std::wstring> links;
-  std::vector<std::wstring> launchers;
+  std::vector<LinkMeta> links;
+  std::vector<LinkMeta> launchers;
   int weights{0}; // Weights derived from bucket
 };
 

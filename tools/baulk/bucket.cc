@@ -99,6 +99,12 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
       ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
+    if (!ja.array("links64", pkg.links)) {
+      ja.array("links", pkg.links);
+    }
+    if (!ja.array("launchers64", pkg.launchers)) {
+      ja.array("launchers", pkg.launchers);
+    }
 // AMD64 code
 #else
     if (ja.get("url", pkg.urls)) {
@@ -107,9 +113,10 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
       ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
-#endif
     ja.array("links", pkg.links);
     ja.array("launchers", pkg.launchers);
+#endif
+
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package meta json: ",
                                bela::ToWide(e.what()));

@@ -18,6 +18,10 @@ add_executable(version_test xversion.cc)
 
 target_link_libraries(version_test belawin)
 
+add_executable(linkmeta_test linkmeta.cc)
+
+target_link_libraries(linkmeta_test belawin)
+
 add_executable(
   vsenv_test
   vsenv.cc
