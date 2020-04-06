@@ -87,7 +87,8 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
     baulk::json::JsonAssignor ja(j);
     pkg.description = ja.get("description");
     pkg.version = ja.get("version");
-    pkg.extension = ja.get("extension");
+    // to lower
+    pkg.extension = bela::AsciiStrToLower(ja.get("extension"));
     // load version
 #ifdef _M_X64
     if (ja.get("url64", pkg.urls)) {
@@ -220,6 +221,5 @@ bool PackageIsUpdatable(std::wstring_view pkgname, baulk::Package &pkg) {
   }
   return PackageUpdatableMeta(*opkg, pkg);
 }
-
 
 } // namespace baulk::bucket

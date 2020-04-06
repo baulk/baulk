@@ -317,7 +317,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite,
     }
     linkmetas.emplace_back(baulkcli, lnk);
   }
-  if (BaulkLinkMetaStore(linkmetas, pkg, ec)) {
+  if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
@@ -343,7 +343,7 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite,
                     source, ec.message);
     }
   }
-  if (BaulkLinkMetaStore(executor.LinkMetas(), pkg, ec)) {
+  if (!BaulkLinkMetaStore(executor.LinkMetas(), pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
@@ -378,7 +378,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite,
     }
     linkmetas.emplace_back(fn, lnk);
   }
-  if (BaulkLinkMetaStore(linkmetas, pkg, ec)) {
+  if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",

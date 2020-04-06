@@ -1,15 +1,38 @@
 //
 #include <bela/stdwriter.hpp>
 #include <bela/path.hpp>
+#include <bela/io.hpp>
 #include <version.hpp>
+#include <jsonex.hpp>
+#include <time.hpp>
 #include "bucket.hpp"
 #include "launcher.hpp"
 #include "pkg.hpp"
 #include "net.hpp"
 #include "hash.hpp"
 #include "fs.hpp"
+#include "decompress.hpp"
 
 namespace baulk::package {
+
+bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
+  try {
+    nlohmann::json j;
+    j["version"] = bela::ToNarrow(pkg.version);
+    j["bucket"] = bela::ToNarrow(pkg.bucket);
+    j["date"] = baulk::time::TimeNow();
+    auto file = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
+    if (!baulk::fs::MakeDir(file, ec)) {
+      return false;
+    }
+    bela::StrAppend(&file, L"\\", pkg.name, L".json");
+    return bela::io::WriteTextAtomic(j.dump(4), file, ec);
+  } catch (const std::exception &e) {
+    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+  }
+  return false;
+}
+
 // Package cached
 std::optional<std::wstring> PackageCached(std::wstring_view filename,
                                           std::wstring_view hash) {
@@ -38,9 +61,71 @@ int PackageMakeLinks(const baulk::Package &pkg) {
   return 0;
 }
 
+inline bool BaulkRename(std::wstring_view source, std::wstring_view target,
+                        bela::error_code &ec) {
+  if (bela::PathExists(target)) {
+    baulk::fs::PathRemove(target, ec);
+  }
+  if (MoveFileExW(source.data(), target.data(),
+                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  return true;
+}
+
 int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
-  //
-  return 0;
+  auto h = baulk::LookupHandler(pkg.extension);
+  if (!h) {
+    bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n",
+                  pkg.extension);
+    return 1;
+  }
+  std::wstring outdir(pkgfile);
+  if (auto pos = outdir.rfind('.'); pos != std::wstring::npos) {
+    outdir.resize(pos);
+  } else {
+    outdir.append(L".out");
+  }
+  baulk::DbgPrint(L"Decompress %s to %s\n", pkg.name, outdir);
+  bela::error_code ec;
+  if (bela::PathExists(outdir)) {
+    baulk::fs::PathRemove(outdir, ec);
+  }
+  if (!h->decompress(pkgfile, outdir, ec)) {
+    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile,
+                  ec.message);
+    return 1;
+  }
+  h->regularize(outdir);
+  auto pkgdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkgs\\", pkg.name);
+  std::wstring pkgold;
+  std::error_code e;
+  if (bela::PathExists(pkgdir)) {
+    pkgold = bela::StringCat(pkgdir, L".old");
+    if (!BaulkRename(pkgdir, pkgold, ec)) {
+      bela::FPrintF(stderr, L"baulk rename %s error: \x1b[31m%s\x1b[0m\n",
+                    pkgdir, ec.message);
+      return 1;
+    }
+  }
+  if (!BaulkRename(outdir, pkgdir, ec)) {
+    bela::FPrintF(stderr, L"baulk rename %s error: \x1b[31m%s\x1b[0m\n", pkgdir,
+                  ec.message);
+    if (!pkgold.empty()) {
+      BaulkRename(pkgdir, pkgold, ec);
+    }
+    return 1;
+  }
+  if (!pkgold.empty()) {
+    baulk::fs::PathRemove(pkgold, ec);
+  }
+  // create a links
+  if (!PackageLocalMetaWrite(pkg, ec)) {
+    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec.message);
+    return 1;
+  }
+  return PackageMakeLinks(pkg);
 }
 
 int BaulkInstall(const baulk::Package &pkg) {
