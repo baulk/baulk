@@ -50,9 +50,10 @@ std::optional<std::wstring> PackageCached(std::wstring_view filename,
 }
 
 int PackageMakeLinks(const baulk::Package &pkg) {
+  bela::error_code ec;
+  baulk::BaulkRemovePkgLinks(pkg.name, ec);
   // check package is good installed
   // rebuild launcher and links
-  bela::error_code ec;
   if (!baulk::BaulkMakePkgLinks(pkg, true, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name,
                   ec.message);

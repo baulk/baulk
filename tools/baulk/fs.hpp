@@ -57,7 +57,8 @@ inline std::wstring FileName(std::wstring_view p) {
 
 inline bool PathRemove(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
-  if (!std::filesystem::remove_all(path, e)) {
+  // https://en.cppreference.com/w/cpp/filesystem/remove
+  if (std::filesystem::remove_all(path, e) == static_cast<std::uintmax_t>(-1)) {
     ec = bela::from_std_error_code(e);
     return false;
   }

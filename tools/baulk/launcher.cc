@@ -94,9 +94,9 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     nlohmann::json newlinkobj;
     auto linksobj = it.value();
     for (auto it = linksobj.begin(); it != linksobj.end(); ++it) {
-      auto value = it.value().get<std::string_view>();
-      std::vector<std::wstring_view> mv = bela::StrSplit(
-          bela::ToWide(value), bela::ByChar('@'), bela::SkipEmpty());
+      auto value = bela::ToWide(it.value().get<std::string_view>());
+      std::vector<std::wstring_view> mv =
+          bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
       if (mv.size() < 2) {
         continue;
       }
