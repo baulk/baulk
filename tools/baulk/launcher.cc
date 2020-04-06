@@ -5,6 +5,7 @@
 #include <bela/pe.hpp>
 #include <bela/narrow/strcat.hpp>
 #include <bela/io.hpp>
+#include <bela/str_split.hpp>
 #include <time.hpp>
 #include <jsonex.hpp>
 #include "launcher.hpp"

@@ -148,10 +148,10 @@ int BaulkInstall(const baulk::Package &pkg) {
       // Since the metadata has been updated, we cannot rebuild the frozen
       // package launcher
       bela::FPrintF(stderr,
-                    L"baulk \x1b[31mcannot\x1b[0m upgrade \x1b[35m%s\x1b[0m "
-                    L"from \x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
-                    L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m. it has been "
-                    L"\x1b[31mfrozen\x1b[0m\n",
+                    L"baulk \x1b[31mskip upgrade\x1b[0m "
+                    L"\x1b[35m%s\x1b[0m(\x1b[31mfrozen\x1b[0m) from "
+                    L"\x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
+                    L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m.\n",
                     pkg.name, pkglocal->version, pkglocal->bucket, pkg.version,
                     pkg.bucket);
       return 0;
