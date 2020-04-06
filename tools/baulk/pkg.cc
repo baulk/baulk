@@ -58,6 +58,10 @@ int PackageMakeLinks(const baulk::Package &pkg) {
                   ec.message);
     return 1;
   }
+  bela::FPrintF(stderr,
+                L"baulk install \x1b[35m%s\x1b[0m/\x1b[34m%s\x1b[0m version "
+                L"\x1b[32m%s\x1b[0m success.\n",
+                pkg.name, pkg.bucket, pkg.version);
   return 0;
 }
 
