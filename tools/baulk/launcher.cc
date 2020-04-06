@@ -45,7 +45,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
     for (const auto &lm : metas) {
       auto meta = bela::ToNarrow(
           bela::StringCat(pkg.name, L"@", lm.path, L"@", pkg.version));
-      linkobj[bela::ToNarrow(lm.alias)] = meta; // "7z.exe":"7z.exe@7z@19.01"
+      linkobj[bela::ToNarrow(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
     }
     obj["links"] = linkobj;
     obj["updated"] = baulk::time::TimeNow();
@@ -302,7 +302,8 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite,
         baulk::fs::PathRemove(lnk, ec);
       }
     }
-    if (!baulk::fs::SymLink(src, lnk, ec)) {
+    // use baulk-cli as source
+    if (!baulk::fs::SymLink(baulkcli, lnk, ec)) {
       return false;
     }
     linkmetas.emplace_back(lm);

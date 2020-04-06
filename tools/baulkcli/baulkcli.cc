@@ -51,6 +51,27 @@ bool IsSubsytemConsole(std::wstring_view exe) {
   return pe->subsystem == bela::pe::Subsystem::CUI;
 }
 
+std::wstring_view DirName(std::wstring_view s) {
+  auto i = s.size() - 1;
+  auto p = s.data();
+  for (; bela::IsPathSeparator(p[i]); i--) {
+    if (i == 0) {
+      return L"";
+    }
+  }
+  for (; !bela::IsPathSeparator(p[i]); i--) {
+    if (i == 0) {
+      return L"";
+    }
+  }
+  for (; bela::IsPathSeparator(p[i]); i--) {
+    if (i == 0) {
+      return L"";
+    }
+  }
+  return std::wstring_view{s.data(), i + 1};
+}
+
 std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
                                           bela::error_code &ec) {
   // avoid commandline forged
@@ -59,10 +80,9 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
   if (!exe) {
     return std::nullopt;
   }
-  fs::path p(*exe);
-  auto launcher = p.filename().wstring();
-  auto parent_path = p.parent_path();
-  auto linkmeta = bela::StringCat(parent_path.wstring(), baulklinkmeta);
+  auto launcher = bela::BaseName(*exe);
+  auto parent = DirName(*exe);
+  auto linkmeta = bela::StringCat(parent, baulklinkmeta);
   try {
     /* code */
     FILE *fd{nullptr};
@@ -82,9 +102,9 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0,
                                  L"' invaild metadata: ", metadata);
       return std::nullopt;
     }
-    auto launchersrc = bela::StringCat(parent_path.parent_path().wstring(),
-                                       L"\\", tv[0], L"\\", tv[1]);
-    return std::make_optional(std::move(launchersrc));
+    auto baulkroot = DirName(parent);
+    auto target = bela::StringCat(baulkroot, L"\\pkgs\\", tv[0], L"\\", tv[1]);
+    return std::make_optional(std::move(target));
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"baulk.links.json exception: ",
                                bela::ToWide(e.what()));
