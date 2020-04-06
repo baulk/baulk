@@ -5,6 +5,6 @@
 
 namespace baulk::package {
 int BaulkInstall(const baulk::Package &pkg);
-};
+}; // namespace baulk::package
 
 #endif

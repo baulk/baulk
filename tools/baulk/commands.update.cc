@@ -166,6 +166,12 @@ bool PackageScanUpdatable() {
 }
 
 int cmd_update(const argv_t &argv) {
+  bela::error_code ec;
+  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
+  if (!locker) {
+    bela::FPrintF(stderr, L"baulk update: \x1b[31m%s\x1b[0m\n", ec.message);
+    return 1;
+  }
   BucketUpdater updater;
   if (!updater.Initialize()) {
     return 1;

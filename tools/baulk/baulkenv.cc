@@ -1,10 +1,13 @@
 // initialize baulk environment
-#include "baulk.hpp"
 #include <bela/env.hpp>
 #include <bela/path.hpp>
+#include <bela/io.hpp>
+#include <bela/narrow/strcat.hpp>
 #include <filesystem>
 #include <regutils.hpp>
 #include <jsonex.hpp>
+#include "baulk.hpp"
+#include "fs.hpp"
 
 namespace baulk {
 // https://github.com/baulk/bucket/commits/master.atom
@@ -190,6 +193,58 @@ int BaulkBucketWeights(std::wstring_view bucket) {
 
 bool BaulkInitializeExecutor(bela::error_code &ec) {
   return BaulkEnv::Instance().InitializeExecutor(ec);
+}
+
+inline bool BaulkIsRunning(DWORD pid) {
+  if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
+      hProcess != nullptr) {
+    CloseHandle(hProcess);
+    return true;
+  }
+  return false;
+}
+
+BaulkCloser::~BaulkCloser() {
+  if (FileHandle != INVALID_HANDLE_VALUE) {
+    CloseHandle(FileHandle);
+    auto file = bela::StringCat(BaulkEnv::Instance().BaulkRoot(),
+                                L"\\bin\\pkgs\\baulk.pid");
+    DeleteFileW(file.data());
+  }
+}
+
+std::optional<BaulkCloser> BaulkCloser::BaulkMakeLocker(bela::error_code &ec) {
+  auto pkgsdir =
+      bela::StringCat(BaulkEnv::Instance().BaulkRoot(), L"\\bin\\pkgs");
+  if (!baulk::fs::MakeDir(pkgsdir, ec)) {
+    return std::nullopt;
+  }
+  auto file = bela::StringCat(pkgsdir, L"\\baulk.pid");
+  if (auto line = bela::io::ReadLine(file, ec); line) {
+    DWORD pid = 0;
+    if (bela::SimpleAtoi(*line, &pid) && BaulkIsRunning(pid)) {
+      ec = bela::make_error_code(1, L"baulk is running. pid= ", pid);
+      return std::nullopt;
+    }
+  }
+  auto FileHandle =
+      ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                    nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code();
+    return std::nullopt;
+  }
+  bela::narrow::AlphaNum an(GetCurrentProcessId());
+  DWORD written = 0;
+  if (WriteFile(FileHandle, an.data(), static_cast<DWORD>(an.size()), &written,
+                nullptr) != TRUE) {
+    ec = bela::make_system_error_code();
+    CloseHandle(FileHandle);
+    DeleteFileW(file.data());
+    return std::nullopt;
+  }
+  return std::make_optional<BaulkCloser>(FileHandle);
 }
 
 } // namespace baulk

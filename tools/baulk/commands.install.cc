@@ -30,6 +30,11 @@ int cmd_install(const argv_t &argv) {
     return 1;
   }
   bela::error_code ec;
+  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
+  if (!locker) {
+    bela::FPrintF(stderr, L"baulk install: \x1b[31m%s\x1b[0m\n", ec.message);
+    return 1;
+  }
   if (!baulk::BaulkInitializeExecutor(ec)) {
     baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
   }

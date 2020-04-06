@@ -34,8 +34,13 @@ int cmd_freeze(const argv_t &argv) {
     bela::FPrintF(stderr, L"usage: baulk freeze package ...\n");
     return 1;
   }
-  nlohmann::json json;
   bela::error_code ec;
+  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
+  if (!locker) {
+    bela::FPrintF(stderr, L"baulk freeze: \x1b[31m%s\x1b[0m\n", ec.message);
+    return 1;
+  }
+  nlohmann::json json;
   if (!BaulkLoad(json, ec)) {
     bela::FPrintF(stderr, L"unable load baulk profile: %s\n", ec.message);
     return 1;
@@ -78,13 +83,19 @@ int cmd_freeze(const argv_t &argv) {
                 pkgs.size());
   return 0;
 }
+
 int cmd_unfreeze(const argv_t &argv) {
   if (argv.empty()) {
     bela::FPrintF(stderr, L"usage: baulk unfreeze package ...\n");
     return 1;
   }
-  nlohmann::json json;
   bela::error_code ec;
+  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
+  if (!locker) {
+    bela::FPrintF(stderr, L"baulk unfreeze: \x1b[31m%s\x1b[0m\n", ec.message);
+    return 1;
+  }
+  nlohmann::json json;
   if (!BaulkLoad(json, ec)) {
     bela::FPrintF(stderr, L"unable load baulk profile: %s\n", ec.message);
     return 1;

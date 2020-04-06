@@ -111,6 +111,19 @@ struct Package {
   int weights{0}; // Weights derived from bucket
 };
 
+class BaulkCloser {
+public:
+  BaulkCloser(HANDLE hFile_) : FileHandle(hFile_) {}
+  BaulkCloser(const BaulkCloser &) = delete;
+  BaulkCloser &operator=(const BaulkCloser &) = delete;
+  ~BaulkCloser();
+  // FileDispositionInfo or FILE_FLAG_DELETE_ON_CLOSE
+  static std::optional<BaulkCloser> BaulkMakeLocker(bela::error_code &ec);
+
+private:
+  HANDLE FileHandle{INVALID_HANDLE_VALUE};
+};
+
 } // namespace baulk
 
 #endif
