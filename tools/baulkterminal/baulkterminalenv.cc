@@ -345,7 +345,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
   auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
   if (bela::PathExists(baulkexe)) {
     JoinEnv(paths, *exepath);
-    JoinEnv(paths, *exepath, L"\\linkbin");
+    JoinEnv(paths, *exepath, L"\\links");
     return true;
   }
   std::wstring baulkroot(*exepath);
@@ -353,7 +353,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
     auto baulkexe = bela::StringCat(baulkroot, L"\\bin\\baulk.exe");
     if (bela::PathExists(baulkexe)) {
       JoinEnv(paths, baulkroot, L"\\bin");
-      JoinEnv(paths, baulkroot, L"\\bin\\linkbin");
+      JoinEnv(paths, baulkroot, L"\\bin\\links");
       return true;
     }
     bela::PathStripName(baulkroot);
