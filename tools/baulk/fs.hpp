@@ -65,6 +65,8 @@ inline bool PathRemove(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
+bool PathRemoveEx(std::wstring_view path, bela::error_code &ec);
+
 inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
   if (std::filesystem::exists(path, e)) {

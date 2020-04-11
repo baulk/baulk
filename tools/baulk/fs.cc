@@ -62,6 +62,67 @@ bool IsExecutablePath(std::wstring_view p) {
   return false;
 }
 
+// https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-deletefilew
+// The following list identifies some tips for deleting, removing, or closing
+// files:
+
+// To delete a read-only file, first you must remove the read-only attribute.
+// To delete or rename a file, you must have either delete permission on the
+// file, or delete child permission in the parent directory. To recursively
+// delete the files in a directory, use the SHFileOperation function. To remove
+// an empty directory, use the RemoveDirectory function. To close an open file,
+// use the CloseHandle function.
+
+bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
+  Finder finder;
+  if (!finder.First(path, L"*", ec)) {
+    return false;
+  }
+  do {
+    if (finder.Ignore()) {
+      continue;
+    }
+    auto child = bela::StringCat(path, L"\\", finder.Name());
+    if (finder.IsDir()) {
+
+      if (!PathRemoveInternal(child, ec)) {
+        return false;
+      }
+      continue;
+    }
+    SetFileAttributesW(child.data(), GetFileAttributesW(child.data()) &
+                                         ~FILE_ATTRIBUTE_READONLY);
+    if (DeleteFileW(child.data()) != TRUE) {
+      ec =
+          bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
+      return false;
+    }
+
+  } while (finder.Next());
+  SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) &
+                                      ~FILE_ATTRIBUTE_READONLY);
+  if (RemoveDirectoryW(path.data()) != TRUE) {
+    ec =
+        bela::make_system_error_code(bela::StringCat(L"rmdir '", path, L"': "));
+    return false;
+  }
+  return true;
+}
+
+bool PathRemoveEx(std::wstring_view path, bela::error_code &ec) {
+  if ((GetFileAttributesW(path.data()) & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) &
+                                        ~FILE_ATTRIBUTE_READONLY);
+    if (DeleteFileW(path.data()) != TRUE) {
+      ec =
+          bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
+      return false;
+    }
+    return true;
+  }
+  return PathRemoveInternal(path, ec);
+}
+
 std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
   if (!bela::PathExists(p, bela::FileAttribute::Dir)) {
     return std::nullopt;
@@ -100,8 +161,7 @@ bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
     auto newpath = destpath / p.path().filename();
     std::filesystem::rename(p.path(), newpath, e);
   }
-  if (!std::filesystem::remove_all(*subfirst, e)) {
-    ec = bela::from_std_error_code(e);
+  if (!PathRemoveEx(*subfirst, ec)) {
     return false;
   }
   return true;

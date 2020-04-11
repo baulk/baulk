@@ -24,7 +24,8 @@ int uninstallone(std::wstring_view pkgname) {
   }
   baulk::fs::PathRemove(lock, ec);
   auto pkgdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkgs\\", pkgname);
-  if (!baulk::fs::PathRemove(pkgdir, ec)) {
+  // Use PathRemoveEx. remove the read-only attribute first
+  if (!baulk::fs::PathRemoveEx(pkgdir, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n",
                   pkgname, ec.message);
     return 1;
