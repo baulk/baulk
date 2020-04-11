@@ -244,13 +244,14 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
       rcwrited = false;
     }
   }
-  DbgPrint(L"%s %s", baulktemp, cxxsrcname);
+  DbgPrint(L"compile %s", cxxsrcname);
   if (baulk::BaulkExecutor().Execute(baulktemp, L"cl", L"-c", L"-std:c++17",
                                      L"-nologo", L"-Os", cxxsrcname) != 0) {
     ec = baulk::BaulkExecutor().LastErrorCode();
     return false;
   }
   int exitcode = 0;
+  DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
   if (rcwrited) {
     exitcode = baulk::BaulkExecutor().Execute(
         baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",

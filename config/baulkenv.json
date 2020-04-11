@@ -1,5 +1,5 @@
 {
-    "env": [
-        "GOPROXY=https://goproxy.cn"
-    ]
+    "env": {
+        "GOPROXY": "https://goproxy.cn"
+    }
 }
