@@ -115,6 +115,9 @@ std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
     return std::nullopt;
   }
   auto tmpdir = tmppath.wstring();
+  if (!tmpdir.empty() && bela::IsPathSeparator(tmpdir.back())) {
+    tmpdir.pop_back();
+  }
   auto len = tmpdir.size();
   wchar_t X = 'A';
   bela::AlphaNum an(GetCurrentThreadId());

@@ -88,7 +88,9 @@ public:
     auto query = [&](std::wstring_view name, std::wstring &val) {
       auto k = bela::StringCat(block, name);
       if (VerQueryValueW(buffer, k.data(), &info, &ilen) == TRUE) {
-        val.assign(reinterpret_cast<wchar_t *>(info), ilen);
+        if (ilen > 0) {
+          val.assign(reinterpret_cast<wchar_t *>(info), ilen - 1);
+        }
       }
     };
     query(L"CompanyName", vi.CompanyName);

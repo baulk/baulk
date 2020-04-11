@@ -143,6 +143,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
     auto j = nlohmann::json::parse(fd);
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
     pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
+    // must get bucket name
     pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
@@ -154,9 +155,11 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
 bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   // initialize version from installed version
   baulk::version::version pkgversion(opkg.version);
+  auto weights = opkg.weights;
   bool updated{false};
   auto bucketsdir =
       bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+
   for (const auto &bk : baulk::BaulkBuckets()) {
     auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
                                    opkg.name, L".json");
@@ -174,9 +177,10 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
     if (newversion > pkgversion ||
-        (newversion == pkgversion && pkg.weights < pkgN->weights)) {
+        (newversion == pkgversion && weights < pkgN->weights)) {
       pkg = std::move(*pkgN);
       pkgversion = newversion;
+      weights = pkgN->weights;
       updated = true;
     }
   }

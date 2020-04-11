@@ -113,6 +113,7 @@ struct LinkMeta {
     path.assign(sv);
     alias.assign(bela::BaseName(path));
   }
+  LinkMeta(const LinkMeta &lm) : path(lm.path), alias(lm.alias) {}
   std::wstring path;
   std::wstring alias;
 };

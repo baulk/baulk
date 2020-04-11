@@ -1,2 +1,2 @@
 https://github.com/greg7mdp/parallel-hashmap.git
-5ba0c2d619c702a1450d50d3350922161c6781f1
+882162cc2a882b8e63079ad26c825ec4d4530b56

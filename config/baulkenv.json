@@ -1,0 +1,5 @@
+{
+    "env": [
+        "GOPROXY=https://goproxy.cn"
+    ]
+}

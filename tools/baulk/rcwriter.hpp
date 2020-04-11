@@ -49,13 +49,13 @@ public:
   Writer &FileVersion(int MajorPart, int MinorPart, int BuildPart,
                       int PrivatePart) {
     bela::StrAppend(&buffer, L"FILEVERSION ", MajorPart, L", ", MinorPart,
-                    L", ", BuildPart, L", ", PrivatePart);
+                    L", ", BuildPart, L", ", PrivatePart, L"\n");
     return *this;
   }
   Writer &ProductVersion(int MajorPart, int MinorPart, int BuildPart,
                          int PrivatePart) {
     bela::StrAppend(&buffer, L"PRODUCTVERSION ", MajorPart, L", ", MinorPart,
-                    L", ", BuildPart, L", ", PrivatePart);
+                    L", ", BuildPart, L", ", PrivatePart, L"\n");
     return *this;
   }
   Writer &PreVersion() {
@@ -66,7 +66,7 @@ public:
     return *this;
   }
   Writer &Version(std::wstring_view name, std::wstring_view value) {
-    bela::StrAppend(&buffer, L"VALUE \"", name, L"\" L\"", value, L"\"\n");
+    bela::StrAppend(&buffer, L"VALUE \"", name, L"\", L\"", value, L"\"\n");
     return *this;
   }
   Writer &VersionEx(std::wstring_view name, std::wstring_view value,
