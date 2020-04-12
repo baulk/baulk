@@ -90,7 +90,8 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
     // to lower
     pkg.extension = bela::AsciiStrToLower(ja.get("extension"));
     // load version
-#ifdef _M_X64
+#if defined(_M_X64)
+    // AMD64 support
     if (ja.get("url64", pkg.urls)) {
       pkg.checksum = ja.get("url64.hash");
     } else if (ja.get("url", pkg.urls)) {
@@ -105,7 +106,22 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
     if (!ja.array("launchers64", pkg.launchers)) {
       ja.array("launchers", pkg.launchers);
     }
-// AMD64 code
+#elif defined(_M_ARM64)
+    // ARM64 support
+    if (ja.get("urlarm64", pkg.urls)) {
+      pkg.checksum = ja.get("urlarm64.hash");
+    } else if (ja.get("url", pkg.urls)) {
+      pkg.checksum = ja.get("url.hash");
+    } else {
+      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      return std::nullopt;
+    }
+    if (!ja.array("linksarm64", pkg.links)) {
+      ja.array("links", pkg.links);
+    }
+    if (!ja.array("launchersarm64", pkg.launchers)) {
+      ja.array("launchers", pkg.launchers);
+    }
 #else
     if (ja.get("url", pkg.urls)) {
       pkg.checksum = ja.get("url.hash");

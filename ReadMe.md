@@ -1,5 +1,6 @@
 # Baulk - Minimal Package Manager for Windows
 
+[简体中文](./ReadMe.zh-CN.md)
 
 ## Usage
 

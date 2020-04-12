@@ -7,6 +7,20 @@
 #include "bucket.hpp"
 
 namespace baulk::commands {
+// https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
+constexpr const std::wstring_view Architecture() {
+#if defined(_M_X64)
+  return L"x64";
+#elif defined(_M_X86)
+  return L"x86";
+#elif defined(_M_ARM64)
+  return L"ARM64";
+#elif defined(_M_ARM)
+  return L"ARM";
+#else
+  return L"UNKNOWN";
+#endif
+}
 
 int install_pkg(std::wstring_view name) {
   bela::error_code ec;
@@ -16,7 +30,8 @@ int install_pkg(std::wstring_view name) {
     return 1;
   }
   if (pkg->urls.empty()) {
-    bela::FPrintF(stderr, L"baulk: '%s' empty urls\n", name);
+    bela::FPrintF(stderr, L"baulk: '%s' does not support \x1b[31m%s\x1b[0m\n",
+                  name, Architecture());
     return 1;
   }
   return baulk::package::BaulkInstall(*pkg);

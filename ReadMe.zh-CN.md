@@ -121,3 +121,6 @@ Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW
 
 
 
+## Baulk Windows Terminal 集成
+
+
