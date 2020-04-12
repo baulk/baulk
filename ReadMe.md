@@ -30,5 +30,8 @@ Command:
 
 ```
 
+![](./docs/images/baulksearch.png)
+
+
 WIP
 
