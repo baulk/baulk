@@ -66,6 +66,55 @@ baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可
 
 ### 包管理
 
+baulk 管理软件包的命令有 `install`, `uninstall`, `upgrade`, `freeze` 和 `unfreeze` 以及 `list` 和 `search`。使用 baulk 安装软件非常简单，命令如下：
+
+```shell
+# 安装 cmake git 和 7z
+baulk install cmake git 7z
+```
+
+`baulk install` 将安装特定的软件包，在执行安装的过程中，baulk 将从 bucket 读取特定的包的元数据，这些元数据的格式一般如下：
+
+```json
+{
+    "description": "CMake is an open-source, cross-platform family of tools designed to build, test and package software",
+    "version": "3.17.1",
+    "url": [
+        "https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-win32-x86.zip",
+        "https://cmake.org/files/v3.17/cmake-3.17.1-win32-x86.zip"
+    ],
+    "url64": [
+        "https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-win64-x64.zip",
+        "https://cmake.org/files/v3.17/cmake-3.17.1-win64-x64.zip"
+    ],
+    "url.hash": "SHA256:d3a283be64f4cb1e3f8a14e84ea7d423c6fe18205698e0687306290dea451f6b",
+    "url64.hash": "SHA256:a5af7a2fe73f34070456397e940042e4469f072126c82974f44333ac43d478b1",
+    "extension": "zip",
+    "links": [
+        "bin\\cmake.exe",
+        "bin\\cmake-gui.exe",
+        "bin\\cmcldeps.exe",
+        "bin\\cpack.exe",
+        "bin\\ctest.exe"
+    ]
+}
+```
+
+baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 BLAKE3，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，baulk 按照 `extension` 的类型执行相应的解压缩程序。在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulkcli` 创建模拟启动器。如果在 baulk 运行在 Windows AMD64 系统中，且包清单存在 `url64/url64.hash/links64/launchers64`，baulk 将使用 `url64/url64.hash/links64/launchers64` 设置。
+
+Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
+
+在运行 `baulk install` 时，如果软件已经被安装，则可能出现两种情况，第一种是软件没有更新，则 `baulk` 将重建 `links` 和 `launchers`，这适用于不同的包具有相同的 `links`/`launchers` 安装出现了覆盖需要还原的情况。如果软件存在更新，baulk 将安装指定包的最新版本。
+
+`baulk uninstall` 将删除包和创建的启动器，符号链接。`baulk upgrade` 通过搜寻已经安装的包，如果相应的包存在新版本，则安装新版本。
+
+在 baulk 中还存在 `freeze/unfreeze` 命令，`baulk freeze` 将冻结特定的包，使用 `baulk install/baulk upgrade` 将跳过这些包的升级，但是，如果 `baulk install/baulk upgrade` 使用了 `--force/-f` 参数，则会强制升级相应的包。我们还可以使用 `baulk unfreeze` 接触特定包的冻结。
+
+在 baulk 中，我们可以使用  `baulk search pattern` 搜索 bucket 中添加的包，这里的 `pattern` 是基于文件名匹配，规则类似 [POSIX fnmatch](https://linux.die.net/man/3/fnmatch)。运行 `baulk search *` 将列出所有的包。
+
+在 baulk 中，我们可以使用 `baulk list` 列出所有安装的包，使用 `baulk list pkgname` 列出特定的包。
+
+![](./docs/images/baulksearch.png)
 
 ### 杂项
 
