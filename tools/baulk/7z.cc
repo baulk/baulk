@@ -16,6 +16,10 @@ inline std::optional<std::wstring> lookup_sevenzip() {
     return std::nullopt;
   }
   s7z = bela::StringCat(*self, L"\\7z.exe");
+  if (bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
+  s7z = bela::StringCat(*self, L"\\links\\7z.exe");
   if (!bela::PathExists(s7z)) {
     return std::nullopt;
   }
