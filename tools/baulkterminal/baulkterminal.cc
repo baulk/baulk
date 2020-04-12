@@ -31,44 +31,14 @@ Usage: baulkterminal [option] ...
                Use conhost not Windows terminal
   --clang
                Add Visual Studio's built-in clang to the PATH environment variable
+  --manifest
+               Baulkterminal startup manifest file
 )";
   bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
                        BAULK_APPLINK, bela::mbs_t::ABOUT);
 }
 
-//
-struct Options {
-  bool cleanup{false};
-  bool enablevs{false};
-  bool conhost{false};
-  bool clang{false};
-  std::wstring shell;
-  std::wstring cwd;
-  bool Parse(bela::error_code &ec);
-  std::wstring BaulkShell();
-};
-
-template <size_t Len = 256> std::wstring PWD() {
-  std::wstring s;
-  s.resize(Len);
-  auto len = GetCurrentDirectoryW(Len, s.data());
-  if (len == 0) {
-    return L"";
-  }
-  if (len < Len) {
-    s.resize(len);
-    return s;
-  }
-  s.resize(len);
-  auto nlen = GetCurrentDirectoryW(len, s.data());
-  if (nlen == 0 || nlen > len) {
-    return L"";
-  }
-  s.resize(nlen);
-  return s;
-}
-
-bool Options::Parse(bela::error_code &ec) {
+bool Executor::ParseArgv(bela::error_code &ec) {
   int Argc = 0;
   auto Argv = CommandLineToArgvW(GetCommandLineW(), &Argc);
   if (Argv == nullptr) {
@@ -83,9 +53,10 @@ bool Options::Parse(bela::error_code &ec) {
       .Add(L"vs", bela::no_argument, L'V') // load visual studio environment
       .Add(L"shell", bela::required_argument, L'S')
       .Add(L"cwd", bela::required_argument, L'W')
-      .Add(L"conhost", bela::no_argument, 1001)
-      .Add(L"clang", bela::no_argument, 1002); // disable windows termainl
-  auto result = pa.Execute(
+      .Add(L"conhost", bela::no_argument, 1001) // disable windows termainl
+      .Add(L"clang", bela::no_argument, 1002)
+      .Add(L"manifest", bela::required_argument, 1003);
+  return pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
@@ -100,7 +71,7 @@ bool Options::Parse(bela::error_code &ec) {
           cleanup = true;
           break;
         case 'V':
-          enablevs = true;
+          usevs = true;
           break;
         case 'S':
           shell = oa;
@@ -114,87 +85,16 @@ bool Options::Parse(bela::error_code &ec) {
         case 1002:
           clang = true;
           break;
+        case 1003:
+          manifest = oa;
+          break;
         default:
           break;
         }
         return true;
       },
       ec);
-  if (!result) {
-    return false;
-  }
-  if (cwd.empty()) {
-    cwd = PWD();
-  }
-  return true;
 }
-
-bool LookupPwshCore(std::wstring &ps) {
-  bool success = false;
-  auto psdir = bela::ExpandEnv(L"%ProgramFiles%\\Powershell");
-  if (!bela::PathExists(psdir)) {
-    psdir = bela::ExpandEnv(L"%ProgramW6432%\\Powershell");
-    if (!bela::PathExists(psdir)) {
-      return false;
-    }
-  }
-  WIN32_FIND_DATAW wfd;
-  auto findstr = bela::StringCat(psdir, L"\\*");
-  HANDLE hFind = FindFirstFileW(findstr.c_str(), &wfd);
-  if (hFind == INVALID_HANDLE_VALUE) {
-    return false; /// Not found
-  }
-  do {
-    if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-      auto pscore = bela::StringCat(psdir, L"\\", wfd.cFileName, L"\\pwsh.exe");
-      if (bela::PathExists(pscore)) {
-        ps.assign(std::move(pscore));
-        success = true;
-        break;
-      }
-    }
-  } while (FindNextFileW(hFind, &wfd));
-  FindClose(hFind);
-  return success;
-}
-
-bool LookupPwshDesktop(std::wstring &ps) {
-  WCHAR pszPath[MAX_PATH]; /// by default , System Dir Length <260
-  // https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getsystemdirectoryw
-  auto N = GetSystemDirectoryW(pszPath, MAX_PATH);
-  if (N == 0) {
-    return false;
-  }
-  pszPath[N] = 0;
-  ps = bela::StringCat(pszPath, L"\\WindowsPowerShell\\v1.0\\powershell.exe");
-  return true;
-}
-
-std::wstring PwshExePath() {
-  std::wstring pwshexe;
-  if (LookupPwshCore(pwshexe)) {
-    return pwshexe;
-  }
-  if (LookupPwshDesktop(pwshexe)) {
-    return pwshexe;
-  }
-  return L"";
-}
-
-std::wstring Options::BaulkShell() {
-  if (shell.empty() || bela::EqualsIgnoreCase(L"pwsh", shell)) {
-    return PwshExePath();
-  }
-  if (bela::EqualsIgnoreCase(L"bash", shell)) {
-    // git for windows
-  }
-  if (bela::EqualsIgnoreCase(L"wsl", shell)) {
-    //
-    return L"wsl.exe";
-  }
-  return L"cmd.exe";
-}
-
 } // namespace baulkterminal
 
 std::optional<std::wstring> FindWindowsTerminal() {
@@ -220,26 +120,34 @@ public:
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   dotcom_global_initializer di;
-  baulkterminal::Options opt;
+  baulkterminal::Executor executor;
   bela::error_code ec;
-  if (!opt.Parse(ec)) {
+  if (!executor.ParseArgv(ec)) {
     bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(),
                          BAULK_APPLINKE, bela::mbs_t::FATAL);
     return 1;
   }
+  if (!executor.PrepareEnv(ec)) {
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare env error",
+                         ec.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
+    return 1;
+  }
   bela::EscapeArgv ea;
-
-  if (!opt.conhost) {
+  if (!executor.IsConhost()) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Append(*wt);
-      if (!opt.cwd.empty()) {
+      if (!executor.Cwd().empty()) {
         ea.Append(L"--startingDirectory");
-        ea.Append(opt.cwd);
+        ea.Append(executor.Cwd());
       }
     }
   }
-  ea.Append(opt.BaulkShell());
-  auto env = baulkterminal::MakeEnv(opt.enablevs, opt.clang, opt.cleanup, ec);
+  auto shell = executor.MakeShell();
+  ea.Append(shell);
+  if (bela::EndsWithIgnoreCase(shell, L"bash.exe")) {
+    ea.Append(L"-i").Append(L"-l");
+  }
+  auto env = executor.MakeEnv(ec);
   if (!env) {
     bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(),
                          nullptr, bela::mbs_t::FATAL);
@@ -253,7 +161,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   if (CreateProcessW(
           nullptr, ea.data(), nullptr, nullptr, FALSE,
           CREATE_UNICODE_ENVIRONMENT, baulkterminal::string_nullable(*env),
-          baulkterminal::string_nullable(opt.cwd), &si, &pi) != TRUE) {
+          baulkterminal::string_nullable(executor.Cwd()), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(),
                          nullptr, bela::mbs_t::FATAL);
