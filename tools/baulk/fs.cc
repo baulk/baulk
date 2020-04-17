@@ -179,7 +179,6 @@ std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
     tmpdir.pop_back();
   }
   auto len = tmpdir.size();
-  wchar_t X = 'A';
   bela::AlphaNum an(GetCurrentThreadId());
   for (wchar_t X = 'A'; X < 'Z'; X++) {
     bela::StrAppend(&tmpdir, L"\\BaulkTemp", X, an);
