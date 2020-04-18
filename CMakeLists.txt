@@ -86,6 +86,7 @@ install(FILES "config/baulk.json" DESTINATION config)
 
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)
+add_subdirectory(lib/archive)
 add_subdirectory(tools)
 
 if(BUILD_TEST)

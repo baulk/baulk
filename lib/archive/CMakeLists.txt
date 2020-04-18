@@ -1,0 +1,69 @@
+#
+
+if("${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x86" OR "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x64")
+  set(ZLIB_SOURCES
+      zlib-intel/adler32.c
+      zlib-intel/compress.c
+      zlib-intel/crc_folding.c
+      zlib-intel/crc32.c
+      zlib-intel/deflate_medium.c
+      zlib-intel/deflate_quick.c
+      zlib-intel/deflate.c
+      zlib-intel/inffast.c
+      zlib-intel/inflate.c
+      zlib-intel/inftrees.c
+      zlib-intel/match.c
+      zlib-intel/slide_sse.c
+      zlib-intel/trees.c
+      zlib-intel/x86.c
+      zlib-intel/zutil.c)
+else()
+  set(ZLIB_SOURCES
+      zlib/adler32.c
+      zlib/compress.c
+      zlib/crc32.c
+      zlib/deflate.c
+      zlib/inffast.c
+      zlib/inflate.c
+      zlib/inftrees.c
+      zlib/trees.c
+      zlib/zutil.c)
+endif()
+
+set(BROTLI_SOURCES
+    brotli/common/dictionary.c
+    brotli/common/transform.c
+    brotli/dec/bit_reader.c
+    brotli/dec/decode.c
+    brotli/dec/huffman.c
+    brotli/dec/state.c
+    brotli/enc/backward_references.c
+    brotli/enc/backward_references_hq.c
+    brotli/enc/bit_cost.c
+    brotli/enc/block_splitter.c
+    brotli/enc/brotli_bit_stream.c
+    brotli/enc/cluster.c
+    brotli/enc/compress_fragment.c
+    brotli/enc/compress_fragment_two_pass.c
+    brotli/enc/dictionary_hash.c
+    brotli/enc/encode.c
+    brotli/enc/encoder_dict.c
+    brotli/enc/entropy_encode.c
+    brotli/enc/histogram.c
+    brotli/enc/literal_cost.c
+    brotli/enc/memory.c
+    brotli/enc/metablock.c
+    brotli/enc/static_dict.c
+    brotli/enc/utf8_util.c)
+
+add_library(
+  baulkarchive STATIC
+  zip.cc
+  bzip2/blocksort.c
+  bzip2/bzlib.c
+  bzip2/compress.c
+  bzip2/crctable.c
+  bzip2/decompress.c
+  bzip2/huffman.c
+  bzip2/randtable.c
+  ${ZLIB_SOURCES})
