@@ -128,13 +128,6 @@ add_library(zlib STATIC ${ZLIB_SOURCES})
 # minizip
 add_library(
   minizip STATIC
-  minizip/brg/aescrypt.c
-  minizip/brg/aeskey.c
-  minizip/brg/aestab.c
-  minizip/brg/hmac.c
-  minizip/brg/sha1.c
-  minizip/brg/sha2.c
-  minizip/mz_crypt_brg.c
   minizip/mz_crypt.c
   minizip/mz_os.c
   minizip/mz_os_win32.c
@@ -146,7 +139,6 @@ add_library(
   minizip/mz_zip.c
   minizip/mz_zip_rw.c
   minizip/mz_strm_wzaes.c
-  minizip/mz_crypt_brg.c
   minizip/mz_strm_lzma.c)
 
 set(MINIZIP_DEF)
@@ -167,7 +159,6 @@ list(APPEND MINIZIP_DEF -DHAVE_STDINT_H)
 list(APPEND MINIZIP_DEF -DHAVE_STRING_H)
 list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
 
-list(APPEND MINIZIP_INC minizip/brg)
 list(APPEND MINIZIP_INC bzip2)
 list(APPEND MINIZIP_INC zlib)
 list(APPEND MINIZIP_INC liblzma/api)
