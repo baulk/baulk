@@ -1,5 +1,6 @@
-#
+# archive libs
 
+# liblzma
 add_library(
   lzma STATIC
   liblzma/common/tuklib_cpucores.c
@@ -75,19 +76,23 @@ add_library(
   liblzma/simple/simple_encoder.c
   liblzma/simple/sparc.c
   liblzma/simple/x86.c)
-# liblzma
-target_include_directories(
-  lzma
-  PRIVATE "liblzma"
-          "liblzma/api"
-          "liblzma/check"
-          "liblzma/common"
-          "liblzma/delta"
-          "liblzma/lz"
-          "liblzma/lzma"
-          "liblzma/rangecoder"
-          "liblzma/simple")
 
+set(LZMA_INC)
+list(APPEND LZMA_INC liblzma)
+list(APPEND LZMA_INC liblzma/api)
+list(APPEND LZMA_INC liblzma/check)
+list(APPEND LZMA_INC liblzma/common)
+list(APPEND LZMA_INC liblzma/delta)
+list(APPEND LZMA_INC liblzma/lz)
+list(APPEND LZMA_INC liblzma/lzma)
+list(APPEND LZMA_INC liblzma/rangecoder)
+list(APPEND LZMA_INC liblzma/simple)
+list(APPEND LZMA_DEF -DLZMA_API_STATIC)
+
+target_include_directories(lzma PRIVATE ${LZMA_INC})
+target_compile_definitions(lzma PRIVATE ${LZMA_DEF})
+
+# zlib
 if("${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x86" OR "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x64")
   set(ZLIB_SOURCES
       zlib-intel/adler32.c
@@ -118,6 +123,61 @@ else()
       zlib/zutil.c)
 endif()
 
+add_library(zlib STATIC ${ZLIB_SOURCES})
+
+# minizip
+add_library(
+  minizip STATIC
+  minizip/brg/aescrypt.c
+  minizip/brg/aeskey.c
+  minizip/brg/aestab.c
+  minizip/brg/hmac.c
+  minizip/brg/sha1.c
+  minizip/brg/sha2.c
+  minizip/mz_crypt_brg.c
+  minizip/mz_crypt.c
+  minizip/mz_os.c
+  minizip/mz_os_win32.c
+  minizip/mz_strm_os_win32.c
+  minizip/mz_strm.c
+  minizip/mz_strm_buf.c
+  minizip/mz_strm_mem.c
+  minizip/mz_strm_split.c
+  minizip/mz_zip.c
+  minizip/mz_zip_rw.c
+  minizip/mz_strm_wzaes.c
+  minizip/mz_crypt_brg.c
+  minizip/mz_strm_lzma.c)
+
+set(MINIZIP_DEF)
+set(MINIZIP_INC)
+list(APPEND MINIZIP_DEF -DHAVE_BZIP2)
+list(APPEND MINIZIP_DEF -D_CRT_SECURE_NO_DEPRECATE)
+list(APPEND MINIZIP_DEF -DHAVE_WZAES)
+list(APPEND MINIZIP_DEF -DHAVE_ZLIB)
+list(APPEND MINIZIP_DEF -DHAVE_LZMA)
+list(APPEND MINIZIP_DEF -DLZMA_API_STATIC)
+list(APPEND MINIZIP_DEF -DHAVE_IMMINTRIN_H)
+list(APPEND MINIZIP_DEF -DHAVE_INTTYPES_H)
+list(APPEND MINIZIP_DEF -DHAVE_LIMITS_H)
+list(APPEND MINIZIP_DEF -DHAVE_MEMORY_H)
+list(APPEND MINIZIP_DEF -DHAVE_STDBOOL_H)
+list(APPEND MINIZIP_DEF -DHAVE_STDDEF_H)
+list(APPEND MINIZIP_DEF -DHAVE_STDINT_H)
+list(APPEND MINIZIP_DEF -DHAVE_STRING_H)
+list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
+
+list(APPEND MINIZIP_INC minizip/brg)
+list(APPEND MINIZIP_INC bzip2)
+list(APPEND MINIZIP_INC zlib)
+list(APPEND MINIZIP_INC liblzma/api)
+
+target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
+target_include_directories(minizip PRIVATE ${MINIZIP_INC})
+target_link_libraries(minizip lzma zlib)
+
+
+# Brotli
 set(BROTLI_SOURCES
     brotli/common/dictionary.c
     brotli/common/transform.c
@@ -154,9 +214,8 @@ add_library(
   bzip2/decompress.c
   bzip2/huffman.c
   bzip2/randtable.c
-  ${ZLIB_SOURCES}
   ${BROTLI_SOURCES})
 
 target_include_directories(baulkarchive PRIVATE brotli/include)
 
-target_link_libraries(baulkarchive lzma)
+target_link_libraries(baulkarchive minizip)

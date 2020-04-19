@@ -1055,7 +1055,7 @@ static int32_t mz_zip_read_cd(void *handle)
                 /* Total number of entries in the central directory */
                 if (err == MZ_OK)
                     err = mz_stream_read_uint64(zip->stream, &number_entry_cd64);
-                if (&zip->number_entry != number_entry_cd64)
+                if (zip->number_entry != number_entry_cd64)
                     err = MZ_FORMAT_ERROR;
                 /* Size of the central directory */
                 if (err == MZ_OK)
