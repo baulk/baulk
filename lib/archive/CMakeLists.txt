@@ -165,7 +165,7 @@ list(APPEND MINIZIP_INC liblzma/api)
 
 target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
 target_include_directories(minizip PRIVATE ${MINIZIP_INC})
-target_link_libraries(minizip lzma zlib)
+target_link_libraries(minizip lzma zlib advapi32)
 
 
 # Brotli
