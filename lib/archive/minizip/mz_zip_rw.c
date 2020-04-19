@@ -101,8 +101,23 @@ int32_t mz_zip_reader_open(void *handle, void *stream)
 }
 
 int32_t mz_zip_reader_open_file_w(void *handle, const wchar_t *path){
+    mz_zip_reader *reader = (mz_zip_reader *)handle;
+    int32_t err = MZ_OK;
 
-    return 0;
+
+    mz_zip_reader_close(handle);
+
+    mz_stream_os_create(&reader->file_stream);
+    mz_stream_buffered_create(&reader->buffered_stream);
+    mz_stream_split_create(&reader->split_stream);
+
+    mz_stream_set_base(reader->buffered_stream, reader->file_stream);
+    mz_stream_set_base(reader->split_stream, reader->buffered_stream);
+
+    err = mz_stream_open_w(reader->split_stream, path, MZ_OPEN_MODE_READ);
+    if (err == MZ_OK)
+        err = mz_zip_reader_open(handle, reader->split_stream);
+    return err;
 }
 
 int32_t mz_zip_reader_open_file(void *handle, const char *path)

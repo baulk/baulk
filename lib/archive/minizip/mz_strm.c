@@ -26,6 +26,14 @@ int32_t mz_stream_open(void *stream, const char *path, int32_t mode)
     return strm->vtbl->open(strm, path, mode);
 }
 
+int32_t mz_stream_open_w(void *stream, const wchar_t *path, int32_t mode)
+{
+    mz_stream *strm = (mz_stream *)stream;
+    if (strm == NULL || strm->vtbl == NULL || strm->vtbl->wopen == NULL)
+        return MZ_STREAM_ERROR;
+    return strm->vtbl->wopen(strm, path, mode);
+}
+
 int32_t mz_stream_is_open(void *stream)
 {
     mz_stream *strm = (mz_stream *)stream;

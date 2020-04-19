@@ -55,6 +55,7 @@ static mz_stream_vtbl mz_stream_os_vtbl = {
     mz_stream_os_create,
     mz_stream_os_delete,
     NULL,
+    NULL,
     NULL
 };
 

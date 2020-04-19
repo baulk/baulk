@@ -38,6 +38,8 @@
 #  endif
 #endif
 
+int32_t mz_stream_os_open_w(void *stream, const wchar_t *path, int32_t mode);
+
 /***************************************************************************/
 
 static mz_stream_vtbl mz_stream_os_vtbl = {
@@ -52,7 +54,8 @@ static mz_stream_vtbl mz_stream_os_vtbl = {
     mz_stream_os_create,
     mz_stream_os_delete,
     NULL,
-    NULL
+    NULL,
+    mz_stream_os_open_w
 };
 
 /***************************************************************************/
@@ -71,6 +74,67 @@ typedef struct mz_stream_win32_s
 #else
 #  define mz_stream_os_print(fmt,...)
 #endif
+
+/***************************************************************************/
+
+int32_t mz_stream_os_open_w(void *stream, const wchar_t *path, int32_t mode)
+{
+    mz_stream_win32 *win32 = (mz_stream_win32 *)stream;
+    uint32_t desired_access = 0;
+    uint32_t creation_disposition = 0;
+    uint32_t share_mode = FILE_SHARE_READ;
+    uint32_t flags_attribs = FILE_ATTRIBUTE_NORMAL;
+    wchar_t *path_wide = NULL;
+
+    if (path == NULL)
+        return MZ_PARAM_ERROR;
+
+    /* Some use cases require write sharing as well */
+    share_mode |= FILE_SHARE_WRITE;
+
+    if ((mode & MZ_OPEN_MODE_READWRITE) == MZ_OPEN_MODE_READ)
+    {
+        desired_access = GENERIC_READ;
+        creation_disposition = OPEN_EXISTING;
+    }
+    else if (mode & MZ_OPEN_MODE_APPEND)
+    {
+        desired_access = GENERIC_WRITE | GENERIC_READ;
+        creation_disposition = OPEN_EXISTING;
+    }
+    else if (mode & MZ_OPEN_MODE_CREATE)
+    {
+        desired_access = GENERIC_WRITE | GENERIC_READ;
+        creation_disposition = CREATE_ALWAYS;
+    }
+    else
+    {
+        return MZ_PARAM_ERROR;
+    }
+
+    mz_stream_os_print("Win32 - Open - %s (mode %" PRId32 ")\n", path);
+
+
+#ifdef MZ_WINRT_API
+    win32->handle = CreateFile2W(path, desired_access, share_mode,
+        creation_disposition, NULL);
+#else
+    win32->handle = CreateFileW(path, desired_access, share_mode, NULL,
+        creation_disposition, flags_attribs, NULL);
+#endif
+
+
+    if (mz_stream_os_is_open(stream) != MZ_OK)
+    {
+        win32->error = GetLastError();
+        return MZ_OPEN_ERROR;
+    }
+
+    if (mode & MZ_OPEN_MODE_APPEND)
+        return mz_stream_os_seek(stream, 0, MZ_SEEK_END);
+
+    return MZ_OK;
+}
 
 /***************************************************************************/
 
