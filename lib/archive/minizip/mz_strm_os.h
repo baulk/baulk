@@ -19,6 +19,7 @@ extern "C" {
 /***************************************************************************/
 
 int32_t mz_stream_os_open(void *stream, const char *path, int32_t mode);
+int32_t mz_stream_os_open_w(void *stream, const wchar_t *path, int32_t mode);
 int32_t mz_stream_os_is_open(void *stream);
 int32_t mz_stream_os_read(void *stream, void *buf, int32_t size);
 int32_t mz_stream_os_write(void *stream, const void *buf, int32_t size);
@@ -29,7 +30,6 @@ int32_t mz_stream_os_error(void *stream);
 
 void*   mz_stream_os_create(void **stream);
 void    mz_stream_os_delete(void **stream);
-
 void*   mz_stream_os_get_interface(void);
 
 /***************************************************************************/

@@ -38,7 +38,6 @@
 #  endif
 #endif
 
-int32_t mz_stream_os_open_w(void *stream, const wchar_t *path, int32_t mode);
 
 /***************************************************************************/
 

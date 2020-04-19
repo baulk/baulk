@@ -31,6 +31,7 @@ add_executable(
 
 target_link_libraries(
   baulk
+  baulkarchive
   blake3
   belawin
   winhttp
