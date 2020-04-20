@@ -142,7 +142,7 @@ int32_t baulk_zip_reader_open_stream(void *handle, HANDLE FileHandle) {
 
   mz_stream_set_base(reader->buffered_stream, reader->file_stream);
   mz_stream_set_base(reader->split_stream, reader->buffered_stream);
-  mz_stream_win32 *win32 = (mz_stream_win32 *)stream;
+  mz_stream_win32 *win32 = (mz_stream_win32 *)reader->split_stream;
   win32->handle = FileHandle;
   return mz_zip_reader_open(handle, reader->split_stream);
 }
