@@ -33,7 +33,6 @@ extern "C" {
 /***************************************************************************/
 
 typedef int32_t (*mz_stream_open_cb)           (void *stream, const char *path, int32_t mode);
-typedef int32_t (*mz_stream_open_w_cb)         (void *stream, const wchar_t *path, int32_t mode);
 typedef int32_t (*mz_stream_is_open_cb)        (void *stream);
 typedef int32_t (*mz_stream_read_cb)           (void *stream, void *buf, int32_t size);
 typedef int32_t (*mz_stream_write_cb)          (void *stream, const void *buf, int32_t size);
@@ -67,7 +66,6 @@ typedef struct mz_stream_vtbl_s
 
     mz_stream_get_prop_int64_cb get_prop_int64;
     mz_stream_set_prop_int64_cb set_prop_int64;
-    mz_stream_open_w_cb         wopen;
 } mz_stream_vtbl;
 
 typedef struct mz_stream_s {
@@ -78,7 +76,6 @@ typedef struct mz_stream_s {
 /***************************************************************************/
 
 int32_t mz_stream_open(void *stream, const char *path, int32_t mode);
-int32_t mz_stream_open_w(void *stream, const wchar_t *path, int32_t mode);
 int32_t mz_stream_is_open(void *stream);
 int32_t mz_stream_read(void *stream, void *buf, int32_t size);
 int32_t mz_stream_read_uint8(void *stream, uint8_t *value);

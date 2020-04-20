@@ -6,7 +6,9 @@
 // Do not modify the include order of header files
 #include "minizip/mz.h"
 #include "minizip/mz_os.h"
+#include "minizip/mz_strm_buf.h"
 #include "minizip/mz_strm.h"
+#include "minizip/mz_strm_split.h"
 #include "minizip/mz_strm_os.h"
 #include "minizip/mz_zip.h"
 #include "minizip/mz_zip_rw.h"
@@ -79,6 +81,44 @@ inline std::wstring baulk_unicode_string_create(std::string_view sv,
   return output;
 }
 
+int32_t baulk_stream_os_open(void *stream, const wchar_t *path, int32_t mode) {
+  mz_stream_win32 *win32 = (mz_stream_win32 *)stream;
+  uint32_t desired_access = 0;
+  uint32_t creation_disposition = 0;
+  uint32_t share_mode = FILE_SHARE_READ;
+  uint32_t flags_attribs = FILE_ATTRIBUTE_NORMAL;
+
+  /* Some use cases require write sharing as well */
+  share_mode |= FILE_SHARE_WRITE;
+
+  if ((mode & MZ_OPEN_MODE_READWRITE) == MZ_OPEN_MODE_READ) {
+    desired_access = GENERIC_READ;
+    creation_disposition = OPEN_EXISTING;
+  } else if (mode & MZ_OPEN_MODE_APPEND) {
+    desired_access = GENERIC_WRITE | GENERIC_READ;
+    creation_disposition = OPEN_EXISTING;
+  } else if (mode & MZ_OPEN_MODE_CREATE) {
+    desired_access = GENERIC_WRITE | GENERIC_READ;
+    creation_disposition = CREATE_ALWAYS;
+  } else {
+    return MZ_PARAM_ERROR;
+  }
+
+  win32->handle = CreateFileW(path, desired_access, share_mode, NULL,
+                              creation_disposition, flags_attribs, NULL);
+
+  if (mz_stream_os_is_open(stream) != MZ_OK) {
+    win32->error = GetLastError();
+    return MZ_OPEN_ERROR;
+  }
+
+  if (mode & MZ_OPEN_MODE_APPEND) {
+    return mz_stream_os_seek(stream, 0, MZ_SEEK_END);
+  }
+
+  return MZ_OK;
+}
+
 inline void mz_os_unix_to_file_time(time_t unix_time, FILETIME *file_time) {
   uint64_t quad_file_time = 0;
   quad_file_time = ((uint64_t)unix_time * 10000000) + 116444736000000000LL;
@@ -129,6 +169,7 @@ inline int32_t baulk_os_set_file_attribs(const wchar_t *path,
   }
   return MZ_OK;
 }
+
 // todo
 int32_t baulk_zip_reader_open_stream(void *handle, HANDLE FileHandle) {
   mz_zip_reader *reader = (mz_zip_reader *)handle;
@@ -201,7 +242,7 @@ int baulk_zip_reader_entry_save_file(void *handle, std::wstring_view path) {
   uint32_t target_attrib = 0;
   int32_t err_attrib = 0;
   mz_stream_os_create(&stream);
-  if (mz_stream_os_open_w(stream, path.data(), MZ_OPEN_MODE_CREATE) == MZ_OK) {
+  if (baulk_stream_os_open(stream, path.data(), MZ_OPEN_MODE_CREATE) == MZ_OK) {
     err = mz_zip_reader_entry_save(handle, stream, mz_stream_write);
   }
 
@@ -269,8 +310,18 @@ int baulk_zip_reader_save_all(void *handle, std::wstring_view dest) {
   return 0;
 }
 
-bool ZipExtract(std::wstring_view file, std::wstring_view dest,
-                bela::error_code &ec) {
+bool DecompressFile(HANDLE &FileHandle, std::wstring_view dest,
+                    bela::error_code &ec) {
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+  LARGE_INTEGER pos{0};
+  LARGE_INTEGER newPos;
+  if (SetFilePointerEx(FileHandle, pos, &newPos, FILE_BEGIN) != TRUE) {
+    ec = bela::make_system_error_code();
+    CloseHandle(FileHandle);
+    return false;
+  }
   void *reader = nullptr;
   mz_zip_create(&reader);
   mz_zip_reader_create(&reader);
@@ -279,21 +330,14 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest,
       /// trace
     }
     mz_zip_delete(&reader);
+    FileHandle = INVALID_HANDLE_VALUE;
   });
-  // mz_zip_reader_set_pattern(reader, pattern, 1);
-  // mz_zip_reader_set_password(reader, password);
-  // mz_zip_reader_set_encoding(reader, options->encoding);
-  // mz_zip_reader_set_entry_cb(reader, options, minizip_extract_entry_cb);
-
-  // mz_zip_reader_set_progress_cb(reader, options,
-  // minizip_extract_progress_cb);
-
-  // mz_zip_reader_set_overwrite_cb(reader, options,
-  // minizip_extract_overwrite_cb);
-  auto err = mz_zip_reader_open_file_w(reader, file.data());
+  auto err = baulk_zip_reader_open_stream(reader, FileHandle);
   if (err != MZ_OK) {
+    CloseHandle(FileHandle);
     return false;
   }
   return baulk_zip_reader_save_all(reader, dest) == MZ_OK;
 }
+
 } // namespace baulk::archive::zip

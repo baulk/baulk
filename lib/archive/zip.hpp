@@ -5,9 +5,8 @@
 #include <bela/base.hpp>
 
 namespace baulk::archive::zip {
-bool ZipExtract(std::wstring_view file, std::wstring_view dest,
-                bela::error_code &ec);
-
-} // namespace zip
+bool DecompressFile(HANDLE &FileHandle, std::wstring_view dest,
+                    bela::error_code &ec);
+} // namespace baulk::archive::zip
 
 #endif

@@ -34,9 +34,6 @@ int32_t mz_zip_reader_open(void *handle, void *stream);
 int32_t mz_zip_reader_open_file(void *handle, const char *path);
 /* Opens zip file from a file path */
 
-int32_t mz_zip_reader_open_file_w(void *handle, const wchar_t *path);
-/* Opens zip file from a file path */
-
 int32_t mz_zip_reader_open_file_in_memory(void *handle, const char *path);
 /* Opens zip file from a file path into memory for faster access */
 
