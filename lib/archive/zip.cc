@@ -188,10 +188,15 @@ int32_t baulk_zip_reader_open_stream(void *handle, HANDLE FileHandle) {
   return mz_zip_reader_open(handle, reader->split_stream);
 }
 
-// callback
-int baulk_zip_reader_entry_save_file(void *handle, std::wstring_view path) {
+Decompressor::~Decompressor() {
+  if (reader != nullptr) {
+    mz_zip_reader_close(reader);
+    mz_zip_delete(reinterpret_cast<void **>(&reader));
+  }
+}
+
+int Decompressor::Decompress(std::wstring_view path, bela::error_code &ec) {
   std::filesystem::path path_(path);
-  auto *reader = reinterpret_cast<mz_zip_reader *>(handle);
   std::error_code e;
   /* If it is a directory entry then create a directory instead of writing file
    */
@@ -243,7 +248,7 @@ int baulk_zip_reader_entry_save_file(void *handle, std::wstring_view path) {
   int32_t err_attrib = 0;
   mz_stream_os_create(&stream);
   if (baulk_stream_os_open(stream, path.data(), MZ_OPEN_MODE_CREATE) == MZ_OK) {
-    err = mz_zip_reader_entry_save(handle, stream, mz_stream_write);
+    err = mz_zip_reader_entry_save(reader, stream, mz_stream_write);
   }
 
   mz_stream_close(stream);
@@ -262,16 +267,18 @@ int baulk_zip_reader_entry_save_file(void *handle, std::wstring_view path) {
     }
   }
   return err;
+  return true;
 }
 
-int baulk_zip_reader_save_all(void *handle, std::wstring_view dest) {
-  auto err = mz_zip_reader_goto_first_entry(handle);
+bool Decompressor::ZipDecompress(std::wstring_view dest, bela::error_code &ec) {
+  auto err = mz_zip_reader_goto_first_entry(reader);
   if (err != MZ_END_OF_LIST) {
     return err;
   }
   auto path = bela::PathAbsolute(dest);
   auto pathlen = path.size();
   std::wstring subfile;
+
   auto PathAppend = [&](std::wstring_view sub) {
     path.resize(pathlen);
     if (PathResolve(sub, subfile)) {
@@ -280,7 +287,6 @@ int baulk_zip_reader_save_all(void *handle, std::wstring_view dest) {
     bela::StrAppend(&path, L"\\", subfile);
     return true;
   };
-  auto *reader = reinterpret_cast<mz_zip_reader *>(handle);
   path.reserve(4096);
   while (err == MZ_OK) {
     auto filename = std::string_view(reader->file_info->filename,
@@ -299,19 +305,15 @@ int baulk_zip_reader_save_all(void *handle, std::wstring_view dest) {
       }
     }
     /* Save file to disk */
-    err = baulk_zip_reader_entry_save_file(handle, path);
-    if (err == MZ_OK) {
-      err = mz_zip_reader_goto_next_entry(handle);
+
+    if (err = Decompress(path, ec); err == MZ_OK) {
+      err = mz_zip_reader_goto_next_entry(reader);
     }
   }
-  if (err == MZ_END_OF_LIST) {
-    return MZ_OK;
-  }
-  return 0;
+  return err == MZ_END_OF_LIST;
 }
 
-bool DecompressFile(HANDLE &FileHandle, std::wstring_view dest,
-                    bela::error_code &ec) {
+bool Decompressor::Stealing(HANDLE &FileHandle, bela::error_code &ec) {
   if (FileHandle == INVALID_HANDLE_VALUE) {
     return false;
   }
@@ -320,24 +322,18 @@ bool DecompressFile(HANDLE &FileHandle, std::wstring_view dest,
   if (SetFilePointerEx(FileHandle, pos, &newPos, FILE_BEGIN) != TRUE) {
     ec = bela::make_system_error_code();
     CloseHandle(FileHandle);
-    return false;
-  }
-  void *reader = nullptr;
-  mz_zip_create(&reader);
-  mz_zip_reader_create(&reader);
-  auto closer = bela::finally([&] {
-    if (mz_zip_reader_close(reader) != MZ_OK) {
-      /// trace
-    }
-    mz_zip_delete(&reader);
     FileHandle = INVALID_HANDLE_VALUE;
-  });
-  auto err = baulk_zip_reader_open_stream(reader, FileHandle);
-  if (err != MZ_OK) {
-    CloseHandle(FileHandle);
     return false;
   }
-  return baulk_zip_reader_save_all(reader, dest) == MZ_OK;
+  mz_zip_create(reinterpret_cast<void **>(&reader));
+  mz_zip_reader_create(reinterpret_cast<void **>(&reader));
+  if (auto err = baulk_zip_reader_open_stream(reader, FileHandle);
+      err != MZ_OK) {
+    CloseHandle(FileHandle);
+    FileHandle = INVALID_HANDLE_VALUE;
+    return false;
+  }
+  return true;
 }
 
 } // namespace baulk::archive::zip
