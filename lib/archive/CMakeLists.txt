@@ -167,7 +167,6 @@ target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
 target_include_directories(minizip PRIVATE ${MINIZIP_INC})
 target_link_libraries(minizip lzma zlib advapi32)
 
-
 # Brotli
 set(BROTLI_SOURCES
     brotli/common/dictionary.c
@@ -209,4 +208,4 @@ add_library(
 
 target_include_directories(baulkarchive PRIVATE brotli/include)
 
-target_link_libraries(baulkarchive minizip)
+target_link_libraries(baulkarchive belawin minizip)

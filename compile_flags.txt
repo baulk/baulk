@@ -1,0 +1,6 @@
+-Wall
+-Wextra
+-pedantic
+-std=c++17
+-Iinclude
+-Ivendor/bela/include

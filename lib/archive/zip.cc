@@ -42,6 +42,11 @@ typedef struct mz_zip_reader_s {
   uint8_t cd_zipped;
   uint8_t entry_verified;
 } mz_zip_reader;
+typedef struct mz_stream_win32_s {
+  mz_stream stream;
+  HANDLE handle;
+  int32_t error;
+} mz_stream_win32;
 }
 
 namespace baulk::archive::zip {
@@ -123,6 +128,23 @@ inline int32_t baulk_os_set_file_attribs(const wchar_t *path,
     return MZ_INTERNAL_ERROR;
   }
   return MZ_OK;
+}
+// todo
+int32_t baulk_zip_reader_open_stream(void *handle, HANDLE FileHandle) {
+  mz_zip_reader *reader = (mz_zip_reader *)handle;
+  int32_t err = MZ_OK;
+
+  mz_zip_reader_close(handle);
+
+  mz_stream_os_create(&reader->file_stream);
+  mz_stream_buffered_create(&reader->buffered_stream);
+  mz_stream_split_create(&reader->split_stream);
+
+  mz_stream_set_base(reader->buffered_stream, reader->file_stream);
+  mz_stream_set_base(reader->split_stream, reader->buffered_stream);
+  mz_stream_win32 *win32 = (mz_stream_win32 *)stream;
+  win32->handle = FileHandle;
+  return mz_zip_reader_open(handle, reader->split_stream);
 }
 
 // callback
