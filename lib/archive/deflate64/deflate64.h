@@ -6,9 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-// typedef unsigned (*in_func) OF((void FAR *,
-//                                 z_const unsigned char FAR * FAR *));
-// typedef int (*out_func) OF((void FAR *, unsigned char FAR *, unsigned));
+
 int inflateBack9(z_stream *strm, in_func in, void *in_desc, out_func out,
                  void *out_desc);
 //int inflate9(z_streamp *strm, int flush); //
