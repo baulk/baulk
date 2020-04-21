@@ -289,6 +289,9 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite,
   auto pkgroot =
       bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
   auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
+  if (!baulk::fs::MakeDir(linkdir, ec)) {
+    return false;
+  }
   LinkExecutor executor;
   if (!executor.Initialize(ec)) {
     return false;
@@ -322,6 +325,9 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite,
   auto pkgroot =
       bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
   auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
+  if (!baulk::fs::MakeDir(linkdir, ec)) {
+    return false;
+  }
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.links) {
     auto src = bela::PathCat(pkgroot, L"\\", lm.path);
@@ -357,6 +363,9 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite,
   auto pkgroot =
       bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
   auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
+  if (!baulk::fs::MakeDir(linkdir, ec)) {
+    return false;
+  }
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.links) {
     auto src = bela::PathCat(pkgroot, L"\\", lm.path);
@@ -371,6 +380,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite,
       }
     }
     if (!baulk::fs::SymLink(src, lnk, ec)) {
+      DbgPrint(L"make %s -> %s: %s\n", src, lnk, ec.message);
       return false;
     }
     linkmetas.emplace_back(lm);
