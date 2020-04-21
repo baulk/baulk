@@ -6,24 +6,26 @@
 namespace baulk::sevenzip {
 //
 inline std::optional<std::wstring> lookup_sevenzip() {
+  bela::error_code ec;
+  auto parent = bela::ExecutableParent(ec);
+  if (!parent) {
+    return std::nullopt;
+  }
+  // baulk7z - A derivative version of 7-Zip-zstd maintained by baulk
+  // contributors
+  if (auto s7z = bela::StringCat(*parent, L"\\baulk7z.exe");
+      bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
+  if (auto s7z = bela::StringCat(*parent, L"\\links\\7z.exe");
+      !bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
   std::wstring s7z;
   if (bela::ExecutableExistsInPath(L"7z.exe", s7z)) {
     return std::make_optional(std::move(s7z));
   }
-  bela::error_code ec;
-  auto self = bela::ExecutableParent(ec);
-  if (!self) {
-    return std::nullopt;
-  }
-  s7z = bela::StringCat(*self, L"\\7z.exe");
-  if (bela::PathExists(s7z)) {
-    return std::make_optional(std::move(s7z));
-  }
-  s7z = bela::StringCat(*self, L"\\links\\7z.exe");
-  if (!bela::PathExists(s7z)) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(s7z));
+  return std::nullopt;
 }
 
 bool Decompress(std::wstring_view src, std::wstring_view outdir,
