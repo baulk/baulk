@@ -93,6 +93,7 @@ target_include_directories(lzma PRIVATE ${LZMA_INC})
 target_compile_definitions(lzma PRIVATE ${LZMA_DEF})
 
 # zlib
+set(ZLIB_INC)
 if("${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x86" OR "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x64")
   set(ZLIB_SOURCES
       zlib-intel/adler32.c
@@ -110,6 +111,7 @@ if("${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x86" OR "${CMAKE_C_COMPILER_A
       zlib-intel/trees.c
       zlib-intel/x86.c
       zlib-intel/zutil.c)
+  set(ZLIB_INC zlib-intel)
 else()
   set(ZLIB_SOURCES
       zlib/adler32.c
@@ -121,6 +123,7 @@ else()
       zlib/inftrees.c
       zlib/trees.c
       zlib/zutil.c)
+  set(ZLIB_INC zlib)
 endif()
 
 add_library(zlib STATIC ${ZLIB_SOURCES})
@@ -160,7 +163,7 @@ list(APPEND MINIZIP_DEF -DHAVE_STRING_H)
 list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
 
 list(APPEND MINIZIP_INC bzip2)
-list(APPEND MINIZIP_INC zlib)
+list(APPEND MINIZIP_INC ${ZLIB_INC})
 list(APPEND MINIZIP_INC liblzma/api)
 
 target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})

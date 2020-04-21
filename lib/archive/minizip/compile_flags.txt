@@ -1,0 +1,8 @@
+-Wall
+-Wextra
+-pedantic
+-std=c17
+-Iinclude
+-I../zlib
+-I../bzip2
+-I../liblzma/include
