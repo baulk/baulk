@@ -3,8 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#include "zutil.h"
-#include "inftree9.h"
+#include "deflate64_internal.h"
 
 #define MAXBITS 15
 

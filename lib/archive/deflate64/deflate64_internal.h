@@ -1,14 +1,8 @@
-/* inftree9.h -- header to use inftree9.c
- * Copyright (C) 1995-2008 Mark Adler
- * For conditions of distribution and use, see copyright notice in zlib.h
- */
-#ifndef ZLIB_INFTREE9_H
-#define ZLIB_INFTREE9_H
+///
+#ifndef DEFLATE64_INTERNAL_H
+#define DEFLATE64_INTERNAL_H
+#include <stdint.h>
 #include <zlib.h>
-/* WARNING: this file should *not* be used by applications. It is
-   part of the implementation of the compression library and is
-   subject to change. Applications should only use zlib.h.
- */
 
 /* Structure for decoding tables.  Each entry provides either the
    information needed to do the operation requested by the code that
@@ -54,8 +48,45 @@ typedef struct {
 /* Type of code to build for inflate_table9() */
 typedef enum { CODES, LENS, DISTS } codetype;
 
-extern int inflate_table9 OF((codetype type, unsigned short FAR *lens,
-                              unsigned codes, code FAR *FAR *table,
-                              unsigned FAR *bits, unsigned short FAR *work));
+extern int inflate_table9(codetype type, unsigned short *lens, unsigned codes,
+                          code **table, unsigned *bits, unsigned short *work);
+
+/* Possible inflate modes between inflate() calls */
+typedef enum {
+  TYPE,   /* i: waiting for type bits, including last-flag bit */
+  STORED, /* i: waiting for stored size (length and complement) */
+  TABLE,  /* i: waiting for dynamic block table lengths */
+  LEN,    /* i: waiting for length/lit code */
+  DONE,   /* finished check, done -- remain here until reset */
+  BAD     /* got a data error -- remain here until reset */
+} inflate_mode;
+
+/*
+    State transitions between above modes -
+
+    (most modes can go to the BAD mode -- not shown for clarity)
+
+    Read deflate blocks:
+            TYPE -> STORED or TABLE or LEN or DONE
+            STORED -> TYPE
+            TABLE -> LENLENS -> CODELENS -> LEN
+    Read deflate codes:
+                LEN -> LEN or TYPE
+ */
+
+/* state maintained between inflate() calls.  Approximately 7K bytes. */
+struct inflate_state {
+  /* sliding window */
+  unsigned char *window;    /* allocated sliding window, if needed */
+                            /* dynamic table building */
+  unsigned ncode;           /* number of code length code lengths */
+  unsigned nlen;            /* number of length code lengths */
+  unsigned ndist;           /* number of distance code lengths */
+  unsigned have;            /* number of code lengths in lens[] */
+  code *next;               /* next available space in codes[] */
+  unsigned short lens[320]; /* temporary storage for code lengths */
+  unsigned short work[288]; /* work area for code table building */
+  code codes[ENOUGH];       /* space for code tables */
+};
 
 #endif

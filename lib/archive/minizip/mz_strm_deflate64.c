@@ -1,25 +1,7 @@
 //
-//  https://github.com/madler/sunzip/blob/master/sunzip.c
-// if (strm9 == NULL) {    /* initialize first time */
-//     strm9 = &strms9;
-//     strm9->zalloc = Z_NULL;
-//     strm9->zfree = Z_NULL;
-//     strm9->opaque = Z_NULL;
-//     ret = inflateBack9Init(strm9, outbuf);
-//     if (ret != Z_OK)
-//         bye(ret == Z_MEM_ERROR ? "not enough memory (!)" :
-//                                  "internal error");
-// }
-// strm9->avail_in = left;
-// strm9->next_in = next;
-// ret = inflateBack9(strm9, get, in, put, out);
-// left = strm9->avail_in;      /* reclaim unused input */
-// next = strm9->next_in;
-// if (ret != Z_STREAM_END) {
-//     bad("deflate64 compressed data corrupted",
-//         entries, here, here_hi);
-//     bye("zip file corrupted -- cannot continue");
-// }
+//  Thanks:
+//   https://github.com/madler/sunzip/blob/master/sunzip.c
+//   https://github.com/cskilbeck/ShaderProcessor/blob/master/DX/Archive.cpp
 #include <stdint.h>
 #include "mz.h"
 #include "mz_strm.h"
@@ -30,7 +12,7 @@
 #include "zlib-ng.h"
 #endif
 #include "mz_strm_deflate64.h"
-#include "../deflate64/infback9.h"
+#include "../deflate64/deflate64.h"
 
 #if defined(ZLIBNG_VERNUM) && !defined(ZLIB_COMPAT)
 #define ZLIB_PREFIX(x) zng_##x
@@ -108,14 +90,19 @@ int32_t mz_stream_deflate64_is_open(void *stream) {
 }
 // https://github.com/madler/sunzip/blob/master/sunzip.c#L537
 unsigned get(void *in_desc, unsigned char **buf) {
-  mz_stream_deflate64 *zlib = (mz_stream_deflate64 *)in_desc;
+  MZ_UNUSED(in_desc);
+  MZ_UNUSED(buf);
   return 0;
 }
 
 // https://github.com/madler/sunzip/blob/master/sunzip.c#L537
 int put(void *out_desc, unsigned char *buf, unsigned len) {
   mz_stream_deflate64 *zlib = (mz_stream_deflate64 *)out_desc;
-  return 0;
+  uint32_t minlen = len > (uint32_t)zlib->zstream.avail_out
+                        ? (uint32_t)zlib->zstream.avail_out
+                        : len;
+  memcpy(zlib->zstream.next_out, buf, minlen);
+  return minlen;
 }
 
 int32_t mz_stream_deflate64_read(void *stream, void *buf, int32_t size) {
@@ -195,6 +182,7 @@ int32_t mz_stream_deflate64_read(void *stream, void *buf, int32_t size) {
   return total_out;
 #endif
 }
+
 int32_t mz_stream_deflate64_write(void *stream, const void *buf, int32_t size) {
   MZ_UNUSED(stream);
   MZ_UNUSED(buf);
