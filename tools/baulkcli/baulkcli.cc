@@ -44,7 +44,11 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
 
 bool IsSubsytemConsole(std::wstring_view exe) {
   bela::error_code ec;
-  auto pe = bela::pe::Expose(exe, ec);
+  auto realexe = bela::RealPathEx(exe, ec);
+  if (!realexe) {
+    return false;
+  }
+  auto pe = bela::pe::Expose(*realexe, ec);
   if (!pe) {
     return true;
   }
