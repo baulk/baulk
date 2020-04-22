@@ -198,7 +198,11 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
                                                L"-ENTRY:wWinMain"};
   constexpr const std::wstring_view subsystemnane[] = {L"-SUBSYSTEM:CONSOLE",
                                                        L"-SUBSYSTEM:WINDOWS"};
-  auto pe = bela::pe::Expose(source, ec);
+  auto realexe = bela::RealPathEx(source, ec);
+  if (!realexe) {
+    return false;
+  }
+  auto pe = bela::pe::Expose(*realexe, ec);
   if (!pe) {
     // not pe subname
     return false;
