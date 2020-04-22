@@ -1,7 +1,6 @@
 # bela win libaray
 
 add_library(belawin STATIC
-  appexeclink.cc
   env.cc
   io.cc
   path.cc

@@ -5,8 +5,11 @@
 namespace bela {
 std::optional<std::wstring> RealPath(std::wstring_view src,
                                      bela::error_code &ec) {
-  auto hFile = CreateFileW(src.data(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                           OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  auto hFile = CreateFileW(
+      src.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      nullptr, OPEN_EXISTING,
+      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  // FILE_FLAG_BACKUP_SEMANTICS open directory require
   if (hFile == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return std::nullopt;
@@ -18,12 +21,14 @@ std::optional<std::wstring> RealPath(std::wstring_view src,
   });
   auto len = GetFinalPathNameByHandleW(hFile, nullptr, 0, VOLUME_NAME_DOS);
   if (len == 0) {
+    ec = bela::make_system_error_code();
     return std::nullopt;
   }
   std::wstring buf;
   buf.resize(len);
-  len = GetFinalPathNameByHandleW(hFile, buf.data(), len, VOLUME_NAME_DOS);
-  if (len == 0) {
+  if (len = GetFinalPathNameByHandleW(hFile, buf.data(), len, VOLUME_NAME_DOS);
+      len == 0) {
+    ec = bela::make_system_error_code();
     return std::nullopt;
   }
   buf.resize(len);
