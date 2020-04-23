@@ -26,6 +26,10 @@ namespace sevenzip {
 bool Decompress(std::wstring_view src, std::wstring_view outdir,
                 bela::error_code &ec);
 } // namespace sevenzip
+namespace tar {
+bool Decompress(std::wstring_view src, std::wstring_view outdir,
+                bela::error_code &ec);
+}
 
 struct decompress_handler_t {
   std::wstring_view extension;
@@ -39,7 +43,8 @@ LookupHandler(std::wstring_view ext) {
       {L"exe", exe::Decompress, exe::Regularize},
       {L"msi", msi::Decompress, msi::Regularize},
       {L"zip", zip::Decompress, standard::Regularize},
-      {L"7z", sevenzip::Decompress, standard::Regularize}
+      {L"7z", sevenzip::Decompress, standard::Regularize},
+      {L"tar", tar::Decompress, standard::Regularize}
       //
   };
   for (const auto &h : hs) {
@@ -49,7 +54,6 @@ LookupHandler(std::wstring_view ext) {
   }
   return std::nullopt;
 }
-
 } // namespace baulk
 
 #endif

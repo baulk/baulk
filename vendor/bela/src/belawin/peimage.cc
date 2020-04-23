@@ -96,8 +96,7 @@ inline std::wstring DllName(MemView mv, LPVOID nh, ULONG nva) {
   if (it >= end) {
     return L""; // BAD string table
   }
-  std::string_view name(begin, it - begin);
-  return bela::fromascii(name);
+  return bela::fromascii(std::string_view(begin, it - begin));
 }
 
 // https://docs.microsoft.com/zh-cn/previous-versions/ms809762(v=msdn.10)#pe-file-resources
