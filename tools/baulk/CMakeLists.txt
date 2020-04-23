@@ -24,6 +24,7 @@ add_executable(
   msi.cc
   net.cc
   pkg.cc
+  tar.cc
   tcp.cc
   zip.cc
   baulk.rc
