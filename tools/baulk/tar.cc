@@ -1,5 +1,7 @@
 /// ----- support tar.*
 #include <string_view>
+#include <bela/path.hpp>
+#include <bela/process.hpp>
 #include "decompress.hpp"
 #include "fs.hpp"
 
@@ -20,7 +22,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
     ec = bela::make_error_code(ERROR_NOT_FOUND, L" tar not install");
     return false;
   }
-  if (!baulk::fs::MakeDir(outdir, err)) {
+  if (!baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }
   bela::process::Process process;

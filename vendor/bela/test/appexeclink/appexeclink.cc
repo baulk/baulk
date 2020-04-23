@@ -11,13 +11,13 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto p = bela::RealPath(argv[1], ec);
   if (p) {
-    bela::FPrintF(stderr, L"%s RealPath [%s]\n", argv[1], *p);
+    bela::FPrintF(stdout, L"%s RealPath [%s]\n", argv[1], *p);
   } else {
     bela::FPrintF(stderr, L"%s RealPath error: %s\n", argv[1], ec.message);
   }
   auto p2 = bela::RealPathEx(argv[1], ec);
   if (p2) {
-    bela::FPrintF(stderr, L"%s RealPathEx [%s]\n", argv[1], *p2);
+    bela::FPrintF(stdout, L"%s RealPathEx [%s]\n", argv[1], *p2);
   } else {
     bela::FPrintF(stderr, L"%s RealPathEx error: %s\n", argv[1], ec.message);
   }
@@ -27,7 +27,7 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   bela::FPrintF(
-      stderr,
+      stdout,
       L"AppExecLink details:\nPackageID:  %s\nAppUserID:  %s\nTarget:     %s\n",
       ae.pkid, ae.appuserid, ae.target);
   return 0;

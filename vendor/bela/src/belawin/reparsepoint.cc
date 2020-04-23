@@ -3,12 +3,31 @@
 #include <bela/path.hpp>
 #include <bela/repasepoint.hpp>
 #include <bela/strcat.hpp>
+#include <bela/match.hpp>
 #include <winioctl.h>
 #include "reparsepoint_internal.hpp"
 
 namespace bela {
 using facv_t = std::vector<FileAttributePair>;
 using ReparseBuffer = REPARSE_DATA_BUFFER;
+
+struct FileReparser {
+  FileReparser() = default;
+  FileReparser(const FileReparser &) = delete;
+  FileReparser &operator=(const FileReparser &) = delete;
+  ~FileReparser() {
+    if (FileHandle != INVALID_HANDLE_VALUE) {
+      CloseHandle(FileHandle);
+    }
+    if (buffer != nullptr) {
+      HeapFree(GetProcessHeap(), 0, buffer);
+    }
+  }
+  REPARSE_DATA_BUFFER *buffer{nullptr};
+  HANDLE FileHandle{INVALID_HANDLE_VALUE};
+  DWORD len{0};
+  bool FileDeviceLookup(std::wstring_view file, bela::error_code &ec);
+};
 
 bool FileReparser::FileDeviceLookup(std::wstring_view file,
                                     bela::error_code &ec) {
@@ -274,10 +293,11 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src,
     ec = bela::make_error_code(1, L"BAD: unable decode AppLinkExec");
     return std::nullopt;
   case IO_REPARSE_TAG_SYMLINK:
-    if (std::wstring target; DecodeSymbolicLink(reparser.buffer, target)) {
-      return std::make_optional(std::move(target));
+    CloseHandle(reparser.FileHandle);
+    reparser.FileHandle = INVALID_HANDLE_VALUE;
+    if (auto target = bela::RealPath(src, ec); target) {
+      return std::make_optional(std::move(*target));
     }
-    ec = bela::make_error_code(1, L"BAD: unable decode SymbolicLink");
     return std::nullopt;
   case IO_REPARSE_TAG_GLOBAL_REPARSE:
     if (std::wstring target; DecodeSymbolicLink(reparser.buffer, target)) {

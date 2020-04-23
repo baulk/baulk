@@ -94,8 +94,8 @@ std::wstring ExpandEnv(std::wstring_view sv) {
   if (pos == std::wstring_view::npos) {
     return std::wstring(sv);
   }
-  auto pos2 = sv.find(L'%', pos + 1);
-  if (pos2 == std::wstring_view::npos) {
+  // NO check
+  if (sv.find(L'%', pos + 1) == std::wstring_view::npos) {
     return std::wstring(sv);
   }
   std::wstring buf;

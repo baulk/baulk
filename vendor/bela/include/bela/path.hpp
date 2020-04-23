@@ -121,6 +121,8 @@ enum class FileAttribute : DWORD {
 bool PathExists(std::wstring_view src, FileAttribute fa = FileAttribute::None);
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
 // Use GetFinalPathNameByHandleW
+std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle,
+                                             bela::error_code &ec);
 std::optional<std::wstring> RealPath(std::wstring_view src,
                                      bela::error_code &ec);
 // RealPathEx parse reparsepoint
