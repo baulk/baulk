@@ -32,7 +32,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
                 bela::error_code &ec) {
   auto s7z = lookup_sevenzip();
   if (!s7z) {
-    ec = bela::make_error_code(ERROR_NOT_FOUND, L" 7z not install");
+    ec = bela::make_error_code(ERROR_NOT_FOUND, L"7z not install");
     return false;
   }
   bela::process::Process process;
