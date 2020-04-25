@@ -105,10 +105,10 @@ baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的
 |扩展|解压程序|限制|
 |---|---|---|
 |`exe`|-|-|
-|`zip`|内置, 基于 minizip|不支持加密，不支持 Deflate64|
+|`zip`|内置，基于 minizip|不支持加密，不支持 Deflate64|
 |`msi`|内置，基于 MSI API|-|
-|`7z`|优先级：baulk7z(baulk 发行版)>7z(baulk 包管理中的)>环境变量中的 7z|-|
-|`tar`|优先级：baulktar(baulk 开发的)>bsdtar(baulk 添加了 xz 支持的)>msys2 tar>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），bsdtar 可能存在乱码问题等。|
+|`7z`|优先级：</br>baulk7z(Baulk 发行版)</br>7z(baulk 包管理中的)</br>环境变量中的 7z|-|
+|`tar`|优先级：</br>baulktar(Baulk 开发的)</br>bsdtar(Baulk 构建版)</br>msys2 tar</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），bsdtar 可能存在乱码问题等。|
 
 Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
 

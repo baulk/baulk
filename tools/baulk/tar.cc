@@ -8,6 +8,30 @@
 
 namespace baulk::tar {
 
+inline bool initialize_baulktar(std::wstring &tar) {
+  bela::error_code ec;
+  auto parent = bela::ExecutableParent(ec);
+  if (!parent) {
+    return false;
+  }
+  if (tar = bela::StringCat(*parent, L"\\baulktar.exe");
+      bela::PathExists(tar)) {
+    return true;
+  }
+  if (tar = bela::StringCat(*parent, L"\\links\\baulktar.exe");
+      bela::PathExists(tar)) {
+    return true;
+  }
+  if (tar = bela::StringCat(*parent, L"\\bsdtar.exe"); bela::PathExists(tar)) {
+    return true;
+  }
+  if (tar = bela::StringCat(*parent, L"\\links\\bsdtar.exe");
+      bela::PathExists(tar)) {
+    return true;
+  }
+  return false;
+}
+
 inline bool initialize_msys2tar(std::wstring &tar, bela::process::Process &p) {
   bela::error_code ec;
   auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
@@ -42,7 +66,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
   }
   bela::process::Process process;
   std::wstring tar;
-  if (!initialize_msys2tar(tar, process) &&
+  if (!initialize_baulktar(tar) && !initialize_msys2tar(tar, process) &&
       !bela::ExecutableExistsInPath(L"tar.exe", tar)) {
     ec = bela::make_error_code(ERROR_NOT_FOUND, L"tar not install");
     return false;
