@@ -303,7 +303,7 @@ bool HashEqual(std::wstring_view file, std::wstring_view hashvalue,
   auto pos = hashvalue.find(':');
   if (pos == std::wstring_view::npos) {
     std::wstring nv;
-    if (!b3sum(file, nv, ec)) {
+    if (!sha256sum(file, nv, ec)) {
       return false;
     }
     if (bela::EqualsIgnoreCase(nv, hashvalue)) {

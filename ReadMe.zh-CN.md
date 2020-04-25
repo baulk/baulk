@@ -100,7 +100,15 @@ baulk install cmake git 7z
 }
 ```
 
-baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 BLAKE3，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，baulk 按照 `extension` 的类型执行相应的解压缩程序。在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulkcli` 创建模拟启动器。如果在 baulk 运行在 Windows AMD64 系统中，且包清单存在 `url64/url64.hash/links64/launchers64`，baulk 将使用 `url64/url64.hash/links64/launchers64` 设置。
+baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，baulk 按照 `extension` 的类型执行相应的解压缩程序。在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulkcli` 创建模拟启动器。如果在 baulk 运行在 Windows AMD64 系统中，且包清单存在 `url64/url64.hash/links64/launchers64`，baulk 将使用 `url64/url64.hash/links64/launchers64` 设置。
+
+|扩展|解压程序|限制|
+|---|---|---|
+|`exe`|-|-|
+|`zip`|内置, 基于 minizip|不支持加密，不支持 Deflate64|
+|`msi`|内置，基于 MSI API|-|
+|`7z`|优先级：baulk7z(baulk 发行版)>7z(baulk 包管理中的)>环境变量中的 7z|-|
+|`tar`|优先级：baulktar(baulk 开发的)>bsdtar(baulk 添加了 xz 支持的)>msys2 tar>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），bsdtar 可能存在乱码问题等。|
 
 Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
 
