@@ -131,18 +131,22 @@ add_library(zlib STATIC ${ZLIB_SOURCES})
 # minizip
 add_library(
   minizip STATIC
+  minizip/mz_crypt_win32.c
   minizip/mz_crypt.c
   minizip/mz_os.c
   minizip/mz_os_win32.c
-  minizip/mz_strm_os_win32.c
   minizip/mz_strm.c
   minizip/mz_strm_buf.c
+  minizip/mz_strm_bzip.c
+  minizip/mz_strm_lzma.c
   minizip/mz_strm_mem.c
+  minizip/mz_strm_os_win32.c
   minizip/mz_strm_split.c
-  minizip/mz_zip.c
-  minizip/mz_zip_rw.c
   minizip/mz_strm_wzaes.c
-  minizip/mz_strm_lzma.c)
+  minizip/mz_strm_lzma.c
+  minizip/mz_strm_zlib.c
+  minizip/mz_zip.c
+  minizip/mz_zip_rw.c)
 
 set(MINIZIP_DEF)
 set(MINIZIP_INC)

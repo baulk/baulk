@@ -29,3 +29,8 @@ add_executable(
   ../tools/baulk/fs.cc)
 
 target_link_libraries(vsenv_test belawin)
+
+add_executable(unzip_test unzip.cc)
+
+target_link_libraries(unzip_test baulkarchive belawin)
+target_include_directories(unzip_test PRIVATE ../lib/archive)

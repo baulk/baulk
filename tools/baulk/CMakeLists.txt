@@ -44,6 +44,8 @@ if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+target_include_directories(baulk PRIVATE ../../lib/archive)
+
 install(TARGETS baulk DESTINATION bin)
 
 if(BUILD_TEST)
