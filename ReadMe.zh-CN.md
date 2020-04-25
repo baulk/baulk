@@ -116,7 +116,7 @@ Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW
 
 `baulk uninstall` 将删除包和创建的启动器，符号链接。`baulk upgrade` 通过搜寻已经安装的包，如果相应的包存在新版本，则安装新版本。
 
-在 baulk 中还存在 `freeze/unfreeze` 命令，`baulk freeze` 将冻结特定的包，使用 `baulk install/baulk upgrade` 将跳过这些包的升级，但是，如果 `baulk install/baulk upgrade` 使用了 `--force/-f` 参数，则会强制升级相应的包。我们还可以使用 `baulk unfreeze` 接触特定包的冻结。
+在 baulk 中还存在 `freeze/unfreeze` 命令，`baulk freeze` 将冻结特定的包，使用 `baulk install/baulk upgrade` 将跳过这些包的升级，但是，如果 `baulk install/baulk upgrade` 使用了 `--force/-f` 参数，则会强制升级相应的包。我们还可以使用 `baulk unfreeze` 解除特定包的冻结。
 
 在 baulk 中，我们可以使用  `baulk search pattern` 搜索 bucket 中添加的包，这里的 `pattern` 是基于文件名匹配，规则类似 [POSIX fnmatch](https://linux.die.net/man/3/fnmatch)。运行 `baulk search *` 将列出所有的包。
 
