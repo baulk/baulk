@@ -740,8 +740,8 @@ int32_t mz_zip_reader_entry_save_file(void *handle, const char *path)
     int32_t err_attrib = 0;
     int32_t err = MZ_OK;
     int32_t err_cb = MZ_OK;
-    char pathwfs[512];
-    char directory[512];
+    char pathwfs[4096];
+    char directory[4096];
 
     if (mz_zip_reader_is_open(reader) != MZ_OK)
         return MZ_PARAM_ERROR;
