@@ -13,7 +13,7 @@ inline std::optional<std::wstring> lookup_sevenzip() {
   }
   // baulk7z - A derivative version of 7-Zip-zstd maintained by baulk
   // contributors
-  if (auto s7z = bela::StringCat(*parent, L"\\baulk7z.exe");
+  if (auto s7z = bela::StringCat(*parent, L"\\links\\baulk7z.exe");
       bela::PathExists(s7z)) {
     return std::make_optional(std::move(s7z));
   }

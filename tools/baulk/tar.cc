@@ -14,17 +14,17 @@ inline bool initialize_baulktar(std::wstring &tar) {
   if (!parent) {
     return false;
   }
-  if (tar = bela::StringCat(*parent, L"\\baulktar.exe");
-      bela::PathExists(tar)) {
-    return true;
-  }
+  // rethink tar
   if (tar = bela::StringCat(*parent, L"\\links\\baulktar.exe");
       bela::PathExists(tar)) {
     return true;
   }
-  if (tar = bela::StringCat(*parent, L"\\bsdtar.exe"); bela::PathExists(tar)) {
-    return true;
-  }
+  // // Full UTF-8 support
+  // if (tar = bela::StringCat(*parent, L"\\links\\wintar.exe");
+  //     bela::PathExists(tar)) {
+  //   return true;
+  // }
+  // libarchive bsdtar, baulk build
   if (tar = bela::StringCat(*parent, L"\\links\\bsdtar.exe");
       bela::PathExists(tar)) {
     return true;
