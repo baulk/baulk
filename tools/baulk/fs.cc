@@ -29,6 +29,9 @@ std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
   if (count != 1) {
     return std::nullopt;
   }
+  if (bela::EndsWithIgnoreCase(subdir, L"\\bin")) {
+    return std::nullopt;
+  }
   return std::make_optional(std::move(subdir));
 }
 
