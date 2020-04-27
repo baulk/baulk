@@ -35,5 +35,7 @@ jobs:
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
           mkdir %vc_arch%
           cd %vc_arch%
+          set CC=cl
+          set CXX=cl
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
           ninja all
