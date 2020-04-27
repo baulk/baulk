@@ -16,13 +16,16 @@ jobs:
       matrix:
         baulk_target: [baulk-win64, baulk-win32, baulk-arm64]
         include:
-          - baulk_target: baulk-win64,
-            msvc_arch: x64
+          - baulk_target: baulk-win64
+            msvc_arch: amd64
           - baulk_target: baulk-win32
-            msvc_arch: x64_x86
+            msvc_arch: amd64_x86
           - baulk_target: baulk-arm64
-            msvc_arch: x64_arm64
+            msvc_arch: amd64_arm64
     steps:
+      - name: Install packages (Windows)
+        run: |
+          choco install ninja
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
