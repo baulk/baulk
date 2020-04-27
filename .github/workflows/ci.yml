@@ -33,7 +33,7 @@ jobs:
           vc_arch: ${{ matrix.msvc_arch }}
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
-          mkdir build
-          cd build
+          mkdir %vc_arch%
+          cd %vc_arch%
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
           ninja all
