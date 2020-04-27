@@ -2,13 +2,16 @@ name: CI
 on: 
   push:
     paths-ignore:
-      - 'ReadMe.md'
-      - 'ReadMe.zh-CN.md'
+      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+      - "docs/**"
+      - '**.md'
+      - '**.txt'
       - 'LICENSE'
   pull_request:
     paths-ignore:
-      - 'ReadMe.md'
-      - 'ReadMe.zh-CN.md'
+      - "docs/**"
+      - '**.md'
+      - '**.txt'
       - 'LICENSE'
 jobs:
   build:
