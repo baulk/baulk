@@ -13,15 +13,19 @@ jobs:
     name: Build
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         baulk_target: [baulk-win64, baulk-win32, baulk-arm64]
         include:
           - baulk_target: baulk-win64
             msvc_arch: amd64
+            build_dir: build
           - baulk_target: baulk-win32
             msvc_arch: amd64_x86
+            build_dir: build.win32
           - baulk_target: baulk-arm64
             msvc_arch: amd64_arm64
+            build_dir: build.arm64
     steps:
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v1
@@ -31,10 +35,11 @@ jobs:
         shell: cmd
         env:
           vc_arch: ${{ matrix.msvc_arch }}
+          workdir: ${{ matrix.build_dir }}
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
-          mkdir %vc_arch%
-          cd %vc_arch%
+          mkdir %workdir%
+          cd %workdir%
           set CC=cl
           set CXX=cl
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
