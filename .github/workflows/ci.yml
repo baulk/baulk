@@ -1,0 +1,38 @@
+name: Windows
+on: 
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        baulk_target: [baulk-win64, baulk-win32, baulk-arm64]
+        include:
+          - baulk_target: baulk-win64,
+            msvc_arch: x64
+            baulk_target: baulk-win32
+            msvc_arch: x64_x86
+          - baulk_target: baulk-arm64
+            msvc_arch: x64_arm64
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: compile-baulk
+        shell: cmd
+        env:
+          vc_arch: ${{ matrix.msvc_arch }}
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
+          mkdir build
+          cd build
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+          ninja all
