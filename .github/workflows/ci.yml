@@ -2,11 +2,13 @@ name: CI
 on: 
   push:
     paths-ignore:
-      - 'README.md'
+      - 'ReadMe.md'
+      - 'ReadMe.zh-CN.md'
       - 'LICENSE'
   pull_request:
     paths-ignore:
-      - 'README.md'
+      - 'ReadMe.md'
+      - 'ReadMe.zh-CN.md'
       - 'LICENSE'
 jobs:
   build:
