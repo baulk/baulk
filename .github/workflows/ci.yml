@@ -18,7 +18,7 @@ jobs:
         include:
           - baulk_target: baulk-win64,
             msvc_arch: x64
-            baulk_target: baulk-win32
+          - baulk_target: baulk-win32
             msvc_arch: x64_x86
           - baulk_target: baulk-arm64
             msvc_arch: x64_arm64
