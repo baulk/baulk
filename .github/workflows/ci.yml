@@ -23,9 +23,7 @@ jobs:
           - baulk_target: baulk-arm64
             msvc_arch: amd64_arm64
     steps:
-      - name: Install packages (Windows)
-        run: |
-          choco install ninja
+      - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
