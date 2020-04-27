@@ -1,6 +1,6 @@
 # Baulk - Minimal Package Manager for Windows
 
-![Github Actions](https://github.com/baulk/baulk/workflows/Windows/badge.svg)
+[![Master Branch Status](https://github.com/baulk/baulk/workflows/CI/badge.svg)](https://github.com/baulk/baulk/actions)
 
 [简体中文](./ReadMe.zh-CN.md)
 

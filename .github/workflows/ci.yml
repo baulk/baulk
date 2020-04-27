@@ -1,4 +1,4 @@
-name: Windows
+name: CI
 on: 
   push:
     paths-ignore:
@@ -51,8 +51,12 @@ jobs:
         # create package and show sha256 hash
         run: |
           Set-Location ${{ matrix.build_dir }}
+          # cleanup zip files
+          Remove-Item -Force *.zip
           cpack -G ZIP
-          Get-FileHash -Algorithm SHA256 Baulk*.zip
+          $obj=Get-FileHash -Algorithm SHA256 Baulk*.zip
+          Split-Path -Leaf $obj.Path
+          $obj.Algorithm +":"+$obj.Hash.ToLower()
       - name: Upload release
         uses: svenstaro/upload-release-action@v1-release
         if: startsWith(github.ref, 'refs/tags/')
