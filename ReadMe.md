@@ -1,5 +1,7 @@
 # Baulk - Minimal Package Manager for Windows
 
+![Github Actions](https://github.com/baulk/baulk/workflows/Windows/badge.svg)
+
 [简体中文](./ReadMe.zh-CN.md)
 
 ## Usage
