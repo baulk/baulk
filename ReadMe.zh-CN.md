@@ -1,5 +1,7 @@
 # Baulk - Windows 极简包管理器
 
+[![Master Branch Status](https://github.com/baulk/baulk/workflows/CI/badge.svg)](https://github.com/baulk/baulk/actions)
+
 Baulk 设计理念来自于 [clangbuilder](https://github.com/fstudio/clangbuilder) 的 [`devi`](https://github.com/fstudio/clangbuilder/blob/master/bin/devi.ps1) 工具，devi 是一个基于 PowerShell 开发的简易包管理工具，最初用于解决在搭建 LLVM/Clang 构建环境时依赖软件的升级问题，后来实现了 Ports 机制，也就成了一个小型的包管理工具。`devi` 支持安装，卸载升级包，并且还支持创建符号链接到特定的 `links` 的目录，这样的策略能够有效的减少 `PATH` 环境变量的条目，并且配合 `mklauncher` 能够支持不能使用符号链接的命令，创建它的启动器到 links。devi 的理念是避免安装软件需要特权，修改操作系统注册表。以及避免软件安装过程中修改操作系统环境变量。通常来说，将特定软件添加到环境变量中确实能够简化使用，但随着安装软件的增加，环境变量则会容易覆盖，多个版本的软件同时安装时可能会出现冲突，等等。从 2018 年 devi 的诞生到现在，我对软件的管理有了深刻的认识，对 devi 也有了反思，而 devi 存在诸多问题需要解决，比如包的下载不支持哈希校验，`mklauncher` 需要单独运行，启动较慢等等。思考良久后，我决定基于 C++17 和 [bela](https://github.com/fcharlie/bela) 实现新的包管理器，也就是 `Baulk`。Baulk 融汇了我这几年的技术积累，我自认为 baulk 要远胜于 devi，由于 PowerShell 启动较慢，执行较慢，devi 的执行速度完全比不上 baulk，实际上我在使用 Golang 重新实现基于 PowerShell 编写的 Golang 项目构建打包工具 [Bali](https://github.com/fcharlie/bali) (Golang 重新实现为 [Baligo](https://github.com/fcharlie/baligo)) 时，有相同的感受。
 
 Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希望 Baulk 专注于在新的 Windows 上运行，因此在实现 Baulk 的时候，错误信息都使用了 ANSI 转义（Bela 实际上在旧的控制台支持 ANSI 转义转 Console API），Baulk 中也添加了 `baulkterminal` 命令与 Windows Terminal 高度集成。
@@ -78,17 +80,17 @@ baulk install cmake git 7z
 ```json
 {
     "description": "CMake is an open-source, cross-platform family of tools designed to build, test and package software",
-    "version": "3.17.1",
+    "version": "3.17.2",
     "url": [
-        "https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-win32-x86.zip",
-        "https://cmake.org/files/v3.17/cmake-3.17.1-win32-x86.zip"
+        "https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-win32-x86.zip",
+        "https://cmake.org/files/v3.17/cmake-3.17.2-win32-x86.zip"
     ],
+    "url.hash": "SHA256:66a68a1032ad1853bcff01778ae190cd461d174d6a689e1c646e3e9886f01e0a",
     "url64": [
-        "https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-win64-x64.zip",
-        "https://cmake.org/files/v3.17/cmake-3.17.1-win64-x64.zip"
+        "https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-win64-x64.zip",
+        "https://cmake.org/files/v3.17/cmake-3.17.2-win64-x64.zip"
     ],
-    "url.hash": "SHA256:d3a283be64f4cb1e3f8a14e84ea7d423c6fe18205698e0687306290dea451f6b",
-    "url64.hash": "SHA256:a5af7a2fe73f34070456397e940042e4469f072126c82974f44333ac43d478b1",
+    "url64.hash": "SHA256:cf82b1eb20b6fbe583487656fcd496490ffccdfbcbba0f26e19f1c9c63b0b041",
     "extension": "zip",
     "links": [
         "bin\\cmake.exe",
@@ -100,15 +102,27 @@ baulk install cmake git 7z
 }
 ```
 
-baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，`tar`，baulk 按照 `extension` 的类型执行相应的解压缩程序。在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulkcli` 创建模拟启动器。如果在 baulk 运行在 Windows AMD64 系统中，且包清单存在 `url64/url64.hash/links64/launchers64`，baulk 将使用 `url64/url64.hash/links64/launchers64` 设置。
+baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。
+
+在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，`tar`，baulk 按照 `extension` 的类型执行相应的解压缩程序。扩展的解压程序如下：
 
 |扩展|解压程序|限制|
 |---|---|---|
 |`exe`|-|-|
 |`zip`|内置，基于 minizip|不支持加密，不支持 Deflate64，Deflate64 可以使用 `7z`|
 |`msi`|内置，基于 MSI API|-|
-|`7z`|优先级：</br>baulk7z(Baulk 发行版)</br>7z(baulk 包管理中的)</br>环境变量中的 7z|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
-|`tar`|优先级：</br>baulktar(Baulk 开发的)</br>bsdtar(Baulk 构建版)</br>msys2 tar</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，zip 不支持 Deflate64|
+|`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
+|`tar`|优先级：</br>baulktar - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 Deflate64|
+
+在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulkcli` 创建模拟启动器。如果在 baulk 运行在 Windows x64 或者 ARM64 架构时，会有一些细小的差别，即优先使用平台相关的 URL/Launchers/Links，细节如下：
+
+|架构|URL|Launchers|Links|备注|
+|---|---|---|---|---|
+|x86|url|launchers|links|-|
+|x64|url64, url|launchers64, launchers|links64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
+|ARM64|urlamr64, url|launchersarm64, launchers|linksarm64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
+
+
 
 Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
 
