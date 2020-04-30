@@ -100,11 +100,11 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
       ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
-    if (!ja.array("links64", pkg.links)) {
-      ja.array("links", pkg.links);
+    if (!ja.patharray("links64", pkg.links)) {
+      ja.patharray("links", pkg.links);
     }
-    if (!ja.array("launchers64", pkg.launchers)) {
-      ja.array("launchers", pkg.launchers);
+    if (!ja.patharray("launchers64", pkg.launchers)) {
+      ja.patharray("launchers", pkg.launchers);
     }
 #elif defined(_M_ARM64)
     // ARM64 support
@@ -116,11 +116,11 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
       ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
-    if (!ja.array("linksarm64", pkg.links)) {
-      ja.array("links", pkg.links);
+    if (!ja.patharray("linksarm64", pkg.links)) {
+      ja.patharray("links", pkg.links);
     }
-    if (!ja.array("launchersarm64", pkg.launchers)) {
-      ja.array("launchers", pkg.launchers);
+    if (!ja.patharray("launchersarm64", pkg.launchers)) {
+      ja.patharray("launchers", pkg.launchers);
     }
 #else
     if (ja.get("url", pkg.urls)) {
@@ -129,8 +129,8 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
       ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
-    ja.array("links", pkg.links);
-    ja.array("launchers", pkg.launchers);
+    ja.patharray("links", pkg.links);
+    ja.patharray("launchers", pkg.launchers);
 #endif
 
   } catch (const std::exception &e) {

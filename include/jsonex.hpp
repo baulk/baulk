@@ -6,6 +6,15 @@
 
 namespace baulk::json {
 //
+
+inline void FromSlash(std::wstring &s) {
+  for (auto &c : s) {
+    if (c == '/') {
+      c = L'\\';
+    }
+  }
+}
+
 class JsonAssignor {
 public:
   JsonAssignor(const nlohmann::json &obj_) : obj(obj_) {}
@@ -42,6 +51,19 @@ public:
     }
     return false;
   }
+  template <typename T>
+  bool patharray(std::string_view name, std::vector<T> &arr) {
+    if (auto it = obj.find(name); it != obj.end()) {
+      for (const auto &o : it.value()) {
+        auto p = bela::ToWide(o.get<std::string_view>());
+        FromSlash(p);
+        arr.emplace_back(std::move(p));
+      }
+      return true;
+    }
+    return false;
+  }
+
   template <typename Integer>
   Integer integer(std::string_view name, const Integer dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
