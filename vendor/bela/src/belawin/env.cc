@@ -61,6 +61,12 @@ constexpr std::wstring_view env_wstrings[] = {
     // library in cmake.exe
     L"http_proxy",
     L"https_proxy",
+    // Environment variables to tell git to use custom SSH executable or command
+    L"GIT_SSH",
+    L"GIT_SSH_COMMAND",
+    // Environment variables needed for ssh-agent based authentication
+    L"SSH_AUTH_SOCK",
+    L"SSH_AGENT_PID",
     // Enables find_package(CUDA) and enable_language(CUDA) in CMake
     L"CUDA_PATH",
     L"CUDA_PATH_V9_0",
