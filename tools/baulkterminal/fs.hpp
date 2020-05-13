@@ -51,10 +51,7 @@ inline bool AccumulatePwsh(std::wstring_view dir,
   }
   constexpr const std::wstring_view pwsh_exe = L"pwsh.exe";
   constexpr const std::wstring_view previewsv = L"-preview";
-  if (!bela::PathExists(dir)) {
-    return false;
-  }
-  for (const auto &it : std::filesystem::directory_iterator(dir)) {
+  for (const auto &it : std::filesystem::directory_iterator(pwshdir)) {
     const auto versionPath = it.path();
     const auto exe = versionPath / pwsh_exe;
     if (std::filesystem::exists(exe)) {
@@ -75,12 +72,12 @@ inline bool AccumulatePwsh(std::wstring_view dir,
 
 inline std::wstring PwshCore() {
   std::vector<PwshMeta> pwshs;
-  if (AccumulatePwsh(L"%ProgramFiles%\\Powershell", pwshs)) {
+  if (AccumulatePwsh(L"%ProgramFiles%\\PowerShell", pwshs)) {
     return PwshNewest(pwshs);
   }
 #if defined(_M_AMD64) || defined(_M_ARM64)
   // No point in looking for WOW if we're not somewhere it exists
-  if (AccumulatePwsh(L"%ProgramW6432%\\Powershell", pwshs)) {
+  if (AccumulatePwsh(L"%ProgramFiles(x86)%\\PowerShell", pwshs)) {
     return PwshNewest(pwshs);
   }
 #endif
