@@ -8,17 +8,17 @@
 
 namespace baulk::commands {
 // https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
-constexpr const std::wstring_view Architecture() {
+constexpr const std::wstring_view architecture() {
 #if defined(_M_X64)
   return L"x64";
 #elif defined(_M_X86)
   return L"x86";
 #elif defined(_M_ARM64)
-  return L"ARM64";
+  return L"arm64";
 #elif defined(_M_ARM)
-  return L"ARM";
+  return L"arm";
 #else
-  return L"UNKNOWN";
+  return L"unknown cpu architecture";
 #endif
 }
 
@@ -31,7 +31,7 @@ int install_pkg(std::wstring_view name) {
   }
   if (pkg->urls.empty()) {
     bela::FPrintF(stderr, L"baulk: '%s' does not support \x1b[31m%s\x1b[0m\n",
-                  name, Architecture());
+                  name, architecture());
     return 1;
   }
   return baulk::package::BaulkInstall(*pkg);
