@@ -91,7 +91,7 @@ ConsoleMode GetConsoleModeEx(HANDLE hFile) {
     if (IsCygwinPipe(hFile)) {
       return ConsoleMode::PTY; // cygwin is pipe
     }
-    return ConsoleMode::File; // cygwin is pipe
+    return ConsoleMode::File;
   }
   if (EnableVirtualTerminal(hFile)) {
     return ConsoleMode::ConPTY;
@@ -258,9 +258,16 @@ std::wstring FileTypeName(FILE *file) {
   return Adapter::instance().FileTypeName(file);
 }
 
-bool IsTerminal(FILE *file) {
+bool IsTerminal(FILE *fd) {
   // fd IsTerminal
-  return Adapter::instance().IsTerminal(file);
+  return Adapter::instance().IsTerminal(fd);
+}
+bool IsCygwinTerminal(FILE *fd) {
+  auto hFile = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
+  if (GetFileType(hFile) != FILE_TYPE_PIPE) {
+    return false;
+  }
+  return IsCygwinPipe(hFile);
 }
 
 } // namespace bela

@@ -20,6 +20,7 @@ add_executable(
   decompress.cc
   fs.cc
   hash.cc
+  indicators.cc
   launcher.cc
   msi.cc
   net.cc
@@ -49,11 +50,11 @@ target_include_directories(baulk PRIVATE ../../lib/archive)
 install(TARGETS baulk DESTINATION bin)
 
 if(BUILD_TEST)
-  add_executable(indicators_test indicators_test.cc)
+  add_executable(indicators_test indicators_test.cc indicators.cc)
 
   target_link_libraries(indicators_test belawin winhttp)
 
-  add_executable(windl_test windl_test.cc net.cc tcp.cc)
+  add_executable(windl_test windl_test.cc indicators.cc net.cc tcp.cc)
 
   target_link_libraries(windl_test belawin winhttp ws2_32)
 endif(BUILD_TEST)

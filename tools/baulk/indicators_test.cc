@@ -27,6 +27,7 @@ void Maximum(const wchar_t *filename) {
   }
   bar.MarkCompleted();
   bar.Finish();
+  bela::FPrintF(stderr, L"columns %d\n", bar.Columns());
 }
 
 int wmain(int argc, wchar_t **argv) {

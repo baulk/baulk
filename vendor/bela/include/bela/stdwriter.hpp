@@ -8,7 +8,7 @@
 #include "fmt.hpp"
 
 namespace bela {
-
+//
 ssize_t FileWrite(FILE *out, std::wstring_view msg);
 template <typename... Args>
 ssize_t FPrintF(FILE *out, const wchar_t *fmt, Args... args) {
@@ -23,7 +23,9 @@ inline ssize_t FPrintF(FILE *out, const wchar_t *fmt) {
   return FileWrite(out, str);
 }
 std::wstring FileTypeName(FILE *file);
-bool IsTerminal(FILE *file);
+// IsTerminal include console PTY and cygwin pipe
+bool IsTerminal(FILE *fd);
+bool IsCygwinTerminal(FILE *fd);
 uint32_t TerminalWidth();
 } // namespace bela
 

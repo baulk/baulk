@@ -1,7 +1,6 @@
 /// Learn from https://github.com/p-ranav/indicators
 #ifndef BAULK_INDICATORS_HPP
 #define BAULK_INDICATORS_HPP
-#include <bela/stdwriter.hpp>
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -13,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <bela/stdwriter.hpp>
 
 namespace baulk {
 [[maybe_unused]] constexpr uint64_t KB = 1024ULL;
@@ -62,6 +62,9 @@ public:
       space.resize(MAX_BARLENGTH + 4, L' ');
       scs.resize(MAX_BARLENGTH + 4, L'#');
       memset(speed, 0, sizeof(speed));
+      if (cygwinterminal = bela::IsCygwinTerminal(stderr); cygwinterminal) {
+        MakeColumns();
+      }
       this->Loop();
     });
   }
@@ -75,6 +78,7 @@ public:
   }
   void MarkFault() { state = ProgressState::Fault; }
   void MarkCompleted() { state = ProgressState::Completed; }
+  uint32_t Columns() const { return columns; }
 
 private:
   uint64_t maximum{0};
@@ -92,8 +96,9 @@ private:
   uint32_t tick{0};
   uint32_t fnpos{0};
   uint32_t pos{0};
-  uint32_t width{80};
+  uint32_t columns{80};
   size_t flen{20};
+  bool cygwinterminal{false};
   inline std::wstring_view MakeSpace(size_t n) {
     if (n > MAX_BARLENGTH) {
       return std::wstring_view{};
@@ -130,17 +135,15 @@ private:
     bela::FPrintF(stderr, L"\n");
   }
   void Draw() {
-    auto w = bela::TerminalWidth();
-    if (w != 0 && w <= MAX_BARLENGTH && w != width) {
-      width = w;
-      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[0m%s\x1b[0m",
-                    MakeSpace((std::min)(w, MAX_BARLENGTH)));
+    if (!cygwinterminal) {
+      columns = bela::TerminalWidth();
+      if (columns < 80) {
+        columns = 80;
+      }
     }
-    if (width < 80) {
-      width = 80;
-    }
+
     // file.tar.gz 17%[###############>      ] 1024.00K 1024.00K/s
-    auto barwidth = width - 50;
+    auto barwidth = columns - 50;
     wchar_t strtotal[64];
     auto total_ = static_cast<uint64_t>(total);
     //' 1024.00K 1024.00K/s' 20
@@ -178,6 +181,7 @@ private:
                   (uint32_t)state, MakeFileName(), scale, ps, sps, strtotal,
                   speed);
   }
+  bool MakeColumns();
 };
 } // namespace baulk
 
