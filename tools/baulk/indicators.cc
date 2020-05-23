@@ -8,7 +8,9 @@
 
 namespace baulk {
 
-bool ProgressBar::MakeColumns() {
+// CygwinTerminalSize resolve cygwin terminal size use stty,
+// When running under Cygwin terminal, stty should be available
+bool CygwinTerminalSize(bela::terminal::terminal_size &termsz) {
   bela::process::Process ps;
   constexpr DWORD flags =
       bela::process::CAPTURE_USEIN | bela::process::CAPTURE_USEERR;
@@ -101,16 +103,16 @@ bool ProgressBar::Execute() {
   if (!bela::terminal::IsSameTerminal(stderr)) {
     return false;
   }
+  if (cygwinterminal = bela::terminal::IsCygwinTerminal(stderr);
+      cygwinterminal) {
+    CygwinTerminalSize(termsz);
+  }
   state = ProgressState::Running;
   worker = std::make_shared<std::thread>([this] {
     // Progress Loop
     space.resize(MAX_BARLENGTH + 4, L' ');
     scs.resize(MAX_BARLENGTH + 4, L'#');
     memset(speed, 0, sizeof(speed));
-    if (cygwinterminal = bela::terminal::IsCygwinTerminal(stderr);
-        cygwinterminal) {
-      MakeColumns();
-    }
     this->Loop();
   });
   return true;

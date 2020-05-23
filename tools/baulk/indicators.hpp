@@ -113,7 +113,6 @@ private:
 
   void Loop();
   void Draw();
-  bool MakeColumns();
 };
 } // namespace baulk
 
