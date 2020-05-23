@@ -1,5 +1,5 @@
 #include <bela/semver.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 int main() {
   bela::semver::version v1(L"7.8.1-rc.1");

@@ -1,5 +1,5 @@
 // exec command
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/pe.hpp>
 #include <bela/base.hpp>
 #include <bela/escapeargv.hpp>

@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk {
 [[maybe_unused]] constexpr uint64_t KB = 1024ULL;
@@ -40,7 +40,12 @@ template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
   _snwprintf_s(buf, N, L"%lldB", x);
 }
 
-enum ProgressState : uint32_t { Running = 33, Completed = 32, Fault = 31 };
+enum ProgressState : uint32_t {
+  Uninitialized = 0,
+  Running = 33,
+  Completed = 32,
+  Fault = 31
+};
 
 class ProgressBar {
 public:
@@ -56,29 +61,12 @@ public:
     }
   }
   void Update(uint64_t value) { total = value; }
-  void Execute() {
-    worker = std::make_shared<std::thread>([this] {
-      // Progress Loop
-      space.resize(MAX_BARLENGTH + 4, L' ');
-      scs.resize(MAX_BARLENGTH + 4, L'#');
-      memset(speed, 0, sizeof(speed));
-      if (cygwinterminal = bela::IsCygwinTerminal(stderr); cygwinterminal) {
-        MakeColumns();
-      }
-      this->Loop();
-    });
-  }
-  void Finish() {
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      active = false;
-    }
-    cv.notify_all();
-    worker->join();
-  }
+  bool Execute();
+  void Finish();
   void MarkFault() { state = ProgressState::Fault; }
   void MarkCompleted() { state = ProgressState::Completed; }
-  uint32_t Columns() const { return columns; }
+  uint32_t Columns() const { return termsz.columns; }
+  uint32_t Rows() const { return termsz.rows; }
 
 private:
   uint64_t maximum{0};
@@ -91,12 +79,12 @@ private:
   std::wstring space;
   std::wstring scs;
   std::wstring filename;
-  std::atomic_uint32_t state{ProgressState::Running};
+  std::atomic_uint32_t state{ProgressState::Uninitialized};
   wchar_t speed[64];
   uint32_t tick{0};
   uint32_t fnpos{0};
   uint32_t pos{0};
-  uint32_t columns{80};
+  bela::terminal::terminal_size termsz;
   size_t flen{20};
   bool cygwinterminal{false};
   inline std::wstring_view MakeSpace(size_t n) {
@@ -123,64 +111,8 @@ private:
     return sv;
   }
 
-  void Loop() {
-    while (active) {
-      {
-        std::unique_lock lock(mtx);
-        cv.wait_for(lock, std::chrono::milliseconds(100));
-      }
-      // --- draw progress bar
-      Draw();
-    }
-    bela::FPrintF(stderr, L"\n");
-  }
-  void Draw() {
-    if (!cygwinterminal) {
-      columns = bela::TerminalWidth();
-      if (columns < 80) {
-        columns = 80;
-      }
-    }
-
-    // file.tar.gz 17%[###############>      ] 1024.00K 1024.00K/s
-    auto barwidth = columns - 50;
-    wchar_t strtotal[64];
-    auto total_ = static_cast<uint64_t>(total);
-    //' 1024.00K 1024.00K/s' 20
-
-    EncodeRate(strtotal, total_);
-    if (tick % 10 == 0) {
-      auto delta = (total_ - previous); // cycle 50/1000 s
-      previous = total_;
-      EncodeRate(speed, delta);
-    }
-    tick++;
-    if (maximum == 0) {
-      barwidth += 5;
-      // file.tar.gz  [ <=> ] 1024.00K 1024.00K/s
-      constexpr std::wstring_view bounce = L"<=>";
-      pos++;
-      if (pos == barwidth - 3) {
-        pos = 0;
-      }
-      //[##############################]
-      //[      <=>                     ]
-      // '<=>'
-      auto s0 = MakeSpace(pos);
-      auto s1 = MakeSpace(barwidth - pos - 3);
-      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s [%s%s%s] %s %s/s\x1b[0m",
-                    (uint32_t)state, MakeFileName(), s0, bounce, s1, strtotal,
-                    speed);
-      return;
-    }
-    auto scale = total_ * 100 / maximum;
-    auto progress = scale * barwidth / 100;
-    auto ps = MakeRate(static_cast<size_t>(progress));
-    auto sps = MakeSpace(static_cast<size_t>(barwidth - progress));
-    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s %d%% [%s%s] %s %s/s\x1b[0m",
-                  (uint32_t)state, MakeFileName(), scale, ps, sps, strtotal,
-                  speed);
-  }
+  void Loop();
+  void Draw();
   bool MakeColumns();
 };
 } // namespace baulk

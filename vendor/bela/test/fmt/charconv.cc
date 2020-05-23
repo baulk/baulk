@@ -1,7 +1,7 @@
 ////
 #include <bela/charconv.hpp>
 #include <bela/strcat.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 int wmain() {
   const wchar_t *w = L"196.1082741";

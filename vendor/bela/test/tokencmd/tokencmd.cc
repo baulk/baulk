@@ -1,6 +1,6 @@
 ///
 #include <bela/base.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/tokenizecmdline.hpp>
 #include <clocale>
 

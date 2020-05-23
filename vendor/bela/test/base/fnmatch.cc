@@ -1,4 +1,4 @@
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/fnmatch.hpp>
 
 void round0() {

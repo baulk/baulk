@@ -1,6 +1,6 @@
 ////
 #include <bela/strcat.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/path.hpp>
 
 int wmain(int argc, wchar_t **argv) {

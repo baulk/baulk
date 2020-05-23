@@ -1,5 +1,5 @@
 //
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <version.hpp>
 #include "pkg.hpp"
 #include "commands.hpp"

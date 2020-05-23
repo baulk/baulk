@@ -1,6 +1,6 @@
 //
 #include <zip.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/path.hpp>
 
 struct context {

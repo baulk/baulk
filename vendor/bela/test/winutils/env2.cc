@@ -1,6 +1,6 @@
 //////////
 #include <bela/env.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 namespace bela {
 namespace env {

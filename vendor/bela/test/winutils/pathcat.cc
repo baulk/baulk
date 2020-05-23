@@ -1,6 +1,6 @@
 ///
 #include <bela/path.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 std::wstring FullPath(std::wstring_view p) {
   DWORD dwlen = GetFullPathNameW(p.data(), 0, nullptr, nullptr);

@@ -1,7 +1,7 @@
 ///
 /// unicode escape L"CH\u2082O\u2083" => L"CH₂O"
 #include <bela/escaping.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 int wmain() {
   bela::FPrintF(stderr, L"Humans cannot do without O\u2082\n");

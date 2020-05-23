@@ -1,7 +1,20 @@
 #include <bela/process.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
+
+int stty_size() {
+  bela::process::Process p;
+  if (p.CaptureWithMode(bela::process::CAPTURE_USEIN |
+                            bela::process::CAPTURE_USEERR,
+                        L"stty", L"size") != 0) {
+    bela::FPrintF(stderr, L"%s\n", p.ErrorCode().message);
+    return 1;
+  }
+  bela::FPrintF(stderr, L"result: %s\n", p.Out());
+  return 0;
+}
 
 int wmain(int argc, wchar_t **argv) {
+  stty_size();
   bela::process::Process p;
   if (p.Capture(L"vswhere", L"-format", L"json", L"-utf8") == 0) {
     bela::FPrintF(stderr, L"result: %s\n", p.Out());

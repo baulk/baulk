@@ -3,7 +3,7 @@
 // https://github.com/microsoftarchive/redis/blob/3.0/src/Win32_Interop/Win32_ANSI.c
 #include <string_view>
 #include <bela/base.hpp>
-#include <bela/stdwriter.hpp> // ssize_t
+#include <bela/fmt.hpp> // ssize_t
 #include <bela/strcat.hpp>
 
 namespace bela {

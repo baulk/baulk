@@ -4,7 +4,6 @@
 #include <bela/strip.hpp>
 #include <bela/strcat.hpp>
 #include <bela/str_split.hpp>
-#include <bela/stdwriter.hpp>
 #include <bela/ascii.hpp>
 #include <bela/base.hpp>
 #include <bela/env.hpp>

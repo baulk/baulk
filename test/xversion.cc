@@ -1,4 +1,4 @@
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/match.hpp>
 #include <bela/strip.hpp>
 #include <version.hpp>

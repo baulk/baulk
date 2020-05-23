@@ -1,5 +1,5 @@
 ///
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/endian.hpp>
 
 int wmain() {

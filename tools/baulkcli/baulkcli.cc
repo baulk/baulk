@@ -2,7 +2,7 @@
 #include <bela/base.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/pe.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/str_split.hpp>
 #include <bela/env.hpp>
@@ -28,7 +28,7 @@ bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
     str.pop_back();
   }
   str.append(L"\x1b[0m\n");
-  return bela::FileWrite(stderr, str);
+  return bela::terminal::WriteAuto(stderr, str);
 }
 inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!IsDebugMode) {
@@ -38,8 +38,8 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::FileWrite(stderr,
-                         bela::StringCat(L"\x1b[33m", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(
+      stderr, bela::StringCat(L"\x1b[33m", msg, L"\x1b[0m\n"));
 }
 
 bool IsSubsytemConsole(std::wstring_view exe) {

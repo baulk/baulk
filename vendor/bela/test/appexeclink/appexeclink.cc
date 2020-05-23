@@ -1,5 +1,5 @@
 ///
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/path.hpp>
 // test\appexeclink\appexeclink_test.exe
 // C:\Users\$Username\AppData\Local\Microsoft\WindowsApps\wt.exe

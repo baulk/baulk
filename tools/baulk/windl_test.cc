@@ -1,5 +1,5 @@
 #include <bela/base.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/comutils.hpp>
 #include <winsock2.h>
 #include <ws2tcpip.h>

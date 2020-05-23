@@ -1,6 +1,6 @@
 #include <bela/pe.hpp>
 #include <bela/subsitute.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/io.hpp>
 #include <cstdio>
 

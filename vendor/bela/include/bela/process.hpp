@@ -12,6 +12,14 @@ constexpr const wchar_t *string_nullable(std::wstring_view str) {
 constexpr wchar_t *string_nullable(std::wstring &str) {
   return str.empty() ? nullptr : str.data();
 }
+
+enum CaptureMode {
+  CAPTURE_OUT = 0,
+  CAPTURE_ERR = 0x1,
+  CAPTURE_USEIN = 0x2,
+  CAPTURE_USEERR = 0x4,
+};
+
 class Process {
 public:
   Process() = default;
@@ -40,13 +48,19 @@ public:
   }
   template <typename... Args> int Capture(std::wstring_view cmd, Args... args) {
     bela::EscapeArgv ea(cmd, args...);
-    exitcode = CaptureInternal(ea.data());
+    exitcode = CaptureInternal(ea.data(), CAPTURE_OUT);
+    return exitcode;
+  }
+  template <typename... Args>
+  int CaptureWithMode(DWORD flags, std::wstring_view cmd, Args... args) {
+    bela::EscapeArgv ea(cmd, args...);
+    exitcode = CaptureInternal(ea.data(), flags);
     return exitcode;
   }
 
 private:
   int ExecuteInternal(wchar_t *cmdline);
-  int CaptureInternal(wchar_t *cmdline);
+  int CaptureInternal(wchar_t *cmdline, DWORD flags);
   std::wstring cwd;
   std::wstring env;
   std::string out;

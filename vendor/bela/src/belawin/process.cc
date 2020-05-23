@@ -30,15 +30,21 @@ int Process::ExecuteInternal(wchar_t *cmdline) {
   GetExitCodeProcess(pi.hProcess, &exitCode);
   return exitCode;
 }
+
+void Free(HANDLE fd) {
+  if (fd != nullptr) {
+    CloseHandle(fd);
+  }
+}
+
 // thanks:
 // https://github.com/microsoft/vcpkg/blob/master/toolsrc/src/vcpkg/base/system.process.cpp
 struct process_capture_helper {
   process_capture_helper() : pi{} {}
   PROCESS_INFORMATION pi;
-  HANDLE child_stdin = nullptr;
-  HANDLE child_stdout = nullptr;
+  HANDLE fdout{nullptr};
   bool create_process_redirect(wchar_t *cmdline, std::wstring &env,
-                               std::wstring &cwd,
+                               std::wstring &cwd, DWORD flags,
                                bela::error_code &ec) noexcept {
     STARTUPINFOW si;
     memset(&si, 0, sizeof(STARTUPINFOW));
@@ -50,34 +56,25 @@ struct process_capture_helper {
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
-
     // Create a pipe for the child process's STDOUT.
-    if (CreatePipe(&child_stdout, &si.hStdOutput, &saAttr, 0) != TRUE) {
+    if (CreatePipe(&fdout, &si.hStdOutput, &saAttr, 0) != TRUE) {
       ec = bela::make_system_error_code();
       return false;
     }
     // Ensure the read handle to the pipe for STDOUT is not inherited.
-    if (SetHandleInformation(child_stdout, HANDLE_FLAG_INHERIT, 0) != TRUE) {
+    if (SetHandleInformation(fdout, HANDLE_FLAG_INHERIT, 0) != TRUE) {
       ec = bela::make_system_error_code();
-      CloseHandle(child_stdout);
-      CloseHandle(si.hStdOutput);
+      Free(fdout);
+      Free(si.hStdOutput);
       return false;
     }
-    // Create a pipe for the child process's STDIN.
-    if (CreatePipe(&si.hStdInput, &child_stdin, &saAttr, 0) != TRUE) {
-      ec = bela::make_system_error_code();
-      CloseHandle(child_stdout);
-      CloseHandle(si.hStdOutput);
-      return false;
+    if ((flags & CAPTURE_ERR) != 0) {
+      si.hStdError = si.hStdOutput;
+    } else if ((flags & CAPTURE_USEERR) != 0) {
+      si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
-    // Ensure the write handle to the pipe for STDIN is not inherited.
-    if (SetHandleInformation(child_stdin, HANDLE_FLAG_INHERIT, 0) != TRUE) {
-      ec = bela::make_system_error_code();
-      CloseHandle(child_stdout);
-      CloseHandle(si.hStdOutput);
-      CloseHandle(child_stdin);
-      CloseHandle(si.hStdInput);
-      return false;
+    if ((flags & CAPTURE_USEIN) != 0) {
+      si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     }
     si.hStdError = si.hStdOutput;
     if (CreateProcessW(
@@ -85,14 +82,11 @@ struct process_capture_helper {
             IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW,
             string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
       ec = bela::make_system_error_code();
-      CloseHandle(child_stdout);
-      CloseHandle(si.hStdOutput);
-      CloseHandle(child_stdin);
-      CloseHandle(si.hStdInput);
+      Free(fdout);
+      Free(si.hStdOutput);
       return false;
     }
-    CloseHandle(si.hStdInput);
-    CloseHandle(si.hStdOutput);
+    Free(si.hStdOutput);
     return true;
   }
   void close_handles() {
@@ -109,26 +103,25 @@ struct process_capture_helper {
   }
 
   int wait_and_stream_output(std::string &out) {
-    CloseHandle(child_stdin);
     unsigned long bytes_read = 0;
     static constexpr int buffer_size = 1024 * 32;
     auto buf = std::make_unique<char[]>(buffer_size);
-    while (ReadFile(child_stdout, (void *)buf.get(), buffer_size, &bytes_read,
+    while (ReadFile(fdout, (void *)buf.get(), buffer_size, &bytes_read,
                     nullptr) == TRUE &&
            bytes_read > 0) {
       out.append(buf.get(), static_cast<size_t>(bytes_read));
     }
-    CloseHandle(child_stdout);
+    CloseHandle(fdout);
     return wait_and_close_handles();
   }
 };
 
-int Process::CaptureInternal(wchar_t *cmdline) {
+int Process::CaptureInternal(wchar_t *cmdline, DWORD flags) {
   process_capture_helper helper;
   if (env.empty() && de.Size() != 0) {
     env = de.MakeEnv();
   }
-  if (!helper.create_process_redirect(cmdline, env, cwd, ec)) {
+  if (!helper.create_process_redirect(cmdline, env, cwd, flags, ec)) {
     return 1;
   }
   return helper.wait_and_stream_output(out);

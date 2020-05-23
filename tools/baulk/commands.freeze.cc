@@ -1,4 +1,4 @@
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/base.hpp>
 #include <bela/io.hpp>
 #include <time.hpp>

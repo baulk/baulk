@@ -57,12 +57,12 @@ Command:
   auto exeparent = bela::ExecutableParent(ec);
   if (!exeparent) {
     auto msg = bela::Substitute(usage, L"$Prefix");
-    bela::FileWrite(stderr, msg);
+    bela::terminal::WriteAuto(stderr, msg);
     return;
   }
   bela::PathStripName(*exeparent);
   auto msg = bela::Substitute(usage, *exeparent);
-  bela::FileWrite(stderr, msg);
+  bela::terminal::WriteAuto(stderr, msg);
 }
 void Version() {
   //

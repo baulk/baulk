@@ -1,7 +1,7 @@
 ///
 #include <bela/path.hpp>
 #include <bela/match.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <filesystem>
 
 inline bool DirSkipFaster(const wchar_t *dir) {

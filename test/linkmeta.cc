@@ -1,5 +1,5 @@
 #include <bela/path.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 struct LinkMeta {
   LinkMeta() = default;

@@ -1,6 +1,6 @@
 //
 #include <bela/env.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 std::wstring ExpandEnv2(std::wstring_view s) {
   auto N = ExpandEnvironmentStringsW(s.data(), nullptr, 0);

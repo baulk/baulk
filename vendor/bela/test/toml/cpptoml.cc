@@ -1,4 +1,4 @@
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/codecvt.hpp>
 #define CPPTOML_NO_RTTI
 #include "cpptoml.h"

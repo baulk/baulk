@@ -1,5 +1,5 @@
 #include <bela/picker.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 class dotcom_global_initializer {
 public:

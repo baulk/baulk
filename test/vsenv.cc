@@ -1,5 +1,5 @@
 #include "../tools/baulk/compiler.hpp"
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk {
 bool IsDebugMode = true;

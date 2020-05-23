@@ -1,4 +1,4 @@
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/toml.hpp>
 
 std::vector<std::string_view> split(std::string_view value, char separator) {

@@ -47,7 +47,7 @@ ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args)
 ```cpp
 ///
 #include <bela/strcat.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   auto ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4"; // force encode UTF-8
@@ -59,8 +59,6 @@ int wmain(int argc, wchar_t **argv) {
   auto s = bela::StringCat(L"Look emoji -->", em, L" U: ",
                            static_cast<uint32_t>(em));
   bela::FPrintF(stderr, L"emoji test %c %s\n", em, s);
-  bela::FPrintF(stderr, L"hStderr Mode: %s hStdin Mode: %s\n",
-                bela::FileTypeName(stderr), bela::FileTypeName(stdin));
   return 0;
 }
 

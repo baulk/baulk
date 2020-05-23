@@ -1,5 +1,5 @@
 ///
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/unicode.hpp>
 #include <bela/strcat.hpp>
 
@@ -27,7 +27,5 @@ int wmain(int argc, wchar_t **argv) {
                            bela::AlphaNum(bela::Hex(em)));
   bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh,
                 blueheart, se, em, em2, s, &em);
-  bela::FPrintF(stderr, L"hStderr Mode:    %s.\nhStdin Mode:     %s.\n",
-                bela::FileTypeName(stderr), bela::FileTypeName(stdin));
   return 0;
 }

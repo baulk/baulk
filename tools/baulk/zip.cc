@@ -2,7 +2,7 @@
 #include <bela/base.hpp>
 #include <bela/path.hpp>
 #include <bela/process.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <zip.hpp>
 #include "fs.hpp"
 

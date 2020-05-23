@@ -1,6 +1,6 @@
 ///
 #include <bela/strcat.hpp>
-#include <bela/stdwriter.hpp>
+#include <bela/terminal.hpp>
 #include <bela/codecvt.hpp>
 #include "ucwidth-wt.hpp"
 
@@ -40,12 +40,8 @@ int wmain(int argc, wchar_t **argv) {
       bela::unicode::CalculateWidthInternal(0xA9), 161,
       bela::unicode::CalculateWidthInternal(161), hammerandwrench,
       bela::unicode::CalculateWidthInternal(hammerandwrench));
-  bela::FPrintF(stderr, L"hStderr Mode:    %s.\nhStdin Mode:     %s.\n",
-                bela::FileTypeName(stderr), bela::FileTypeName(stdin));
   auto es = bela::EscapeNonBMP(wx);
   bela::FPrintF(stderr, L"EscapeNonBMP: %s\n", es);
-  bela::FPrintF(stderr, L"[%-20s]\n", bela::FileTypeName(stdout));
-  bela::FPrintF(stderr, L"[%20s]\n", bela::FileTypeName(stdout));
   bela::FPrintF(stderr, L"[%-10d]\n", argc);
   bela::FPrintF(stderr, L"[%10d]\n", argc);
   bela::FPrintF(stderr, L"[%010d]\n", argc);

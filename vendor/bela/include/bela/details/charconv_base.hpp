@@ -189,7 +189,18 @@ inline to_chars_result to_chars(wchar_t *const _First, wchar_t *const _Last,
   return _Integer_to_chars(_First, _Last, _Value, _Base);
 }
 
+
+#if defined(_MSC_VER) && _MSC_VER >= 1926
 // FUNCTION TEMPLATE _Bit_cast
+template <class _To, class _From,
+          std::enable_if_t<sizeof(_To) == sizeof(_From) &&
+                               std::is_trivially_copyable_v<_To> &&
+                               std::is_trivially_copyable_v<_From>,
+                           int> = 0>
+[[nodiscard]] constexpr _To _Bit_cast(const _From &_Val) noexcept {
+  return __builtin_bit_cast(_To, _Val);
+}
+#else
 template <class _To, class _From,
           std::enable_if_t<sizeof(_To) == sizeof(_From) &&
                                std::is_trivially_copyable_v<_To> &&
@@ -200,6 +211,10 @@ template <class _To, class _From,
   std::memcpy(std::addressof(_To_obj), std::addressof(_From_obj), sizeof(_To));
   return _To_obj;
 }
+#endif
+
+to_chars_result to_chars(wchar_t *_First, wchar_t *_Last, bool _Value,
+                         int _Base = 10) = delete;
 
 // from char to integer
 
@@ -3303,12 +3318,12 @@ _Floating_to_chars(wchar_t *_First, wchar_t *const _Last, _Floating _Value,
   }
 
   if constexpr (_Overload == _Floating_to_chars_overload::_Plain) {
-    (void)_Fmt;
-    (void)_Precision;
+    //(void)_Fmt;
+    //(void)_Precision;
 
     return _Floating_to_chars_ryu(_First, _Last, _Value, chars_format{});
   } else if constexpr (_Overload == _Floating_to_chars_overload::_Format_only) {
-    (void)_Precision;
+    //(void)_Precision;
 
     if (_Fmt == chars_format::hex) {
       return _Floating_to_chars_hex_shortest(_First, _Last, _Value);
