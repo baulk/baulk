@@ -91,6 +91,10 @@ include_directories("./include" "./vendor/bela/include")
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)
+install(FILES "script/installmenu.bat" DESTINATION script)
+install(FILES "script/installmenu.ps1" DESTINATION script)
+install(FILES "script/uninstallmenu.bat" DESTINATION script)
+install(FILES "script/uninstallmenu.ps1" DESTINATION script)
 
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)
