@@ -110,6 +110,12 @@ struct Searcher {
     }
     return false;
   }
+  void JoinForceEnv(vector_t &vec, std::wstring_view p) {
+    vec.emplace_back(std::wstring(p));
+  }
+  void JoinForceEnv(vector_t &vec, std::wstring_view a, std::wstring_view b) {
+    vec.emplace_back(bela::StringCat(a, b));
+  }
   bool JoinEnv(vector_t &vec, std::wstring_view p) {
     return JoinEnvInternal(vec, std::wstring(p));
   }
@@ -346,16 +352,16 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
   }
   auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
   if (bela::PathExists(baulkexe)) {
-    JoinEnv(paths, *exepath);
-    JoinEnv(paths, *exepath, L"\\links");
+    JoinForceEnv(paths, *exepath);
+    JoinForceEnv(paths, *exepath, L"\\links");
     return true;
   }
   std::wstring baulkroot(*exepath);
   for (size_t i = 0; i < 5; i++) {
     auto baulkexe = bela::StringCat(baulkroot, L"\\bin\\baulk.exe");
     if (bela::PathExists(baulkexe)) {
-      JoinEnv(paths, baulkroot, L"\\bin");
-      JoinEnv(paths, baulkroot, L"\\bin\\links");
+      JoinForceEnv(paths, baulkroot, L"\\bin");
+      JoinForceEnv(paths, baulkroot, L"\\bin\\links");
       return true;
     }
     bela::PathStripName(baulkroot);
