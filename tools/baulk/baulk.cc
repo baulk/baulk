@@ -1,5 +1,6 @@
 #include <bela/subsitute.hpp>
 #include <bela/path.hpp>
+#include <baulkrev.hpp>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"
@@ -65,8 +66,11 @@ Command:
   bela::terminal::WriteAuto(stderr, msg);
 }
 void Version() {
-  //
-  bela::FPrintF(stderr, L"baulk %s\n", BAULK_VERSION_FULL);
+  // baulk
+  bela::FPrintF(stderr,
+                L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
+                BAULK_VERSION_FULL, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT,
+                BAULK_BUILD_TIME);
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
@@ -79,7 +83,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
-      .Add(L"exec");                                            // subcommand
+      .Add(L"upgrade")
+      .Add(L"exec"); // subcommand
   bela::error_code ec;
   auto result = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {

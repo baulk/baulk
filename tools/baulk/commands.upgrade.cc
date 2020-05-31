@@ -6,7 +6,16 @@
 #include "pkg.hpp"
 
 namespace baulk::commands {
+
+int upgrade_self() {
+  baulk::DbgPrint(L"baulk upgrade --self");
+  return 0;
+}
+
 int cmd_upgrade(const argv_t &argv) {
+  if (argv.size() > 0 && argv[0] == L"--self") {
+    return upgrade_self();
+  }
   bela::error_code ec;
   auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
   if (!locker) {

@@ -1,6 +1,7 @@
 .vscode/
 /build/
 /build.arm64/
+/include/baulkversion.h
 *.pdb
 *.exe
 *.obj

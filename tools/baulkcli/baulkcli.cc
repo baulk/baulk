@@ -39,7 +39,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
     msg.remove_suffix(1);
   }
   return bela::terminal::WriteAuto(
-      stderr, bela::StringCat(L"\x1b[33m", msg, L"\x1b[0m\n"));
+      stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
 bool IsSubsytemConsole(std::wstring_view exe) {
