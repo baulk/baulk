@@ -49,6 +49,7 @@
 #define BAULKUI_COPYRIGHT L"Copyright \xA9 2020, Baulk contributors."
 
 #define ICON_MAIN 256
+#define IDM_ASKPASS_ABOUT 500
 #define IDD_ASKPASS_WINDOW 1001
 #define IDS_PROMPT_CONTENT 1002
 #define IDE_ASKPASS_INPUT 1003

@@ -1,7 +1,7 @@
 #
 
 #
-add_executable(ssh-askpass-baulk main.cc ssh-askpass-baulk.rc ssh-askpass-baulk.manifest)
+add_executable(ssh-askpass-baulk main.cc app.cc ssh-askpass-baulk.rc ssh-askpass-baulk.manifest)
 
 target_link_libraries(ssh-askpass-baulk belashl Shell32)
 
