@@ -27,6 +27,7 @@ add_executable(
   pkg.cc
   tar.cc
   tcp.cc
+  upgrade.cc
   zip.cc
   baulk.rc
   baulk.manifest)

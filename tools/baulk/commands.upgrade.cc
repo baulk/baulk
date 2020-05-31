@@ -5,16 +5,15 @@
 #include "bucket.hpp"
 #include "pkg.hpp"
 
-namespace baulk::commands {
-
-int upgrade_self() {
-  baulk::DbgPrint(L"baulk upgrade --self");
-  return 0;
+namespace baulk {
+int BaulkUpgradeSelf();
 }
+
+namespace baulk::commands {
 
 int cmd_upgrade(const argv_t &argv) {
   if (argv.size() > 0 && argv[0] == L"--self") {
-    return upgrade_self();
+    return baulk::BaulkUpgradeSelf();
   }
   bela::error_code ec;
   auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
