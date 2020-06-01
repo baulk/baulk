@@ -27,9 +27,18 @@ add_executable(
   pkg.cc
   tar.cc
   tcp.cc
-  upgrade.cc
   zip.cc
   baulk.rc
+  baulk.manifest)
+
+add_executable(
+  baulk-update
+  baulk-update.cc
+  indicators.cc
+  fs.cc
+  net.cc
+  tcp.cc
+  baulk-update.rc
   baulk.manifest)
 
 target_link_libraries(
@@ -42,13 +51,25 @@ target_link_libraries(
   Msi
   XmlLite)
 
+target_link_libraries(
+  baulk-update
+  baulkarchive
+  belawin
+  winhttp
+  ws2_32
+  Msi
+  XmlLite)
+
 if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  set_property(TARGET baulk-update PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
 target_include_directories(baulk PRIVATE ../../lib/archive)
+target_include_directories(baulk-update PRIVATE ../../lib/archive)
 
 install(TARGETS baulk DESTINATION bin)
+install(TARGETS baulk-update DESTINATION bin)
 
 if(BUILD_TEST)
   add_executable(indicators_test indicators_test.cc indicators.cc)
