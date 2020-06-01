@@ -5,16 +5,14 @@
 namespace bela {
 namespace strings_internal {
 
-using FixedMapping =
-    std::initializer_list<std::pair<std::wstring_view, std::wstring_view>>;
+using FixedMapping = std::initializer_list<std::pair<std::wstring_view, std::wstring_view>>;
 
 // Applies the ViableSubstitutions in subs_ptr to the std::wstring_view s, and
 // stores the result in *result_ptr. Returns the number of substitutions that
 // occurred.
-int ApplySubstitutions(
-    std::wstring_view s,
-    std::vector<strings_internal::ViableSubstitution> *subs_ptr,
-    std::wstring *result_ptr) {
+int ApplySubstitutions(std::wstring_view s,
+                       std::vector<strings_internal::ViableSubstitution> *subs_ptr,
+                       std::wstring *result_ptr) {
   auto &subs = *subs_ptr;
   int substitutions = 0;
   size_t pos = 0;
@@ -53,13 +51,11 @@ int ApplySubstitutions(
 // Note that we implement them here, rather than in the header, so that they
 // aren't inlined.
 
-std::wstring StrReplaceAll(std::wstring_view s,
-                           strings_internal::FixedMapping replacements) {
+std::wstring StrReplaceAll(std::wstring_view s, strings_internal::FixedMapping replacements) {
   return StrReplaceAll<strings_internal::FixedMapping>(s, replacements);
 }
 
-int StrReplaceAll(strings_internal::FixedMapping replacements,
-                  std::wstring *target) {
+int StrReplaceAll(strings_internal::FixedMapping replacements, std::wstring *target) {
   return StrReplaceAll<strings_internal::FixedMapping>(replacements, target);
 }
 } // namespace bela

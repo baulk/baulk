@@ -29,15 +29,14 @@ inline strings_internal::AlphaNumFormatterImpl AlphaNumFormatter() {
 template <typename FirstFormatter, typename SecondFormatter>
 inline strings_internal::PairFormatterImpl<FirstFormatter, SecondFormatter>
 PairFormatter(FirstFormatter f1, std::wstring_view sep, SecondFormatter f2) {
-  return strings_internal::PairFormatterImpl<FirstFormatter, SecondFormatter>(
-      std::move(f1), sep, std::move(f2));
+  return strings_internal::PairFormatterImpl<FirstFormatter, SecondFormatter>(std::move(f1), sep,
+                                                                              std::move(f2));
 }
 
 // Function overload of PairFormatter() for using a default
 // `AlphaNumFormatter()` for each Formatter in the pair.
-inline strings_internal::PairFormatterImpl<
-    strings_internal::AlphaNumFormatterImpl,
-    strings_internal::AlphaNumFormatterImpl>
+inline strings_internal::PairFormatterImpl<strings_internal::AlphaNumFormatterImpl,
+                                           strings_internal::AlphaNumFormatterImpl>
 PairFormatter(std::wstring_view sep) {
   return PairFormatter(AlphaNumFormatter(), sep, AlphaNumFormatter());
 }
@@ -49,19 +48,16 @@ PairFormatter(std::wstring_view sep) {
 // pointer-to-T. This pattern often shows up when joining repeated fields in
 // protocol buffers.
 template <typename Formatter>
-strings_internal::DereferenceFormatterImpl<Formatter>
-DereferenceFormatter(Formatter &&f) {
-  return strings_internal::DereferenceFormatterImpl<Formatter>(
-      std::forward<Formatter>(f));
+strings_internal::DereferenceFormatterImpl<Formatter> DereferenceFormatter(Formatter &&f) {
+  return strings_internal::DereferenceFormatterImpl<Formatter>(std::forward<Formatter>(f));
 }
 
 // Function overload of `DererefenceFormatter()` for using a default
 // `AlphaNumFormatter()`.
-inline strings_internal::DereferenceFormatterImpl<
-    strings_internal::AlphaNumFormatterImpl>
+inline strings_internal::DereferenceFormatterImpl<strings_internal::AlphaNumFormatterImpl>
 DereferenceFormatter() {
-  return strings_internal::DereferenceFormatterImpl<
-      strings_internal::AlphaNumFormatterImpl>(AlphaNumFormatter());
+  return strings_internal::DereferenceFormatterImpl<strings_internal::AlphaNumFormatterImpl>(
+      AlphaNumFormatter());
 }
 
 // -----------------------------------------------------------------------------
@@ -153,37 +149,31 @@ DereferenceFormatter() {
 //   EXPECT_EQ("123-abc-0.456", s);
 
 template <typename Iterator, typename Formatter>
-std::wstring StrJoin(Iterator start, Iterator end, std::wstring_view sep,
-                     Formatter &&fmt) {
+std::wstring StrJoin(Iterator start, Iterator end, std::wstring_view sep, Formatter &&fmt) {
   return strings_internal::JoinAlgorithm(start, end, sep, fmt);
 }
 
 template <typename Range, typename Formatter>
-std::wstring StrJoin(const Range &range, std::wstring_view separator,
-                     Formatter &&fmt) {
+std::wstring StrJoin(const Range &range, std::wstring_view separator, Formatter &&fmt) {
   return strings_internal::JoinRange(range, separator, fmt);
 }
 
 template <typename T, typename Formatter>
-std::wstring StrJoin(std::initializer_list<T> il, std::wstring_view separator,
-                     Formatter &&fmt) {
+std::wstring StrJoin(std::initializer_list<T> il, std::wstring_view separator, Formatter &&fmt) {
   return strings_internal::JoinRange(il, separator, fmt);
 }
 
 template <typename... T, typename Formatter>
-std::wstring StrJoin(const std::tuple<T...> &value, std::wstring_view separator,
-                     Formatter &&fmt) {
+std::wstring StrJoin(const std::tuple<T...> &value, std::wstring_view separator, Formatter &&fmt) {
   return strings_internal::JoinAlgorithm(value, separator, fmt);
 }
 
 template <typename Iterator>
-std::wstring StrJoin(Iterator start, Iterator end,
-                     std::wstring_view separator) {
+std::wstring StrJoin(Iterator start, Iterator end, std::wstring_view separator) {
   return strings_internal::JoinRange(start, end, separator);
 }
 
-template <typename Range>
-std::wstring StrJoin(const Range &range, std::wstring_view separator) {
+template <typename Range> std::wstring StrJoin(const Range &range, std::wstring_view separator) {
   return strings_internal::JoinRange(range, separator);
 }
 
@@ -193,8 +183,7 @@ std::wstring StrJoin(std::initializer_list<T> il, std::wstring_view separator) {
 }
 
 template <typename... T>
-std::wstring StrJoin(const std::tuple<T...> &value,
-                     std::wstring_view separator) {
+std::wstring StrJoin(const std::tuple<T...> &value, std::wstring_view separator) {
   return strings_internal::JoinAlgorithm(value, separator, AlphaNumFormatter());
 }
 

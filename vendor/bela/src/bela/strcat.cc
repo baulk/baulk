@@ -86,8 +86,7 @@ std::wstring StringCat(const AlphaNum &a, const AlphaNum &b) {
   return result;
 }
 
-std::wstring StringCat(const AlphaNum &a, const AlphaNum &b,
-                       const AlphaNum &c) {
+std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   std::wstring result;
   result.resize(a.size() + b.size() + c.size());
   wchar_t *const begin = &result[0];
@@ -99,8 +98,7 @@ std::wstring StringCat(const AlphaNum &a, const AlphaNum &b,
   return result;
 }
 
-std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                       const AlphaNum &d) {
+std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d) {
   std::wstring result;
   result.resize(a.size() + b.size() + c.size() + d.size());
   wchar_t *const begin = &result[0];
@@ -139,12 +137,11 @@ std::wstring CatPieces(std::initializer_list<std::wstring_view> pieces) {
 // random. Therefore, check for this in debug mode.  Use unsigned math so we
 // only have to do one comparison. Note, there's an exception case: appending an
 // empty string is always allowed.
-#define ASSERT_NO_OVERLAP(dest, src)                                           \
-  assert(((src).size() == 0) ||                                                \
+#define ASSERT_NO_OVERLAP(dest, src)                                                               \
+  assert(((src).size() == 0) ||                                                                    \
          (uintptr_t((src).data() - (dest).data()) > uintptr_t((dest).size())))
 
-void AppendPieces(std::wstring *dest,
-                  std::initializer_list<std::wstring_view> pieces) {
+void AppendPieces(std::wstring *dest, std::initializer_list<std::wstring_view> pieces) {
   size_t old_size = dest->size();
   size_t total_size = old_size;
   for (const std::wstring_view piece : pieces) {
@@ -181,8 +178,7 @@ void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b) {
   assert(out == begin + dest->size());
 }
 
-void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c) {
+void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   ASSERT_NO_OVERLAP(*dest, a);
   ASSERT_NO_OVERLAP(*dest, b);
   ASSERT_NO_OVERLAP(*dest, c);
@@ -196,8 +192,8 @@ void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b,
   assert(out == begin + dest->size());
 }
 
-void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c, const AlphaNum &d) {
+void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+               const AlphaNum &d) {
   ASSERT_NO_OVERLAP(*dest, a);
   ASSERT_NO_OVERLAP(*dest, b);
   ASSERT_NO_OVERLAP(*dest, c);

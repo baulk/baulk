@@ -63,8 +63,7 @@ std::wstring_view BaseName(std::wstring_view name) {
   return name.substr(i);
 }
 
-bool SplitPathInternal(std::wstring_view sv,
-                       std::vector<std::wstring_view> &output) {
+bool SplitPathInternal(std::wstring_view sv, std::vector<std::wstring_view> &output) {
   constexpr std::wstring_view dotdot = L"..";
   constexpr std::wstring_view dot = L".";
   size_t first = 0;
@@ -126,9 +125,8 @@ size_t PathRootLen(std::wstring_view p) {
   if (p[1] == ':' && bela::ascii_isalpha(p[0])) {
     return 2;
   }
-  if (p.size() >= 4 && bela::IsPathSeparator(p[0]) &&
-      bela::IsPathSeparator(p[1]) && !bela::IsPathSeparator(p[2]) &&
-      (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
+  if (p.size() >= 4 && bela::IsPathSeparator(p[0]) && bela::IsPathSeparator(p[1]) &&
+      !bela::IsPathSeparator(p[2]) && (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
     if (p.size() >= 6) {
       if (p[5] == ':' && bela::ascii_isalpha(p[4])) {
         return 6;
@@ -136,8 +134,7 @@ size_t PathRootLen(std::wstring_view p) {
       return 4;
     }
   }
-  if (auto l = p.size(); l >= 5 && bela::IsPathSeparator(p[0]) &&
-                         bela::IsPathSeparator(p[1]) &&
+  if (auto l = p.size(); l >= 5 && bela::IsPathSeparator(p[0]) && bela::IsPathSeparator(p[1]) &&
                          !bela::IsPathSeparator(p[2]) && p[2] != '.') {
     // first, leading `\\` and next shouldn't be `\`. its server name.
     for (size_t n = 3; n < l - 1; n++) {
@@ -244,8 +241,7 @@ bool PathExists(std::wstring_view src, FileAttribute fa) {
 
 inline bool PathFileIsExists(std::wstring_view file) {
   auto at = GetFileAttributesW(file.data());
-  return (INVALID_FILE_ATTRIBUTES != at &&
-          (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
+  return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
 }
 
 bool HasExt(std::wstring_view file) {
@@ -256,8 +252,8 @@ bool HasExt(std::wstring_view file) {
   return (file.find_last_of(L":\\/") < pos);
 }
 
-bool FindExecutable(std::wstring_view file,
-                    const std::vector<std::wstring> &exts, std::wstring &p) {
+bool FindExecutable(std::wstring_view file, const std::vector<std::wstring> &exts,
+                    std::wstring &p) {
   if (HasExt(file) && PathFileIsExists(file)) {
     p = file;
     return true;
@@ -280,8 +276,7 @@ bool FindExecutable(std::wstring_view file,
 }
 
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
-  constexpr std::wstring_view defaultexts[] = {L".com", L".exe", L".bat",
-                                               L".cmd"};
+  constexpr std::wstring_view defaultexts[] = {L".com", L".exe", L".bat", L".cmd"};
   std::wstring suffixwapper;
   std::vector<std::wstring> exts;
   auto pathext = GetEnv<64>(L"PATHEXT");

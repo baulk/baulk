@@ -18,9 +18,7 @@ struct AlphaNumFormatterImpl {
     StrAppend(out, AlphaNum(t));
   }
 
-  void operator()(std::wstring *out, const AlphaNum &t) const {
-    StrAppend(out, t);
-  }
+  void operator()(std::wstring *out, const AlphaNum &t) const { StrAppend(out, t); }
 };
 
 // A type that's used to overload the JoinAlgorithm() function (defined below)
@@ -60,16 +58,11 @@ private:
 template <typename Formatter> class DereferenceFormatterImpl {
 public:
   DereferenceFormatterImpl() : f_() {}
-  explicit DereferenceFormatterImpl(Formatter &&f)
-      : f_(std::forward<Formatter>(f)) {}
+  explicit DereferenceFormatterImpl(Formatter &&f) : f_(std::forward<Formatter>(f)) {}
 
-  template <typename T> void operator()(std::wstring *out, const T &t) {
-    f_(out, *t);
-  }
+  template <typename T> void operator()(std::wstring *out, const T &t) { f_(out, *t); }
 
-  template <typename T> void operator()(std::wstring *out, const T &t) const {
-    f_(out, *t);
-  }
+  template <typename T> void operator()(std::wstring *out, const T &t) const { f_(out, *t); }
 
 private:
   Formatter f_;
@@ -82,27 +75,17 @@ private:
 //
 // AlphaNumFormatterImpl is the default in the base template, followed by
 // specializations for other types.
-template <typename ValueType> struct DefaultFormatter {
-  typedef AlphaNumFormatterImpl Type;
-};
-template <> struct DefaultFormatter<const char *> {
-  typedef AlphaNumFormatterImpl Type;
-};
-template <> struct DefaultFormatter<char *> {
-  typedef AlphaNumFormatterImpl Type;
-};
+template <typename ValueType> struct DefaultFormatter { typedef AlphaNumFormatterImpl Type; };
+template <> struct DefaultFormatter<const char *> { typedef AlphaNumFormatterImpl Type; };
+template <> struct DefaultFormatter<char *> { typedef AlphaNumFormatterImpl Type; };
 template <> struct DefaultFormatter<std::wstring> { typedef NoFormatter Type; };
-template <> struct DefaultFormatter<std::wstring_view> {
-  typedef NoFormatter Type;
-};
+template <> struct DefaultFormatter<std::wstring_view> { typedef NoFormatter Type; };
 template <typename ValueType> struct DefaultFormatter<ValueType *> {
-  typedef DereferenceFormatterImpl<typename DefaultFormatter<ValueType>::Type>
-      Type;
+  typedef DereferenceFormatterImpl<typename DefaultFormatter<ValueType>::Type> Type;
 };
 
 template <typename ValueType>
-struct DefaultFormatter<std::unique_ptr<ValueType>>
-    : public DefaultFormatter<ValueType *> {};
+struct DefaultFormatter<std::unique_ptr<ValueType>> : public DefaultFormatter<ValueType *> {};
 
 //
 // JoinAlgorithm() functions
@@ -112,8 +95,7 @@ struct DefaultFormatter<std::unique_ptr<ValueType>>
 // iterator range, each separated by the given separator, into an output string,
 // and formats each element using the provided Formatter object.
 template <typename Iterator, typename Formatter>
-std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s,
-                           Formatter &&f) {
+std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s, Formatter &&f) {
   std::wstring result;
   std::wstring_view sep(L"");
   for (Iterator it = start; it != end; ++it) {
@@ -139,12 +121,10 @@ std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s,
 // string to avoid the need to resize while appending. To do this, the iterator
 // range will be traversed twice: once to calculate the total needed size, and
 // then again to copy the elements and delimiters to the output string.
-template <typename Iterator,
-          typename = typename std::enable_if<std::is_convertible<
-              typename std::iterator_traits<Iterator>::iterator_category,
-              std::forward_iterator_tag>::value>::type>
-std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s,
-                           NoFormatter) {
+template <typename Iterator, typename = typename std::enable_if<std::is_convertible<
+                                 typename std::iterator_traits<Iterator>::iterator_category,
+                                 std::forward_iterator_tag>::value>::type>
+std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s, NoFormatter) {
   std::wstring result;
   if (start != end) {
     // Sums size
@@ -180,8 +160,7 @@ std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s,
 // matches the end-of-tuple, and terminates the iteration.
 template <size_t I, size_t N> struct JoinTupleLoop {
   template <typename Tup, typename Formatter>
-  void operator()(std::wstring *out, const Tup &tup, std::wstring_view sep,
-                  Formatter &&fmt) {
+  void operator()(std::wstring *out, const Tup &tup, std::wstring_view sep, Formatter &&fmt) {
     if (I > 0)
       out->append(sep.data(), sep.size());
     fmt(out, std::get<I>(tup));
@@ -190,21 +169,18 @@ template <size_t I, size_t N> struct JoinTupleLoop {
 };
 template <size_t N> struct JoinTupleLoop<N, N> {
   template <typename Tup, typename Formatter>
-  void operator()(std::wstring *, const Tup &, std::wstring_view,
-                  Formatter &&) {}
+  void operator()(std::wstring *, const Tup &, std::wstring_view, Formatter &&) {}
 };
 
 template <typename... T, typename Formatter>
-std::wstring JoinAlgorithm(const std::tuple<T...> &tup, std::wstring_view sep,
-                           Formatter &&fmt) {
+std::wstring JoinAlgorithm(const std::tuple<T...> &tup, std::wstring_view sep, Formatter &&fmt) {
   std::wstring result;
   JoinTupleLoop<0, sizeof...(T)>()(&result, tup, sep, fmt);
   return result;
 }
 
 template <typename Iterator>
-std::wstring JoinRange(Iterator first, Iterator last,
-                       std::wstring_view separator) {
+std::wstring JoinRange(Iterator first, Iterator last, std::wstring_view separator) {
   // No formatter was explicitly given, so a default must be chosen.
   typedef typename std::iterator_traits<Iterator>::value_type ValueType;
   typedef typename DefaultFormatter<ValueType>::Type Formatter;
@@ -212,15 +188,13 @@ std::wstring JoinRange(Iterator first, Iterator last,
 }
 
 template <typename Range, typename Formatter>
-std::wstring JoinRange(const Range &range, std::wstring_view separator,
-                       Formatter &&fmt) {
+std::wstring JoinRange(const Range &range, std::wstring_view separator, Formatter &&fmt) {
   using std::begin;
   using std::end;
   return JoinAlgorithm(begin(range), end(range), separator, fmt);
 }
 
-template <typename Range>
-std::wstring JoinRange(const Range &range, std::wstring_view separator) {
+template <typename Range> std::wstring JoinRange(const Range &range, std::wstring_view separator) {
   using std::begin;
   using std::end;
   return JoinRange(begin(range), end(range), separator);

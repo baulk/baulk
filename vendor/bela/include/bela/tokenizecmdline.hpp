@@ -19,9 +19,7 @@ inline std::wstring_view StripTrailingWhitespace(std::wstring_view str) {
   return str.substr(0, str.rend() - it);
 }
 
-constexpr inline bool isWhitespaceOrNull(wchar_t ch) {
-  return isWhitespace(ch) || ch == L'\0';
-}
+constexpr inline bool isWhitespaceOrNull(wchar_t ch) { return isWhitespace(ch) || ch == L'\0'; }
 constexpr inline bool isQuote(wchar_t ch) { return ch == '\"' || ch == '\''; }
 
 inline void vector_fill_n(std::vector<wchar_t> &Token, size_t n, wchar_t ch) {
@@ -29,8 +27,7 @@ inline void vector_fill_n(std::vector<wchar_t> &Token, size_t n, wchar_t ch) {
     Token.push_back(ch);
   }
 }
-inline size_t parseBackslash(std::wstring_view Src, size_t I,
-                             std::vector<wchar_t> &Token) {
+inline size_t parseBackslash(std::wstring_view Src, size_t I, std::vector<wchar_t> &Token) {
   auto E = Src.size();
   int BackslashCount = 0;
   // Skip the backslashes.
@@ -73,9 +70,7 @@ public:
 private:
   std::vector<wchar_t *> saver_;
   void SaveArg(const wchar_t *data, size_t len);
-  void SaveArg(const std::vector<wchar_t> &token) {
-    SaveArg(token.data(), token.size());
-  }
+  void SaveArg(const std::vector<wchar_t> &token) { SaveArg(token.data(), token.size()); }
 };
 
 void Tokenizer::SaveArg(const wchar_t *data, size_t len) {

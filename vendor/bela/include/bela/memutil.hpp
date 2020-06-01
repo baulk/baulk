@@ -26,8 +26,8 @@ wchar_t *mempbrk(const wchar_t *s, size_t slen, const wchar_t *accept);
 
 // This is for internal use only.  Don't call this directly
 template <bool case_sensitive>
-const wchar_t *int_memmatch(const wchar_t *haystack, size_t haylen,
-                            const wchar_t *needle, size_t neelen) {
+const wchar_t *int_memmatch(const wchar_t *haystack, size_t haylen, const wchar_t *needle,
+                            size_t neelen) {
   if (0 == neelen) {
     return haystack; // even if haylen is 0
   }
@@ -53,30 +53,28 @@ const wchar_t *int_memmatch(const wchar_t *haystack, size_t haylen,
 }
 
 // These are the guys you can call directly
-inline const wchar_t *memstr(const wchar_t *phaystack, size_t haylen,
-                             const wchar_t *pneedle) {
+inline const wchar_t *memstr(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle) {
   return int_memmatch<true>(phaystack, haylen, pneedle, wcslen(pneedle));
 }
 
-inline const wchar_t *memcasestr(const wchar_t *phaystack, size_t haylen,
-                                 const wchar_t *pneedle) {
+inline const wchar_t *memcasestr(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle) {
   return int_memmatch<false>(phaystack, haylen, pneedle, wcslen(pneedle));
 }
 
-inline const wchar_t *memmem(const wchar_t *phaystack, size_t haylen,
-                             const wchar_t *pneedle, size_t needlelen) {
+inline const wchar_t *memmem(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle,
+                             size_t needlelen) {
   return int_memmatch<true>(phaystack, haylen, pneedle, needlelen);
 }
 
-inline const wchar_t *memcasemem(const wchar_t *phaystack, size_t haylen,
-                                 const wchar_t *pneedle, size_t needlelen) {
+inline const wchar_t *memcasemem(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle,
+                                 size_t needlelen) {
   return int_memmatch<false>(phaystack, haylen, pneedle, needlelen);
 }
 
 // This is significantly faster for case-sensitive matches with very
 // few possible matches.  See unit test for benchmarks.
-const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen,
-                        const wchar_t *pneedle, size_t neelen);
+const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle,
+                        size_t neelen);
 } // namespace strings_internal
 
 } // namespace bela

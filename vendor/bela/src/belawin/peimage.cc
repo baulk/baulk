@@ -32,8 +32,7 @@ struct STORAGESIGNATURE {
 #pragma pack()
 // LE endian
 [[maybe_unused]] inline PVOID belarva(PVOID m, PVOID b) {
-  return reinterpret_cast<PVOID>(reinterpret_cast<ULONG_PTR>(b) +
-                                 reinterpret_cast<ULONG_PTR>(m));
+  return reinterpret_cast<PVOID>(reinterpret_cast<ULONG_PTR>(b) + reinterpret_cast<ULONG_PTR>(m));
 }
 
 PIMAGE_SECTION_HEADER
@@ -54,15 +53,13 @@ BelaImageRvaToSection(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva) {
 
 // like RtlImageRvaToVa
 PVOID
-BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva,
-                 PIMAGE_SECTION_HEADER *sh) {
+BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva, PIMAGE_SECTION_HEADER *sh) {
   PIMAGE_SECTION_HEADER section = nullptr;
   if (sh != nullptr) {
     section = *sh;
   }
   if ((section == nullptr) || (rva < bela::swaple(section->VirtualAddress)) ||
-      (rva >= bela::swaple(section->VirtualAddress) +
-                  bela::swaple(section->SizeOfRawData))) {
+      (rva >= bela::swaple(section->VirtualAddress) + bela::swaple(section->SizeOfRawData))) {
     section = BelaImageRvaToSection(nh, BaseAddress, rva);
     if (section == nullptr) {
       return nullptr;
@@ -82,8 +79,7 @@ BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva,
 // sensitive and terminated by a null byte.
 // SO we use ASCII to convert this.
 inline std::wstring DllName(MemView mv, LPVOID nh, ULONG nva) {
-  auto va =
-      BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(), nva, nullptr);
+  auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(), nva, nullptr);
   if (va == nullptr) {
     return L"";
   }
@@ -104,46 +100,37 @@ inline std::wstring DllName(MemView mv, LPVOID nh, ULONG nva) {
 // TODO resolve PE file resources include 'VersionInfo'
 
 inline std::wstring ClrMessage(MemView mv, LPVOID nh, ULONG clrva) {
-  auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(), clrva,
-                             nullptr);
+  auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(), clrva, nullptr);
   auto end = mv.data() + mv.size();
-  if (va == nullptr ||
-      reinterpret_cast<uint8_t *>(va) + sizeof(IMAGE_COR20_HEADER) > end) {
+  if (va == nullptr || reinterpret_cast<uint8_t *>(va) + sizeof(IMAGE_COR20_HEADER) > end) {
     return L"";
   }
   auto clrh = reinterpret_cast<PIMAGE_COR20_HEADER>(va);
   auto va2 = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(),
                               clrh->MetaData.VirtualAddress, nullptr);
-  if (va2 == nullptr ||
-      reinterpret_cast<uint8_t *>(va2) + sizeof(STORAGESIGNATURE) > end) {
+  if (va2 == nullptr || reinterpret_cast<uint8_t *>(va2) + sizeof(STORAGESIGNATURE) > end) {
     return L"";
   }
   auto clrmsg = reinterpret_cast<const STORAGESIGNATURE *>(va2);
   if (reinterpret_cast<const uint8_t *>(clrmsg) + clrmsg->Length > end) {
     return L"";
   }
-  std::string_view u8msg((const char *)clrmsg + sizeof(STORAGESIGNATURE),
-                         clrmsg->Length);
+  std::string_view u8msg((const char *)clrmsg + sizeof(STORAGESIGNATURE), clrmsg->Length);
   return bela::ToWide(u8msg);
 }
 
 template <typename H = IMAGE_NT_HEADERS64>
-std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh,
-                                         bela::error_code &ec) {
+std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh, bela::error_code &ec) {
   Attributes pm;
   pm.machine = static_cast<Machine>(bela::swaple(nh->FileHeader.Machine));
   pm.characteristics = bela::swaple(nh->FileHeader.Characteristics);
   pm.dllcharacteristics = bela::swaple(nh->OptionalHeader.DllCharacteristics);
   pm.osver.Update(nh->OptionalHeader.MajorOperatingSystemVersion,
                   nh->OptionalHeader.MinorOperatingSystemVersion);
-  pm.subsystem =
-      static_cast<Subsystem>(bela::swaple(nh->OptionalHeader.Subsystem));
-  pm.linkver.Update(nh->OptionalHeader.MajorLinkerVersion,
-                    nh->OptionalHeader.MinorLinkerVersion);
-  pm.imagever.Update(nh->OptionalHeader.MajorImageVersion,
-                     nh->OptionalHeader.MinorImageVersion);
-  auto clre =
-      &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_COMHEADER]);
+  pm.subsystem = static_cast<Subsystem>(bela::swaple(nh->OptionalHeader.Subsystem));
+  pm.linkver.Update(nh->OptionalHeader.MajorLinkerVersion, nh->OptionalHeader.MinorLinkerVersion);
+  pm.imagever.Update(nh->OptionalHeader.MajorImageVersion, nh->OptionalHeader.MinorImageVersion);
+  auto clre = &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_COMHEADER]);
   auto end = mv.data() + mv.size();
   if (bela::swaple(clre->Size) == sizeof(IMAGE_COR20_HEADER)) {
     // Exists IMAGE_COR20_HEADER
@@ -151,13 +138,11 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh,
   }
 
   // Import
-  auto import_ =
-      &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]);
+  auto import_ = &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]);
   if (bela::swaple(import_->Size) != 0) {
     auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(),
                                bela::swaple(import_->VirtualAddress), nullptr);
-    if (va == nullptr ||
-        reinterpret_cast<uint8_t *>(va) + bela::swaple(import_->Size) >= end) {
+    if (va == nullptr || reinterpret_cast<uint8_t *>(va) + bela::swaple(import_->Size) >= end) {
       ec = bela::make_error_code(INVALID_FILE_SIZE, L"PE file size invaild.");
       return std::make_optional<>(pm);
     }
@@ -174,13 +159,11 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh,
   }
 
   /// Delay import
-  auto delay_ =
-      &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT]);
+  auto delay_ = &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT]);
   if (bela::swaple(delay_->Size) != 0) {
     auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(),
                                bela::swaple(delay_->VirtualAddress), nullptr);
-    if (va == nullptr ||
-        reinterpret_cast<uint8_t *>(va) + bela::swaple(delay_->Size) >= end) {
+    if (va == nullptr || reinterpret_cast<uint8_t *>(va) + bela::swaple(delay_->Size) >= end) {
       return std::make_optional<>(pm);
     }
     auto imdes = reinterpret_cast<PIMAGE_DELAYLOAD_DESCRIPTOR>(va);
@@ -201,8 +184,7 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh,
 }
 
 std::optional<Attributes> Expose(std::wstring_view file, bela::error_code &ec) {
-  constexpr size_t peminsize =
-      sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS32);
+  constexpr size_t peminsize = sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS32);
   bela::MapView mapview;
   if (!mapview.MappingView(file, ec, peminsize)) {
     return std::nullopt;
@@ -210,25 +192,21 @@ std::optional<Attributes> Expose(std::wstring_view file, bela::error_code &ec) {
   auto mv = mapview.subview();
   auto h = mv.cast<IMAGE_DOS_HEADER>(0);
   if (h == nullptr) {
-    ec = bela::make_error_code(
-        bela::FileSizeTooSmall,
-        L"PE file size tool small, less IMAGE_DOS_HEADER");
+    ec = bela::make_error_code(bela::FileSizeTooSmall,
+                               L"PE file size tool small, less IMAGE_DOS_HEADER");
     return std::nullopt;
   }
   auto nh = mv.cast<IMAGE_NT_HEADERS32>(bela::swaple(h->e_lfanew));
   if (nh == nullptr) {
-    ec = bela::make_error_code(
-        bela::FileSizeTooSmall,
-        L"PE file size tool small, less IMAGE_NT_HEADERS32");
+    ec = bela::make_error_code(bela::FileSizeTooSmall,
+                               L"PE file size tool small, less IMAGE_NT_HEADERS32");
     return std::nullopt;
   }
   switch (bela::swaple(nh->OptionalHeader.Magic)) {
   case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
-    return ExposeInternal(mv, reinterpret_cast<const IMAGE_NT_HEADERS64 *>(nh),
-                          ec);
+    return ExposeInternal(mv, reinterpret_cast<const IMAGE_NT_HEADERS64 *>(nh), ec);
   case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
-    return ExposeInternal(mv, reinterpret_cast<const IMAGE_NT_HEADERS32 *>(nh),
-                          ec);
+    return ExposeInternal(mv, reinterpret_cast<const IMAGE_NT_HEADERS32 *>(nh), ec);
   case IMAGE_ROM_OPTIONAL_HDR_MAGIC: {
     // Not implemented
   } break;

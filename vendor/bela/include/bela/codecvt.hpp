@@ -39,13 +39,9 @@ inline std::string ToNarrow(const wchar_t *data, size_t len) {
   return c16tomb(reinterpret_cast<const char16_t *>(data), len);
 }
 // Narrow std::u16string_view to UTF-8
-inline std::string ToNarrow(std::u16string_view uw) {
-  return c16tomb(uw.data(), uw.size());
-}
+inline std::string ToNarrow(std::u16string_view uw) { return c16tomb(uw.data(), uw.size()); }
 // Narrow const char16_t* to UTF-8
-inline std::string ToNarrow(const char16_t *data, size_t len) {
-  return c16tomb(data, len);
-}
+inline std::string ToNarrow(const char16_t *data, size_t len) { return c16tomb(data, len); }
 
 inline std::wstring ToWide(const char *str, size_t len) {
   return mbrtowc(reinterpret_cast<const unsigned char *>(str), len);
@@ -66,8 +62,8 @@ size_t StringWidth(std::string_view str);
 size_t StringWidth(std::u16string_view str);
 // Calculate UTF-16 string display width (Windows)
 inline size_t StringWidth(std::wstring_view str) {
-  return StringWidth(std::u16string_view{
-      reinterpret_cast<const char16_t *>(str.data()), str.size()});
+  return StringWidth(
+      std::u16string_view{reinterpret_cast<const char16_t *>(str.data()), str.size()});
 }
 } // namespace bela
 

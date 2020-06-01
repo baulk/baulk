@@ -8,16 +8,13 @@
 #include <string_view>
 
 namespace bela {
-[[nodiscard]] std::wstring StrReplaceAll(
-    std::wstring_view s,
-    std::initializer_list<std::pair<std::wstring_view, std::wstring_view>>
-        replacements);
+[[nodiscard]] std::wstring
+StrReplaceAll(std::wstring_view s,
+              std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements);
 template <typename StrToStrMapping>
-[[nodiscard]] std::wstring StrReplaceAll(std::wstring_view s,
-                                         const StrToStrMapping &replacements);
+[[nodiscard]] std::wstring StrReplaceAll(std::wstring_view s, const StrToStrMapping &replacements);
 int StrReplaceAll(
-    std::initializer_list<std::pair<std::wstring_view, std::wstring_view>>
-        replacements,
+    std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements,
     std::wstring *target);
 // Implementation details only, past this point.
 namespace strings_internal {
@@ -27,8 +24,8 @@ struct ViableSubstitution {
   std::wstring_view replacement;
   size_t offset;
 
-  ViableSubstitution(std::wstring_view old_str,
-                     std::wstring_view replacement_str, size_t offset_val)
+  ViableSubstitution(std::wstring_view old_str, std::wstring_view replacement_str,
+                     size_t offset_val)
       : old(old_str), replacement(replacement_str), offset(offset_val) {}
 
   // One substitution occurs "before" another (takes priority) if either
@@ -45,8 +42,8 @@ struct ViableSubstitution {
 // out that most callers have small enough a list of substitutions that the
 // overhead of such a queue isn't worth it.
 template <typename StrToStrMapping>
-std::vector<ViableSubstitution>
-FindSubstitutions(std::wstring_view s, const StrToStrMapping &replacements) {
+std::vector<ViableSubstitution> FindSubstitutions(std::wstring_view s,
+                                                  const StrToStrMapping &replacements) {
   std::vector<ViableSubstitution> subs;
   subs.reserve(replacements.size());
 
@@ -76,15 +73,13 @@ FindSubstitutions(std::wstring_view s, const StrToStrMapping &replacements) {
   return subs;
 }
 
-int ApplySubstitutions(std::wstring_view s,
-                       std::vector<ViableSubstitution> *subs_ptr,
+int ApplySubstitutions(std::wstring_view s, std::vector<ViableSubstitution> *subs_ptr,
                        std::wstring *result_ptr);
 
 } // namespace strings_internal
 
 template <typename StrToStrMapping>
-std::wstring StrReplaceAll(std::wstring_view s,
-                           const StrToStrMapping &replacements) {
+std::wstring StrReplaceAll(std::wstring_view s, const StrToStrMapping &replacements) {
   auto subs = strings_internal::FindSubstitutions(s, replacements);
   std::wstring result;
   result.reserve(s.size());
@@ -100,8 +95,7 @@ int StrReplaceAll(const StrToStrMapping &replacements, std::wstring *target) {
 
   std::wstring result;
   result.reserve(target->size());
-  int substitutions =
-      strings_internal::ApplySubstitutions(*target, &subs, &result);
+  int substitutions = strings_internal::ApplySubstitutions(*target, &subs, &result);
   target->swap(result);
   return substitutions;
 }

@@ -24,8 +24,7 @@ template <typename T, size_t N> constexpr T *ArrayEnd(T (&aArr)[N]) {
  * std::equal has subpar ergonomics.
  */
 
-template <typename T, typename U, size_t N>
-bool ArrayEqual(const T (&a)[N], const U (&b)[N]) {
+template <typename T, typename U, size_t N> bool ArrayEqual(const T (&a)[N], const U (&b)[N]) {
   return std::equal(a, a + N, b);
 }
 

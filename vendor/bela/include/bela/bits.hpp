@@ -105,8 +105,7 @@ BELA_FORCE_INLINE int CountLeadingZeros32(uint32_t n) {
   //  x86: bsr
   //  ARM64: clz
   //  PPC: cntlzd
-  static_assert(sizeof(int) == sizeof(n),
-                "__builtin_clz does not take 32-bit arg");
+  static_assert(sizeof(int) == sizeof(n), "__builtin_clz does not take 32-bit arg");
 
   // Handle 0 as a special case because __builtin_clz(0) is undefined.
   if (n == 0) {
@@ -191,8 +190,7 @@ BELA_FORCE_INLINE int CountTrailingZerosNonZero32(uint32_t n) {
   _BitScanForward(&result, n);
   return result;
 #elif defined(__GNUC__) || defined(__clang__)
-  static_assert(sizeof(int) == sizeof(n),
-                "__builtin_ctz does not take 32-bit arg");
+  static_assert(sizeof(int) == sizeof(n), "__builtin_ctz does not take 32-bit arg");
   return __builtin_ctz(n);
 #else
   return CountTrailingZerosNonZero32Slow(n);

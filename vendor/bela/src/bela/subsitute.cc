@@ -4,8 +4,7 @@
 namespace bela {
 namespace substitute_internal {
 void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format,
-                              const std::wstring_view *args_array,
-                              size_t num_args) {
+                              const std::wstring_view *args_array, size_t num_args) {
   size_t size = 0;
   auto fmtsize = format.size();
   for (size_t i = 0; i < fmtsize; i++) {

@@ -17,8 +17,7 @@ namespace bela {
 // Literal delimiter will ultimately use std::wstring_view::find(), and the
 // AnyOf delimiter will use std::wstring_view::find_first_of().
 template <typename FindPolicy>
-std::wstring_view GenericFind(std::wstring_view text,
-                              std::wstring_view delimiter, size_t pos,
+std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimiter, size_t pos,
                               FindPolicy find_policy) {
   if (delimiter.empty() && text.length() > 0) {
     // Special case for empty std::string delimiters: always return a
@@ -31,8 +30,7 @@ std::wstring_view GenericFind(std::wstring_view text,
                           0); // By default, not found
   found_pos = find_policy.Find(text, delimiter, pos);
   if (found_pos != std::wstring_view::npos) {
-    found = std::wstring_view(text.data() + found_pos,
-                              find_policy.Length(delimiter));
+    found = std::wstring_view(text.data() + found_pos, find_policy.Length(delimiter));
   }
   return found;
 }

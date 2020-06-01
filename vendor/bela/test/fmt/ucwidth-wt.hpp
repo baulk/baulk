@@ -22,8 +22,7 @@ struct UnicodeRange final {
   CodepointWidth width;
 };
 
-static bool operator<(const UnicodeRange &range,
-                      const unsigned int searchTerm) {
+static bool operator<(const UnicodeRange &range, const unsigned int searchTerm) {
   return range.upperBound < searchTerm;
 }
 
@@ -318,14 +317,13 @@ static constexpr std::array<UnicodeRange, 285> s_wideAndAmbiguousTable{
     UnicodeRange{0x100000, 0x10fffd, CodepointWidth::Ambiguous}};
 
 inline size_t CalculateWidthInternal(char32_t rune) {
-  const auto it = std::lower_bound(s_wideAndAmbiguousTable.begin(),
-                                   s_wideAndAmbiguousTable.end(), rune);
+  const auto it =
+      std::lower_bound(s_wideAndAmbiguousTable.begin(), s_wideAndAmbiguousTable.end(), rune);
 
   // For characters that are not _in_ the table, lower_bound will return the
   // nearest item that is. We must check its bounds to make sure that our hit
   // was a true hit.
-  if (it != s_wideAndAmbiguousTable.end() && rune >= it->lowerBound &&
-      rune <= it->upperBound) {
+  if (it != s_wideAndAmbiguousTable.end() && rune >= it->lowerBound && rune <= it->upperBound) {
     switch (it->width) {
     case CodepointWidth::Ambiguous:
       return 0;

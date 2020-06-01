@@ -38,8 +38,7 @@ int __cdecl main(void) {
   strncpy(ServerSocket.sun_path, SERVER_SOCKET, strlen(SERVER_SOCKET));
 
   // Bind the socket to the path.
-  Result = bind(ListenSocket, (struct sockaddr *)&ServerSocket,
-                sizeof(ServerSocket));
+  Result = bind(ListenSocket, (struct sockaddr *)&ServerSocket, sizeof(ServerSocket));
   if (Result == SOCKET_ERROR) {
     printf("bind failed with error: %d\n", WSAGetLastError());
     goto Exit;

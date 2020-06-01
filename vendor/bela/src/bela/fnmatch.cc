@@ -281,8 +281,8 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
   return inv;
 }
 
-static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str,
-                           size_t n, int flags) {
+static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, size_t n,
+                           int flags) {
   const char16_t *p, *ptail, *endpat;
   const char16_t *s, *stail, *endstr;
   size_t pinc, sinc, tailcnt = 0;
@@ -431,10 +431,8 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str,
   return 0;
 }
 
-int FnMatchInternal(std::u16string_view pattern, std::u16string_view text,
-                    int flags) {
-  return FnMatchInternal(pattern.data(), pattern.size(), text.data(),
-                         text.size(), flags);
+int FnMatchInternal(std::u16string_view pattern, std::u16string_view text, int flags) {
+  return FnMatchInternal(pattern.data(), pattern.size(), text.data(), text.size(), flags);
 }
 
 // Thanks https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c
@@ -457,8 +455,7 @@ bool FnMatch(std::u16string_view pattern, std::u16string_view text, int flags) {
 }
 
 constexpr inline std::u16string_view u16sv(std::wstring_view sv) {
-  return std::u16string_view{reinterpret_cast<const char16_t *>(sv.data()),
-                             sv.size()};
+  return std::u16string_view{reinterpret_cast<const char16_t *>(sv.data()), sv.size()};
 }
 
 // Thanks https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c

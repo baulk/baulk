@@ -28,22 +28,19 @@ std::wstring PathAbsoluteCatPieces(bela::Span<std::wstring_view> pieces);
   return path_internal::PathAbsoluteCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a,
-                                                  const AlphaNum &b) {
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b) {
   std::wstring_view pv[] = {a.Piece(), b.Piece()};
   return path_internal::PathAbsoluteCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring
-PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b,
+                                                  const AlphaNum &c) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece()};
   return path_internal::PathAbsoluteCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a,
-                                                  const AlphaNum &b,
-                                                  const AlphaNum &c,
-                                                  const AlphaNum &d) {
+[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b,
+                                                  const AlphaNum &c, const AlphaNum &d) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece(), d.Piece()};
   return path_internal::PathAbsoluteCatPieces(pv);
 }
@@ -53,20 +50,17 @@ PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   return path_internal::PathCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a,
-                                          const AlphaNum &b) {
+[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b) {
   std::wstring_view pv[] = {a.Piece(), b.Piece()};
   return path_internal::PathCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b,
-                                          const AlphaNum &c) {
+[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece()};
   return path_internal::PathCatPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b,
-                                          const AlphaNum &c,
+[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
                                           const AlphaNum &d) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece(), d.Piece()};
   return path_internal::PathCatPieces(pv);
@@ -74,12 +68,11 @@ PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
 
 // Support 5 or more arguments
 template <typename... AV>
-[[nodiscard]] inline std::wstring
-PathCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-        const AlphaNum &d, const AlphaNum &e, const AV &... args) {
-  return path_internal::PathCatPieces(
-      {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-       static_cast<const AlphaNum &>(args).Piece()...});
+[[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                          const AlphaNum &d, const AlphaNum &e,
+                                          const AV &... args) {
+  return path_internal::PathCatPieces({a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
+                                       static_cast<const AlphaNum &>(args).Piece()...});
 }
 
 enum class FileAttribute : DWORD {
@@ -105,14 +98,12 @@ enum class FileAttribute : DWORD {
   Virtual = 0x10000
 };
 
-[[nodiscard]] constexpr FileAttribute operator&(FileAttribute L,
-                                                FileAttribute R) noexcept {
+[[nodiscard]] constexpr FileAttribute operator&(FileAttribute L, FileAttribute R) noexcept {
   using I = std::underlying_type_t<FileAttribute>;
   return static_cast<FileAttribute>(static_cast<I>(L) & static_cast<I>(R));
 }
 
-[[nodiscard]] constexpr FileAttribute operator|(FileAttribute L,
-                                                FileAttribute R) noexcept {
+[[nodiscard]] constexpr FileAttribute operator|(FileAttribute L, FileAttribute R) noexcept {
   using I = std::underlying_type_t<FileAttribute>;
   return static_cast<FileAttribute>(static_cast<I>(L) | static_cast<I>(R));
 }
@@ -121,13 +112,10 @@ enum class FileAttribute : DWORD {
 bool PathExists(std::wstring_view src, FileAttribute fa = FileAttribute::None);
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
 // Use GetFinalPathNameByHandleW
-std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle,
-                                             bela::error_code &ec);
-std::optional<std::wstring> RealPath(std::wstring_view src,
-                                     bela::error_code &ec);
+std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code &ec);
+std::optional<std::wstring> RealPath(std::wstring_view src, bela::error_code &ec);
 // RealPathEx parse reparsepoint
-std::optional<std::wstring> RealPathEx(std::wstring_view src,
-                                       bela::error_code &ec);
+std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &ec);
 struct AppExecTarget {
   std::wstring pkid;
   std::wstring appuserid;
@@ -144,8 +132,7 @@ inline std::optional<std::wstring> ExecutableParent(bela::error_code &ec) {
   return exe;
 }
 std::optional<std::wstring> ExecutableFinalPath(bela::error_code &ec);
-inline std::optional<std::wstring>
-ExecutableFinalPathParent(bela::error_code &ec) {
+inline std::optional<std::wstring> ExecutableFinalPathParent(bela::error_code &ec) {
   auto exe = bela::ExecutableFinalPath(ec);
   if (!exe) {
     return std::nullopt;

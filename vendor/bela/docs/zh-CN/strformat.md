@@ -47,7 +47,7 @@ ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args)
 ```cpp
 ///
 #include <bela/strcat.hpp>
-#include <bela/terminal.hpp>
+#include <bela/stdwriter.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   auto ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4"; // force encode UTF-8

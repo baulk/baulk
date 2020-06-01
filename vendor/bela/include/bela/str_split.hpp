@@ -187,23 +187,18 @@ namespace strings_internal {
 // This allows functions like bela::StrSplit() and bela::MaxSplits() to accept
 // string-like objects (e.g., ',') as delimiter arguments but they will be
 // treated as if a ByString delimiter was given.
-template <typename Delimiter> struct SelectDelimiter {
-  using type = Delimiter;
-};
+template <typename Delimiter> struct SelectDelimiter { using type = Delimiter; };
 
 template <> struct SelectDelimiter<wchar_t> { using type = ByChar; };
 template <> struct SelectDelimiter<wchar_t *> { using type = ByString; };
 template <> struct SelectDelimiter<const wchar_t *> { using type = ByString; };
-template <> struct SelectDelimiter<std::wstring_view> {
-  using type = ByString;
-};
+template <> struct SelectDelimiter<std::wstring_view> { using type = ByString; };
 template <> struct SelectDelimiter<std::wstring> { using type = ByString; };
 
 // Wraps another delimiter and sets a max number of matches for that delimiter.
 template <typename Delimiter> class MaxSplitsImpl {
 public:
-  MaxSplitsImpl(Delimiter delimiter, int limit)
-      : delimiter_(delimiter), limit_(limit), count_(0) {}
+  MaxSplitsImpl(Delimiter delimiter, int limit) : delimiter_(delimiter), limit_(limit), count_(0) {}
   std::wstring_view Find(std::wstring_view text, size_t pos) {
     if (count_++ == limit_) {
       return std::wstring_view(text.data() + text.size(),
@@ -233,13 +228,10 @@ private:
 //
 //   // v[0] == L"a", v[1] == L"b,c"
 template <typename Delimiter>
-inline strings_internal::MaxSplitsImpl<
-    typename strings_internal::SelectDelimiter<Delimiter>::type>
+inline strings_internal::MaxSplitsImpl<typename strings_internal::SelectDelimiter<Delimiter>::type>
 MaxSplits(Delimiter delimiter, int limit) {
-  typedef
-      typename strings_internal::SelectDelimiter<Delimiter>::type DelimiterType;
-  return strings_internal::MaxSplitsImpl<DelimiterType>(
-      DelimiterType(delimiter), limit);
+  typedef typename strings_internal::SelectDelimiter<Delimiter>::type DelimiterType;
+  return strings_internal::MaxSplitsImpl<DelimiterType>(DelimiterType(delimiter), limit);
 }
 
 //------------------------------------------------------------------------------
@@ -434,24 +426,19 @@ struct SkipWhitespace {
 //
 // Try not to depend on this distinction because the bug may one day be fixed.
 template <typename Delimiter>
-strings_internal::Splitter<
-    typename strings_internal::SelectDelimiter<Delimiter>::type, AllowEmpty>
+strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>::type, AllowEmpty>
 StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d) {
-  using DelimiterType =
-      typename strings_internal::SelectDelimiter<Delimiter>::type;
-  return strings_internal::Splitter<DelimiterType, AllowEmpty>(
-      std::move(text), DelimiterType(d), AllowEmpty());
+  using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
+  return strings_internal::Splitter<DelimiterType, AllowEmpty>(std::move(text), DelimiterType(d),
+                                                               AllowEmpty());
 }
 
 template <typename Delimiter, typename Predicate>
-strings_internal::Splitter<
-    typename strings_internal::SelectDelimiter<Delimiter>::type, Predicate>
-StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d,
-         Predicate p) {
-  using DelimiterType =
-      typename strings_internal::SelectDelimiter<Delimiter>::type;
-  return strings_internal::Splitter<DelimiterType, Predicate>(
-      std::move(text), DelimiterType(d), std::move(p));
+strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>::type, Predicate>
+StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d, Predicate p) {
+  using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
+  return strings_internal::Splitter<DelimiterType, Predicate>(std::move(text), DelimiterType(d),
+                                                              std::move(p));
 }
 
 } // namespace bela

@@ -55,8 +55,8 @@ private:
 };
 
 constexpr const size_t kFastToBufferSize = 32;
-const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base,
-                        wchar_t fill = ' ', bool u = false);
+const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base, wchar_t fill = ' ',
+                        bool u = false);
 
 template <typename C = std::wstring> class Writer {
 public:
@@ -70,8 +70,8 @@ public:
     }
   }
   // append string
-  Writer &Append(const wchar_t *data, size_t len, size_t width = 0,
-                 wchar_t kc = ' ', bool la = false) {
+  Writer &Append(const wchar_t *data, size_t len, size_t width = 0, wchar_t kc = ' ',
+                 bool la = false) {
     if (width < len) {
       c.append(data, len);
       return *this;
@@ -90,16 +90,14 @@ public:
     return *this;
   }
   // Add unicode
-  Writer &AddUnicode(char32_t ch, size_t width, wchar_t kc = ' ',
-                     bool la = false) {
+  Writer &AddUnicode(char32_t ch, size_t width, wchar_t kc = ' ', bool la = false) {
     constexpr size_t kMaxEncodedUTF16Size = 2;
     wchar_t digits[kMaxEncodedUTF16Size + 2];
     if (ch < 0xFFFF) {
       digits[0] = static_cast<wchar_t>(ch);
       return Append(digits, 1, width, kc, la);
     }
-    auto n = char32tochar16(ch, reinterpret_cast<char16_t *>(digits),
-                            kMaxEncodedUTF16Size + 2);
+    auto n = char32tochar16(ch, reinterpret_cast<char16_t *>(digits), kMaxEncodedUTF16Size + 2);
 
     return Append(digits, n, width, kc, la);
   }

@@ -9,9 +9,8 @@
 
 namespace bela {
 
-HRESULT WINAPI taskdialog_callback_impl(__in HWND hWnd, __in UINT msg,
-                                        __in WPARAM wParam, __in LPARAM lParam,
-                                        __in LONG_PTR lpRefData) {
+HRESULT WINAPI taskdialog_callback_impl(__in HWND hWnd, __in UINT msg, __in WPARAM wParam,
+                                        __in LPARAM lParam, __in LONG_PTR lpRefData) {
   UNREFERENCED_PARAMETER(lpRefData);
   UNREFERENCED_PARAMETER(wParam);
   switch (msg) {
@@ -23,22 +22,21 @@ HRESULT WINAPI taskdialog_callback_impl(__in HWND hWnd, __in UINT msg,
   case TDN_BUTTON_CLICKED:
     break;
   case TDN_HYPERLINK_CLICKED:
-    ShellExecuteW(hWnd, nullptr, reinterpret_cast<LPCWSTR>(lParam), nullptr,
-                  nullptr, SW_SHOWNORMAL);
+    ShellExecuteW(hWnd, nullptr, reinterpret_cast<LPCWSTR>(lParam), nullptr, nullptr,
+                  SW_SHOWNORMAL);
     break;
   }
   return S_OK;
 }
 
-#define TKDWFLAGS                                                              \
-  TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW |            \
-      TDF_SIZE_TO_CONTENT
-#define TKDWFLAGSEX                                                            \
-  TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW |            \
-      TDF_SIZE_TO_CONTENT | TDF_EXPAND_FOOTER_AREA | TDF_ENABLE_HYPERLINKS
+#define TKDWFLAGS                                                                                  \
+  TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_SIZE_TO_CONTENT
+#define TKDWFLAGSEX                                                                                \
+  TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW | TDF_SIZE_TO_CONTENT |          \
+      TDF_EXPAND_FOOTER_AREA | TDF_ENABLE_HYPERLINKS
 
-bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent,
-                    LPCWSTR pszExpandedInfo, mbs_t mt) {
+bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent, LPCWSTR pszExpandedInfo,
+                    mbs_t mt) {
   TASKDIALOGCONFIG tc;
   memset(&tc, 0, sizeof(tc));
   int nButton = 0;
@@ -66,8 +64,7 @@ bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent,
     break;
   case mbs_t::ABOUT:
     if (hWnd) {
-      auto hIcon =
-          reinterpret_cast<HICON>(SendMessageW(hWnd, WM_GETICON, ICON_BIG, 0));
+      auto hIcon = reinterpret_cast<HICON>(SendMessageW(hWnd, WM_GETICON, ICON_BIG, 0));
       if (hIcon) {
         tc.hMainIcon = hIcon;
         tc.dwFlags |= TDF_USE_HICON_MAIN;
@@ -80,11 +77,11 @@ bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent,
   return (TaskDialogIndirect(&tc, &nButton, &nRadioButton, nullptr) == S_OK);
 }
 
-std::optional<std::wstring> FilePicker(HWND hWnd, const wchar_t *title,
-                                       const filter_t *fts, size_t flen) {
+std::optional<std::wstring> FilePicker(HWND hWnd, const wchar_t *title, const filter_t *fts,
+                                       size_t flen) {
   bela::comptr<IFileOpenDialog> window;
-  if (::CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IFileOpenDialog, (void **)&window) != S_OK) {
+  if (::CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileOpenDialog,
+                         (void **)&window) != S_OK) {
     return std::nullopt;
   }
   if (!window) {
@@ -95,8 +92,7 @@ std::optional<std::wstring> FilePicker(HWND hWnd, const wchar_t *title,
       return std::nullopt;
     }
   }
-  if (window->SetTitle(title == nullptr ? L"Open File Picker" : title) !=
-      S_OK) {
+  if (window->SetTitle(title == nullptr ? L"Open File Picker" : title) != S_OK) {
     return std::nullopt;
   }
   if (window->Show(hWnd) != S_OK) {
@@ -107,8 +103,7 @@ std::optional<std::wstring> FilePicker(HWND hWnd, const wchar_t *title,
     return std::nullopt;
   }
   LPWSTR pszFilePath = nullptr;
-  if (item->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath) !=
-      S_OK) {
+  if (item->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, &pszFilePath) != S_OK) {
     return std::nullopt;
   }
   auto opt = std::make_optional<std::wstring>(pszFilePath);
@@ -118,8 +113,8 @@ std::optional<std::wstring> FilePicker(HWND hWnd, const wchar_t *title,
 
 std::optional<std::wstring> FolderPicker(HWND hWnd, const wchar_t *title) {
   bela::comptr<IFileDialog> w;
-  if (::CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IFileDialog, (void **)&w) != S_OK) {
+  if (::CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileDialog,
+                         (void **)&w) != S_OK) {
     return std::nullopt;
   }
   DWORD dwo = 0;

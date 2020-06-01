@@ -85,8 +85,8 @@ wchar_t *mempbrk(const wchar_t *s, size_t slen, const wchar_t *accept) {
 
 // This is significantly faster for case-sensitive matches with very
 // few possible matches.  See unit test for benchmarks.
-const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen,
-                        const wchar_t *pneedle, size_t neelen) {
+const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle,
+                        size_t neelen) {
   if (0 == neelen) {
     return phaystack; // even if haylen is 0
   }
@@ -98,8 +98,8 @@ const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen,
   const wchar_t *hayend = phaystack + haylen - neelen + 1;
   // A static cast is used here to work around the fact that memchr returns
   // a void* on Posix-compliant systems and const void* on Windows.
-  while ((match = static_cast<const wchar_t *>(wmemchr(
-              phaystack, pneedle[0], (hayend - phaystack)))) != nullptr) {
+  while ((match = static_cast<const wchar_t *>(
+              wmemchr(phaystack, pneedle[0], (hayend - phaystack)))) != nullptr) {
     if (memcmp(match, pneedle, neelen * sizeof(wchar_t)) == 0) {
       return match;
     }

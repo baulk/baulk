@@ -106,12 +106,10 @@ std::wstring ExpandEnv(std::wstring_view sv) {
   }
   std::wstring buf;
   buf.resize(sv.size() + 256);
-  auto N = ExpandEnvironmentStringsW(sv.data(), buf.data(),
-                                     static_cast<DWORD>(buf.size()));
+  auto N = ExpandEnvironmentStringsW(sv.data(), buf.data(), static_cast<DWORD>(buf.size()));
   if (static_cast<size_t>(N) > buf.size()) {
     buf.resize(N);
-    N = ExpandEnvironmentStringsW(sv.data(), buf.data(),
-                                  static_cast<DWORD>(buf.size()));
+    N = ExpandEnvironmentStringsW(sv.data(), buf.data(), static_cast<DWORD>(buf.size()));
   }
   if (N == 0 || static_cast<size_t>(N) > buf.size()) {
     return L"";
@@ -164,8 +162,8 @@ std::wstring PathUnExpand(std::wstring_view sv) {
 namespace env {
 
 inline bool is_shell_specia_var(wchar_t ch) {
-  return (ch == '*' || ch == '#' || ch == '$' || ch == '@' || ch == '!' ||
-          ch == '?' || ch == '-' || (ch >= '0' && ch <= '9'));
+  return (ch == '*' || ch == '#' || ch == '$' || ch == '@' || ch == '!' || ch == '?' || ch == '-' ||
+          (ch >= '0' && ch <= '9'));
 }
 
 inline bool is_alphanum(wchar_t ch) {
@@ -226,10 +224,9 @@ bool AddBashCompatibleT(int argc, wchar_t *const *argv, ContainerT &envb) {
   for (int i = 0; i < argc; i++) {
     envb.emplace(bela::AlphaNum(i).Piece(), argv[i]);
   }
-  envb.emplace(
-      L"$",
-      bela::AlphaNum(GetCurrentProcessId()).Piece()); // current process PID
-  envb.emplace(L"@", GetCommandLineW());              // $@ -->cmdline
+  envb.emplace(L"$",
+               bela::AlphaNum(GetCurrentProcessId()).Piece()); // current process PID
+  envb.emplace(L"@", GetCommandLineW());                       // $@ -->cmdline
   std::wstring userprofile;
   if (os_expand_env(L"USERPROFILE", userprofile)) {
     envb.emplace(L"HOME", userprofile);
@@ -237,8 +234,7 @@ bool AddBashCompatibleT(int argc, wchar_t *const *argv, ContainerT &envb) {
   return true;
 }
 
-template <typename ContainerT = Derivator::value_type>
-std::wstring MakeEnvT(ContainerT &envb) {
+template <typename ContainerT = Derivator::value_type> std::wstring MakeEnvT(ContainerT &envb) {
   LPWCH envs{nullptr};
   auto deleter = bela::finally([&] {
     if (envs) {
@@ -286,9 +282,9 @@ std::wstring CleanupEnvT(std::wstring_view prependpath, ContainerT &envb) {
     return L"";
   }
   auto systemroot = bela::GetEnv(L"SystemRoot");
-  auto newpath = bela::StringCat(
-      L"Path=", prependpath, L";", systemroot, L"\\System32;", systemroot, L";",
-      systemroot, L"\\Wbem;", systemroot, L"\\WindowsPowerShell\\v1.0\\");
+  auto newpath =
+      bela::StringCat(L"Path=", prependpath, L";", systemroot, L"\\System32;", systemroot, L";",
+                      systemroot, L"\\Wbem;", systemroot, L"\\WindowsPowerShell\\v1.0\\");
   std::wstring ne;
   for (wchar_t const *lastch{envs}; *lastch != '\0'; ++lastch) {
     const auto len = ::wcslen(lastch);
@@ -326,8 +322,7 @@ bool Derivator::AddBashCompatible(int argc, wchar_t *const *argv) {
 
 bool Derivator::EraseEnv(std::wstring_view key) { return envb.erase(key) != 0; }
 
-bool Derivator::SetEnv(std::wstring_view key, std::wstring_view value,
-                       bool force) {
+bool Derivator::SetEnv(std::wstring_view key, std::wstring_view value, bool force) {
   if (force) {
     // envb[key] = value;
     envb.insert_or_assign(key, value);
@@ -362,8 +357,7 @@ bool Derivator::AppendEnv(std::wstring_view key, std::wstring &s) const {
 }
 
 // Expand Env string to normal string only support  Unix style'${KEY}'
-bool Derivator::ExpandEnv(std::wstring_view raw, std::wstring &w,
-                          bool strict) const {
+bool Derivator::ExpandEnv(std::wstring_view raw, std::wstring &w, bool strict) const {
   w.reserve(raw.size() * 2);
   size_t i = 0;
   for (size_t j = 0; j < raw.size(); j++) {
@@ -406,8 +400,7 @@ bool DerivatorMT::EraseEnv(std::wstring_view key) {
   return envb.erase(key) != 0; /// Internal is thread safe
 }
 
-bool DerivatorMT::SetEnv(std::wstring_view key, std::wstring_view value,
-                         bool force) {
+bool DerivatorMT::SetEnv(std::wstring_view key, std::wstring_view value, bool force) {
   if (force) {
     envb.insert_or_assign(key, value);
     return true;
@@ -440,8 +433,7 @@ bool DerivatorMT::AppendEnv(std::wstring_view key, std::wstring &s) {
   return true;
 }
 
-bool DerivatorMT::ExpandEnv(std::wstring_view raw, std::wstring &w,
-                            bool strict) {
+bool DerivatorMT::ExpandEnv(std::wstring_view raw, std::wstring &w, bool strict) {
   w.reserve(raw.size() * 2);
   size_t i = 0;
   for (size_t j = 0; j < raw.size(); j++) {

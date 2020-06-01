@@ -28,8 +28,7 @@ inline bool ConsumeSuffix(std::wstring_view *str, std::wstring_view expected) {
   return str;
 }
 
-inline std::wstring_view StripSuffix(std::wstring_view str,
-                                     std::wstring_view suffix) {
+inline std::wstring_view StripSuffix(std::wstring_view str, std::wstring_view suffix) {
   if (bela::EndsWith(str, suffix)) {
     str.remove_suffix(suffix.size());
   }

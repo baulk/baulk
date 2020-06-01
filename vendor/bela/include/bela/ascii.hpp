@@ -130,9 +130,7 @@ inline bool ascii_isascii(wchar_t c) { return c < 128; }
 //
 // Returns an ASCII character, converting to lowercase if uppercase is
 // passed. Note that character values > 127 are simply returned.
-inline char ascii_tolower(wchar_t c) {
-  return (c > 0xFF ? c : ascii_internal::kToLower[c]);
-}
+inline char ascii_tolower(wchar_t c) { return (c > 0xFF ? c : ascii_internal::kToLower[c]); }
 
 void AsciiStrToLower(std::wstring *s);
 inline std::wstring AsciiStrToLower(std::wstring_view s) {
@@ -141,9 +139,7 @@ inline std::wstring AsciiStrToLower(std::wstring_view s) {
   return result;
 }
 
-inline wchar_t ascii_toupper(wchar_t c) {
-  return (c > 0xFF ? c : ascii_internal::kToUpper[c]);
-}
+inline wchar_t ascii_toupper(wchar_t c) { return (c > 0xFF ? c : ascii_internal::kToUpper[c]); }
 // Converts the characters in `s` to uppercase, changing the contents of `s`.
 void AsciiStrToUpper(std::wstring *s);
 

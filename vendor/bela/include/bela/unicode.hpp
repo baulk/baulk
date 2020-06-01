@@ -12,8 +12,8 @@ namespace unicode {
 #ifndef _BELA_HAS_CHAR8_T // TRANSITION, LLVM#41063
 // Clang can't mangle char8_t on Windows, but the feature-test macro is defined.
 // This issue has been fixed for the 8.0.1 release.
-#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L &&                      \
-    !(defined(__clang__) && __clang_major__ == 8 && __clang_minor__ == 0 &&    \
+#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L &&                                          \
+    !(defined(__clang__) && __clang_major__ == 8 && __clang_minor__ == 0 &&                        \
       __clang_patchlevel__ == 0)
 #define _BELA_HAS_CHAR8_T 1
 // char8_t exists
@@ -78,15 +78,12 @@ extern LookupTables const smTables;
 extern char const *smClassNames[12];
 extern char const *smStateNames[9];
 
-inline int32_t advancewstable(char8_t const *&it, char8_t const *end,
-                              char32_t &rune) noexcept {
+inline int32_t advancewstable(char8_t const *&it, char8_t const *end, char32_t &rune) noexcept {
   char32_t unit = 0;
   int32_t type = 0;
   int32_t curr = 0;
   unit = *it++;
-  type =
-      smTables
-          .maOctetCategory[unit]; //- Get the first code unit's character class
+  type = smTables.maOctetCategory[unit];         //- Get the first code unit's character class
   rune = smTables.maFirstOctetMask[type] & unit; //- Apply the first octet mask
   curr = smTables.maTransitions[type];           //- Look up the second state
 
@@ -134,9 +131,8 @@ inline std::uint32_t char32tochar8(char32_t rune, char8_t *dest) noexcept {
 }
 
 template <typename T, typename Allocator>
-inline size_t
-char32tochar8(char32_t rune,
-              std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
+inline size_t char32tochar8(char32_t rune,
+                            std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
   static_assert(sizeof(T) == 1, "Only supports one-byte character basic types");
   if (rune <= 0x7F) {
     dest += static_cast<T>(rune);
@@ -163,9 +159,7 @@ char32tochar8(char32_t rune,
   return 0;
 }
 
-inline constexpr bool issurrogate(char32_t rune) {
-  return (rune >= 0xD800 && rune <= 0xDFFF);
-}
+inline constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 
 inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   if (rune <= 0xFFFF) {
@@ -182,9 +176,8 @@ inline size_t char32tochar16(char32_t rune, char16_t *dest) {
 }
 
 template <typename T = char16_t, typename Allocator>
-inline size_t
-char32tochar16(char32_t rune,
-               std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
+inline size_t char32tochar16(char32_t rune,
+                             std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
   static_assert(sizeof(T) == 2, "Only supports one-byte character basic types");
   if (rune <= 0xFFFF) {
     dest.push_back(issurrogate(rune) ? 0xFFFD : static_cast<T>(rune));
@@ -261,8 +254,7 @@ inline std::wstring mbrtowc(std::string_view src) {
 inline std::u16string ToWide(std::string_view src) { return mbrtoc16(src); }
 #endif
 
-template <typename T = char16_t>
-inline std::string u16tomb(const T *data, size_t len) {
+template <typename T = char16_t> inline std::string u16tomb(const T *data, size_t len) {
   static_assert(sizeof(T) == 2, "Only supports 2Byte character basic types");
   std::string s;
   s.reserve(len * 4 / 2);
@@ -287,13 +279,9 @@ inline std::string u16tomb(const T *data, size_t len) {
   return s;
 }
 #ifdef _WIN32
-inline std::string ToNarrow(std::wstring_view ws) {
-  return u16tomb(ws.data(), ws.size());
-}
+inline std::string ToNarrow(std::wstring_view ws) { return u16tomb(ws.data(), ws.size()); }
 #endif
-inline std::string ToNarrow(std::u16string_view us) {
-  return u16tomb(us.data(), us.size());
-}
+inline std::string ToNarrow(std::u16string_view us) { return u16tomb(us.data(), us.size()); }
 
 } // namespace unicode
 } // namespace bela

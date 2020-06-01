@@ -37,36 +37,31 @@ struct error_code {
 inline bela::error_code make_error_code(long code, const AlphaNum &a) {
   return bela::error_code{std::wstring(a.Piece()), code};
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a,
-                                        const AlphaNum &b) {
+inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b) {
   bela::error_code ec;
   ec.code = code;
   ec.message.reserve(a.Piece().size() + b.Piece().size());
   ec.message.assign(a.Piece()).append(b.Piece());
   return ec;
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a,
-                                        const AlphaNum &b, const AlphaNum &c) {
+inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b,
+                                        const AlphaNum &c) {
   bela::error_code ec;
   ec.code = code;
   ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size());
   ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece());
   return ec;
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a,
-                                        const AlphaNum &b, const AlphaNum &c,
-                                        const AlphaNum &d) {
+inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b,
+                                        const AlphaNum &c, const AlphaNum &d) {
   bela::error_code ec;
   ec.code = code;
-  ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size() +
-                     d.Piece().size());
-  ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece()).append(
-      d.Piece());
+  ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size() + d.Piece().size());
+  ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece()).append(d.Piece());
   return ec;
 }
 template <typename... AV>
-bela::error_code make_error_code(long code, const AlphaNum &a,
-                                 const AlphaNum &b, const AlphaNum &c,
+bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
                                  const AlphaNum &d, AV... av) {
   bela::error_code ec;
   ec.code = code;
@@ -75,8 +70,7 @@ bela::error_code make_error_code(long code, const AlphaNum &a,
 }
 
 error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix = L"");
-std::wstring resolve_system_error_message(DWORD ec,
-                                          std::wstring_view prefix = L"");
+std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix = L"");
 inline error_code make_system_error_code(std::wstring_view prefix = L"") {
   error_code ec;
   ec.code = GetLastError();
@@ -88,21 +82,17 @@ std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
                                           std::wstring_view prefix);
 // bela::fromascii
 inline std::wstring fromascii(std::string_view sv) {
-  auto sz =
-      MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
+  auto sz = MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
   std::wstring output;
   output.resize(sz);
   // C++17 must output.data()
   MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), output.data(), sz);
   return output;
 }
-error_code from_std_error_code(const std::error_code &e,
-                               std::wstring_view prefix = L"");
+error_code from_std_error_code(const std::error_code &e, std::wstring_view prefix = L"");
 // https://github.com/microsoft/wil/blob/master/include/wil/stl.h#L38
 template <typename T> struct secure_allocator : public std::allocator<T> {
-  template <typename Other> struct rebind {
-    typedef secure_allocator<Other> other;
-  };
+  template <typename Other> struct rebind { typedef secure_allocator<Other> other; };
 
   secure_allocator() : std::allocator<T>() {}
 
@@ -110,8 +100,7 @@ template <typename T> struct secure_allocator : public std::allocator<T> {
 
   secure_allocator(const secure_allocator &a) : std::allocator<T>(a) {}
 
-  template <class U>
-  secure_allocator(const secure_allocator<U> &a) : std::allocator<T>(a) {}
+  template <class U> secure_allocator(const secure_allocator<U> &a) : std::allocator<T>(a) {}
 
   T *allocate(size_t n) { return std::allocator<T>::allocate(n); }
 
@@ -122,14 +111,12 @@ template <typename T> struct secure_allocator : public std::allocator<T> {
 };
 
 //! `bela::secure_vector` will be securely zeroed before deallocation.
-template <typename Type>
-using secure_vector = std::vector<Type, bela::secure_allocator<Type>>;
+template <typename Type> using secure_vector = std::vector<Type, bela::secure_allocator<Type>>;
 //! `bela::secure_wstring` will be securely zeroed before deallocation.
-using secure_wstring = std::basic_string<wchar_t, std::char_traits<wchar_t>,
-                                         bela::secure_allocator<wchar_t>>;
+using secure_wstring =
+    std::basic_string<wchar_t, std::char_traits<wchar_t>, bela::secure_allocator<wchar_t>>;
 //! `bela::secure_string` will be securely zeroed before deallocation.
-using secure_string = std::basic_string<char, std::char_traits<char>,
-                                        bela::secure_allocator<char>>;
+using secure_string = std::basic_string<char, std::char_traits<char>, bela::secure_allocator<char>>;
 
 // final_act
 // https://github.com/microsoft/gsl/blob/ebe7ebfd855a95eb93783164ffb342dbd85cbc27\
@@ -156,9 +143,7 @@ private:
 };
 
 // finally() - convenience function to generate a final_act
-template <class F> inline final_act<F> finally(const F &f) noexcept {
-  return final_act<F>(f);
-}
+template <class F> inline final_act<F> finally(const F &f) noexcept { return final_act<F>(f); }
 
 template <class F> inline final_act<F> finally(F &&f) noexcept {
   return final_act<F>(std::forward<F>(f));

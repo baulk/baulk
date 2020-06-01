@@ -21,8 +21,7 @@ public:
 #else
   // libstdc++ call wcslen is bad
   static constexpr std::wstring_view Empty{L"\"\"", sizeof("\"\"") - 1};
-  static constexpr std::wstring_view UnicodePrefix = {L"\\U",
-                                                      sizeof("\\U") - 1};
+  static constexpr std::wstring_view UnicodePrefix = {L"\\U", sizeof("\\U") - 1};
 #endif
 };
 template <> class Literal<char16_t> {
@@ -51,17 +50,14 @@ static const char trailingbytesu8[256] = {
     2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
 };
 // clang-format on
-constexpr const char32_t offsetfromu8[6] = {0x00000000UL, 0x00003080UL,
-                                            0x000E2080UL, 0x03C82080UL,
-                                            0xFA082080UL, 0x82082080UL};
+constexpr const char32_t offsetfromu8[6] = {0x00000000UL, 0x00003080UL, 0x000E2080UL,
+                                            0x03C82080UL, 0xFA082080UL, 0x82082080UL};
 
 // char32_t - type for UTF-32 character representation, required to be large
 // enough to represent any UTF-32 code unit (32 bits). It has the same size,
 // signedness, and alignment as std::uint_least32_t, but is a distinct type.
 
-inline constexpr bool IsSurrogate(char32_t rune) {
-  return (rune >= 0xD800 && rune <= 0xDFFF);
-}
+inline constexpr bool IsSurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 
 size_t char32tochar16(char32_t rune, char16_t *dest, size_t dlen) {
   if (dlen == 0 || dest == nullptr) {
@@ -278,15 +274,13 @@ std::string EscapeNonBMP(std::string_view sv) {
       it += nb + 1;
       continue;
     }
-    s.append(codecvt_internal::Literal<char>::UnicodePrefix)
-        .append(EncodeUnicode(ub, ch));
+    s.append(codecvt_internal::Literal<char>::UnicodePrefix).append(EncodeUnicode(ub, ch));
     it += nb + 1;
   }
   return s;
 }
 
-template <typename T>
-std::basic_string<T> EscapeNonBMPInternal(std::u16string_view sv) {
+template <typename T> std::basic_string<T> EscapeNonBMPInternal(std::u16string_view sv) {
   std::basic_string<T> s;
   s.reserve(sv.size());
   auto it = sv.data();
@@ -309,20 +303,16 @@ std::basic_string<T> EscapeNonBMPInternal(std::u16string_view sv) {
       s += static_cast<T>(ch);
       continue;
     }
-    s.append(codecvt_internal::Literal<T>::UnicodePrefix)
-        .append(EncodeUnicode(buffer, ch));
+    s.append(codecvt_internal::Literal<T>::UnicodePrefix).append(EncodeUnicode(buffer, ch));
   }
   return s;
 }
 
 // EscapeNonBMP UTF-16
 std::wstring EscapeNonBMP(std::wstring_view sv) {
-  return EscapeNonBMPInternal<wchar_t>(
-      {reinterpret_cast<const char16_t *>(sv.data()), sv.size()});
+  return EscapeNonBMPInternal<wchar_t>({reinterpret_cast<const char16_t *>(sv.data()), sv.size()});
 }
-std::u16string EscapeNonBMP(std::u16string_view sv) {
-  return EscapeNonBMPInternal<char16_t>(sv);
-}
+std::u16string EscapeNonBMP(std::u16string_view sv) { return EscapeNonBMPInternal<char16_t>(sv); }
 
 // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 // https://vt100.net/

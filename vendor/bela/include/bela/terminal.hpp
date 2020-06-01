@@ -34,11 +34,9 @@ bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data);
 // If you need to call freopen, you should use the following:
 bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data);
 } // namespace terminal
-template <typename... Args>
-ssize_t FPrintF(FILE *out, const wchar_t *fmt, Args... args) {
+template <typename... Args> ssize_t FPrintF(FILE *out, const wchar_t *fmt, Args... args) {
   const format_internal::FormatArg arg_array[] = {args...};
-  auto str =
-      format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
+  auto str = format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
   return bela::terminal::WriteAuto(out, str);
 }
 
@@ -47,11 +45,9 @@ inline ssize_t FPrintF(FILE *out, const wchar_t *fmt) {
   return bela::terminal::WriteAuto(out, str);
 }
 
-template <typename... Args>
-ssize_t FPrintFallbackF(FILE *out, const wchar_t *fmt, Args... args) {
+template <typename... Args> ssize_t FPrintFallbackF(FILE *out, const wchar_t *fmt, Args... args) {
   const format_internal::FormatArg arg_array[] = {args...};
-  auto str =
-      format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
+  auto str = format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
   return bela::terminal::WriteAutoFallback(out, str);
 }
 

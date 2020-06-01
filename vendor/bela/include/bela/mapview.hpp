@@ -20,8 +20,7 @@ public:
     size_ = other.size_;
     return *this;
   }
-  template <size_t ArrayLen>
-  bool StartsWith(const uint8_t (&bv)[ArrayLen]) const {
+  template <size_t ArrayLen> bool StartsWith(const uint8_t (&bv)[ArrayLen]) const {
     return ArrayLen <= size_ && (memcmp(data_, bv, ArrayLen) == 0);
   }
 
@@ -29,18 +28,14 @@ public:
     return sv.size() <= size_ && (memcmp(data_, sv.data(), sv.size()) == 0);
   }
 
-  bool StartsWith(const void *p, size_t n) {
-    return (n <= size_ && memcmp(data_, p, n) == 0);
-  }
+  bool StartsWith(const void *p, size_t n) { return (n <= size_ && memcmp(data_, p, n) == 0); }
 
-  template <size_t ArrayLen>
-  bool IndexsWith(size_t pos, const uint8_t (&bv)[ArrayLen]) const {
+  template <size_t ArrayLen> bool IndexsWith(size_t pos, const uint8_t (&bv)[ArrayLen]) const {
     return ArrayLen + pos <= size_ && (memcmp(data_ + pos, bv, ArrayLen) == 0);
   }
 
   bool IndexsWith(size_t pos, std::string_view sv) const {
-    return sv.size() + pos <= size_ &&
-           (memcmp(data_ + pos, sv.data(), sv.size()) == 0);
+    return sv.size() + pos <= size_ && (memcmp(data_ + pos, sv.data(), sv.size()) == 0);
   }
 
   bool IndexsWith(size_t pos, const void *p, size_t n) const {
@@ -94,8 +89,8 @@ public:
     closeauto(FileMap);
     closeauto(FileHandle);
   }
-  bool MappingView(std::wstring_view file, bela::error_code &ec,
-                   std::size_t minsize = 1, std::size_t maxsize = SIZE_MAX);
+  bool MappingView(std::wstring_view file, bela::error_code &ec, std::size_t minsize = 1,
+                   std::size_t maxsize = SIZE_MAX);
   MemView subview(size_t off = 0) const {
     if (off >= size_) {
       return MemView();
@@ -110,24 +105,21 @@ private:
   std::size_t size_{0};
 };
 
-inline bool MapView::MappingView(std::wstring_view file, bela::error_code &ec,
-                                 std::size_t minsize, std::size_t maxsize) {
-  if ((FileHandle = CreateFileW(file.data(), GENERIC_READ,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                                nullptr)) == INVALID_HANDLE_VALUE) {
+inline bool MapView::MappingView(std::wstring_view file, bela::error_code &ec, std::size_t minsize,
+                                 std::size_t maxsize) {
+  if ((FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)) ==
+      INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
   }
   LARGE_INTEGER li;
-  if (GetFileSizeEx(FileHandle, &li) != TRUE ||
-      (std::size_t)li.QuadPart < minsize) {
-    ec = bela::make_error_code(bela::FileSizeTooSmall,
-                               L"File size too smal, size: ", li.QuadPart);
+  if (GetFileSizeEx(FileHandle, &li) != TRUE || (std::size_t)li.QuadPart < minsize) {
+    ec = bela::make_error_code(bela::FileSizeTooSmall, L"File size too smal, size: ", li.QuadPart);
     return false;
   }
-  if ((FileMap = CreateFileMappingW(FileHandle, nullptr, PAGE_READONLY, 0, 0,
-                                    nullptr)) == INVALID_HANDLE_VALUE) {
+  if ((FileMap = CreateFileMappingW(FileHandle, nullptr, PAGE_READONLY, 0, 0, nullptr)) ==
+      INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
   }

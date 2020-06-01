@@ -79,37 +79,31 @@ struct Hex {
   template <typename Int>
   explicit Hex(
       Int v, PadSpec spec = kNoPad,
-      typename std::enable_if<sizeof(Int) == 1 &&
-                              !std::is_pointer<Int>::value>::type * = nullptr)
+      typename std::enable_if<sizeof(Int) == 1 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint8_t>(v)) {}
   template <typename Int>
   explicit Hex(
       Int v, PadSpec spec = kNoPad,
-      typename std::enable_if<sizeof(Int) == 2 &&
-                              !std::is_pointer<Int>::value>::type * = nullptr)
+      typename std::enable_if<sizeof(Int) == 2 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint16_t>(v)) {}
   template <typename Int>
   explicit Hex(
       Int v, PadSpec spec = kNoPad,
-      typename std::enable_if<sizeof(Int) == 4 &&
-                              !std::is_pointer<Int>::value>::type * = nullptr)
+      typename std::enable_if<sizeof(Int) == 4 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint32_t>(v)) {}
   template <typename Int>
   explicit Hex(
       Int v, PadSpec spec = kNoPad,
-      typename std::enable_if<sizeof(Int) == 8 &&
-                              !std::is_pointer<Int>::value>::type * = nullptr)
+      typename std::enable_if<sizeof(Int) == 8 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint64_t>(v)) {}
   template <typename Pointee>
-  explicit Hex(Pointee *v, PadSpec spec = kNoPad)
-      : Hex(spec, reinterpret_cast<uintptr_t>(v)) {}
+  explicit Hex(Pointee *v, PadSpec spec = kNoPad) : Hex(spec, reinterpret_cast<uintptr_t>(v)) {}
 
 private:
   Hex(PadSpec spec, uint64_t v)
       : value(v),
         width(spec == kNoPad ? 1
-                             : spec >= kSpacePad2 ? spec - kSpacePad2 + 2
-                                                  : spec - kZeroPad2 + 2),
+                             : spec >= kSpacePad2 ? spec - kSpacePad2 + 2 : spec - kZeroPad2 + 2),
         fill(spec >= kSpacePad2 ? ' ' : '0') {}
 };
 
@@ -129,11 +123,9 @@ struct Dec {
   template <typename Int>
   explicit Dec(Int v, PadSpec spec = kNoPad,
                typename std::enable_if<(sizeof(Int) <= 8)>::type * = nullptr)
-      : value(v >= 0 ? static_cast<uint64_t>(v)
-                     : uint64_t{0} - static_cast<uint64_t>(v)),
+      : value(v >= 0 ? static_cast<uint64_t>(v) : uint64_t{0} - static_cast<uint64_t>(v)),
         width(spec == kNoPad ? 1
-                             : spec >= kSpacePad2 ? spec - kSpacePad2 + 2
-                                                  : spec - kZeroPad2 + 2),
+                             : spec >= kSpacePad2 ? spec - kSpacePad2 + 2 : spec - kZeroPad2 + 2),
         fill(spec >= kSpacePad2 ? ' ' : '0'), neg(v < 0) {}
 };
 
@@ -216,8 +208,7 @@ private:
 namespace strings_internal {
 // Do not call directly - this is not part of the public API.
 std::string CatPieces(std::initializer_list<std::string_view> pieces);
-void AppendPieces(std::string *dest,
-                  std::initializer_list<std::string_view> pieces);
+void AppendPieces(std::string *dest, std::initializer_list<std::string_view> pieces);
 
 } // namespace strings_internal
 
@@ -228,19 +219,17 @@ void AppendPieces(std::string *dest,
 }
 
 [[nodiscard]] std::string StringCat(const AlphaNum &a, const AlphaNum &b);
-[[nodiscard]] std::string StringCat(const AlphaNum &a, const AlphaNum &b,
-                                    const AlphaNum &c);
-[[nodiscard]] std::string StringCat(const AlphaNum &a, const AlphaNum &b,
-                                    const AlphaNum &c, const AlphaNum &d);
+[[nodiscard]] std::string StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c);
+[[nodiscard]] std::string StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                    const AlphaNum &d);
 
 // Support 5 or more arguments
 template <typename... AV>
-[[nodiscard]] inline std::string
-StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-          const AlphaNum &d, const AlphaNum &e, const AV &... args) {
-  return strings_internal::CatPieces(
-      {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-       static_cast<const AlphaNum &>(args).Piece()...});
+[[nodiscard]] inline std::string StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                           const AlphaNum &d, const AlphaNum &e,
+                                           const AV &... args) {
+  return strings_internal::CatPieces({a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
+                                      static_cast<const AlphaNum &>(args).Piece()...});
 }
 
 // -----------------------------------------------------------------------------
@@ -273,19 +262,16 @@ StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
 inline void StrAppend(std::string *) {}
 void StrAppend(std::string *dest, const AlphaNum &a);
 void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b);
-void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c);
-void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-               const AlphaNum &c, const AlphaNum &d);
+void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c);
+void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+               const AlphaNum &d);
 
 // Support 5 or more arguments
 template <typename... AV>
-inline void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b,
-                      const AlphaNum &c, const AlphaNum &d, const AlphaNum &e,
-                      const AV &... args) {
-  strings_internal::AppendPieces(
-      dest, {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-             static_cast<const AlphaNum &>(args).Piece()...});
+inline void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                      const AlphaNum &d, const AlphaNum &e, const AV &... args) {
+  strings_internal::AppendPieces(dest, {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
+                                        static_cast<const AlphaNum &>(args).Piece()...});
 }
 
 } // namespace bela::narrow

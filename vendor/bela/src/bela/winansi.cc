@@ -305,26 +305,23 @@ void WinAnsiWriter::InterpretEscSeq() {
       }
       if (grm.concealed) {
         if (grm.rvideo) {
-          attribut =
-              foregroundcolor[grm.foreground] | backgroundcolor[grm.foreground];
+          attribut = foregroundcolor[grm.foreground] | backgroundcolor[grm.foreground];
           if (grm.bold)
             attribut |= FOREGROUND_INTENSITY | BACKGROUND_INTENSITY;
         } else {
-          attribut =
-              foregroundcolor[grm.background] | backgroundcolor[grm.background];
+          attribut = foregroundcolor[grm.background] | backgroundcolor[grm.background];
           if (grm.underline)
             attribut |= FOREGROUND_INTENSITY | BACKGROUND_INTENSITY;
         }
       } else if (grm.rvideo) {
-        attribut =
-            foregroundcolor[grm.background] | backgroundcolor[grm.foreground];
+        attribut = foregroundcolor[grm.background] | backgroundcolor[grm.foreground];
         if (grm.bold)
           attribut |= BACKGROUND_INTENSITY;
         if (grm.underline)
           attribut |= FOREGROUND_INTENSITY;
       } else
-        attribut = foregroundcolor[grm.foreground] | grm.bold |
-                   backgroundcolor[grm.background] | grm.underline;
+        attribut = foregroundcolor[grm.foreground] | grm.bold | backgroundcolor[grm.background] |
+                   grm.underline;
       if (grm.reverse)
         attribut = ((attribut >> 4) & 15) | ((attribut & 15) << 4);
       SetConsoleTextAttribute(hConOut, attribut);
@@ -337,34 +334,28 @@ void WinAnsiWriter::InterpretEscSeq() {
         return;
       switch (es_argv[0]) {
       case 0: // ESC[0J erase from cursor to end of display
-        len = (Info.dwSize.Y - Info.dwCursorPosition.Y - 1) * Info.dwSize.X +
-              Info.dwSize.X - Info.dwCursorPosition.X - 1;
+        len = (Info.dwSize.Y - Info.dwCursorPosition.Y - 1) * Info.dwSize.X + Info.dwSize.X -
+              Info.dwCursorPosition.X - 1;
         FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition,
                                     &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len,
-                                   Info.dwCursorPosition,
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition,
                                    &NumberOfCharsWritten);
         return;
 
       case 1: // ESC[1J erase from start to cursor.
         Pos.X = 0;
         Pos.Y = 0;
-        len = Info.dwCursorPosition.Y * Info.dwSize.X +
-              Info.dwCursorPosition.X + 1;
-        FillConsoleOutputCharacterW(hConOut, ' ', len, Pos,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Pos,
-                                   &NumberOfCharsWritten);
+        len = Info.dwCursorPosition.Y * Info.dwSize.X + Info.dwCursorPosition.X + 1;
+        FillConsoleOutputCharacterW(hConOut, ' ', len, Pos, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Pos, &NumberOfCharsWritten);
         return;
 
       case 2: // ESC[2J Clear screen and home cursor
         Pos.X = 0;
         Pos.Y = 0;
         len = Info.dwSize.X * Info.dwSize.Y;
-        FillConsoleOutputCharacterW(hConOut, ' ', len, Pos,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Pos,
-                                   &NumberOfCharsWritten);
+        FillConsoleOutputCharacterW(hConOut, ' ', len, Pos, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Pos, &NumberOfCharsWritten);
         SetConsoleCursorPosition(hConOut, Pos);
         return;
 
@@ -382,28 +373,25 @@ void WinAnsiWriter::InterpretEscSeq() {
         len = Info.dwSize.X - Info.dwCursorPosition.X + 1;
         FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition,
                                     &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len,
-                                   Info.dwCursorPosition,
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition,
                                    &NumberOfCharsWritten);
         return;
 
       case 1: // ESC[1K Clear from start of line to cursor
         Pos.X = 0;
         Pos.Y = Info.dwCursorPosition.Y;
-        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwCursorPosition.X + 1,
-                                    Pos, &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes,
-                                   Info.dwCursorPosition.X + 1, Pos,
+        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwCursorPosition.X + 1, Pos,
+                                    &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwCursorPosition.X + 1, Pos,
                                    &NumberOfCharsWritten);
         return;
 
       case 2: // ESC[2K Clear whole line.
         Pos.X = 0;
         Pos.Y = Info.dwCursorPosition.Y;
-        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwSize.X, Pos,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwSize.X,
-                                   Pos, &NumberOfCharsWritten);
+        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwSize.X, Pos, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwSize.X, Pos,
+                                   &NumberOfCharsWritten);
         return;
 
       default:
@@ -415,10 +403,10 @@ void WinAnsiWriter::InterpretEscSeq() {
         es_argv[es_argc++] = 1; // ESC[X == ESC[1X
       if (es_argc != 1)
         return;
-      FillConsoleOutputCharacterW(hConOut, ' ', es_argv[0],
-                                  Info.dwCursorPosition, &NumberOfCharsWritten);
-      FillConsoleOutputAttribute(hConOut, Info.wAttributes, es_argv[0],
-                                 Info.dwCursorPosition, &NumberOfCharsWritten);
+      FillConsoleOutputCharacterW(hConOut, ' ', es_argv[0], Info.dwCursorPosition,
+                                  &NumberOfCharsWritten);
+      FillConsoleOutputAttribute(hConOut, Info.wAttributes, es_argv[0], Info.dwCursorPosition,
+                                 &NumberOfCharsWritten);
       return;
 
     case 'L': // ESC[#L Insert # blank lines.
@@ -476,8 +464,7 @@ void WinAnsiWriter::InterpretEscSeq() {
       Rect.Bottom = Info.dwCursorPosition.Y;
       CharInfo.Char.UnicodeChar = ' ';
       CharInfo.Attributes = Info.wAttributes;
-      ScrollConsoleScreenBuffer(hConOut, &Rect, NULL, Info.dwCursorPosition,
-                                &CharInfo);
+      ScrollConsoleScreenBuffer(hConOut, &Rect, NULL, Info.dwCursorPosition, &CharInfo);
       return;
 
     case '@': // ESC[#@ Insert # blank characters.

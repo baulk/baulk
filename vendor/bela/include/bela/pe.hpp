@@ -109,8 +109,7 @@ struct VersionInfo {
   std::wstring SpecialBuild;
 };
 
-std::optional<VersionInfo> ExposeVersion(std::wstring_view file,
-                                         bela::error_code &ec);
+std::optional<VersionInfo> ExposeVersion(std::wstring_view file, bela::error_code &ec);
 
 } // namespace bela::pe
 

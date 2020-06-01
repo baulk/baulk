@@ -9,9 +9,7 @@ namespace bela::process {
 constexpr const wchar_t *string_nullable(std::wstring_view str) {
   return str.empty() ? nullptr : str.data();
 }
-constexpr wchar_t *string_nullable(std::wstring &str) {
-  return str.empty() ? nullptr : str.data();
-}
+constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
 enum CaptureMode {
   CAPTURE_OUT = 0,
@@ -29,8 +27,7 @@ public:
     cwd = dir;
     return *this;
   }
-  Process &SetEnv(std::wstring_view key, std::wstring_view val,
-                  bool force = false) {
+  Process &SetEnv(std::wstring_view key, std::wstring_view val, bool force = false) {
     de.SetEnv(key, val, force);
     return *this;
   }

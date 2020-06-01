@@ -31,12 +31,11 @@ public:
     }
     return true;
   }
-  bool GetTranslationId(LPVOID lpData, UINT unBlockSize, WORD wLangId,
-                        DWORD &dwId, BOOL bPrimaryEnough /*= FALSE*/) {
+  bool GetTranslationId(LPVOID lpData, UINT unBlockSize, WORD wLangId, DWORD &dwId,
+                        BOOL bPrimaryEnough /*= FALSE*/) {
     LPWORD lpwData;
 
-    for (lpwData = (LPWORD)lpData;
-         (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
+    for (lpwData = (LPWORD)lpData; (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
       if (*lpwData == wLangId) {
         dwId = *((DWORD *)lpwData);
         return true;
@@ -47,8 +46,7 @@ public:
       return false;
     }
 
-    for (lpwData = (LPWORD)lpData;
-         (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
+    for (lpwData = (LPWORD)lpData; (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
       if (((*lpwData) & 0x00FF) == (wLangId & 0x00FF)) {
         dwId = *((DWORD *)lpwData);
         return true;
@@ -62,16 +60,12 @@ public:
     UINT ilen{0};
     VerQueryValueW(buffer, L"\\VarFileInfo\\Translation", &info, &ilen);
     DWORD dwLangCode = 0;
-    if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode,
-                          FALSE)) {
-      if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode,
-                            TRUE)) {
-        if (!GetTranslationId(info, ilen,
-                              MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                              dwLangCode, TRUE)) {
-          if (!GetTranslationId(info, ilen,
-                                MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
-                                dwLangCode, TRUE))
+    if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode, FALSE)) {
+      if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode, TRUE)) {
+        if (!GetTranslationId(info, ilen, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), dwLangCode,
+                              TRUE)) {
+          if (!GetTranslationId(info, ilen, MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL), dwLangCode,
+                                TRUE))
             // use the first one we can get
             dwLangCode = *(reinterpret_cast<DWORD *>(info));
         }
@@ -80,11 +74,8 @@ public:
     // dwLangCode&0x0000FFFF, (dwLangCode&0xFFFF0000)>>16
 
     auto block = bela::StringCat(
-        L"\\StringFileInfo\\",
-        bela::AlphaNum(bela::Hex(dwLangCode & 0x0000FFFF, bela::kZeroPad4)),
-        bela::AlphaNum(
-            bela::Hex((dwLangCode & 0xFFFF0000) >> 16, bela::kZeroPad4)),
-        L"\\");
+        L"\\StringFileInfo\\", bela::AlphaNum(bela::Hex(dwLangCode & 0x0000FFFF, bela::kZeroPad4)),
+        bela::AlphaNum(bela::Hex((dwLangCode & 0xFFFF0000) >> 16, bela::kZeroPad4)), L"\\");
     auto query = [&](std::wstring_view name, std::wstring &val) {
       auto k = bela::StringCat(block, name);
       if (VerQueryValueW(buffer, k.data(), &info, &ilen) == TRUE) {
@@ -111,8 +102,7 @@ private:
   uint8_t *buffer{nullptr};
 };
 
-std::optional<VersionInfo> ExposeVersion(std::wstring_view file,
-                                         bela::error_code &ec) {
+std::optional<VersionInfo> ExposeVersion(std::wstring_view file, bela::error_code &ec) {
   Exposer exposer;
   if (!exposer.Initialize(file, ec)) {
     return std::nullopt;

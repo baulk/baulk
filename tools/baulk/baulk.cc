@@ -28,8 +28,7 @@ struct command_map_t {
 };
 
 void Usage() {
-  constexpr std::wstring_view usage =
-      LR"(baulk - Minimal Package Manager for Windows
+  constexpr std::wstring_view usage = LR"(baulk - Minimal Package Manager for Windows
 Usage: baulk [option] command pkg ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
@@ -67,10 +66,8 @@ Command:
 }
 
 void Version() {
-  bela::FPrintF(stdout,
-                L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_VERSION_FULL, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT,
-                BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION_FULL,
+                BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT, BAULK_BUILD_TIME);
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
@@ -132,16 +129,11 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = ba.Argv().front();
   cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
-      {L"exec", baulk::commands::cmd_exec},
-      {L"install", baulk::commands::cmd_install},
-      {L"list", baulk::commands::cmd_list},
-      {L"search", baulk::commands::cmd_search},
-      {L"uninstall", baulk::commands::cmd_uninstall},
-      {L"update", baulk::commands::cmd_update},
-      {L"upgrade", baulk::commands::cmd_upgrade},
-      {L"freeze", baulk::commands::cmd_freeze},
-      {L"unfreeze", baulk::commands::cmd_unfreeze},
-      {L"b3sum", baulk::commands::cmd_b3sum},
+      {L"exec", baulk::commands::cmd_exec},           {L"install", baulk::commands::cmd_install},
+      {L"list", baulk::commands::cmd_list},           {L"search", baulk::commands::cmd_search},
+      {L"uninstall", baulk::commands::cmd_uninstall}, {L"update", baulk::commands::cmd_update},
+      {L"upgrade", baulk::commands::cmd_upgrade},     {L"freeze", baulk::commands::cmd_freeze},
+      {L"unfreeze", baulk::commands::cmd_unfreeze},   {L"b3sum", baulk::commands::cmd_b3sum},
       {L"sha256sum", baulk::commands::cmd_sha256sum}};
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {

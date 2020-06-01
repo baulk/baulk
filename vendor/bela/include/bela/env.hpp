@@ -56,8 +56,7 @@ struct StringCaseInsensitiveHash {
     constexpr size_t kFNVPrime = 16777619U;
 #endif
     size_t val = kFNVOffsetBasis;
-    std::string_view sv = {reinterpret_cast<const char *>(wsv.data()),
-                           wsv.size() * 2};
+    std::string_view sv = {reinterpret_cast<const char *>(wsv.data()), wsv.size() * 2};
     for (auto c : sv) {
       val ^= static_cast<size_t>(bela::ascii_tolower(c));
       val *= kFNVPrime;
@@ -82,20 +81,17 @@ template <typename T> std::wstring JoinEnv(std::initializer_list<T> il) {
 }
 
 template <typename... T> std::wstring JoinEnv(const std::tuple<T...> &value) {
-  return bela::strings_internal::JoinAlgorithm(value, Separators,
-                                               AlphaNumFormatter());
+  return bela::strings_internal::JoinAlgorithm(value, Separators, AlphaNumFormatter());
 }
 
-template <typename... Args>
-std::wstring InsertEnv(std::wstring_view key, Args... arg) {
+template <typename... Args> std::wstring InsertEnv(std::wstring_view key, Args... arg) {
   std::wstring_view svv[] = {arg...};
   auto prepend = bela::env::JoinEnv(svv);
   auto val = bela::GetEnv(key);
   return bela::StringCat(prepend, Separators, val);
 }
 
-template <typename... Args>
-std::wstring AppendEnv(std::wstring_view key, Args... arg) {
+template <typename... Args> std::wstring AppendEnv(std::wstring_view key, Args... arg) {
   std::wstring_view svv[] = {arg...};
   auto ended = bela::env::JoinEnv(svv);
   auto val = bela::GetEnv(key);
@@ -105,23 +101,20 @@ std::wstring AppendEnv(std::wstring_view key, Args... arg) {
 // Derivator Environment variable derivation container
 class Derivator {
 public:
-  using value_type =
-      bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
-                          StringCaseInsensitiveEq>;
+  using value_type = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
+                                         StringCaseInsensitiveEq>;
   Derivator() = default;
   Derivator(const Derivator &) = delete;
   Derivator &operator=(const Derivator &) = delete;
   size_t Size() const { return envb.size(); }
   bool AddBashCompatible(int argc, wchar_t *const *argv);
   bool EraseEnv(std::wstring_view key);
-  bool SetEnv(std::wstring_view key, std::wstring_view value,
-              bool force = false);
+  bool SetEnv(std::wstring_view key, std::wstring_view value, bool force = false);
   bool PutEnv(std::wstring_view nv, bool force = false);
   [[nodiscard]] std::wstring_view GetEnv(std::wstring_view key) const;
   // ExpandEnv POSIX style ${KEY}. if not enable strict, use
   // GetEnvironmentVariableW if key not exists envb
-  bool ExpandEnv(std::wstring_view raw, std::wstring &w,
-                 bool strict = false) const;
+  bool ExpandEnv(std::wstring_view raw, std::wstring &w, bool strict = false) const;
   std::wstring MakeEnv() const;
   // CleanupEnv create cleanup env. you can use bela::env::JoinEnv create it.
   std::wstring CleanupEnv(std::wstring_view prependpath) const;
@@ -133,17 +126,16 @@ private:
 
 class DerivatorMT {
 public:
-  using value_type = bela::parallel_flat_hash_map<std::wstring, std::wstring,
-                                                  StringCaseInsensitiveHash,
-                                                  StringCaseInsensitiveEq>;
+  using value_type =
+      bela::parallel_flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
+                                   StringCaseInsensitiveEq>;
   DerivatorMT() = default;
   DerivatorMT(const DerivatorMT &) = delete;
   DerivatorMT &operator=(const DerivatorMT &) = delete;
   size_t Size() const { return envb.size(); }
   bool AddBashCompatible(int argc, wchar_t *const *argv);
   bool EraseEnv(std::wstring_view key);
-  bool SetEnv(std::wstring_view key, std::wstring_view value,
-              bool force = false);
+  bool SetEnv(std::wstring_view key, std::wstring_view value, bool force = false);
   bool PutEnv(std::wstring_view nv, bool force = false);
   [[nodiscard]] std::wstring GetEnv(std::wstring_view key);
   // ExpandEnv

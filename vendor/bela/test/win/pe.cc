@@ -13,8 +13,8 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"Unable parse pe file: %s\n", ec.message);
     return 1;
   }
-  bela::FPrintF(stderr, L"File %s \nLinker: %s\nOS: %s\ndepends: \n", argv[1],
-                pm->linkver.Str(), pm->osver.Str());
+  bela::FPrintF(stderr, L"File %s \nLinker: %s\nOS: %s\ndepends: \n", argv[1], pm->linkver.Str(),
+                pm->osver.Str());
   for (const auto &d : pm->depends) {
     bela::FPrintF(stderr, L"    %s\n", d);
   }

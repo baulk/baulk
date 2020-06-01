@@ -13,8 +13,7 @@ namespace fnmatch {
 [[maybe_unused]] constexpr int FileName = PathName;
 } // namespace fnmatch
 // POSIX fnmatch impl see http://man7.org/linux/man-pages/man3/fnmatch.3.html
-bool FnMatch(std::u16string_view pattern, std::u16string_view text,
-             int flags = 0);
+bool FnMatch(std::u16string_view pattern, std::u16string_view text, int flags = 0);
 bool FnMatch(std::wstring_view pattern, std::wstring_view text, int flags = 0);
 } // namespace bela
 

@@ -64,9 +64,7 @@ public:
     }
     return *this;
   }
-  comptr &operator=(const comptr &other) noexcept {
-    return operator=(other.get());
-  }
+  comptr &operator=(const comptr &other) noexcept { return operator=(other.get()); }
 
   comptr &operator=(comptr &&other) noexcept {
     if (this == std::addressof(other)) {
@@ -102,8 +100,7 @@ private:
 template <typename Class, typename Interface = IUnknown>
 bela::comptr<Class> CoCreateInstance(DWORD dwClsContext = CLSCTX_INPROC_SERVER) {
   bela::comptr<Class> result;
-  ::CoCreateInstance(__uuidof(Class), nullptr, dwClsContext,
-                     IID_PPV_ARGS(&result));
+  ::CoCreateInstance(__uuidof(Class), nullptr, dwClsContext, IID_PPV_ARGS(&result));
   return result;
 }
 

@@ -17,8 +17,7 @@ inline void char16encodehex(uint16_t ch, std::wstring &dest) {
 inline bool is_octal_digit(wchar_t c) { return (L'0' <= c) && (c <= L'7'); }
 
 inline int hex_digit_to_int(wchar_t c) {
-  static_assert('0' == 0x30 && 'A' == 0x41 && 'a' == 0x61,
-                "Character set must be ASCII.");
+  static_assert('0' == 0x30 && 'A' == 0x41 && 'a' == 0x61, "Character set must be ASCII.");
   // assert(bela::ascii_isxdigit(c));
   int x = static_cast<unsigned char>(c);
   if (x > '9') {
@@ -27,9 +26,7 @@ inline int hex_digit_to_int(wchar_t c) {
   return x & 0xf;
 }
 
-inline constexpr bool issurrogate(char32_t rune) {
-  return (rune >= 0xD800 && rune <= 0xDFFF);
-}
+inline constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   if (rune <= 0xFFFF) {
     dest[0] = issurrogate(rune) ? 0xFFFD : static_cast<char16_t>(rune);
@@ -44,9 +41,8 @@ inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   return 2;
 }
 
-bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
-                       wchar_t *dest, ptrdiff_t *dest_len,
-                       std::wstring *error) {
+bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar_t *dest,
+                       ptrdiff_t *dest_len, std::wstring *error) {
   wchar_t *d = dest;
   const wchar_t *p = source.data();
   const wchar_t *end = p + source.size();
@@ -117,10 +113,9 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
           ch = ch * 8 + *++p - L'0'; // now points at last digit
         if (ch > 0xff) {
           if (error) {
-            *error = bela::StringCat(
-                L"Value of \\",
-                std::wstring_view(octal_start, p + 1 - octal_start),
-                L" exceeds 0xff");
+            *error =
+                bela::StringCat(L"Value of \\", std::wstring_view(octal_start, p + 1 - octal_start),
+                                L" exceeds 0xff");
           }
           return false;
         }
@@ -155,8 +150,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
         if (ch > 0xFF) {
           if (error) {
             *error = bela::StringCat(
-                L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start),
-                L" exceeds 0xff");
+                L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start), L" exceeds 0xff");
           }
           return false;
         }
@@ -177,9 +171,8 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
         const wchar_t *hex_start = p;
         if (p + 4 >= end) {
           if (error) {
-            *error = bela::StringCat(
-                L"\\u must be followed by 4 hex digits: \\",
-                std::wstring_view(hex_start, p + 1 - hex_start));
+            *error = bela::StringCat(L"\\u must be followed by 4 hex digits: \\",
+                                     std::wstring_view(hex_start, p + 1 - hex_start));
           }
           return false;
         }
@@ -189,9 +182,8 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
             rune = (rune << 4) + hex_digit_to_int(*++p); // Advance p.
           } else {
             if (error) {
-              *error = bela::StringCat(
-                  L"\\u must be followed by 4 hex digits: \\",
-                  std::wstring_view(hex_start, p + 1 - hex_start));
+              *error = bela::StringCat(L"\\u must be followed by 4 hex digits: \\",
+                                       std::wstring_view(hex_start, p + 1 - hex_start));
             }
             return false;
           }
@@ -212,9 +204,8 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
         const wchar_t *hex_start = p;
         if (p + 8 >= end) {
           if (error) {
-            *error = bela::StringCat(
-                L"\\U must be followed by 8 hex digits: \\",
-                std::wstring_view(hex_start, p + 1 - hex_start));
+            *error = bela::StringCat(L"\\U must be followed by 8 hex digits: \\",
+                                     std::wstring_view(hex_start, p + 1 - hex_start));
           }
           return false;
         }
@@ -226,10 +217,9 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
             uint32_t newrune = (rune << 4) + hex_digit_to_int(*++p);
             if (newrune > 0x10FFFF) {
               if (error) {
-                *error = bela::StringCat(
-                    L"Value of \\",
-                    std::wstring_view(hex_start, p + 1 - hex_start),
-                    L" exceeds Unicode limit (0x10FFFF)");
+                *error =
+                    bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start),
+                                    L" exceeds Unicode limit (0x10FFFF)");
               }
               return false;
             } else {
@@ -237,9 +227,8 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
             }
           } else {
             if (error) {
-              *error = bela::StringCat(
-                  L"\\U must be followed by 8 hex digits: \\",
-                  std::wstring_view(hex_start, p + 1 - hex_start));
+              *error = bela::StringCat(L"\\U must be followed by 8 hex digits: \\",
+                                       std::wstring_view(hex_start, p + 1 - hex_start));
             }
             return false;
           }
@@ -270,8 +259,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped,
 // Unescape string
 // \u2082
 //\U00002082
-bool CUnescape(std::wstring_view source, std::wstring *dest,
-               std::wstring *error) {
+bool CUnescape(std::wstring_view source, std::wstring *dest, std::wstring *error) {
   dest->resize(source.size());
   ptrdiff_t dest_size = 0;
   if (!CUnescapeInternal(source, false, dest->data(), &dest_size, error)) {
@@ -310,8 +298,7 @@ std::wstring CEscape(std::wstring_view src) {
       // Note that if we emit \xNN and the src character after that is a hex
       // digit then that digit must be escaped too to prevent it being
       // interpreted as part of the character code by C.
-      if (c < 0x80 && (!bela::ascii_isprint(c) ||
-                       (last_hex_escape && bela::ascii_isxdigit(c)))) {
+      if (c < 0x80 && (!bela::ascii_isprint(c) || (last_hex_escape && bela::ascii_isxdigit(c)))) {
         auto ch = static_cast<uint8_t>(c);
         dest += L"\\x";
         dest += uhc[ch / 16];

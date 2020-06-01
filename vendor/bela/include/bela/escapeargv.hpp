@@ -19,8 +19,7 @@ public:
   static constexpr std::wstring_view Empty = L"\"\"";
 #else
   // libstdc++ call wcslen is bad
-  static constexpr std::wstring_view Empty{L"\"\"",
-                                           sizeof(L"\"\"") - sizeof(wchar_t)};
+  static constexpr std::wstring_view Empty{L"\"\"", sizeof(L"\"\"") - sizeof(wchar_t)};
 #endif
 };
 template <> class Literal<char16_t> {
@@ -31,14 +30,12 @@ public:
 } // namespace argv_internal
 
 // basic escape argv
-template <typename charT, typename Allocator = std::allocator<charT>>
-class basic_escape_argv {
+template <typename charT, typename Allocator = std::allocator<charT>> class basic_escape_argv {
 public:
   typedef std::basic_string_view<charT> string_view_t;
   typedef std::basic_string<charT, std::char_traits<charT>, Allocator> string_t;
 
-  template <typename... Args>
-  basic_escape_argv(string_view_t arg0, Args... arg) {
+  template <typename... Args> basic_escape_argv(string_view_t arg0, Args... arg) {
     string_view_t svv[] = {arg0, arg...};
     AssignFull(svv);
   }

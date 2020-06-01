@@ -40,8 +40,7 @@ bool IsCygwinTerminal(HANDLE fd) {
   }
   constexpr unsigned int pipemaxlen = 512;
   WCHAR buffer[pipemaxlen] = {0};
-  if (GetFileInformationByHandleEx(fd, FileNameInfo, buffer, pipemaxlen * 2) !=
-      TRUE) {
+  if (GetFileInformationByHandleEx(fd, FileNameInfo, buffer, pipemaxlen * 2) != TRUE) {
     return false;
   }
   auto pb = reinterpret_cast<FILE_NAME_INFO *>(buffer);
@@ -52,8 +51,7 @@ bool IsCygwinTerminal(HANDLE fd) {
     return false;
   }
   constexpr std::wstring_view cyglikeprefix[] = {
-      L"\\msys", L"\\cygwin", L"\\Device\\NamedPipe\\msys",
-      L"\\Device\\NamedPipe\\cygwin"};
+      L"\\msys", L"\\cygwin", L"\\Device\\NamedPipe\\msys", L"\\Device\\NamedPipe\\cygwin"};
   constexpr std::wstring_view ptyprefix = L"pty";
   constexpr std::wstring_view pipeto = L"to";
   constexpr std::wstring_view pipefrom = L"from";
@@ -81,9 +79,7 @@ bool IsCygwinTerminal(FILE *fd) {
   return IsCygwinTerminal(FileHandle);
 }
 // Is same terminal maybe console or Cygwin pty
-bool IsSameTerminal(HANDLE fd) {
-  return IsTerminal(fd) || IsCygwinTerminal(fd);
-}
+bool IsSameTerminal(HANDLE fd) { return IsTerminal(fd) || IsCygwinTerminal(fd); }
 bool IsSameTerminal(FILE *fd) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
   return IsTerminal(FileHandle) || IsCygwinTerminal(FileHandle);
@@ -165,8 +161,7 @@ private:
       }
     }
   }
-  bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode,
-                                  std::wstring_view data) {
+  bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::wstring_view data) {
     if (fd == nullptr) {
       return -1;
     }

@@ -12,8 +12,7 @@ std::wstring FullPath(std::wstring_view p) {
 }
 
 void BaseNameParse() {
-  constexpr std::wstring_view bv[] = {L"C:", L"C://jackson//jack//",
-                                      L"jackson/zzz/j", L"C:/", L""};
+  constexpr std::wstring_view bv[] = {L"C:", L"C://jackson//jack//", L"jackson/zzz/j", L"C:/", L""};
   for (auto p : bv) {
     bela::FPrintF(stderr, L"BaseName: %s -->[%s]\n", p, bela::BaseName(p));
   }
@@ -21,8 +20,7 @@ void BaseNameParse() {
 
 void BaseCat() {
   bela::FPrintF(stderr, L"\x1b[33mBase cat\x1b[0m\n");
-  auto p =
-      bela::PathCat(L"\\\\?\\C:\\Windows/System32", L"drivers/etc", L"hosts");
+  auto p = bela::PathCat(L"\\\\?\\C:\\Windows/System32", L"drivers/etc", L"hosts");
   bela::FPrintF(stderr, L"PathCat: %s\n", p);
   auto p2 = bela::PathCat(L"C:\\Windows/System32", L"drivers/../..");
   bela::FPrintF(stderr, L"PathCat: %s\n", p2);
@@ -32,11 +30,9 @@ void BaseCat() {
   bela::FPrintF(stderr, L"PathCat: %s\n", p4);
   auto p5 = bela::PathCat(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathCat: %s\n", p5);
-  auto p6 = bela::PathCat(
-      L"\\\\server\\short\\Windows\\System32\\drivers\\..\\.\\IME");
+  auto p6 = bela::PathCat(L"\\\\server\\short\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathCat: %s\n", p6);
-  auto p7 = bela::PathCat(
-      L"\\\\server\\short\\C:\\Windows\\System32\\drivers\\..\\.\\IME");
+  auto p7 = bela::PathCat(L"\\\\server\\short\\C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathCat: %s\n", p7);
   auto p8 = bela::PathCat(L"cmd");
   bela::FPrintF(stderr, L"PathCat: %s\n", p8);
@@ -44,24 +40,19 @@ void BaseCat() {
 
 void AbsCat() {
   bela::FPrintF(stderr, L"\x1b[33mAbs cat\x1b[0m\n");
-  auto p = bela::PathAbsoluteCat(L"\\\\?\\C:\\Windows/System32", L"drivers/etc",
-                                 L"hosts");
+  auto p = bela::PathAbsoluteCat(L"\\\\?\\C:\\Windows/System32", L"drivers/etc", L"hosts");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p);
   auto p2 = bela::PathAbsoluteCat(L"C:\\Windows/System32", L"drivers/../..");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p2);
-  auto p3 =
-      bela::PathAbsoluteCat(L"Windows/System32", L"drivers/./././.\\.\\etc");
+  auto p3 = bela::PathAbsoluteCat(L"Windows/System32", L"drivers/./././.\\.\\etc");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p3);
   auto p4 = bela::PathAbsoluteCat(L".", L"test/pathcat/./pathcat_test.exe");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p4);
-  auto p5 =
-      bela::PathAbsoluteCat(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
+  auto p5 = bela::PathAbsoluteCat(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p5);
-  auto p6 = bela::PathAbsoluteCat(
-      L"\\\\server\\short\\Windows\\System32\\drivers\\..\\.\\IME");
+  auto p6 = bela::PathAbsoluteCat(L"\\\\server\\short\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p6);
-  auto p7 = bela::PathAbsoluteCat(
-      L"\\\\server\\short\\C:\\Windows\\System32\\drivers\\..\\.\\IME");
+  auto p7 = bela::PathAbsoluteCat(L"\\\\server\\short\\C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p7);
   auto p8 = bela::PathAbsoluteCat(L"cmd");
   bela::FPrintF(stderr, L"PathAbsoluteCat: %s\n", p8);

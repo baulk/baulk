@@ -29,13 +29,11 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   if (tokenizer.Argc() != (size_t)argc) {
-    bela::FPrintF(stderr, L"command line number not match %d --> %d\n",
-                  tokenizer.Argc(), argc);
+    bela::FPrintF(stderr, L"command line number not match %d --> %d\n", tokenizer.Argc(), argc);
     return 1;
   }
   for (int i = 0; i < argc; i++) {
-    bela::FPrintF(stderr, L"Need: [%s] Got: [%s]\n", argv[i],
-                  tokenizer.Argv()[i]);
+    bela::FPrintF(stderr, L"Need: [%s] Got: [%s]\n", argv[i], tokenizer.Argv()[i]);
   }
   return 0;
 }

@@ -6,8 +6,7 @@
 #include <bela/path.hpp>
 
 namespace bela::io {
-bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
-              uint64_t maxsize) {
+bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxsize) {
   bela::MapView mv;
   if (!mv.MappingView(file, ec, 1, maxsize)) {
     return false;
@@ -28,8 +27,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
     }
     if (mmv.StartsWith(utf16be)) {
       auto sv = mmv.submv(2).sv();
-      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()),
-                            sv.size() / 2};
+      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2};
       out.resize(wsv.size());
       wchar_t *p = out.data();
       for (size_t i = 0; i < wsv.size(); i++) {
@@ -45,8 +43,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
     }
     if (mmv.StartsWith(utf16le)) {
       auto sv = mmv.submv(2).sv();
-      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()),
-                            sv.size() / 2};
+      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2};
       out.resize(wsv.size());
       wchar_t *p = out.data();
       for (size_t i = 0; i < wsv.size(); i++) {
@@ -58,8 +55,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec,
   out = bela::ToWide(mmv.sv());
   return true;
 }
-bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec,
-              uint64_t maxline) {
+bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxline) {
   if (!ReadFile(file, out, ec, maxline)) {
     return false;
   }
@@ -69,11 +65,11 @@ bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec,
   return true;
 }
 
-bool WriteTextInternal(std::string_view bom, std::string_view text,
-                       std::wstring_view file, bela::error_code &ec) {
-  auto FileHandle = ::CreateFileW(
-      file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
-      nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+bool WriteTextInternal(std::string_view bom, std::string_view text, std::wstring_view file,
+                       bela::error_code &ec) {
+  auto FileHandle =
+      ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
@@ -81,8 +77,8 @@ bool WriteTextInternal(std::string_view bom, std::string_view text,
   auto closer = bela::finally([&] { CloseHandle(FileHandle); });
   DWORD written = 0;
   if (!bom.empty()) {
-    if (WriteFile(FileHandle, bom.data(), static_cast<DWORD>(bom.size()),
-                  &written, nullptr) != TRUE) {
+    if (WriteFile(FileHandle, bom.data(), static_cast<DWORD>(bom.size()), &written, nullptr) !=
+        TRUE) {
       ec = bela::make_system_error_code();
       return false;
     }
@@ -92,8 +88,7 @@ bool WriteTextInternal(std::string_view bom, std::string_view text,
   auto size = text.size();
   while (size > 0) {
     auto len = (std::min)(size, static_cast<size_t>(4096));
-    if (WriteFile(FileHandle, p, static_cast<DWORD>(len), &written, nullptr) !=
-        TRUE) {
+    if (WriteFile(FileHandle, p, static_cast<DWORD>(len), &written, nullptr) != TRUE) {
       ec = bela::make_system_error_code();
       break;
     }
@@ -103,8 +98,7 @@ bool WriteTextInternal(std::string_view bom, std::string_view text,
   return size == 0;
 }
 
-bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
-                    bela::error_code &ec) {
+bool WriteTextU16LE(std::wstring_view text, std::wstring_view file, bela::error_code &ec) {
   if constexpr (bela::IsBigEndian()) {
     constexpr uint8_t u16bebom[] = {0xFE, 0xFF};
     std::string_view bom{reinterpret_cast<const char *>(u16bebom), 2};
@@ -112,8 +106,7 @@ bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
     for (auto &ch : s) {
       ch = static_cast<uint16_t>(bela::swap16(static_cast<uint16_t>(ch)));
     }
-    std::string_view text_{reinterpret_cast<const char *>(s.data()),
-                           s.size() * sizeof(wchar_t)};
+    std::string_view text_{reinterpret_cast<const char *>(s.data()), s.size() * sizeof(wchar_t)};
     return WriteTextInternal(bom, text_, file, ec);
   }
   constexpr uint8_t u16lebom[] = {0xFF, 0xFE};
@@ -123,13 +116,11 @@ bool WriteTextU16LE(std::wstring_view text, std::wstring_view file,
   return WriteTextInternal(bom, text_, file, ec);
 }
 
-bool WriteText(std::string_view text, std::wstring_view file,
-               bela::error_code &ec) {
+bool WriteText(std::string_view text, std::wstring_view file, bela::error_code &ec) {
   return WriteTextInternal("", text, file, ec);
 }
 
-bool WriteTextAtomic(std::string_view text, std::wstring_view file,
-                     bela::error_code &ec) {
+bool WriteTextAtomic(std::string_view text, std::wstring_view file, bela::error_code &ec) {
   if (!bela::PathExists(file)) {
     return WriteTextInternal("", text, file, ec);
   }

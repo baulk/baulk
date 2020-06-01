@@ -120,8 +120,7 @@ struct FormatArg {
   }
   template <typename Allocator>
   FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<wchar_t, std::char_traits<wchar_t>, Allocator>
-          &str)
+      const std::basic_string<wchar_t, std::char_traits<wchar_t>, Allocator> &str)
       : at(ArgType::STRING) {
     strings.data = str.data();
     strings.len = str.size();
@@ -132,21 +131,16 @@ struct FormatArg {
   }
   // support char16_t under Windows.
   FormatArg(const char16_t *str) : at(ArgType::STRING) {
-    strings.data =
-        (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
-    strings.len =
-        (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
+    strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
+    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
   }
   FormatArg(char16_t *str) : at(ArgType::STRING) {
-    strings.data =
-        (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
-    strings.len =
-        (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
+    strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
+    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
   }
   template <typename Allocator>
   FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<char16_t, std::char_traits<char16_t>, Allocator>
-          &str)
+      const std::basic_string<char16_t, std::char_traits<char16_t>, Allocator> &str)
       : at(ArgType::STRING) {
     strings.data = reinterpret_cast<const wchar_t *>(str.data());
     strings.len = str.size();
@@ -252,27 +246,24 @@ struct FormatArg {
 };
 
 // Format function
-ssize_t StrFormatInternal(wchar_t *buf, size_t sz, const wchar_t *fmt,
-                          const FormatArg *args, size_t max_args);
-std::wstring StrFormatInternal(const wchar_t *fmt, const FormatArg *args,
+ssize_t StrFormatInternal(wchar_t *buf, size_t sz, const wchar_t *fmt, const FormatArg *args,
+                          size_t max_args);
+std::wstring StrFormatInternal(const wchar_t *fmt, const FormatArg *args, size_t max_args);
+size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt, const FormatArg *args,
                                size_t max_args);
-size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt,
-                               const FormatArg *args, size_t max_args);
 } // namespace format_internal
 
 size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt);
 template <typename... Args>
 size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt, Args... args) {
   const format_internal::FormatArg arg_array[] = {args...};
-  return format_internal::StrAppendFormatInternal(buf, fmt, arg_array,
-                                                  sizeof...(args));
+  return format_internal::StrAppendFormatInternal(buf, fmt, arg_array, sizeof...(args));
 }
 
 template <typename... Args>
 ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args) {
   const format_internal::FormatArg arg_array[] = {args...};
-  return format_internal::StrFormatInternal(buf, N, fmt, arg_array,
-                                            sizeof...(args));
+  return format_internal::StrFormatInternal(buf, N, fmt, arg_array, sizeof...(args));
 }
 
 template <size_t N, typename... Args>
@@ -280,12 +271,10 @@ ssize_t StrFormat(wchar_t (&buf)[N], const wchar_t *fmt, Args... args) {
   // Use Arg() object to record type information and then copy arguments to an
   // array to make it easier to iterate over them.
   const format_internal::FormatArg arg_array[] = {args...};
-  return format_internal::StrFormatInternal(buf, N, fmt, arg_array,
-                                            sizeof...(args));
+  return format_internal::StrFormatInternal(buf, N, fmt, arg_array, sizeof...(args));
 }
 
-template <typename... Args>
-std::wstring StrFormat(const wchar_t *fmt, Args... args) {
+template <typename... Args> std::wstring StrFormat(const wchar_t *fmt, Args... args) {
   const format_internal::FormatArg arg_array[] = {args...};
   return format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
 }
@@ -293,8 +282,7 @@ std::wstring StrFormat(const wchar_t *fmt, Args... args) {
 // Fast-path when we don't actually need to substitute any arguments.
 ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt);
 std::wstring StrFormat(const wchar_t *fmt);
-template <size_t N>
-inline ssize_t StrFormat(wchar_t (&buf)[N], const wchar_t *fmt) {
+template <size_t N> inline ssize_t StrFormat(wchar_t (&buf)[N], const wchar_t *fmt) {
   return StrFormat(buf, N, fmt);
 }
 

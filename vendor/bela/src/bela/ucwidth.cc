@@ -9,8 +9,7 @@ constexpr const bela::runewidth::interval nonprint[] = {
     {0x180B, 0x180E}, {0x200B, 0x200F}, {0x2028, 0x202E}, {0x206A, 0x206F},
     {0xD800, 0xDFFF}, {0xFEFF, 0xFEFF}, {0xFFF9, 0xFFFB}, {0xFFFE, 0xFFFF},
 };
-bool bisearch(char32_t rune, const bela::runewidth::interval *table,
-              size_t max) {
+bool bisearch(char32_t rune, const bela::runewidth::interval *table, size_t max) {
   size_t min = 0;
   size_t mid;
   if (rune < table[0].first || rune > table[max].last) {
@@ -40,24 +39,19 @@ size_t CalculateWidth(char32_t rune) {
   if (bisearch(rune, bela::nonprint, std::size(bela::nonprint) - 1)) {
     return 0;
   }
-  if (bisearch(rune, bela::runewidth::notassigned,
-               std::size(bela::runewidth::notassigned) - 1)) {
+  if (bisearch(rune, bela::runewidth::notassigned, std::size(bela::runewidth::notassigned) - 1)) {
     return 0;
   }
-  if (bisearch(rune, bela::runewidth::combining,
-               std::size(bela::runewidth::combining) - 1)) {
+  if (bisearch(rune, bela::runewidth::combining, std::size(bela::runewidth::combining) - 1)) {
     return 0;
   }
-  if (bisearch(rune, bela::runewidth::ambiguous,
-               std::size(bela::runewidth::ambiguous) - 1)) {
+  if (bisearch(rune, bela::runewidth::ambiguous, std::size(bela::runewidth::ambiguous) - 1)) {
     return 2;
   }
-  if (bisearch(rune, bela::runewidth::doublewidth,
-               std::size(bela::runewidth::doublewidth) - 1)) {
+  if (bisearch(rune, bela::runewidth::doublewidth, std::size(bela::runewidth::doublewidth) - 1)) {
     return 2;
   }
-  if (bisearch(rune, bela::runewidth::emoji,
-               std::size(bela::runewidth::emoji) - 1)) {
+  if (bisearch(rune, bela::runewidth::emoji, std::size(bela::runewidth::emoji) - 1)) {
     return 2;
   }
   return 1;
