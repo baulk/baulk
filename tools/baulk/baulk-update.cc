@@ -5,6 +5,7 @@
 #include <bela/io.hpp>
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
+#include <bela/process.hpp>
 #include <jsonex.hpp>
 #include <zip.hpp>
 #include "fs.hpp"
@@ -15,9 +16,18 @@ bool IsDebugMode = true;
 bool IsForceMode = false;
 constexpr size_t UerAgentMaximumLength = 64;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
+std::wstring BaulkRoot;
 std::wstring locale;
 std::wstring_view BaulkLocale() { return locale; }
-void UpdateLocale() {
+void InitializeBaulk() {
+  bela::error_code ec;
+  if (auto exedir = bela::ExecutableParent(ec); exedir) {
+    BaulkRoot.assign(std::move(*exedir));
+    bela::PathStripName(BaulkRoot);
+  } else {
+    bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
+    BaulkRoot = L".";
+  }
   locale.resize(64);
   if (auto n = GetUserDefaultLocaleName(locale.data(), 64); n != 0 && n < 64) {
     locale.resize(n);
@@ -108,12 +118,47 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir,
   return baulk::archive::zip::ZipExtract(src, outdir, ec, &closure);
 }
 
+bool ResolveBaulkRev(std::wstring &releasename) {
+  bela::process::Process ps;
+  auto baulkexe = bela::StringCat(BaulkRoot, L"\\bin\\baulk.exe");
+  if (ps.Capture(baulkexe, L"--version") != 0) {
+    if (auto ec = ps.ErrorCode(); ec) {
+      bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec.message);
+    }
+    releasename.assign(BAULK_RELEASE_NAME);
+    return false;
+  }
+  auto out = bela::ToWide(ps.Out());
+
+  std::vector<std::wstring_view> lines =
+      bela::StrSplit(out, bela::ByChar('\n'), bela::SkipEmpty());
+  constexpr std::wstring_view releaseprefix = L"Release:";
+  for (auto line : lines) {
+    line = bela::StripAsciiWhitespace(line);
+    if (!bela::StartsWith(line, releaseprefix)) {
+      continue;
+    }
+    auto relname =
+        bela::StripAsciiWhitespace(line.substr(releaseprefix.size()));
+    releasename.assign(relname);
+    return true;
+  }
+  releasename.assign(BAULK_RELEASE_NAME);
+  return false;
+}
+
 // https://api.github.com/repos/baulk/baulk/releases/latest todo
 bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
-  std::wstring_view releasename(BAULK_RELEASE_NAME);
+  std::wstring releasename;
+  if (!ResolveBaulkRev(releasename)) {
+    bela::FPrintF(
+        stderr,
+        L"unable detect baulk meta, use baulk-update release name '%s'\n",
+        releasename);
+  }
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
   if (!bela::StartsWith(releasename, releaseprefix)) {
-    baulk::DbgPrint(L"%s not public release", releasename);
+    baulk::DbgPrint(L"baulk refname '%s' not public release", releasename);
     if (!forcemode) {
       return false;
     }
@@ -177,22 +222,15 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
 }
 
 int BaulkUpdate(bool forcemode) {
-  std::wstring baulkroot;
-  bela::error_code ec;
-  if (auto exedir = bela::ExecutableParent(ec); exedir) {
-    baulkroot.assign(std::move(*exedir));
-    bela::PathStripName(baulkroot);
-  } else {
-    bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
-    baulkroot = L".";
-  }
   std::wstring url;
   if (!ReleaseIsUpgradable(url, forcemode)) {
     return 0;
   }
   auto filename = baulk::net::UrlFileName(url);
   bela::FPrintF(stderr, L"\x1b[32mNew release url %s\x1b[0m\n", url);
-  auto pkgtmpdir = bela::StringCat(baulkroot, L"\\bin\\pkgs\\.pkgtmp");
+
+  auto pkgtmpdir = bela::StringCat(baulk::BaulkRoot, L"\\bin\\pkgs\\.pkgtmp");
+  bela::error_code ec;
   if (!baulk::fs::MakeDir(pkgtmpdir, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir,
                   ec.message);
@@ -230,12 +268,13 @@ int BaulkUpdate(bool forcemode) {
   };
   for (const auto f : files) {
     auto src = bela::StringCat(outdir, f);
-    auto target = bela::StringCat(baulkroot, f);
+    auto target = bela::StringCat(baulk::BaulkRoot, f);
     UpdateFile(src, target);
   }
   auto srcupdater = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(srcupdater)) {
-    auto targeter = bela::StringCat(baulkroot, L"\\bin\\baulk-update-new.exe");
+    auto targeter =
+        bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update-new.exe");
     if (MoveFileExW(srcupdater.data(), targeter.data(),
                     MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
         TRUE) {
@@ -256,6 +295,6 @@ int wmain(int argc, wchar_t **argv) {
       forcemode = true;
     }
   }
-  baulk::UpdateLocale();
+  baulk::InitializeBaulk();
   return baulk::BaulkUpdate(forcemode);
 }

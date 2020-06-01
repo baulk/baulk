@@ -65,9 +65,9 @@ Command:
   auto msg = bela::Substitute(usage, *exeparent);
   bela::terminal::WriteAuto(stderr, msg);
 }
+
 void Version() {
-  // baulk
-  bela::FPrintF(stderr,
+  bela::FPrintF(stdout,
                 L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
                 BAULK_VERSION_FULL, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT,
                 BAULK_BUILD_TIME);
