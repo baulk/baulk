@@ -11,6 +11,9 @@
 #include "fs.hpp"
 #include "net.hpp"
 
+// https://www.catch22.net/tuts/win32/self-deleting-executables
+// https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c
+
 namespace baulk {
 bool IsDebugMode = true;
 bool IsForceMode = false;
@@ -204,6 +207,34 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
   return true;
 }
 
+int ExecuteInternal(wchar_t *cmdline) {
+  // run a new process and wait
+  auto cwd = bela::StringCat(baulk::BaulkRoot, L"\\bin");
+  STARTUPINFOW si;
+  PROCESS_INFORMATION pi;
+  SecureZeroMemory(&si, sizeof(si));
+  SecureZeroMemory(&pi, sizeof(pi));
+  si.cb = sizeof(si);
+  if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE,
+                     CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr, cwd.data(), &si,
+                     &pi) != TRUE) {
+    auto ec = bela::make_system_error_code();
+    bela::FPrintF(stderr, L"run post script failed %s\n", ec.message);
+    return -1;
+  }
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+  return 0;
+}
+
+int PostUpdate() {
+  constexpr std::wstring_view pwshcommand =
+      L"Sleep 1; Remove-Item -Force -ErrorAction SilentlyContinue baulk-update.exe;Move-Item "
+      L"baulk-update-new.exe baulk-update.exe";
+  bela::EscapeArgv ea(L"powershell", L"-Command", pwshcommand);
+  return ExecuteInternal(ea.data());
+}
+
 int BaulkUpdate(bool forcemode) {
   std::wstring url;
   if (!ReleaseIsUpgradable(url, forcemode)) {
@@ -256,8 +287,7 @@ int BaulkUpdate(bool forcemode) {
     auto targeter = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update-new.exe");
     if (MoveFileExW(srcupdater.data(), targeter.data(),
                     MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
-      baulk::DbgPrint(L"update %s done", targeter);
-      return 0;
+      return PostUpdate();
     }
   }
   return 0;

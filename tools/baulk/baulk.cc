@@ -80,8 +80,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
-      .Add(L"upgrade")
-      .Add(L"exec"); // subcommand
+      .Add(L"exec");                                            // subcommand
   bela::error_code ec;
   auto result = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
@@ -129,12 +128,18 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = ba.Argv().front();
   cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
-      {L"exec", baulk::commands::cmd_exec},           {L"install", baulk::commands::cmd_install},
-      {L"list", baulk::commands::cmd_list},           {L"search", baulk::commands::cmd_search},
-      {L"uninstall", baulk::commands::cmd_uninstall}, {L"update", baulk::commands::cmd_update},
-      {L"upgrade", baulk::commands::cmd_upgrade},     {L"freeze", baulk::commands::cmd_freeze},
-      {L"unfreeze", baulk::commands::cmd_unfreeze},   {L"b3sum", baulk::commands::cmd_b3sum},
-      {L"sha256sum", baulk::commands::cmd_sha256sum}};
+      {L"exec", baulk::commands::cmd_exec},           // exec run command
+      {L"install", baulk::commands::cmd_install},     // install
+      {L"list", baulk::commands::cmd_list},           // list installed
+      {L"search", baulk::commands::cmd_search},       // search from bucket
+      {L"uninstall", baulk::commands::cmd_uninstall}, // uninstall
+      {L"update", baulk::commands::cmd_update},       // update bucket
+      {L"upgrade", baulk::commands::cmd_upgrade},     // upgrade
+      {L"freeze", baulk::commands::cmd_freeze},       // freeze
+      {L"unfreeze", baulk::commands::cmd_unfreeze},   // unfreeze
+      {L"b3sum", baulk::commands::cmd_b3sum},         // b3sum
+      {L"sha256sum", baulk::commands::cmd_sha256sum}  // sha256sum
+  };
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {
       cmd.cmd = c.cmd;
