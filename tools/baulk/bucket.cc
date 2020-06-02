@@ -10,8 +10,7 @@
 #include "decompress.hpp"
 
 namespace baulk::bucket {
-std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
-                                         bela::error_code &ec) {
+std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::error_code &ec) {
   auto rss = bela::StringCat(bucketurl, L"/commits/master.atom");
   baulk::DbgPrint(L"Fetch RSS %s", rss);
   auto resp = baulk::net::RestGet(rss, ec);
@@ -32,12 +31,11 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl,
   return std::nullopt;
 }
 
-bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
-                  std::wstring_view id, bela::error_code &ec) {
+bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstring_view id,
+                  bela::error_code &ec) {
   // https://github.com/baulk/bucket/archive/master.zip
   auto master = bela::StringCat(bucketurl, L"/archive/", id, L".zip");
-  auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\",
-                                baulk::BucketsDirName, L"\\temp");
+  auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\temp");
   if (!bela::PathExists(outdir) && !baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }
@@ -54,8 +52,7 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
     return false;
   }
   baulk::standard::Regularize(decompressdir);
-  auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\",
-                                   baulk::BucketsDirName, L"\\", name);
+  auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", name);
   if (bela::PathExists(bucketdir)) {
     baulk::fs::PathRemove(bucketdir, ec);
   }
@@ -66,10 +63,8 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name,
   return true;
 }
 
-std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
-                                          std::wstring_view pkgname,
-                                          std::wstring_view bucket,
-                                          bela::error_code &ec) {
+std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstring_view pkgname,
+                                          std::wstring_view bucket, bela::error_code &ec) {
   if (!bela::PathExists(pkgmeta)) {
     return std::nullopt;
   }
@@ -134,8 +129,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
 #endif
 
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, L"parse package meta json: ",
-                               bela::ToWide(e.what()));
+    ec = bela::make_error_code(1, L"parse package meta json: ", bela::ToWide(e.what()));
     return std::nullopt;
   }
 
@@ -143,10 +137,8 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta,
 }
 
 // installed package meta;
-std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname,
-                                               bela::error_code &ec) {
-  auto pkglock =
-      bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
+std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::error_code &ec) {
+  auto pkglock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
   FILE *fd = nullptr;
   if (auto en = _wfopen_s(&fd, pkglock.data(), L"rb"); en != 0) {
     ec = bela::make_stdc_error_code(en);
@@ -173,12 +165,10 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   baulk::version::version pkgversion(opkg.version);
   auto weights = opkg.weights;
   bool updated{false};
-  auto bucketsdir =
-      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+  auto bucketsdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
 
   for (const auto &bk : baulk::BaulkBuckets()) {
-    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
-                                   opkg.name, L".json");
+    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\", opkg.name, L".json");
     bela::error_code ec;
     auto pkgN = PackageMeta(pkgmeta, opkg.name, bk.name, ec);
     if (!pkgN) {
@@ -192,8 +182,7 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     baulk::version::version newversion(pkgN->version);
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
-    if (newversion > pkgversion ||
-        (newversion == pkgversion && weights < pkgN->weights)) {
+    if (newversion > pkgversion || (newversion == pkgversion && weights < pkgN->weights)) {
       pkg = std::move(*pkgN);
       pkgversion = newversion;
       weights = pkgN->weights;
@@ -203,16 +192,13 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   return updated;
 }
 // package metadata
-std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
-                                            bela::error_code &ec) {
+std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::error_code &ec) {
   baulk::version::version pkgversion; // 0.0.0.0
   baulk::Package pkg;
-  auto bucketsdir =
-      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+  auto bucketsdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   size_t pkgsame = 0;
   for (const auto &bk : baulk::BaulkBuckets()) {
-    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\",
-                                   pkgname, L".json");
+    auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\", pkgname, L".json");
     bela::error_code ec;
     auto pkgN = PackageMeta(pkgmeta, pkgname, bk.name, ec);
     if (!pkgN) {
@@ -227,8 +213,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname,
     baulk::version::version newversion(pkgN->version);
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
-    if (newversion > pkgversion ||
-        (newversion == pkgversion && pkg.weights < pkgN->weights)) {
+    if (newversion > pkgversion || (newversion == pkgversion && pkg.weights < pkgN->weights)) {
       pkg = std::move(*pkgN);
       pkgversion = newversion;
     }

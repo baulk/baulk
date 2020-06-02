@@ -18,8 +18,7 @@ int credentials(std::wstring_view prompt, std::wstring_view user) {
 }
 
 void usage() {
-  constexpr std::wstring_view usage =
-      LR"(ssh-askpass-baulk - Askpass Utility for Baulk
+  constexpr std::wstring_view usage = LR"(ssh-askpass-baulk - Askpass Utility for Baulk
 Usage: ssh-askpass-baulk [option] ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
@@ -44,8 +43,7 @@ bool ParseArgv(int argc, wchar_t **argv, std::wstring &prompt, bool &credmode) {
           usage();
           exit(0);
         case 'v':
-          bela::FPrintF(stdout, L"ssh-askpass-baulk version: %s\n",
-                        BAULK_VERSION_FULL);
+          bela::FPrintF(stdout, L"ssh-askpass-baulk version: %s\n", BAULK_VERSION_FULL);
           exit(0);
         case 'p':
           credmode = true;

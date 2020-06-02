@@ -15,16 +15,14 @@ App::~App() {
 }
 int App::run(HINSTANCE hInstance) {
   hInst = hInstance;
-  return (int)DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_ASKPASS_WINDOW),
-                              NULL, App::WindowProc,
-                              reinterpret_cast<LPARAM>(this));
+  return (int)DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_ASKPASS_WINDOW), NULL,
+                              App::WindowProc, reinterpret_cast<LPARAM>(this));
 }
 // Typically, the dialog box procedure should return TRUE if it processed the
 // message, and FALSE if it did not. If the dialog box procedure returns FALSE,
 // the dialog manager performs the default dialog operation in response to the
 // message.
-INT_PTR WINAPI App::WindowProc(HWND hWnd, UINT message, WPARAM wParam,
-                               LPARAM lParam) {
+INT_PTR WINAPI App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
   App *app{nullptr};
   if (message == WM_INITDIALOG) {
     auto app = reinterpret_cast<App *>(lParam);
@@ -41,8 +39,7 @@ INT_PTR WINAPI App::WindowProc(HWND hWnd, UINT message, WPARAM wParam,
 bool App::calculateWindow(int &x, int &y, std::wstring &prompttext) {
   auto hdc = GetDC(hPrompt); // test font max length
   SIZE size;
-  std::vector<std::wstring_view> strv =
-      bela::StrSplit(prompt, bela::ByChar('\n'));
+  std::vector<std::wstring_view> strv = bela::StrSplit(prompt, bela::ByChar('\n'));
   SIZE cursize{0};
   for (const auto &sv : strv) {
     std::wstring s(sv);
@@ -74,13 +71,11 @@ bool App::Initialize(HWND window) {
   hPrompt = GetDlgItem(hWnd, IDS_PROMPT_CONTENT);
   hInput = GetDlgItem(hWnd, IDE_ASKPASS_INPUT);
   constexpr auto es = WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
-  constexpr auto exs = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR |
-                       WS_EX_NOPARENTNOTIFY;
+  constexpr auto exs = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY;
   SetWindowLongPtrW(hInput, GWL_EXSTYLE, exs);
   if (!echomode) {
     SetWindowLongPtrW(hInput, GWL_STYLE, es | ES_PASSWORD);
-    SendDlgItemMessage(hWnd, IDE_ASKPASS_INPUT, EM_SETPASSWORDCHAR,
-                       (WPARAM)L'•', (LPARAM)0);
+    SendDlgItemMessage(hWnd, IDE_ASKPASS_INPUT, EM_SETPASSWORDCHAR, (WPARAM)L'•', (LPARAM)0);
   } else {
     SetWindowLongPtrW(hInput, GWL_STYLE, es);
   }
@@ -97,13 +92,12 @@ bool App::Initialize(HWND window) {
   DeferWindowPos(hdwp, hPrompt, nullptr, 20, 10, maxlen, pheight,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   // changel hInput layout
-  DeferWindowPos(hdwp, hInput, nullptr, 20, 10 + pheight + 10, width - 40 - 20,
-                 30, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-  DeferWindowPos(hdwp, hCancel, nullptr, width - 137 * 2 - 6 - 40,
-                 10 + pheight + 50, 137, 32,
+  DeferWindowPos(hdwp, hInput, nullptr, 20, 10 + pheight + 10, width - 40 - 20, 30,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-  DeferWindowPos(hdwp, hOK, nullptr, width - 137 - 40, 10 + pheight + 50, 137,
-                 32, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  DeferWindowPos(hdwp, hCancel, nullptr, width - 137 * 2 - 6 - 40, 10 + pheight + 50, 137, 32,
+                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  DeferWindowPos(hdwp, hOK, nullptr, width - 137 - 40, 10 + pheight + 50, 137, 32,
+                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   EndDeferWindowPos(hdwp);
   HICON icon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_MAIN));
   SetWindowTextW(hWnd, title.data());
@@ -156,8 +150,8 @@ INT_PTR App::MessageHandler(UINT message, WPARAM wParam, LPARAM lParam) {
   } break;
   case WM_SYSCOMMAND:
     if (LOWORD(wParam) == IDM_ASKPASS_ABOUT) {
-      bela::BelaMessageBox(hWnd, L"Askpass Utility for Baulk", BAULK_APPVERSION,
-                           BAULK_APPLINK, bela::mbs_t::ABOUT);
+      bela::BelaMessageBox(hWnd, L"Askpass Utility for Baulk", BAULK_APPVERSION, BAULK_APPLINK,
+                           bela::mbs_t::ABOUT);
       return TRUE;
     }
     break;

@@ -71,16 +71,14 @@ int cmd_freeze(const argv_t &argv) {
     json["updated"] = baulk::time::TimeNow();
     auto jsontext = json.dump(4);
     if (!BaulkStore(jsontext, ec)) {
-      bela::FPrintF(stderr, L"unable store baulk freeze package: %s\n",
-                    ec.message);
+      bela::FPrintF(stderr, L"unable store baulk freeze package: %s\n", ec.message);
       return 1;
     }
   } catch (const std::exception &e) {
     bela::FPrintF(stderr, L"unable store freeze package: %s\n", e.what());
     return 1;
   }
-  bela::FPrintF(stderr, L"baulk freeze package success, freezed: %d\n",
-                pkgs.size());
+  bela::FPrintF(stderr, L"baulk freeze package success, freezed: %d\n", pkgs.size());
   return 0;
 }
 
@@ -131,8 +129,7 @@ int cmd_unfreeze(const argv_t &argv) {
     bela::FPrintF(stderr, L"unable store baulk profile: %s\n", e.what());
     return 1;
   }
-  bela::FPrintF(stderr, L"baulk unfreeze package success, freezed: %d\n",
-                pkgs.size());
+  bela::FPrintF(stderr, L"baulk unfreeze package success, freezed: %d\n", pkgs.size());
   return 0;
 }
 

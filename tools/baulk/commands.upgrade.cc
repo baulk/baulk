@@ -36,12 +36,9 @@ bool ReleaseIsUpgradable(std::wstring &url) {
   auto release = bela::StripPrefix(releasename, releaseprefix);
   baulk::DbgPrint(L"detect current release %s", release);
   bela::error_code ec;
-  auto resp = baulk::net::RestGet(
-      L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
+  auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
   if (!resp) {
-    bela::FPrintF(stderr,
-                  L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n",
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n", ec.message);
     return false;
   }
   try {
@@ -54,9 +51,7 @@ bool ReleaseIsUpgradable(std::wstring &url) {
     }
     auto it = obj.find("assets");
     if (it == obj.end()) {
-      bela::FPrintF(stderr,
-                    L"\x1b[33mbaulk/%s build is not yet complete\x1b[0m",
-                    tagname);
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s build is not yet complete\x1b[0m", tagname);
       return false;
     }
     for (const auto &p : it.value()) {
@@ -69,21 +64,17 @@ bool ReleaseIsUpgradable(std::wstring &url) {
     }
     //
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr,
-                  L"baulk upgrade self decode metadata: \x1b[31m%s\x1b[0m\n",
-                  e.what());
+    bela::FPrintF(stderr, L"baulk upgrade self decode metadata: \x1b[31m%s\x1b[0m\n", e.what());
     return false;
   }
   return false;
 }
 
 void checkself() {
-  auto bun =
-      bela::StringCat(baulk::BaulkRoot(), L"\\bin\\baulk-update-new.exe");
+  auto bun = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\baulk-update-new.exe");
   auto bu = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\baulk-update.exe");
   if (bela::PathExists(bun)) {
-    MoveFileEx(bun.data(), bu.data(),
-               MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
+    MoveFileEx(bun.data(), bu.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
   }
   std::wstring url;
   if (ReleaseIsUpgradable(url)) {

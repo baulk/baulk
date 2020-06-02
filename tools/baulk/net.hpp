@@ -33,8 +33,7 @@ private:
   void Move(Conn &&other);
 };
 // timeout milliseconds
-std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
-                                            int timeout,
+std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port, int timeout,
                                             bela::error_code &ec); // second
 struct StringCaseInsensitiveHash {
   using is_transparent = void;
@@ -51,8 +50,7 @@ struct StringCaseInsensitiveHash {
     constexpr size_t kFNVPrime = 16777619U;
 #endif
     size_t val = kFNVOffsetBasis;
-    std::string_view sv = {reinterpret_cast<const char *>(wsv.data()),
-                           wsv.size() * 2};
+    std::string_view sv = {reinterpret_cast<const char *>(wsv.data()), wsv.size() * 2};
     for (auto c : sv) {
       val ^= static_cast<size_t>(bela::ascii_tolower(c));
       val *= kFNVPrime;
@@ -67,17 +65,14 @@ struct StringCaseInsensitiveEq {
     return bela::EqualsIgnoreCase(wlhs, wrhs);
   }
 };
-using headers_t =
-    bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
-                        StringCaseInsensitiveEq>;
+using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
+                                      StringCaseInsensitiveEq>;
 struct Response {
   headers_t hkv;
   std::string body;
   long statuscode{0};
   void ParseHeadersString(std::wstring_view hdr);
-  [[nodiscard]] bool IsSuccessStatusCode() const {
-    return statuscode >= 200 && statuscode <= 299;
-  }
+  [[nodiscard]] bool IsSuccessStatusCode() const { return statuscode >= 200 && statuscode <= 299; }
 };
 
 class HttpClient {
@@ -93,10 +88,9 @@ public:
     cookies.emplace_back(cookie);
     return *this;
   }
-  std::optional<Response> WinRest(std::wstring_view method,
-                                  std::wstring_view url,
-                                  std::wstring_view contenttype,
-                                  std::wstring_view body, bela::error_code &ec);
+  std::optional<Response> WinRest(std::wstring_view method, std::wstring_view url,
+                                  std::wstring_view contenttype, std::wstring_view body,
+                                  bela::error_code &ec);
   std::optional<Response> Get(std::wstring_view url, bela::error_code &ec) {
     return WinRest(L"GET", url, L"", L"", ec);
   }
@@ -111,14 +105,12 @@ private:
 };
 
 // RestGet
-inline std::optional<Response> RestGet(std::wstring_view url,
-                                       bela::error_code &ec) {
+inline std::optional<Response> RestGet(std::wstring_view url, bela::error_code &ec) {
   return HttpClient::DefaultClient().WinRest(L"GET", url, L"", L"", ec);
 }
 // Parse http
 // download some file to spec workdir
-std::optional<std::wstring> WinGet(std::wstring_view url,
-                                   std::wstring_view workdir,
+std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code &ec);
 std::uint64_t UrlResponseTime(std::wstring_view url);
 std::wstring_view BestUrl(const std::vector<std::wstring> &urls);

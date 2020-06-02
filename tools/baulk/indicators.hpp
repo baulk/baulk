@@ -40,12 +40,7 @@ template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
   _snwprintf_s(buf, N, L"%lldB", x);
 }
 
-enum ProgressState : uint32_t {
-  Uninitialized = 0,
-  Running = 33,
-  Completed = 32,
-  Fault = 31
-};
+enum ProgressState : uint32_t { Uninitialized = 0, Running = 33, Completed = 32, Fault = 31 };
 
 class ProgressBar {
 public:

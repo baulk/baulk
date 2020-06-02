@@ -14,8 +14,7 @@ int cmd_b3sum(const argv_t &argv) {
   for (const auto a : argv) {
     auto hv = baulk::hash::FileHashBLAKE3(a, ec);
     if (!hv) {
-      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 hash %s\n",
-                    ec.message);
+      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 hash %s\n", ec.message);
       continue;
     }
     bela::FPrintF(stdout, L"%s %s\n", *hv, baulk::fs::FileName(a));

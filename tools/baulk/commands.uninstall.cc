@@ -8,26 +8,21 @@
 namespace baulk::commands {
 
 int uninstallone(std::wstring_view pkgname) {
-  auto lock =
-      bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
+  auto lock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
   if (!bela::PathExists(lock) && !baulk::IsForceMode) {
-    bela::FPrintF(
-        stderr,
-        L"No local metadata found, \x1b[34m%s\x1b[0m may not be installed.\n",
-        pkgname);
+    bela::FPrintF(stderr, L"No local metadata found, \x1b[34m%s\x1b[0m may not be installed.\n",
+                  pkgname);
     return 1;
   }
   bela::error_code ec;
   if (!baulk::BaulkRemovePkgLinks(pkgname, ec)) {
-    bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n",
-                  pkgname, ec.message);
+    bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgname, ec.message);
   }
   baulk::fs::PathRemove(lock, ec);
   auto pkgdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkgs\\", pkgname);
   // Use PathRemoveEx. remove the read-only attribute first
   if (!baulk::fs::PathRemoveEx(pkgdir, ec)) {
-    bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n",
-                  pkgname, ec.message);
+    bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n", pkgname, ec.message);
     return 1;
   }
   bela::FPrintF(stderr, L"baulk uninstall \x1b[34m%s\x1b[0m done.\n", pkgname);

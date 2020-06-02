@@ -93,20 +93,16 @@ bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
       }
       continue;
     }
-    SetFileAttributesW(child.data(), GetFileAttributesW(child.data()) &
-                                         ~FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesW(child.data(), GetFileAttributesW(child.data()) & ~FILE_ATTRIBUTE_READONLY);
     if (DeleteFileW(child.data()) != TRUE) {
-      ec =
-          bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
+      ec = bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
       return false;
     }
 
   } while (finder.Next());
-  SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) &
-                                      ~FILE_ATTRIBUTE_READONLY);
+  SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~FILE_ATTRIBUTE_READONLY);
   if (RemoveDirectoryW(path.data()) != TRUE) {
-    ec =
-        bela::make_system_error_code(bela::StringCat(L"rmdir '", path, L"': "));
+    ec = bela::make_system_error_code(bela::StringCat(L"rmdir '", path, L"': "));
     return false;
   }
   return true;
@@ -114,11 +110,9 @@ bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
 
 bool PathRemoveEx(std::wstring_view path, bela::error_code &ec) {
   if ((GetFileAttributesW(path.data()) & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) &
-                                        ~FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~FILE_ATTRIBUTE_READONLY);
     if (DeleteFileW(path.data()) != TRUE) {
-      ec =
-          bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
+      ec = bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
       return false;
     }
     return true;
@@ -144,8 +138,7 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
   return std::nullopt;
 }
 
-bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
-                           bela::error_code &ec) {
+bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec) {
   auto subfirst = UniqueSubdirectory(dir);
   if (!subfirst) {
     return true;
@@ -185,8 +178,7 @@ std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
   bela::AlphaNum an(GetCurrentThreadId());
   for (wchar_t X = 'A'; X < 'Z'; X++) {
     bela::StrAppend(&tmpdir, L"\\BaulkTemp", X, an);
-    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) &&
-        baulk::fs::MakeDir(tmpdir, ec)) {
+    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) && baulk::fs::MakeDir(tmpdir, ec)) {
       return std::make_optional(std::move(tmpdir));
     }
     tmpdir.resize(len);

@@ -46,9 +46,8 @@ int cmd_exec(const argv_t &argv) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
-                     &pi) != TRUE) {
+  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+                     nullptr, nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
     return -1;

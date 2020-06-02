@@ -7,8 +7,7 @@
 
 namespace baulk::fs {
 inline constexpr bool DirSkipFaster(const wchar_t *dir) {
-  return (dir[0] == L'.' &&
-          (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
+  return (dir[0] == L'.' && (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
 }
 
 class Finder {
@@ -23,13 +22,10 @@ public:
   }
   const WIN32_FIND_DATAW &FD() const { return wfd; }
   bool Ignore() const { return DirSkipFaster(wfd.cFileName); }
-  bool IsDir() const {
-    return (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-  }
+  bool IsDir() const { return (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; }
   std::wstring_view Name() const { return std::wstring_view(wfd.cFileName); }
   bool Next() { return FindNextFileW(hFind, &wfd) == TRUE; }
-  bool First(std::wstring_view dir, std::wstring_view suffix,
-             bela::error_code &ec) {
+  bool First(std::wstring_view dir, std::wstring_view suffix, bela::error_code &ec) {
     auto d = bela::StringCat(dir, L"\\", suffix);
     hFind = FindFirstFileW(d.data(), &wfd);
     if (hFind == INVALID_HANDLE_VALUE) {
@@ -79,8 +75,7 @@ inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
-inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink,
-                    bela::error_code &ec) {
+inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink, bela::error_code &ec) {
   std::error_code e;
   std::filesystem::create_symlink(_To, NewLink, e);
   if (e) {
@@ -90,8 +85,7 @@ inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink,
   return true;
 }
 std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir);
-bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest,
-                           bela::error_code &ec);
+bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec);
 std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec);
 } // namespace baulk::fs
 

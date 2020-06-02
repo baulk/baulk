@@ -16,8 +16,7 @@ namespace baulk::net {
 inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
   bela::error_code ec;
   ec.code = GetLastError();
-  ec.message =
-      bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
+  ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
   return ec;
 }
 
@@ -56,14 +55,13 @@ public:
     }
     return len == dwlen;
   }
-  static std::optional<FilePart> MakeFilePart(std::wstring_view p,
-                                              bela::error_code &ec) {
+  static std::optional<FilePart> MakeFilePart(std::wstring_view p, bela::error_code &ec) {
     FilePart file;
     file.path = bela::PathAbsolute(p); // Path cleanup
     auto part = bela::StringCat(file.path, L".part");
-    file.FileHandle = ::CreateFileW(
-        part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ,
-        nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    file.FileHandle =
+        ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file.FileHandle == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
       return std::nullopt;
@@ -99,9 +97,7 @@ struct UrlComponets {
   std::wstring uri;
   int nPort{80};
   int nScheme{INTERNET_SCHEME_HTTPS};
-  inline auto TlsFlag() const {
-    return nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0;
-  }
+  inline auto TlsFlag() const { return nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0; }
 };
 
 inline std::wstring UrlPathName(std::wstring_view urlpath) {
@@ -120,16 +116,14 @@ inline bool CrackUrl(std::wstring_view url, UrlComponets &uc) {
   urlcomp.dwHostNameLength = (DWORD)-1;
   urlcomp.dwUrlPathLength = (DWORD)-1;
   urlcomp.dwExtraInfoLength = (DWORD)-1;
-  if (WinHttpCrackUrl(url.data(), static_cast<DWORD>(url.size()), 0,
-                      &urlcomp) != TRUE) {
+  if (WinHttpCrackUrl(url.data(), static_cast<DWORD>(url.size()), 0, &urlcomp) != TRUE) {
     return false;
   }
   uc.host.assign(urlcomp.lpszHostName, urlcomp.dwHostNameLength);
   std::wstring_view urlpath{urlcomp.lpszUrlPath, urlcomp.dwUrlPathLength};
   uc.filename = UrlPathName(urlpath);
   uc.uri =
-      bela::StringCat(urlpath, std::wstring_view(urlcomp.lpszExtraInfo,
-                                                 urlcomp.dwExtraInfoLength));
+      bela::StringCat(urlpath, std::wstring_view(urlcomp.lpszExtraInfo, urlcomp.dwExtraInfoLength));
   uc.nPort = urlcomp.nPort;
   uc.nScheme = urlcomp.nScheme;
   return true;
@@ -144,8 +138,7 @@ inline void EnableTlsProxy(HINTERNET hSession) {
     proxy.lpszProxyBypass = nullptr;
     WinHttpSetOption(hSession, WINHTTP_OPTION_PROXY, &proxy, sizeof(proxy));
   }
-  DWORD secure_protocols(WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 |
-                         WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3);
+  DWORD secure_protocols(WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 | WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3);
   WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols,
                    sizeof(secure_protocols));
 }
@@ -153,9 +146,8 @@ inline void EnableTlsProxy(HINTERNET hSession) {
 inline bool BodyLength(HINTERNET hReq, uint64_t &len) {
   wchar_t conlen[32];
   DWORD dwXsize = sizeof(conlen);
-  if (WinHttpQueryHeaders(hReq, WINHTTP_QUERY_CONTENT_LENGTH,
-                          WINHTTP_HEADER_NAME_BY_INDEX, conlen, &dwXsize,
-                          WINHTTP_NO_HEADER_INDEX) == TRUE) {
+  if (WinHttpQueryHeaders(hReq, WINHTTP_QUERY_CONTENT_LENGTH, WINHTTP_HEADER_NAME_BY_INDEX, conlen,
+                          &dwXsize, WINHTTP_NO_HEADER_INDEX) == TRUE) {
     return bela::SimpleAtoi({conlen, dwXsize / 2}, &len);
   }
   return false;
@@ -222,8 +214,7 @@ std::string UrlDecode(std::wstring_view str) {
 inline bool Disposition(HINTERNET hReq, std::wstring &fn) {
   wchar_t diposition[MAX_PATH + 4];
   DWORD dwXsize = sizeof(diposition);
-  if (WinHttpQueryHeaders(hReq, WINHTTP_QUERY_CUSTOM, L"Content-Disposition",
-                          diposition, &dwXsize,
+  if (WinHttpQueryHeaders(hReq, WINHTTP_QUERY_CUSTOM, L"Content-Disposition", diposition, &dwXsize,
                           WINHTTP_NO_HEADER_INDEX) != TRUE) {
     return false;
   }
@@ -256,17 +247,14 @@ std::wstring flatten_http_headers(const headers_t &headers,
     bela::StrAppend(&flattened_headers, key, L": ", value, L"\r\n");
   }
   if (!cookies.empty()) {
-    bela::StrAppend(&flattened_headers, L"Cookie: ",
-                    bela::StrJoin(cookies, L"; "), L"\r\n");
+    bela::StrAppend(&flattened_headers, L"Cookie: ", bela::StrJoin(cookies, L"; "), L"\r\n");
   }
   return flattened_headers;
 }
 
-static inline void query_header_length(HINTERNET request_handle, DWORD header,
-                                       DWORD &length) {
+static inline void query_header_length(HINTERNET request_handle, DWORD header, DWORD &length) {
   WinHttpQueryHeaders(request_handle, header, WINHTTP_HEADER_NAME_BY_INDEX,
-                      WINHTTP_NO_OUTPUT_BUFFER, &length,
-                      WINHTTP_NO_HEADER_INDEX);
+                      WINHTTP_NO_OUTPUT_BUFFER, &length, WINHTTP_NO_HEADER_INDEX);
 }
 
 void Response::ParseHeadersString(std::wstring_view hdr) {
@@ -282,10 +270,8 @@ void Response::ParseHeadersString(std::wstring_view hdr) {
   }
 }
 
-std::optional<Response> HttpClient::WinRest(std::wstring_view method,
-                                            std::wstring_view url,
-                                            std::wstring_view contenttype,
-                                            std::wstring_view body,
+std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstring_view url,
+                                            std::wstring_view contenttype, std::wstring_view body,
                                             bela::error_code &ec) {
   HINTERNET hSession = nullptr;
   HINTERNET hConnect = nullptr;
@@ -312,8 +298,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     ec = make_net_error_code();
     return std::nullopt;
   }
-  hRequest = WinHttpOpenRequest(hConnect, method.data(), uc.uri.data(), nullptr,
-                                WINHTTP_NO_REFERER,
+  hRequest = WinHttpOpenRequest(hConnect, method.data(), uc.uri.data(), nullptr, WINHTTP_NO_REFERER,
                                 WINHTTP_DEFAULT_ACCEPT_TYPES, uc.TlsFlag());
   if (hRequest == nullptr) {
     ec = make_net_error_code();
@@ -329,25 +314,23 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     }
   }
   if (!body.empty()) {
-    auto addheader = bela::StringCat(
-        L"Content-Type: ", contenttype.empty() ? contenttype : L"text/plain",
-        L"\r\nContent-Length: ", body.size(), L"\r\n");
-    if (WinHttpAddRequestHeaders(
-            hRequest, addheader.data(), static_cast<size_t>(addheader.size()),
-            WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE) != TRUE) {
+    auto addheader =
+        bela::StringCat(L"Content-Type: ", contenttype.empty() ? contenttype : L"text/plain",
+                        L"\r\nContent-Length: ", body.size(), L"\r\n");
+    if (WinHttpAddRequestHeaders(hRequest, addheader.data(), static_cast<size_t>(addheader.size()),
+                                 WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
-    if (WinHttpSendRequest(
-            hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-            const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())),
-            body.size(), body.size(), 0) != TRUE) {
+    if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                           const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())), body.size(),
+                           body.size(), 0) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
   } else {
-    if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                           WINHTTP_NO_REQUEST_DATA, 0, 0, 0) != TRUE) {
+    if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0,
+                           0, 0) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
@@ -359,25 +342,21 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
   }
   Response resp;
   DWORD headerBufferLength = 0;
-  query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
-                      headerBufferLength);
+  query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, headerBufferLength);
   std::string hdbf;
   hdbf.resize(headerBufferLength);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
-                          WINHTTP_HEADER_NAME_BY_INDEX, hdbf.data(),
-                          &headerBufferLength,
-                          WINHTTP_NO_HEADER_INDEX) != TRUE) {
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX,
+                          hdbf.data(), &headerBufferLength, WINHTTP_NO_HEADER_INDEX) != TRUE) {
     ec = make_net_error_code();
     return std::nullopt;
   }
-  resp.ParseHeadersString(std::wstring_view{
-      reinterpret_cast<const wchar_t *>(hdbf.data()), headerBufferLength / 2});
+  resp.ParseHeadersString(
+      std::wstring_view{reinterpret_cast<const wchar_t *>(hdbf.data()), headerBufferLength / 2});
   std::vector<char> readbuf;
   readbuf.reserve(64 * 1024);
   DWORD dwSize = sizeof(resp.statuscode);
-  if (WinHttpQueryHeaders(
-          hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-          nullptr, &resp.statuscode, &dwSize, nullptr) != TRUE) {
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
+                          &resp.statuscode, &dwSize, nullptr) != TRUE) {
     ec = make_net_error_code();
     return std::nullopt;
   }
@@ -390,8 +369,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
     if (readbuf.size() < dwSize) {
       readbuf.resize(static_cast<size_t>(dwSize) * 2);
     }
-    if (WinHttpReadData(hRequest, (LPVOID)readbuf.data(), dwSize,
-                        &downloaded_size) != TRUE) {
+    if (WinHttpReadData(hRequest, (LPVOID)readbuf.data(), dwSize, &downloaded_size) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
@@ -400,8 +378,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method,
   return std::make_optional(std::move(resp));
 }
 
-std::optional<std::wstring> WinGet(std::wstring_view url,
-                                   std::wstring_view workdir,
+std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code &ec) {
   HINTERNET hSession = nullptr;
   HINTERNET hConnect = nullptr;
@@ -428,15 +405,14 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
     ec = make_net_error_code();
     return std::nullopt;
   }
-  hRequest = WinHttpOpenRequest(hConnect, L"GET", uc.uri.data(), nullptr,
-                                WINHTTP_NO_REFERER,
+  hRequest = WinHttpOpenRequest(hConnect, L"GET", uc.uri.data(), nullptr, WINHTTP_NO_REFERER,
                                 WINHTTP_DEFAULT_ACCEPT_TYPES, uc.TlsFlag());
   if (hRequest == nullptr) {
     ec = make_net_error_code();
     return std::nullopt;
   }
-  if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                         WINHTTP_NO_REQUEST_DATA, 0, 0, 0) != TRUE) {
+  if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0,
+                         0) != TRUE) {
     ec = make_net_error_code();
     return std::nullopt;
   }
@@ -454,8 +430,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
   auto dest = bela::PathCat(workdir, uc.filename);
   if (bela::PathExists(dest)) {
     if (!forceoverwrite) {
-      ec = bela::make_error_code(ERROR_FILE_EXISTS, L"'", dest,
-                                 L"' already exists");
+      ec = bela::make_error_code(ERROR_FILE_EXISTS, L"'", dest, L"' already exists");
       return std::nullopt;
     }
     if (DeleteFileW(dest.data()) != TRUE) {
@@ -484,8 +459,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url,
     if (buf.size() < dwSize) {
       buf.resize(static_cast<size_t>(dwSize) * 2);
     }
-    if (WinHttpReadData(hRequest, (LPVOID)buf.data(), dwSize,
-                        &downloaded_size) != TRUE) {
+    if (WinHttpReadData(hRequest, (LPVOID)buf.data(), dwSize, &downloaded_size) != TRUE) {
       ec = make_net_error_code();
       bar.MarkFault();
       return std::nullopt;
@@ -508,13 +482,11 @@ std::uint64_t UrlResponseTime(std::wstring_view url) {
   }
   auto begin = std::chrono::steady_clock::now();
   bela::error_code ec;
-  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10000, ec);
-      !conn) {
+  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10000, ec); !conn) {
     return MaximumTime;
   }
   auto cur = std::chrono::steady_clock::now();
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(cur - begin)
-      .count();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(cur - begin).count();
 }
 
 std::wstring_view BestUrlInternal(const std::vector<std::wstring> &urls) {

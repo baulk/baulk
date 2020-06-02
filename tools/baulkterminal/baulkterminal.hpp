@@ -9,9 +9,7 @@ namespace baulkterminal {
 constexpr const wchar_t *string_nullable(std::wstring_view str) {
   return str.empty() ? nullptr : str.data();
 }
-constexpr wchar_t *string_nullable(std::wstring &str) {
-  return str.empty() ? nullptr : str.data();
-}
+constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
 struct Boolean {
   bool initialized{false};

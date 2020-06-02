@@ -19,8 +19,7 @@ public:
     if (!cwd.empty()) {
       process.Chdir(cwd);
     }
-    if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...);
-        exitcode != 0) {
+    if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...); exitcode != 0) {
       ec = process.ErrorCode();
       return exitcode;
     }

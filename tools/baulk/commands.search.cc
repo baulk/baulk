@@ -53,11 +53,10 @@ public:
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s [installed "
                       L"\x1b[33m%s\x1b[0m]\n  %s\n",
-                      pkg->name, pkg->bucket, pkg->version, lopkg->version,
-                      pkg->description);
+                      pkg->name, pkg->bucket, pkg->version, lopkg->version, pkg->description);
       } else {
-        bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n  %s\n",
-                      pkg->name, pkg->bucket, pkg->version, pkg->description);
+        bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n  %s\n", pkg->name,
+                      pkg->bucket, pkg->version, pkg->description);
       }
     } while (finder.Next());
 
@@ -74,8 +73,7 @@ int cmd_search(const argv_t &argv) {
     return 1;
   }
   Searcher searcher(argv);
-  auto buckets =
-      bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
+  auto buckets = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   for (const auto &bk : baulk::BaulkBuckets()) {
     auto bucketdir = bela::StringCat(buckets, L"\\", bk.name, L"\\bucket");
     searcher.SearchMatched(bucketdir, bk.name);

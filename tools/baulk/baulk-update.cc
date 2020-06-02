@@ -36,16 +36,14 @@ void InitializeBaulk() {
   locale.clear();
 }
 
-template <typename... Args>
-bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
     return 0;
   }
   const bela::format_internal::FormatArg arg_array[] = {args...};
   std::wstring str;
   str.append(L"\x1b[33m* ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
-                                                 sizeof...(args));
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
   if (str.back() == '\n') {
     str.pop_back();
   }
@@ -60,8 +58,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(
-      stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
 template <typename... Args>
@@ -71,8 +68,7 @@ bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
   }
   const bela::format_internal::FormatArg arg_array[] = {args...};
   auto str = bela::StringCat(L"\x1b[32m* ", prefix, L" ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
-                                                 sizeof...(args));
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
   if (str.back() == '\n') {
     str.pop_back();
   }
@@ -87,8 +83,8 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(
-      stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr,
+                                   bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
 constexpr const std::wstring_view archfilesuffix() {
@@ -105,14 +101,12 @@ constexpr const std::wstring_view archfilesuffix() {
 #endif
 }
 
-int32_t OnEntry(void *handle, void *userdata, mz_zip_file *file_info,
-                const char *path) {
+int32_t OnEntry(void *handle, void *userdata, mz_zip_file *file_info, const char *path) {
   bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", file_info->filename);
   return 0;
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec) {
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   baulk::archive::zip::zip_closure closure{nullptr, nullptr, OnEntry};
   auto flush = bela::finally([] { bela::FPrintF(stderr, L"\n"); });
   return baulk::archive::zip::ZipExtract(src, outdir, ec, &closure);
@@ -130,16 +124,14 @@ bool ResolveBaulkRev(std::wstring &releasename) {
   }
   auto out = bela::ToWide(ps.Out());
 
-  std::vector<std::wstring_view> lines =
-      bela::StrSplit(out, bela::ByChar('\n'), bela::SkipEmpty());
+  std::vector<std::wstring_view> lines = bela::StrSplit(out, bela::ByChar('\n'), bela::SkipEmpty());
   constexpr std::wstring_view releaseprefix = L"Release:";
   for (auto line : lines) {
     line = bela::StripAsciiWhitespace(line);
     if (!bela::StartsWith(line, releaseprefix)) {
       continue;
     }
-    auto relname =
-        bela::StripAsciiWhitespace(line.substr(releaseprefix.size()));
+    auto relname = bela::StripAsciiWhitespace(line.substr(releaseprefix.size()));
     releasename.assign(relname);
     return true;
   }
@@ -151,10 +143,8 @@ bool ResolveBaulkRev(std::wstring &releasename) {
 bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
   std::wstring releasename;
   if (!ResolveBaulkRev(releasename)) {
-    bela::FPrintF(
-        stderr,
-        L"unable detect baulk meta, use baulk-update release name '%s'\n",
-        releasename);
+    bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n",
+                  releasename);
   }
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
   if (!bela::StartsWith(releasename, releaseprefix)) {
@@ -166,12 +156,9 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
   auto release = bela::StripPrefix(releasename, releaseprefix);
   baulk::DbgPrint(L"detect current release %s", release);
   bela::error_code ec;
-  auto resp = baulk::net::RestGet(
-      L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
+  auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
   if (!resp) {
-    bela::FPrintF(stderr,
-                  L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n",
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n", ec.message);
     return false;
   }
   try {
@@ -184,9 +171,7 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
     }
     auto it = obj.find("assets");
     if (it == obj.end()) {
-      bela::FPrintF(stderr,
-                    L"\x1b[33mbaulk/%s build is not yet complete\x1b[0m",
-                    tagname);
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s build is not yet complete\x1b[0m", tagname);
       return false;
     }
     for (const auto &p : it.value()) {
@@ -199,9 +184,7 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
     }
     //
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr,
-                  L"baulk upgrade self decode metadata: \x1b[31m%s\x1b[0m\n",
-                  e.what());
+    bela::FPrintF(stderr, L"baulk upgrade self decode metadata: \x1b[31m%s\x1b[0m\n", e.what());
     return false;
   }
   return false;
@@ -213,8 +196,8 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
     baulk::DbgPrint(L"%s not exists", src);
     return true;
   }
-  if (MoveFileExW(src.data(), target.data(),
-                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
+  if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
+      TRUE) {
     baulk::DbgPrint(L"update %s done", target);
     return true;
   }
@@ -232,14 +215,12 @@ int BaulkUpdate(bool forcemode) {
   auto pkgtmpdir = bela::StringCat(baulk::BaulkRoot, L"\\bin\\pkgs\\.pkgtmp");
   bela::error_code ec;
   if (!baulk::fs::MakeDir(pkgtmpdir, ec)) {
-    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir,
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir, ec.message);
     return 1;
   }
   auto baulkfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
   if (!baulkfile) {
-    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url,
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     return 1;
   }
   std::wstring outdir(*baulkfile);
@@ -253,8 +234,7 @@ int BaulkUpdate(bool forcemode) {
   }
   baulk::DbgPrint(L"Decompress %s to %s\n", filename, outdir);
   if (!baulk::Decompress(*baulkfile, outdir, ec)) {
-    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile,
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec.message);
     return 1;
   }
   baulk::fs::FlatPackageInitialize(outdir, outdir, ec);
@@ -273,11 +253,9 @@ int BaulkUpdate(bool forcemode) {
   }
   auto srcupdater = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(srcupdater)) {
-    auto targeter =
-        bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update-new.exe");
+    auto targeter = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update-new.exe");
     if (MoveFileExW(srcupdater.data(), targeter.data(),
-                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
-        TRUE) {
+                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
       baulk::DbgPrint(L"update %s done", targeter);
       return 0;
     }

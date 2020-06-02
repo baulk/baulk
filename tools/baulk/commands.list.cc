@@ -28,21 +28,18 @@ int cmd_list_all() {
       baulk::Package pkg;
       if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
         upgradable++;
-        bela::FPrintF(
-            stderr,
-            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
-            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
-            opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-            baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m"
-                                             : L"");
+        bela::FPrintF(stderr,
+                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
+                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+                      opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
+                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
         continue;
       }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
-                    opkg->name, opkg->bucket, opkg->version);
+      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n", opkg->name, opkg->bucket,
+                    opkg->version);
     } while (finder.Next());
   }
-  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
-                upgradable);
+  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n", upgradable);
   return 0;
 }
 
@@ -61,16 +58,15 @@ int cmd_list(const argv_t &argv) {
     }
     baulk::Package pkg;
     if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
-      bela::FPrintF(
-          stderr,
-          L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
-          L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
-          opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-          baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
+      bela::FPrintF(stderr,
+                    L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
+                    L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+                    opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
+                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
       continue;
     }
-    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n",
-                  opkg->name, opkg->bucket, opkg->version);
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n", opkg->name, opkg->bucket,
+                  opkg->version);
   }
   return 0;
 }

@@ -33,9 +33,7 @@ public:
   }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
-  bool InitializeExecutor(bela::error_code &ec) {
-    return executor.Initialize(ec);
-  }
+  bool InitializeExecutor(bela::error_code &ec) { return executor.Initialize(ec); }
   bool IsFrozen(std::wstring_view pkg) const {
     for (const auto &p : freezepkgs) {
       if (pkg == p) {
@@ -92,8 +90,7 @@ std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
   return bela::ExpandEnv(L"%LOCALAPPDATA%\\baulk\\baulk.json");
 }
 
-bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
-                          std::wstring_view profile_) {
+bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
   //
   locale.resize(64);
   if (auto n = GetUserDefaultLocaleName(locale.data(), 64); n != 0 && n < 64) {
@@ -135,8 +132,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
         weights = it.value().get<int>();
       }
       DbgPrint(L"Add bucket: %s '%s@%s'", url, name, desc);
-      buckets.emplace_back(std::move(desc), std::move(name), std::move(url),
-                           weights);
+      buckets.emplace_back(std::move(desc), std::move(name), std::move(url), weights);
     }
     if (auto it = json.find("freeze"); it != json.end()) {
       for (const auto &freeze : it.value()) {
@@ -150,8 +146,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv,
   return true;
 }
 
-bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
-                        std::wstring_view profile) {
+bool InitializeBaulkEnv(int argc, wchar_t *const *argv, std::wstring_view profile) {
   return BaulkEnv::Instance().Initialize(argc, argv, profile);
 }
 
@@ -183,9 +178,7 @@ std::wstring_view BaulkLocale() {
   return BaulkEnv::Instance().Locale();
 }
 
-baulk::compiler::Executor &BaulkExecutor() {
-  return BaulkEnv::Instance().BaulkExecutor();
-}
+baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }
 
 int BaulkBucketWeights(std::wstring_view bucket) {
   return BaulkEnv::Instance().BaulkBucketWeights(bucket);
@@ -196,8 +189,7 @@ bool BaulkInitializeExecutor(bela::error_code &ec) {
 }
 
 inline bool BaulkIsRunning(DWORD pid) {
-  if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
-      hProcess != nullptr) {
+  if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid); hProcess != nullptr) {
     CloseHandle(hProcess);
     return true;
   }
@@ -207,15 +199,13 @@ inline bool BaulkIsRunning(DWORD pid) {
 BaulkCloser::~BaulkCloser() {
   if (FileHandle != INVALID_HANDLE_VALUE) {
     CloseHandle(FileHandle);
-    auto file = bela::StringCat(BaulkEnv::Instance().BaulkRoot(),
-                                L"\\bin\\pkgs\\baulk.pid");
+    auto file = bela::StringCat(BaulkEnv::Instance().BaulkRoot(), L"\\bin\\pkgs\\baulk.pid");
     DeleteFileW(file.data());
   }
 }
 
 std::optional<BaulkCloser> BaulkCloser::BaulkMakeLocker(bela::error_code &ec) {
-  auto pkgsdir =
-      bela::StringCat(BaulkEnv::Instance().BaulkRoot(), L"\\bin\\pkgs");
+  auto pkgsdir = bela::StringCat(BaulkEnv::Instance().BaulkRoot(), L"\\bin\\pkgs");
   if (!baulk::fs::MakeDir(pkgsdir, ec)) {
     return std::nullopt;
   }
@@ -227,18 +217,16 @@ std::optional<BaulkCloser> BaulkCloser::BaulkMakeLocker(bela::error_code &ec) {
       return std::nullopt;
     }
   }
-  auto FileHandle =
-      ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                    nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  auto FileHandle = ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return std::nullopt;
   }
   bela::narrow::AlphaNum an(GetCurrentProcessId());
   DWORD written = 0;
-  if (WriteFile(FileHandle, an.data(), static_cast<DWORD>(an.size()), &written,
-                nullptr) != TRUE) {
+  if (WriteFile(FileHandle, an.data(), static_cast<DWORD>(an.size()), &written, nullptr) != TRUE) {
     ec = bela::make_system_error_code();
     CloseHandle(FileHandle);
     DeleteFileW(file.data());

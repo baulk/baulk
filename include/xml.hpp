@@ -7,8 +7,7 @@
 
 namespace baulk::xml {
 using document = pugi::xml_document;
-inline std::optional<document> parse_string(const std::string_view buffer,
-                                            bela::error_code &ec) {
+inline std::optional<document> parse_string(const std::string_view buffer, bela::error_code &ec) {
   baulk::xml::document doc;
   auto result = doc.load_buffer(buffer.data(), buffer.size());
   if (!result) {

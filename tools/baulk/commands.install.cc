@@ -30,8 +30,8 @@ int install_pkg(std::wstring_view name) {
     return 1;
   }
   if (pkg->urls.empty()) {
-    bela::FPrintF(stderr, L"baulk: '%s' does not support \x1b[31m%s\x1b[0m\n",
-                  name, architecture());
+    bela::FPrintF(stderr, L"baulk: '%s' does not support \x1b[31m%s\x1b[0m\n", name,
+                  architecture());
     return 1;
   }
   return baulk::package::BaulkInstall(*pkg);
@@ -39,9 +39,8 @@ int install_pkg(std::wstring_view name) {
 
 int cmd_install(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr,
-                  L"usage: baulk install package\nInstall specific packages. "
-                  L"upgrade or repair installation if already installed\n");
+    bela::FPrintF(stderr, L"usage: baulk install package\nInstall specific packages. "
+                          L"upgrade or repair installation if already installed\n");
     return 1;
   }
   bela::error_code ec;

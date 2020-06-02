@@ -46,33 +46,28 @@ struct VisualStudioInstance {
   }
 };
 
-inline std::optional<std::wstring>
-LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
-  auto file = bela::StringCat(
-      vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
+inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
+                                                          bela::error_code &ec) {
+  auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
   return bela::io::ReadLine(file, ec);
 }
 
 // const fs::path vswhere_exe = program_files_32_bit / "Microsoft Visual Studio"
 // / "Installer" / "vswhere.exe";
 std::optional<std::wstring> LookupVsWhere() {
-  constexpr std::wstring_view relativevswhere =
-      L"/Microsoft Visual Studio/Installer/vswhere.exe";
-  if (auto vswhere_exe =
-          bela::StringCat(bela::GetEnv(L"ProgramFiles(x86)"), relativevswhere);
+  constexpr std::wstring_view relativevswhere = L"/Microsoft Visual Studio/Installer/vswhere.exe";
+  if (auto vswhere_exe = bela::StringCat(bela::GetEnv(L"ProgramFiles(x86)"), relativevswhere);
       bela::PathExists(vswhere_exe)) {
     return std::make_optional(std::move(vswhere_exe));
   }
-  if (auto vswhere_exe =
-          bela::StringCat(bela::GetEnv(L"ProgramFiles"), relativevswhere);
+  if (auto vswhere_exe = bela::StringCat(bela::GetEnv(L"ProgramFiles"), relativevswhere);
       bela::PathExists(vswhere_exe)) {
     return std::make_optional(std::move(vswhere_exe));
   }
   return std::nullopt;
 }
 
-std::optional<VisualStudioInstance>
-LookupVisualStudioInstance(bela::error_code &ec) {
+std::optional<VisualStudioInstance> LookupVisualStudioInstance(bela::error_code &ec) {
   auto vswhere_exe = LookupVsWhere();
   if (!vswhere_exe) {
     ec = bela::make_error_code(-1, L"vswhere not installed");
@@ -82,8 +77,7 @@ LookupVisualStudioInstance(bela::error_code &ec) {
   // Force -utf8 convert to UTF8
   if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8") != 0) {
     if (ec = process.ErrorCode(); !ec) {
-      ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ",
-                                 process.ExitCode());
+      ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ", process.ExitCode());
     }
     return std::nullopt;
   }
@@ -109,26 +103,23 @@ struct Searcher {
     }
     return false;
   }
-  bool JoinEnv(vector_t &vec, std::wstring_view p) {
-    return JoinEnvInternal(vec, std::wstring(p));
-  }
+  bool JoinEnv(vector_t &vec, std::wstring_view p) { return JoinEnvInternal(vec, std::wstring(p)); }
   bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b) {
     auto p = bela::StringCat(a, b);
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b,
-               std::wstring_view c) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c) {
     auto p = bela::StringCat(a, b, c);
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b,
-               std::wstring_view c, std::wstring_view d) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
+               std::wstring_view d) {
     auto p = bela::StringCat(a, b, c, d);
     return JoinEnvInternal(vec, std::wstring(p));
   }
   template <typename... Args>
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b,
-               std::wstring_view c, std::wstring_view d, Args... args) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
+               std::wstring_view d, Args... args) {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }
@@ -163,31 +154,24 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     return false;
   }
   std::wstring sdkversion;
-  if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion,
-                        sdkversion)) {
+  if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion)) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s",
-                  winsdk->ProductVersion, winsdk->InstallationFolder);
-  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt",
-                                        L"\\shared", L"\\winrt"};
+  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s", winsdk->ProductVersion,
+                  winsdk->InstallationFolder);
+  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt", L"\\shared", L"\\winrt"};
   for (auto i : incs) {
-    JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion,
-            i);
+    JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, i);
   }
   // libs
-  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\um\\",
-          arch);
-  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\ucrt\\",
-          arch);
+  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\um\\", arch);
+  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\ucrt\\", arch);
   // Paths
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", arch);
-  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\",
-          arch);
+  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", arch);
   // LIBPATHS
-  JoinEnv(libpaths, winsdk->InstallationFolder, L"\\UnionMetadata\\",
-          sdkversion);
+  JoinEnv(libpaths, winsdk->InstallationFolder, L"\\UnionMetadata\\", sdkversion);
   JoinEnv(libpaths, winsdk->InstallationFolder, L"\\References\\", sdkversion);
   return true;
 }
@@ -198,26 +182,22 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
     // Visual Studio not install
     return false;
   }
-  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s",
-                  vsi->installationVersion, vsi->installationPath);
+  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s", vsi->installationVersion,
+                  vsi->installationPath);
   auto vcver = LookupVisualCppVersion(vsi->installationPath, ec);
   if (!vcver) {
     return false;
   }
   baulk::DbgPrint(L"Visual C++ %s", *vcver);
   // Libs
-  JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\ATLMFC\include)");
-  JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\include)");
+  JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\include)");
+  JoinEnv(includes, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\include)");
   // Libs
-  JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\ATLMFC\lib\)", arch);
-  JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\lib\)", arch);
+  JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
+  JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
-  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\bin\Host)", arch, L"\\", arch);
+  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", arch, L"\\",
+          arch);
   // if constexpr (arch == L"x64") {
   // } else {
   // }
@@ -227,13 +207,10 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   // Extension
   JoinEnv(paths, vsi->installationPath,
           LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
-  JoinEnv(paths, vsi->installationPath,
-          LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
+  JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
   // add libpaths
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\ATLMFC\lib\)", arch);
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\lib\)", arch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\lib\x86\store\references)");
   return true;

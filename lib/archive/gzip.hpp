@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdio>
 #include <memory>
+#include <bela/fmt.hpp>
 #include "zlib.hpp"
 
 namespace baulk::archive::gzip {
@@ -26,7 +27,7 @@ public:
     stream_.next_in = reinterpret_cast<Bytef *>(data);
     return true;
   }
-  ssize_t decompress() {
+  bela::ssize_t decompress() {
     stream_.avail_out = bufsize_;
     stream_.next_out = reinterpret_cast<Bytef *>(refbuf_);
     if (stream_.avail_in == 0) {

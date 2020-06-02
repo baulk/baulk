@@ -32,12 +32,9 @@ private:
   bool initialized{false};
 };
 
-inline constexpr bool InProgress(int rv) {
-  return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS;
-}
+inline constexpr bool InProgress(int rv) { return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS; }
 
-inline bela::error_code make_wsa_error_code(int code,
-                                            std::wstring_view prefix = L"") {
+inline bela::error_code make_wsa_error_code(int code, std::wstring_view prefix = L"") {
   bela::error_code ec;
   ec.code = code;
   ec.message = bela::resolve_system_error_message(ec.code, prefix);
@@ -66,8 +63,7 @@ void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes,
 }
 // query dns timeout use IOCP
 // https://github.com/microsoft/Windows-Classic-Samples/blob/master/Samples/DNSAsyncNetworkNameResolution/cpp/ResolveName.cpp
-bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
-                 bela::error_code &ec) {
+bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::error_code &ec) {
   ADDRINFOEX4 hints = {0};
   hints.ai_family = AF_UNSPEC;
   hints.ai_flags = AI_EXTENDED | AI_FQDN | AI_CANONNAME | AI_RESOLUTION_HANDLE;
@@ -82,18 +78,16 @@ bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
     return false;
   }
   auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
-  if (auto error = GetAddrInfoExW(
-          host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
-          reinterpret_cast<const ADDRINFOEXW *>(&hints),
-          &QueryContext.QueryResults, NULL, &QueryContext.QueryOverlapped,
-          QueryCompleteCallback, &CancelHandle);
+  if (auto error =
+          GetAddrInfoExW(host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
+                         reinterpret_cast<const ADDRINFOEXW *>(&hints), &QueryContext.QueryResults,
+                         NULL, &QueryContext.QueryOverlapped, QueryCompleteCallback, &CancelHandle);
       error != WSA_IO_PENDING) {
     ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
     QueryCompleteCallback(error, 0, &QueryContext.QueryOverlapped);
     return false;
   }
-  if (WaitForSingleObject(QueryContext.CompleteEvent, QueryTimeout) ==
-      WAIT_TIMEOUT) {
+  if (WaitForSingleObject(QueryContext.CompleteEvent, QueryTimeout) == WAIT_TIMEOUT) {
     GetAddrInfoExCancel(&CancelHandle);
     WaitForSingleObject(QueryContext.CompleteEvent, INFINITE);
     if (QueryContext.QueryResults != nullptr) {
@@ -124,11 +118,9 @@ void Conn::Move(Conn &&other) {
 }
 
 ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
-  WSABUF wsabuf{static_cast<ULONG>(len),
-                const_cast<char *>(reinterpret_cast<const char *>(data))};
+  WSABUF wsabuf{static_cast<ULONG>(len), const_cast<char *>(reinterpret_cast<const char *>(data))};
   DWORD dwbytes = 0;
-  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
-      rv != SOCKET_ERROR) {
+  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr); rv != SOCKET_ERROR) {
     return static_cast<ssize_t>(dwbytes);
   }
   if (auto rv = WSAGetLastError(); !InProgress(rv)) {
@@ -140,8 +132,7 @@ ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
   if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
     return -1;
   }
-  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr);
-      rv != SOCKET_ERROR) {
+  if (auto rv = WSASend(sock, &wsabuf, 1, &dwbytes, 0, nullptr, nullptr); rv != SOCKET_ERROR) {
     return dwbytes;
   }
   return -1;
@@ -151,8 +142,7 @@ ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) {
   DWORD dwbytes = 0;
   DWORD flags = 0;
 
-  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr);
-      rv != SOCKET_ERROR) {
+  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr); rv != SOCKET_ERROR) {
     return dwbytes;
   }
   if (auto rv = WSAGetLastError(); InProgress(rv)) {
@@ -164,22 +154,19 @@ ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) {
   if (auto rc = WSAPoll(&pfd, 1, timeout); rc <= 0) {
     return -1;
   }
-  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr);
-      rv != SOCKET_ERROR) {
+  if (auto rv = WSARecv(sock, &wsabuf, 1, &dwbytes, &flags, nullptr, nullptr); rv != SOCKET_ERROR) {
     return dwbytes;
   }
   return -1;
 }
 
-bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout,
-                         bela::error_code &ec) {
+bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout, bela::error_code &ec) {
   ULONG flags = 1;
   if (ioctlsocket(sock, FIONBIO, &flags) == SOCKET_ERROR) {
     ec = make_wsa_error_code(WSAGetLastError(), L"ioctlsocket() ");
     return false;
   }
-  if (connect(sock, hi->ai_addr, static_cast<int>(hi->ai_addrlen)) !=
-      SOCKET_ERROR) {
+  if (connect(sock, hi->ai_addr, static_cast<int>(hi->ai_addrlen)) != SOCKET_ERROR) {
     // success
     return true;
   }
@@ -202,8 +189,8 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout,
   return true;
 }
 
-std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
-                                            int timeout, bela::error_code &ec) {
+std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port, int timeout,
+                                            bela::error_code &ec) {
   static Winsock winsock_;
   PADDRINFOEX4 rhints = nullptr;
   if (!ResolveName(address, port, &rhints, ec)) {

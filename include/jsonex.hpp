@@ -51,8 +51,7 @@ public:
     }
     return false;
   }
-  template <typename T>
-  bool patharray(std::string_view name, std::vector<T> &arr) {
+  template <typename T> bool patharray(std::string_view name, std::vector<T> &arr) {
     if (auto it = obj.find(name); it != obj.end()) {
       for (const auto &o : it.value()) {
         auto p = bela::ToWide(o.get<std::string_view>());
@@ -64,8 +63,7 @@ public:
     return false;
   }
 
-  template <typename Integer>
-  Integer integer(std::string_view name, const Integer dv) {
+  template <typename Integer> Integer integer(std::string_view name, const Integer dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       return it->get<Integer>();
     }

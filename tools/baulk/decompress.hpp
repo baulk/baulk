@@ -8,27 +8,22 @@ namespace standard {
 bool Regularize(std::wstring_view path);
 }
 namespace exe {
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
 bool Regularize(std::wstring_view path);
 } // namespace exe
 namespace msi {
 
-bool Decompress(std::wstring_view msi, std::wstring_view outdir,
-                bela::error_code &ec);
+bool Decompress(std::wstring_view msi, std::wstring_view outdir, bela::error_code &ec);
 bool Regularize(std::wstring_view path);
 } // namespace msi
 namespace zip {
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
 } // namespace zip
 namespace sevenzip {
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
 } // namespace sevenzip
 namespace tar {
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
 }
 
 struct decompress_handler_t {
@@ -37,8 +32,7 @@ struct decompress_handler_t {
   decltype(&exe::Regularize) regularize;
 };
 
-inline std::optional<decompress_handler_t>
-LookupHandler(std::wstring_view ext) {
+inline std::optional<decompress_handler_t> LookupHandler(std::wstring_view ext) {
   static constexpr decompress_handler_t hs[] = {
       {L"exe", exe::Decompress, exe::Regularize},
       {L"msi", msi::Decompress, msi::Regularize},

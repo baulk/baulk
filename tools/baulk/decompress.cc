@@ -14,8 +14,7 @@ bool Regularize(std::wstring_view path) {
 } // namespace standard
 
 namespace exe {
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec) {
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   if (!baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }

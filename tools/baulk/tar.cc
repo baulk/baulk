@@ -15,8 +15,7 @@ inline bool initialize_baulktar(std::wstring &tar) {
     return false;
   }
   // rethink tar
-  if (tar = bela::StringCat(*parent, L"\\links\\baulktar.exe");
-      bela::PathExists(tar)) {
+  if (tar = bela::StringCat(*parent, L"\\links\\baulktar.exe"); bela::PathExists(tar)) {
     return true;
   }
   // // Full UTF-8 support
@@ -25,8 +24,7 @@ inline bool initialize_baulktar(std::wstring &tar) {
   //   return true;
   // }
   // libarchive bsdtar, baulk build
-  if (tar = bela::StringCat(*parent, L"\\links\\bsdtar.exe");
-      bela::PathExists(tar)) {
+  if (tar = bela::StringCat(*parent, L"\\links\\bsdtar.exe"); bela::PathExists(tar)) {
     return true;
   }
   return false;
@@ -46,21 +44,20 @@ inline bool initialize_msys2tar(std::wstring &tar, bela::process::Process &p) {
 #ifdef _M_X64
   auto xz64 = bela::StringCat(*installPath, L"\\mingw64\\bin\\xz.exe");
   if (bela::PathExists(xz64)) {
-    p.SetEnv(L"PATH", bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath,
-                                      L"\\mingw64\\bin"));
+    p.SetEnv(L"PATH",
+             bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath, L"\\mingw64\\bin"));
     return true;
   }
 #endif
   auto xz = bela::StringCat(*installPath, L"\\mingw32\\bin\\xz.exe");
   if (bela::PathExists(xz)) {
-    p.SetEnv(L"PATH", bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath,
-                                      L"\\mingw32\\bin"));
+    p.SetEnv(L"PATH",
+             bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath, L"\\mingw32\\bin"));
   }
   return true;
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view outdir,
-                bela::error_code &ec) {
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   if (!baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }

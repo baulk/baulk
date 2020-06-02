@@ -34,8 +34,8 @@ Usage: baulkterminal [option] ...
   --manifest
                Baulkterminal startup manifest file
 )";
-  bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage,
-                       BAULK_APPLINK, bela::mbs_t::ABOUT);
+  bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage, BAULK_APPLINK,
+                       bela::mbs_t::ABOUT);
 }
 
 bool Executor::ParseArgv(bela::error_code &ec) {
@@ -50,7 +50,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
   pa.Add(L"help", bela::no_argument, L'h')
       .Add(L"version", bela::no_argument, L'v')
       .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
-      .Add(L"vs", bela::no_argument, L'V') // load visual studio environment
+      .Add(L"vs", bela::no_argument, L'V')      // load visual studio environment
       .Add(L"shell", bela::required_argument, L'S')
       .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"conhost", bela::no_argument, 1001) // disable windows termainl
@@ -63,8 +63,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           BaulkMessage();
           ExitProcess(0);
         case 'v':
-          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher",
-                               BAULK_APPVERSION, BAULK_APPLINK,
+          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", BAULK_APPVERSION, BAULK_APPLINK,
                                bela::mbs_t::ABOUT);
           ExitProcess(0);
         case 'C':
@@ -123,13 +122,13 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   baulkterminal::Executor executor;
   bela::error_code ec;
   if (!executor.ParseArgv(ec)) {
-    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(),
-                         BAULK_APPLINKE, bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(), BAULK_APPLINKE,
+                         bela::mbs_t::FATAL);
     return 1;
   }
   if (!executor.PrepareEnv(ec)) {
-    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare env error",
-                         ec.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare env error", ec.data(), BAULK_APPLINKE,
+                         bela::mbs_t::FATAL);
     return 1;
   }
   bela::EscapeArgv ea;
@@ -149,8 +148,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   }
   auto env = executor.MakeEnv(ec);
   if (!env) {
-    bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(),
-                         nullptr, bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(), nullptr,
+                         bela::mbs_t::FATAL);
     return 1;
   }
   STARTUPINFOW si;
@@ -158,13 +157,12 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(
-          nullptr, ea.data(), nullptr, nullptr, FALSE,
-          CREATE_UNICODE_ENVIRONMENT, baulkterminal::string_nullable(*env),
-          baulkterminal::string_nullable(executor.Cwd()), &si, &pi) != TRUE) {
+  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+                     baulkterminal::string_nullable(*env),
+                     baulkterminal::string_nullable(executor.Cwd()), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(),
-                         nullptr, bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr,
+                         bela::mbs_t::FATAL);
     return -1;
   }
   CloseHandle(pi.hThread);

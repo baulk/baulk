@@ -30,19 +30,19 @@
 #define BAULK_BUILD_VERSION BAULK_VERSION_FULL L"." BAULKSUBVER L" (dev)"
 #endif
 
-#define BAULK_APPLINK                                                          \
-  L"For more information about this tool. \nVisit: <a "                        \
-  L"href=\"https://github.com/baulk/baulk\">Baulk</"                           \
-  L"a>\nVisit: <a "                                                            \
+#define BAULK_APPLINK                                                                              \
+  L"For more information about this tool. \nVisit: <a "                                            \
+  L"href=\"https://github.com/baulk/baulk\">Baulk</"                                               \
+  L"a>\nVisit: <a "                                                                                \
   L"href=\"https://forcemz.net/\">forcemz.net</a>"
 
-#define BAULK_APPLINKE                                                         \
-  L"Ask for help with this issue. \nVisit: <a "                                \
-  L"href=\"https://github.com/baulk/baulk/issues\">Baulk "                     \
+#define BAULK_APPLINKE                                                                             \
+  L"Ask for help with this issue. \nVisit: <a "                                                    \
+  L"href=\"https://github.com/baulk/baulk/issues\">Baulk "                                         \
   L"Issues</a>"
 
-#define BAULK_APPVERSION                                                       \
-  L"Version: " BAULK_VERSION_FULL L"\nCopyright \xA9 2020, Baulk "             \
+#define BAULK_APPVERSION                                                                           \
+  L"Version: " BAULK_VERSION_FULL L"\nCopyright \xA9 2020, Baulk "                                 \
   L"contributors."
 
 #define BAULKUI_COPYRIGHT L"Copyright \xA9 2020, Baulk contributors."

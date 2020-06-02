@@ -15,16 +15,13 @@ std::wstring_view BaulkLocale() { return locale; }
 } // namespace baulk
 
 namespace baulk::net {
-std::optional<std::wstring> WinGet(std::wstring_view url,
-                                   std::wstring_view workdir,
+std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir,
                                    bool forceoverwrite, bela::error_code &ec);
-bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints,
-                 bela::error_code &ec);
+bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::error_code &ec);
 } // namespace baulk::net
 int download_atom() {
   bela::error_code ec;
-  auto resp = baulk::net::RestGet(
-      L"https://github.com/baulk/bucket/commits/master.atom", ec);
+  auto resp = baulk::net::RestGet(L"https://github.com/baulk/bucket/commits/master.atom", ec);
   if (!resp) {
     bela::FPrintF(stderr, L"restget error: %s\n", ec.message);
     return 1;
@@ -63,8 +60,7 @@ bool resolve_dns() {
   auto p = rhints;
   while (p) {
     AddressStringLength = MAX_ADDRESS_STRING_LENGTH;
-    WSAAddressToString(p->ai_addr, (DWORD)p->ai_addrlen, nullptr, AddrString,
-                       &AddressStringLength);
+    WSAAddressToString(p->ai_addr, (DWORD)p->ai_addrlen, nullptr, AddrString, &AddressStringLength);
     bela::FPrintF(stderr, L"IP Address: %s\n", AddrString);
     p = p->ai_next;
   }
@@ -73,16 +69,14 @@ bool resolve_dns() {
 }
 
 int wmain(int argc, wchar_t **argv) {
-  auto s = bela::resolve_module_error_message(L"winhttp.dll",
-                                              ERROR_FILE_NOT_FOUND, L"dump ");
+  auto s = bela::resolve_module_error_message(L"winhttp.dll", ERROR_FILE_NOT_FOUND, L"dump ");
   bela::FPrintF(stderr, L"%s\n", s);
   s = bela::resolve_system_error_message(ERROR_FILE_NOT_FOUND, L"dump ");
   bela::FPrintF(stderr, L"%s\n", s); // WSAEINPROGRESS
   s = bela::resolve_system_error_message(WSAEINPROGRESS, L"dump ");
   bela::FPrintF(stderr, L"%s\n", s); // WSAEINPROGRESS
   baulk::locale.resize(64);
-  if (auto n = GetUserDefaultLocaleName(baulk::locale.data(), 64);
-      n != 0 && n < 64) {
+  if (auto n = GetUserDefaultLocaleName(baulk::locale.data(), 64); n != 0 && n < 64) {
     baulk::locale.resize(n);
   } else {
     baulk::locale.clear();

@@ -12,16 +12,14 @@ extern bool IsForceMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 // DbgPrint added newline
-template <typename... Args>
-bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
     return 0;
   }
   const bela::format_internal::FormatArg arg_array[] = {args...};
   std::wstring str;
   str.append(L"\x1b[33m* ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
-                                                 sizeof...(args));
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
   if (str.back() == '\n') {
     str.pop_back();
   }
@@ -36,8 +34,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(
-      stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
 template <typename... Args>
@@ -47,8 +44,7 @@ bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
   }
   const bela::format_internal::FormatArg arg_array[] = {args...};
   auto str = bela::StringCat(L"\x1b[32m* ", prefix, L" ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array,
-                                                 sizeof...(args));
+  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
   if (str.back() == '\n') {
     str.pop_back();
   }
@@ -63,16 +59,15 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(
-      stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr,
+                                   bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
 /// defines
 [[maybe_unused]] constexpr std::wstring_view BucketsDirName = L"buckets";
 struct Bucket {
   Bucket() = default;
-  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u,
-         int weights_ = 99) {
+  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99) {
     description = desc;
     name = n;
     url = u;
@@ -87,8 +82,7 @@ struct Bucket {
 using Buckets = std::vector<Bucket>;
 
 // Env functions
-bool InitializeBaulkEnv(int argc, wchar_t *const *argv,
-                        std::wstring_view profile);
+bool InitializeBaulkEnv(int argc, wchar_t *const *argv, std::wstring_view profile);
 std::wstring_view BaulkProfile();
 bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
@@ -102,8 +96,7 @@ bool BaulkInitializeExecutor(bela::error_code &ec);
 
 struct LinkMeta {
   LinkMeta() = default;
-  LinkMeta(std::wstring_view path_, std::wstring_view alias_)
-      : path(path_), alias(alias_) {}
+  LinkMeta(std::wstring_view path_, std::wstring_view alias_) : path(path_), alias(alias_) {}
   LinkMeta(std::wstring_view sv) {
     if (auto pos = sv.find('@'); pos != std::wstring_view::npos) {
       path.assign(sv.data(), pos);
