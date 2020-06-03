@@ -272,7 +272,8 @@ int BaulkUpdate(bool forcemode) {
   constexpr std::wstring_view files[] = {
       // baulk
       L"\\bin\\baulk.exe",             // baulk main
-      L"\\bin\\baulkcli.exe",          // baulkcli
+      L"\\bin\\baulk-lnk.exe",         // baulk-lnk
+      L"\\bin\\baulk-exec.exe",        // baulk-lnk
       L"\\bin\\ssh-askpass-baulk.exe", // ssh-askpass-baulk
       L"\\baulkterminal.exe"
       //

@@ -40,7 +40,6 @@ Usage: baulk [option] command pkg ...
 
 
 Command:
-  exec             Execute a command
   list             List all installed packages
   search           Search for available packages, or specific package details
   install          Install specific packages. upgrade if already installed.
@@ -128,7 +127,6 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = ba.Argv().front();
   cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
-      {L"exec", baulk::commands::cmd_exec},           // exec run command
       {L"install", baulk::commands::cmd_install},     // install
       {L"list", baulk::commands::cmd_list},           // list installed
       {L"search", baulk::commands::cmd_search},       // search from bucket

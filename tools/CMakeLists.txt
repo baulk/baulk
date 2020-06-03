@@ -1,6 +1,6 @@
 # tools
 add_subdirectory(baulk)
-add_subdirectory(baulkcli)
-add_subdirectory(baulkexec)
+add_subdirectory(baulk-exec)
+add_subdirectory(baulk-lnk)
 add_subdirectory(baulkterminal)
 add_subdirectory(ssh-askpass-baulk)
