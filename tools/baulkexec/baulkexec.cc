@@ -221,6 +221,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
   }
   searcher.InitializeGit(cleanup, ec);
   if (usevs) {
+    DbgPrint(L"visual studio env enabled");
     if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
       bela::FPrintF(stderr, L"InitializeVisualStudioEnv failed %s\n", ec.message);
       return false;
@@ -232,6 +233,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
   }
 
   if (cleanup) {
+    DbgPrint(L"use cleaned env");
     cmd.env = searcher.CleanupEnv();
     return true;
   }
