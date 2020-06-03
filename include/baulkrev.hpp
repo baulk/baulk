@@ -8,6 +8,10 @@
 #endif
 #endif
 
+#ifndef BAULK_RELEASE_VERSION
+#define BAULK_RELEASE_VERSION L"1.0.0"
+#endif
+
 #ifndef BAULK_RELEASE_NAME
 #define BAULK_RELEASE_NAME L"None" // 1.0.0.beta.1 tag
 #endif

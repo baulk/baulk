@@ -99,6 +99,7 @@ install(FILES "script/uninstallmenu.ps1" DESTINATION script)
 add_subdirectory(vendor/bela)
 add_subdirectory(vendor/blake3)
 add_subdirectory(lib/archive)
+add_subdirectory(lib/env)
 add_subdirectory(tools)
 
 if(BUILD_TEST)
