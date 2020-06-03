@@ -75,6 +75,20 @@ inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
+inline bool MakeParentDir(std::wstring_view path, bela::error_code &ec) {
+  std::error_code e;
+  std::filesystem::path p(path);
+  auto parent = p.parent_path();
+  if (std::filesystem::exists(parent, e)) {
+    return true;
+  }
+  if (!std::filesystem::create_directories(parent, e)) {
+    ec = bela::from_std_error_code(e);
+    return false;
+  }
+  return true;
+}
+
 inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink, bela::error_code &ec) {
   std::error_code e;
   std::filesystem::create_symlink(_To, NewLink, e);

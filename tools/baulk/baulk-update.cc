@@ -199,6 +199,11 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
     baulk::DbgPrint(L"%s not exists", src);
     return true;
   }
+  bela::error_code ec;
+  if (!baulk::fs::MakeParentDir(target, ec)) {
+    baulk::DbgPrint(L"failed MakeParentDir %s", ec.message);
+    return false;
+  }
   if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
       TRUE) {
     baulk::DbgPrint(L"update %s done", target);
@@ -269,20 +274,28 @@ int BaulkUpdate(bool forcemode) {
     return 1;
   }
   baulk::fs::FlatPackageInitialize(outdir, outdir, ec);
-  constexpr std::wstring_view files[] = {
-      // baulk
-      L"\\bin\\baulk.exe",             // baulk main
-      L"\\bin\\baulk-lnk.exe",         // baulk-lnk
-      L"\\bin\\baulk-exec.exe",        // baulk-lnk
-      L"\\bin\\ssh-askpass-baulk.exe", // ssh-askpass-baulk
-      L"\\baulkterminal.exe"
-      //
-  };
-  for (const auto f : files) {
-    auto src = bela::StringCat(outdir, f);
-    auto target = bela::StringCat(baulk::BaulkRoot, f);
-    UpdateFile(src, target);
+
+  std::filesystem::path opath(outdir);
+  for (const auto &p : std::filesystem::recursive_directory_iterator(outdir)) {
+    if (p.is_directory()) {
+      continue;
+    }
+    std::error_code e;
+    auto relative = std::filesystem::relative(p.path(), opath, e);
+    if (e) {
+      continue;
+    }
+    auto relativepath = relative.wstring();
+    // skip all config
+
+    DbgPrint(L"found %s", relativepath);
+    auto target = bela::StringCat(baulk::BaulkRoot, L"\\", relativepath);
+    if (bela::EqualsIgnoreCase(relativepath, L"config\\baulk.json") && bela::PathExists(target)) {
+      continue;
+    }
+    UpdateFile(p.path().wstring(), target);
   }
+
   auto srcupdater = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(srcupdater)) {
     auto targeter = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update-new.exe");
