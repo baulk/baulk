@@ -8,6 +8,11 @@ if ([string]::IsNullOrEmpty($ReleaseName)) {
     $ReleaseName = git symbolic-ref HEAD
 }
 
+$ReleaseVersion = "1.0dev"
+if ($ReleaseName.StartsWith("refs/tags/")) {
+    $ReleaseVersion = $ReleaseName.Substring("refs/tags/".Length)
+}
+
 $BUILD_COMMIT = git rev-parse HEAD
 $BAULK_BUILD_TIME = Get-Date -Format "dddd yyyy-MM-dd HH:mm:ss K"
 
@@ -20,6 +25,7 @@ $FileName = Join-Path $PSScriptRoot "include/baulkversion.h"
 #define BAULK_RELEASE_NAME L`"$ReleaseName`"
 #define BAULK_RELEASE_COMMIT L`"$BUILD_COMMIT`"
 #define BAULK_BUILD_TIME L`"$BAULK_BUILD_TIME`"
+#define BAULK_RELEASE_VERSION L`"$ReleaseVersion`"
 
 #endif
 

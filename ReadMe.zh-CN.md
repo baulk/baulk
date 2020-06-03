@@ -146,3 +146,6 @@ Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW
 ## Baulk Windows Terminal 集成
 
 
+## Baulk 执行器
+
+baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环境为背景执行一些命令，如 `baulk-exec pwsh` 就能够加载 baulk 环境然后启动 pwsh。
