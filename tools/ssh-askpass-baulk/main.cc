@@ -7,7 +7,8 @@
 #include <bela/parseargv.hpp>
 #include <bela/fmt.hpp>
 #include <bela/terminal.hpp>
-#include "version.h"
+#include <baulkversion.h>
+#include "resource.h"
 #include "app.hpp"
 
 int credentials(std::wstring_view prompt, std::wstring_view user) {
@@ -43,7 +44,7 @@ bool ParseArgv(int argc, wchar_t **argv, std::wstring &prompt, bool &credmode) {
           usage();
           exit(0);
         case 'v':
-          bela::FPrintF(stdout, L"ssh-askpass-baulk version: %s\n", BAULK_VERSION_FULL);
+          bela::FPrintF(stdout, L"ssh-askpass-baulk version: %s\n", BAULK_VERSION);
           exit(0);
         case 'p':
           credmode = true;

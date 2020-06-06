@@ -52,6 +52,19 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 option(BUILD_TEST "build test" OFF)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+# Gen version
+include(VersionFromVCS)
+get_source_info(${CMAKE_CURRENT_SOURCE_DIR} BAULK_REVISION BAULK_REMOTE_URL BAULK_REFNAME)
+string(TIMESTAMP BAULK_COPYRIGHT_YEAR "%Y")
+
+if("${BAULK_REFNAME}" MATCHES "refs/tags/*")
+  string(TIMESTAMP BAULK_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ")
+else()
+  set(BAULK_BUILD_TIME "none")
+endif()
+
+#
 set(BAULK_VERSION_MAJOR 1)
 set(BAULK_VERSION_MINOR 0)
 set(BAULK_VERSION_PATCH 0)
@@ -70,6 +83,9 @@ set(CPACK_PACKAGE_CONTACT "Baulk contributors")
 
 include(CPack)
 
+# Generate version code
+configure_file(${CMAKE_SOURCE_DIR}/include/baulkversion.h.cmake ${CMAKE_BINARY_DIR}/include/baulkversion.h)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -87,7 +103,7 @@ endif()
 
 add_definitions(-D_UNICODE -DUNICODE)
 
-include_directories("./include" "./vendor/bela/include")
+include_directories("${CMAKE_BINARY_DIR}/include" "./include" "./vendor/bela/include")
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)

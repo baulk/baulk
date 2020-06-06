@@ -1,60 +1,81 @@
-# Adds version control information to the variable VERS. For
-# determining the Version Control System used (if any) it inspects the
-# existence of certain subdirectories under SOURCE_DIR (if provided as an
-# extra argument, otherwise uses CMAKE_CURRENT_SOURCE_DIR).
+# Adds version control information to the variable VERS. For determining the Version Control System used (if any) it
+# inspects the existence of certain subdirectories under SOURCE_DIR (if provided as an extra argument, otherwise uses
+# CMAKE_CURRENT_SOURCE_DIR).
 
-function(get_source_info path revision repository refname)
+function(
+  get_source_info
+  path
+  revision
+  repository
+  refname)
   find_package(Git)
   if(GIT_FOUND)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --git-dir
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse --git-dir
       WORKING_DIRECTORY ${path}
       RESULT_VARIABLE git_result
       OUTPUT_VARIABLE git_output
       ERROR_QUIET)
     if(git_result EQUAL 0)
       string(STRIP "${git_output}" git_output)
-      get_filename_component(git_dir ${git_output} ABSOLUTE BASE_DIR ${path})
-      execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+      get_filename_component(
+        git_dir
+        ${git_output}
+        ABSOLUTE
+        BASE_DIR
+        ${path})
+      execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
         WORKING_DIRECTORY ${path}
         RESULT_VARIABLE git_result
         OUTPUT_VARIABLE git_output)
       if(git_result EQUAL 0)
         string(STRIP "${git_output}" git_output)
-        set(${revision} ${git_output} PARENT_SCOPE)
+        set(${revision}
+            ${git_output}
+            PARENT_SCOPE)
       endif()
-      execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref --symbolic-full-name @{upstream}
+      execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref --symbolic-full-name @{upstream}
         WORKING_DIRECTORY ${path}
         RESULT_VARIABLE git_result
-        OUTPUT_VARIABLE git_output
-        ERROR_QUIET)
+        OUTPUT_VARIABLE git_output ERROR_QUIET)
       if(git_result EQUAL 0)
         string(REPLACE "/" ";" branch ${git_output})
         list(GET branch 0 remote)
       else()
         set(remote "origin")
       endif()
-      execute_process(COMMAND ${GIT_EXECUTABLE} remote get-url ${remote}
+      execute_process(
+        COMMAND ${GIT_EXECUTABLE} remote get-url ${remote}
         WORKING_DIRECTORY ${path}
         RESULT_VARIABLE git_result
-        OUTPUT_VARIABLE git_output
-        ERROR_QUIET)
+        OUTPUT_VARIABLE git_output ERROR_QUIET)
       if(git_result EQUAL 0)
         string(STRIP "${git_output}" git_output)
-        set(${repository} ${git_output} PARENT_SCOPE)
+        set(${repository}
+            ${git_output}
+            PARENT_SCOPE)
       else()
-        set(${repository} ${path} PARENT_SCOPE)
+        set(${repository}
+            ${path}
+            PARENT_SCOPE)
       endif()
     endif()
-    execute_process(COMMAND ${GIT_EXECUTABLE} symbolic-ref HEAD
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} symbolic-ref HEAD
       WORKING_DIRECTORY ${path}
       RESULT_VARIABLE git_result
-      OUTPUT_VARIABLE git_output
-      ERROR_QUIET)
-      if(git_result EQUAL 0)
+      OUTPUT_VARIABLE git_output ERROR_QUIET)
+    if(git_result EQUAL 0)
       string(STRIP "${git_output}" git_output)
-      set(${refname} ${git_output} PARENT_SCOPE)
+      set(${refname}
+          ${git_output}
+          PARENT_SCOPE)
     else()
-      set(${refname} ${path} PARENT_SCOPE)
+      set(${refname}
+          "none"
+          PARENT_SCOPE)
     endif()
   endif()
 endfunction()

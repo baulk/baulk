@@ -6,12 +6,14 @@ on:
       - "docs/**"
       - '**.md'
       - '**.txt'
+      - '!CMakeLists.txt'
       - 'LICENSE'
   pull_request:
     paths-ignore:
       - "docs/**"
       - '**.md'
       - '**.txt'
+      - '!CMakeLists.txt'
       - 'LICENSE'
 jobs:
   build:
@@ -43,7 +45,7 @@ jobs:
           workdir: ${{ matrix.build_dir }}
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
-          pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File parserev.ps1 -ReleaseName "${{ github.ref }}"
+          set BAULK_REFNAME=${{ github.ref }}
           mkdir %workdir%
           cd %workdir%
           set CC=cl

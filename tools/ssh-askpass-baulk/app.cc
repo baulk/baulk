@@ -1,11 +1,12 @@
 ///
-#include "app.hpp"
-#include "version.h"        // define id's
 #include <bela/codecvt.hpp> // test prompt length
 #include <bela/str_split.hpp>
 #include <bela/parseargv.hpp>
 #include <bela/picker.hpp>
 #include <bela/terminal.hpp>
+#include <baulkversion.h>
+#include "app.hpp"
+#include "resource.h"        // define id's
 
 namespace baulk {
 App::~App() {

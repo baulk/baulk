@@ -1,10 +1,9 @@
 #include <bela/subsitute.hpp>
 #include <bela/path.hpp>
-#include <baulkrev.hpp>
+#include <baulkversion.h>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"
-#include "version.h"
 
 namespace baulk {
 bool IsDebugMode = false;
@@ -66,7 +65,7 @@ Command:
 
 void Version() {
   bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_VERSION_FULL, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT, BAULK_BUILD_TIME);
+                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
