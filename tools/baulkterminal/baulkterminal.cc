@@ -10,7 +10,6 @@
 #include <baulkversion.h>
 #include "baulkterminal.hpp"
 
-
 namespace baulkterminal {
 
 void BaulkMessage() {
@@ -57,7 +56,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"conhost", bela::no_argument, 1001) // disable windows termainl
       .Add(L"clang", bela::no_argument, 1002)
       .Add(L"manifest", bela::required_argument, 1003);
-  return pa.Execute(
+  auto ret = pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
@@ -94,6 +93,14 @@ bool Executor::ParseArgv(bela::error_code &ec) {
         return true;
       },
       ec);
+  if (!ret) {
+    return false;
+  }
+  // CommandLineToArgvW BUG
+  if (cwd.size() == 3 && isalpha(cwd[0]) && cwd[1] == L':' && cwd[2] == '"') {
+    cwd.back() = L'\\';
+  }
+  return true;
 }
 } // namespace baulkterminal
 
