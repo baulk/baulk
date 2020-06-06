@@ -105,7 +105,7 @@ struct baulkcommand_t {
     SecureZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
     if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                       string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
+                       nullptr, string_nullable(cwd), &si, &pi) != TRUE) {
       auto ec = bela::make_system_error_code();
       bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
       return -1;
@@ -246,6 +246,13 @@ int wmain(int argc, wchar_t **argv) {
   baulk::exec::baulkcommand_t cmd;
   if (!baulk::exec::ParseArgv(argc, argv, cmd)) {
     return 1;
+  }
+  if (!cmd.env.empty()) {
+    if (SetEnvironmentStringsW(cmd.env.data()) != TRUE) {
+      auto ec = bela::make_system_error_code();
+      bela::FPrintF(stderr, L"SetEnvironmentStringsW %s\n", ec.message);
+      return 1;
+    }
   }
   return cmd();
 }
