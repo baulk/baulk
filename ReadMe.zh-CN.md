@@ -80,6 +80,8 @@ baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可
 
 ### 包管理
 
+baulk 使用 bucket 记录包的下载地址，文件哈希，以及需要创建的启动器，默认的 bucket 存储库为 [https://github.com/baulk/bucket](https://github.com/baulk/bucket)，当然也可以按照 `baulk/bucket` 存储库的布局创建 bucket，Baulk bucket 实际上在一定程度上借鉴了 Scoop ，但 baulk 并不强制使用文件哈希校验，但校验时仅支持 SHA256 和 BLAKE3，且 Baulk 的安装机制与之有一定的差异。
+
 baulk 管理软件包的命令有 `install`, `uninstall`, `upgrade`, `freeze` 和 `unfreeze` 以及 `list` 和 `search`。使用 baulk 安装软件非常简单，命令如下：
 
 ```shell
@@ -114,7 +116,7 @@ baulk install cmake git 7z
 }
 ```
 
-baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。
+baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy，当然也可以通过设置环境变量和命令行参数设置代理。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。
 
 在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，`tar`，baulk 按照 `extension` 的类型执行相应的解压缩程序。扩展的解压程序如下：
 

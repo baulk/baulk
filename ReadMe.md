@@ -82,6 +82,8 @@ To synchronize buckets, you can run the `baulk update` command. This is similar 
 
 ### Package management
 
+baulk uses the bucket to record the download address of the package, the file hash, and the initiator that needs to be created. The default bucket repository is [https://github.com/baulk/bucket](https://github.com/baulk/bucket), of course, you can also create a bucket according to the layout of the `baulk/bucket` repository. Baulk bucket actually draws on Scoop to a certain extent, but baulk does not force the use of file hash verification, but only supports SHA256 during verification It is different from BLAKE3 and Baulk's installation mechanism.
+
 The commands for the baulk management package include `install`, `uninstall`, `upgrade`, `freeze` and `unfreeze`, and `list` and `search`. Installing software using baulk is very simple, the command is as follows:
 
 ```shell
@@ -116,7 +118,7 @@ baulk install cmake git 7z
 }
 ```
 
-baulk downloads the compressed package according to the URL set in the list. If there is a compressed package with the same name and the hash value matches locally, the local cache is used. baulk uses WinHTTP to download the compressed package, which currently supports HTTP Proxy. baulk allows no hashes to be set in the list. The hash of baulk is set to `HashPrefix:HashContent` format. If there is no hash prefix, the default is `SHA256`. The hash prefixes supported by Baulk are `SHA256` and `BLAKE3`.
+baulk downloads the compressed package according to the URL set in the list. If there is a compressed package with the same name and the hash value matches locally, the local cache is used. baulk uses WinHTTP to download the compressed package. Currently it can better support HTTP Proxy, of course, it can also be passed Set the environment variables and command line parameters to set the proxy. baulk allows no hashes to be set in the list. The hash of baulk is set to `HashPrefix:HashContent` format. If there is no hash prefix, the default is `SHA256`. The hash prefixes supported by Baulk are `SHA256` and `BLAKE3`.
 
 In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk executes the corresponding decompression program according to the type of `extension`. The extended decompression procedure is as follows:
 
