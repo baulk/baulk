@@ -58,6 +58,13 @@ include(VersionFromVCS)
 get_source_info(${CMAKE_CURRENT_SOURCE_DIR} BAULK_REVISION BAULK_REMOTE_URL BAULK_REFNAME)
 string(TIMESTAMP BAULK_COPYRIGHT_YEAR "%Y")
 
+# BAULK_REFNAME maybe defined by ci
+if("${BAULK_REFNAME}" STREQUAL "none")
+  if(DEFINED ENV{BAULK_REFNAME})
+    set(BAULK_REFNAME $ENV{BAULK_REFNAME})
+  endif()
+endif()
+
 if("${BAULK_REFNAME}" MATCHES "refs/tags/*")
   string(TIMESTAMP BAULK_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ")
 else()
@@ -82,7 +89,6 @@ set(CPACK_PACKAGE_VENDOR "Baulk")
 set(CPACK_PACKAGE_CONTACT "Baulk contributors")
 
 include(CPack)
-
 # Generate version code
 configure_file(${CMAKE_SOURCE_DIR}/include/baulkversion.h.cmake ${CMAKE_BINARY_DIR}/include/baulkversion.h)
 
