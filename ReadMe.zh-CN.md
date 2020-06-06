@@ -160,9 +160,51 @@ Baulk 还提供了 `baulkterminal.exe` 程序，此程序与 Windows Terminal �
 
 ![](./docs/images/menu.png)
 
+baulkterminal 命令行帮助：
+
+```
+baulkterminal - Baulk Terminal Launcher
+Usage: baulkterminal [option] ...
+  -h|--help
+               Show usage text and quit
+  -v|--version
+               Show version number and quit
+  -C|--cleanup
+               Create clean environment variables to avoid interference
+  -V|--vs
+               Load Visual Studio related environment variables
+  -S|--shell
+               The shell you want to start. allowed: pwsh, bash, cmd, wsl
+  -W|--cwd
+               Set the shell startup directory
+  --conhost
+               Use conhost not Windows terminal
+  --clang
+               Add Visual Studio's built-in clang to the PATH environment variable
+  --manifest
+               Baulkterminal startup manifest file
+```
+
 ## Baulk 执行器
 
 baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环境为背景执行一些命令，如 `baulk-exec pwsh` 就能够加载 baulk 环境然后启动 pwsh。这实际上和 baulkterminal 具有相同的作用，但 baulk-exec 可以解决无法使用 Windows Terminal 的场景，比如容器内，执行 CI/CD 时。
+
+baulk-exec usage:
+
+```
+baulkexec - Baulk extend executor
+Usage: baulkexec [option] command args ...
+  -h|--help        Show usage text and quit
+  -v|--version     Show version number and quit
+  -V|--verbose     Make the operation more talkative
+  -C|--cleanup     Create clean environment variables to avoid interference
+  -W|--cwd         Set the command startup directory
+  --vs             Load Visual Studio related environment variables
+  --clang          Add Visual Studio's built-in clang to the PATH environment variable
+
+example:
+  baulkexec -V --vs TUNNEL_DEBUG=1 pwsh
+```
 
 ## Baulk 的升级
 
