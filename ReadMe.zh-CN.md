@@ -2,9 +2,9 @@
 
 [![Master Branch Status](https://github.com/baulk/baulk/workflows/CI/badge.svg)](https://github.com/baulk/baulk/actions)
 
-Baulk 设计理念来自于 [clangbuilder](https://github.com/fstudio/clangbuilder) 的 [`devi`](https://github.com/fstudio/clangbuilder/blob/master/bin/devi.ps1) 工具，devi 是一个基于 PowerShell 开发的简易包管理工具，最初用于解决在搭建 LLVM/Clang 构建环境时依赖软件的升级问题，后来实现了 Ports 机制，也就成了一个小型的包管理工具。`devi` 支持安装，卸载升级包，并且还支持创建符号链接到特定的 `links` 的目录，这样的策略能够有效的减少 `PATH` 环境变量的条目，并且配合 `mklauncher` 能够支持不能使用符号链接的命令，创建它的启动器到 links。devi 的理念是避免安装软件需要特权，修改操作系统注册表。以及避免软件安装过程中修改操作系统环境变量。通常来说，将特定软件添加到环境变量中确实能够简化使用，但随着安装软件的增加，环境变量则会容易覆盖，多个版本的软件同时安装时可能会出现冲突，等等。从 2018 年 devi 的诞生到现在，我对软件的管理有了深刻的认识，对 devi 也有了反思，而 devi 存在诸多问题需要解决，比如包的下载不支持哈希校验，`mklauncher` 需要单独运行，启动较慢等等。思考良久后，我决定基于 C++17 和 [bela](https://github.com/fcharlie/bela) 实现新的包管理器，也就是 `Baulk`。Baulk 融汇了我这几年的技术积累，我自认为 baulk 要远胜于 devi，由于 PowerShell 启动较慢，执行较慢，devi 的执行速度完全比不上 baulk，实际上我在使用 Golang 重新实现基于 PowerShell 编写的 Golang 项目构建打包工具 [Bali](https://github.com/fcharlie/bali) (Golang 重新实现为 [Baligo](https://github.com/fcharlie/baligo)) 时，有相同的感受。
+Baulk 设计理念来自于 [clangbuilder](https://github.com/fstudio/clangbuilder) 的 [`devi`](https://github.com/fstudio/clangbuilder/blob/master/bin/devi.ps1) 工具，devi 是一个基于 PowerShell 开发的简易包管理工具，最初用于解决在搭建 LLVM/Clang 构建环境时依赖软件的升级问题，后来实现了 Ports 机制，也就成了一个小型的包管理工具。`devi` 支持安装，卸载升级包，并且还支持创建符号链接到特定的 `links` 的目录，这样的策略能够有效的减少 `PATH` 环境变量的条目，并且配合 `mklauncher` 能够支持不能使用符号链接的命令，创建它的启动器到 links。devi 的理念是避免安装软件需要特权，修改操作系统注册表。以及避免软件安装过程中修改操作系统环境变量。通常来说，将特定软件添加到环境变量中确实能够简化使用，但随着安装软件的增加，环境变量则会容易覆盖，多个版本的软件同时安装时可能会出现冲突，等等。从 2018 年 devi 的诞生到现在，我对软件的管理有了深刻的认识，对 devi 也有了反思，而 devi 存在诸多问题需要解决，比如包的下载不支持哈希校验，`mklauncher` 需要单独运行，启动较慢等等。思考良久后，我决定基于 C++17 和 [bela](https://github.com/fcharlie/bela) 实现新的包管理器，也就是 `Baulk`。Baulk 融汇了我这几年的技术积累，我自认为 baulk 要远胜于 devi，由于 PowerShell 启动较慢，执行较慢，devi 的执行速度完全比不上 baulk，实际上我在使用 Golang 重新实现基于 PowerShell 编写的 Golang 项目构建打包工具 [Bali](https://github.com/baulkbuild/bali) 时，有相同的感受。
 
-Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希望 Baulk 专注于在新的 Windows 上运行，因此在实现 Baulk 的时候，错误信息都使用了 ANSI 转义（Bela 实际上在旧的控制台支持 ANSI 转义转 Console API），Baulk 中也添加了 `baulkterminal` 命令与 Windows Terminal 高度集成。
+Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希望 Baulk 专注于在新的 Windows 上运行，因此在实现 Baulk 的时候，错误信息都使用了 ANSI 转义（Bela 实际上在旧的控制台支持 ANSI 转义转 Console API），Baulk 中也添加了 `baulkterminal` 命令与 Windows Terminal 高度集成。此外还添加了脚本支持用户修改右键菜单，在资源管理器目录下按特定的启动路径打开初始化 Baulk 环境了的 Windows Terminal。
 
 ## 命令行参数
 
@@ -17,13 +17,12 @@ Usage: baulk [option] command pkg ...
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
   -F|--force       Turn on force mode. such as force update frozen package
-  -P|--profile     Set profile path. default: $BaulkRoot\config\baulk.json
+  -P|--profile     Set profile path. default: Path\to\baulk\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
 
 Command:
-  exec             Execute a command
   list             List all installed packages
   search           Search for available packages, or specific package details
   install          Install specific packages. upgrade if already installed.
@@ -36,6 +35,19 @@ Command:
   sha256sum        Calculate the SHA256 checksum of a file
 
 ```
+
+|命令|描述|备注|
+|---|---|---|
+|list|查看已安装的包|N/A|
+|search|搜索 Bucket 中可用的包|baulk search 命令支持文件名匹配模式，比如 `baulk search *` 将搜索 Bucket 中所有的包|
+|install|安装特定的包|install 还具备其他特性，当包已安装时会重新构建启动器，当包存在新版本时会将其升级，`--force` 将升级被冻结的包|
+|uninstall|卸载特定的包|N/A|
+|update|更新 bucket 元数据|类似 Ubuntu apt update 命令|
+|upgrade|更新存在新版本的包|`--force` 可升级被冻结的包|
+|freeze|冻结特定的包|被冻结的包无法在常规模式下升级|
+|unfreeze|解除包的冻结|N/A|
+|b3sum|计算文件的 BLAKE3 哈希|N/A|
+|sha256sum|计算文件的 SHA256 哈希|N/A|
 
 ### Baulk 配置文件
 
@@ -123,7 +135,6 @@ baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的
 |ARM64|urlamr64, url|launchersarm64, launchers|linksarm64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
 
 
-
 Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
 
 在运行 `baulk install` 时，如果软件已经被安装，则可能出现两种情况，第一种是软件没有更新，则 `baulk` 将重建 `links` 和 `launchers`，这适用于不同的包具有相同的 `links`/`launchers` 安装出现了覆盖需要还原的情况。如果软件存在更新，baulk 将安装指定包的最新版本。
@@ -140,12 +151,24 @@ Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW
 
 ### 杂项
 
-
+Baulk 提供了 sha256sum b3sum 两个命令帮助用户计算文件哈希值。
 
 
 ## Baulk Windows Terminal 集成
 
+Baulk 还提供了 `baulkterminal.exe` 程序，此程序与 Windows Terminal 高度集成，能够在设置好 Baulk 环境变量后启动 Windows Terminal，这样就解决了既要避免工具修改系统环境变量造成冲突，又要随时随地的加载相关环境变量的矛盾，在 Baulk 分发的压缩包中，我们添加了 `script/installmenu.bat` `script/installmenu.ps1` 脚本，可以修改注册表，添加右键菜单以随时随地打开 Windows Terminal。
+
+![](./docs/images/menu.png)
 
 ## Baulk 执行器
 
-baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环境为背景执行一些命令，如 `baulk-exec pwsh` 就能够加载 baulk 环境然后启动 pwsh。
+baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环境为背景执行一些命令，如 `baulk-exec pwsh` 就能够加载 baulk 环境然后启动 pwsh。这实际上和 baulkterminal 具有相同的作用，但 baulk-exec 可以解决无法使用 Windows Terminal 的场景，比如容器内，执行 CI/CD 时。
+
+## Baulk 的升级
+
+目前我们使用 Github Release Latest 机制实现 Baulk 自身的升级，在执行 Github Actions 时，当推送的新的 tag，Github Actions 会自动创建发行版并将二进制压缩包上传。在此过程中，tag 的信息会编译到 baulk 程序中，本地运行 `baulk-update` （请注意 baulk update 是更新 bucket 与 baulk-update 不是同一个命令）时，会检查本地的 baulk 是否处于 tag ，如果不是基于 Github Actions 构建，除非设置 `--force` 参数否则不会进行下一步检查，如果是基于 Github Actions 构建的 tag，则检查是否与 Github Release Latest 是否一致，不一致下载相应平台的二进制，然后更新 Baulk。
+
+
+## 其他
+
+<div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
