@@ -8,6 +8,8 @@ Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环�
 
 下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 然后将其解压到任意目录, 点击 `baulkterminal.exe` 后即可运行 Windows Terminal。
 
+![](./docs/images/getstarted.png)
+
 ```powershell
 baulk update
 # 安装你需要的任意软件包

@@ -10,6 +10,8 @@ A minimalist Windows package manager, installation-free, without modifying syste
 
 Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), then unzip it to any directory, click `baulkterminal.exe` to run and open the Windows Terminal.
 
+![](./docs/images/getstarted.png)
+
 ```powershell
 baulk update
 # install some package which your need
