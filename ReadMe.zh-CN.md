@@ -4,7 +4,7 @@
 
 Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环境变量，易于使用，能够和 Windows Terminal 集成，能够添加到右键菜单... 无论是 zip/7z/msi 都能管理。
 
-## 安装 
+## 开始使用 
 
 下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 然后将其解压到任意目录, 点击 `baulkterminal.exe` 后即可运行 Windows Terminal。
 
@@ -14,11 +14,19 @@ baulk update
 baulk install baulktar baulk7z neovim curl wget ripgrep
 # 现在你可以在 Windows Terminal 中运行 curl 等命令了
 curl -V
+# 更新源数据
+baulk update
+# 升级可升级的包
+baulk upgrade
+# 卸载你不需要的包
+baulk uninstall wget
 ```
 
 你可以右键以管理员权限运行 `script/installmenu.bat` 将 baulkterminal 添加到右键菜单，这样你就能在任意目录打开初始化 Baulk 环境的 Windows Terminal 了。
 
 ![](./docs/images/menu.png)
+
+**上面就是 Baulk 的基本使用了，非常简单，如果你需要对 Baulk 有个更深入的了解，可以继续阅读下面的内容。**
 
 ## 命令行参数
 
@@ -65,7 +73,7 @@ Command:
 
 ### Baulk 配置文件
 
-baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可以通过设置参数 `--profile` 指定。
+baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可以通过设置参数 `--profile` 指定。通常你无需修改配置文件，只有当新增 bucket 时才会需要修改配置文件，并且在冻结一些包时，会被记录到配置文件当中。
 
 ### Bucket 管理
 
@@ -173,8 +181,6 @@ Baulk 提供了 sha256sum b3sum 两个命令帮助用户计算文件哈希值。
 ## Baulk Windows Terminal 集成
 
 Baulk 还提供了 `baulkterminal.exe` 程序，此程序与 Windows Terminal 高度集成，能够在设置好 Baulk 环境变量后启动 Windows Terminal，这样就解决了既要避免工具修改系统环境变量造成冲突，又要随时随地的加载相关环境变量的矛盾，在 Baulk 分发的压缩包中，我们添加了 `script/installmenu.bat` `script/installmenu.ps1` 脚本，可以修改注册表，添加右键菜单以随时随地打开 Windows Terminal。
-
-![](./docs/images/menu.png)
 
 baulkterminal 命令行帮助：
 

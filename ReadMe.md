@@ -6,7 +6,7 @@
 
 A minimalist Windows package manager, installation-free, without modifying system environment variables, easy to use, can be integrated with Windows Terminal, can be added to the right-click menu...
 
-## Install 
+## Get Started
 
 Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), then unzip it to any directory, click `baulkterminal.exe` to run and open the Windows Terminal.
 
@@ -16,13 +16,21 @@ baulk update
 baulk install baulktar baulk7z neovim curl wget ripgrep
 # now you can run curl under Windows Terminal
 curl -V
+# update bucket metadata
+baulk update
+# upgrade all upgradeable packages
+baulk upgrade
+# uninstall specific packages
+baulk uninstall wget
 ```
 
 You can right-click to run `script/installmenu.bat` with administrator privileges to add baulkterminal to the right-click menu.
 
 ![](./docs/images/menu.png)
 
-## Usage
+**This is the most basic operation. If you need to know more about baulk, you can continue to read the introduction below.**
+
+## Baulk Usage and Details
 
 The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the package name following the command. Of course, specific orders and specific analyses cannot be rigidly understood.
 
@@ -65,9 +73,21 @@ Command:
 |b3sum|Calculate the BLAKE3 hash of the file|N/A|
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
 
+Example:
+
+```powershell
+baulk list
+baulk search *w
+baulk freeze python
+baulk unfreeze python
+baulk update
+baulk upgrade
+```
+
+
 ### Baulk configuration file
 
-The default path of the baulk configuration file is `$ExecutableDir/../config/baulk.json`, which can be specified by setting the parameter `--profile`.
+The default path of the baulk configuration file is `$ExecutableDir/../config/baulk.json`, which can be specified by setting the parameter `--profile`. Unless you need to customize the bucket or some other operation, otherwise do not need to modify the configuration file.
 
 ### Bucket management
 
