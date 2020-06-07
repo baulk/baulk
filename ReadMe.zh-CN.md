@@ -6,6 +6,22 @@ Baulk 设计理念来自于 [clangbuilder](https://github.com/fstudio/clangbuild
 
 Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希望 Baulk 专注于在新的 Windows 上运行，因此在实现 Baulk 的时候，错误信息都使用了 ANSI 转义（Bela 实际上在旧的控制台支持 ANSI 转义转 Console API），Baulk 中也添加了 `baulkterminal` 命令与 Windows Terminal 高度集成。此外还添加了脚本支持用户修改右键菜单，在资源管理器目录下按特定的启动路径打开初始化 Baulk 环境了的 Windows Terminal。
 
+## 安装 
+
+下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 然后将其解压到任意目录, 点击 `baulkterminal.exe` 后即可运行 Windows Terminal。
+
+```powershell
+baulk update
+# 安装你需要的任意软件包
+baulk install baulktar baulk7z neovim curl wget ripgrep
+# 现在你可以在 Windows Terminal 中运行 curl 等命令了
+curl -V
+```
+
+你可以右键以管理员权限运行 `script/installmenu.bat` 将 baulkterminal 添加到右键菜单，这样你就能在任意目录打开初始化 Baulk 环境的 Windows Terminal 了。
+
+![](./docs/images/menu.png)
+
 ## 命令行参数
 
 baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随命令后的包名。当然具体命令具体分析，不能僵硬的理解。

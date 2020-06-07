@@ -8,6 +8,22 @@ The design concept of Baulk comes from the [`devi`](https://github.com/fstudio/c
 
 Windows is constantly improving. I also submitted a PR to the Windows Terminal. I hope that Baulk focuses on running on the new Windows. Therefore, when implementing Baulk, the error messages are all ANSI escaped (Bela is actually in the old The console supports ANSI Escape to Console API), and Baulk also adds the baulkterminal command to highly integrate with Windows Terminal. In addition, a script is added to support the user to modify the right-click menu and open the Windows Terminal that initializes the Baulk environment according to a specific startup path in the Explorer directory
 
+## Install 
+
+Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), then unzip it to any directory, click `baulkterminal.exe` to run and open the Windows Terminal.
+
+```powershell
+baulk update
+# install some package which your need
+baulk install baulktar baulk7z neovim curl wget ripgrep
+# now you can run curl under Windows Terminal
+curl -V
+```
+
+You can right-click to run `script/installmenu.bat` with administrator privileges to add baulkterminal to the right-click menu.
+
+![](./docs/images/menu.png)
+
 ## Usage
 
 The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the package name following the command. Of course, specific orders and specific analyses cannot be rigidly understood.
@@ -162,8 +178,6 @@ Baulk provides sha256sum b3sum two commands to help users calculate file hashes.
 ## Baulk Windows Terminal integration
 
 Baulk also provides the `baulkterminal.exe` program, which is highly integrated with Windows Terminal and can start Windows Terminal after setting the Baulk environment variable, which solves the problem of avoiding conflicts caused by tool modification of system environment variables and anytime, anywhere Contradictions of loading related environment variables, in the compressed package distributed by Baulk, we added `script/installmenu.bat` `script/installmenu.ps1` script, you can modify the registry, add a right-click menu to open Windows Terminal anytime, anywhere.
-
-![](./docs/images/menu.png)
 
 baulkterminal usage:
 
