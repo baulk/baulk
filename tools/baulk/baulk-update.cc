@@ -142,6 +142,50 @@ bool ResolveBaulkRev(std::wstring &releasename) {
   return false;
 }
 
+bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring_view release) {
+  // https://github.com/baulk/baulk/releases/latest
+  constexpr std::wstring_view latest = L"https://github.com/baulk/baulk/releases/latest";
+  bela::error_code ec;
+  auto resp = baulk::net::RestGet(latest, ec);
+  if (!resp) {
+    bela::FPrintF(stderr, L"baulk upgrade get latest: \x1b[31m%s\x1b[0m\n", ec.message);
+    return false;
+  }
+  constexpr std::string_view urlprefix = "/baulk/baulk/releases/download/";
+  size_t index = 0;
+  for (;;) {
+    auto pos = resp->body.find(urlprefix, index);
+    if (pos == std::wstring::npos) {
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+      return false;
+    }
+    auto pos2 = resp->body.find('"', pos);
+    if (pos2 == std::wstring::npos) {
+      bela::FPrintF(stderr, L"baulk upgrade get %s: \x1b[31minvalid html url\x1b[0m\n", release);
+      return false;
+    }
+    std::wstring filename = bela::ToWide(resp->body.data() + pos, pos2 - pos);
+
+    index = pos2 + 1;
+    std::vector<std::wstring_view> svv =
+        bela::StrSplit(filename, bela::ByChar('/'), bela::SkipEmpty());
+    if (svv.size() <= 2) {
+      continue;
+    }
+    if (svv[svv.size() - 2] == release) {
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+      return true;
+    }
+    if (svv.back().find(archfilesuffix()) != std::wstring_view::npos) {
+      url = bela::StringCat(L"https://github.com", filename);
+      DbgPrint(L"Found new release %s", filename);
+      return true;
+    }
+  }
+  bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+  return false;
+}
+
 // https://api.github.com/repos/baulk/baulk/releases/latest todo
 bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
   std::wstring releasename;
@@ -186,9 +230,8 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
       return true;
     }
     //
-  } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"baulk upgrade self decode metadata: \x1b[31m%s\x1b[0m\n", e.what());
-    return false;
+  } catch (const std::exception &) {
+    return ReleaseIsUpgradableFallback(url, release);
   }
   return false;
 }
