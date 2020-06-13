@@ -15,8 +15,8 @@
 
 namespace baulk::archive::zip {
 
-bool ZipExtract(std::wstring_view file, std::wstring_view dest,
-                bela::error_code &ec, const zip_closure *closure) {
+bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code &ec,
+                const zip_closure *closure, int encoding) {
   void *reader = NULL;
   int32_t err = MZ_OK;
   int32_t err_close = MZ_OK;
@@ -29,10 +29,12 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest,
     }
     mz_zip_reader_delete(&reader);
   });
+  if (encoding > 0) {
+    mz_zip_reader_set_encoding(reader, encoding);
+  }
   if (closure != nullptr) {
     if (closure->progress != nullptr) {
-      mz_zip_reader_set_progress_cb(reader, closure->userdata,
-                                    closure->progress);
+      mz_zip_reader_set_progress_cb(reader, closure->userdata, closure->progress);
     }
     if (closure->entry != nullptr) {
       mz_zip_reader_set_entry_cb(reader, closure->userdata, closure->entry);

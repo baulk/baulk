@@ -53,7 +53,7 @@ struct zip_closure {
 };
 
 bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code &ec,
-                const zip_closure *closure = nullptr);
+                const zip_closure *closure = nullptr, int encoding = 0);
 
 } // namespace baulk::archive::zip
 
