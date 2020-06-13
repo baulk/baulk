@@ -128,6 +128,41 @@ endif()
 
 add_library(zlib STATIC ${ZLIB_SOURCES})
 
+set(ZSTD_COMMON_SOURCES
+  zstd/common/debug.c
+  zstd/common/entropy_common.c
+  zstd/common/error_private.c
+  zstd/common/fse_decompress.c
+  zstd/common/pool.c
+  zstd/common/threading.c
+  zstd/common/zstd_common.c
+)
+
+file(GLOB ZSTD_COMPRESS_SOURCES zstd/compress/*.c)
+file(GLOB ZSTD_DECOMPRESS_SOURCES zstd/decompress/*.c)
+file(GLOB ZSTD_DICTBUILDER_SOURCES zstd/dictBuilder/*.c)
+file(GLOB ZSTD_DEPRECATED_SOURCES zstd/deprecated/*.c)
+
+
+add_library(
+  zstd STATIC
+  ${ZSTD_COMMON_SOURCES}
+  ${ZSTD_COMPRESS_SOURCES}
+  ${ZSTD_DECOMPRESS_SOURCES}
+  ${ZSTD_DICTBUILDER_SOURCES}
+  ${ZSTD_DEPRECATED_SOURCES}
+  zstd/legacy/zstd_v01.c
+  zstd/legacy/zstd_v02.c
+  zstd/legacy/zstd_v03.c
+  zstd/legacy/zstd_v04.c
+  zstd/legacy/zstd_v05.c
+  zstd/legacy/zstd_v06.c
+  zstd/legacy/zstd_v07.c)
+
+target_compile_definitions(zstd PRIVATE XXH_INLINE_ALL)
+target_compile_definitions(zstd PRIVATE ZSTD_MULTITHREAD)
+target_include_directories(zstd PRIVATE zstd zstd/common zstd/legacy)
+
 # minizip
 add_library(
   minizip STATIC
@@ -145,6 +180,7 @@ add_library(
   minizip/mz_strm_wzaes.c
   minizip/mz_strm_lzma.c
   minizip/mz_strm_zlib.c
+  minizip/mz_strm_zstd.c
   minizip/mz_zip.c
   minizip/mz_zip_rw.c)
 
@@ -169,10 +205,11 @@ list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
 list(APPEND MINIZIP_INC bzip2)
 list(APPEND MINIZIP_INC ${ZLIB_INC})
 list(APPEND MINIZIP_INC liblzma/api)
+list(APPEND MINIZIP_INC zstd)
 
 target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
 target_include_directories(minizip PRIVATE ${MINIZIP_INC})
-target_link_libraries(minizip lzma zlib advapi32)
+target_link_libraries(minizip lzma zlib zstd advapi32)
 
 # Brotli
 set(BROTLI_SOURCES
