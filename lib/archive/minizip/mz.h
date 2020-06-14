@@ -62,6 +62,7 @@
 /* MZ_COMPRESS */
 #define MZ_COMPRESS_METHOD_STORE        (0)
 #define MZ_COMPRESS_METHOD_DEFLATE      (8)
+#define MZ_COMPRESS_METHOD_DEFLATE64    (9) //Unimplemented
 #define MZ_COMPRESS_METHOD_BZIP2        (12)
 #define MZ_COMPRESS_METHOD_LZMA         (14)
 #define MZ_COMPRESS_METHOD_ZSTD         (20)

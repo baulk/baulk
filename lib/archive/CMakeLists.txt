@@ -159,7 +159,7 @@ add_library(
   zstd/legacy/zstd_v06.c
   zstd/legacy/zstd_v07.c)
 
-target_compile_definitions(zstd PRIVATE XXH_INLINE_ALL)
+target_compile_definitions(zstd PRIVATE XXH_PRIVATE_API)
 target_compile_definitions(zstd PRIVATE ZSTD_MULTITHREAD)
 target_include_directories(zstd PRIVATE zstd zstd/common zstd/legacy)
 
