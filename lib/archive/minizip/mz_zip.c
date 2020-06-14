@@ -1794,6 +1794,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
     case MZ_COMPRESS_METHOD_STORE:
     case MZ_COMPRESS_METHOD_DEFLATE:
     case MZ_COMPRESS_METHOD_ZSTD:
+    case MZ_COMPRESS_METHOD_WINZIPZSTD:
 #ifdef HAVE_BZIP2
     case MZ_COMPRESS_METHOD_BZIP2:
 #endif
@@ -1896,7 +1897,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
         else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA)
             mz_stream_lzma_create(&zip->compress_stream);
 #endif
-        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD)
+        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD||zip->file_info.compression_method == MZ_COMPRESS_METHOD_WINZIPZSTD)
             mz_stream_zstd_create(&zip->compress_stream);
         else
             err = MZ_PARAM_ERROR;
