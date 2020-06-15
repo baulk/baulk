@@ -46,7 +46,7 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code
   }
   if (err = mz_zip_reader_save_all(reader, destination.data());
       err != MZ_OK && err != MZ_END_OF_LIST) {
-    ec = bela::make_error_code(1, L"unable save all, minizip return: ", err);
+    ec = bela::make_error_code(1, L"decompress result: ", err);
     return false;
   }
   return err_close == MZ_OK;

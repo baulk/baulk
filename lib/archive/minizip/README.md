@@ -1,9 +1,10 @@
-# minizip 2.9.2
+# minizip 2.9.3
 
 minizip is a zip manipulation library written in C that is supported on Windows, macOS, and Linux.
 
 [![Master Branch Status](https://github.com/nmoinvaz/minizip/workflows/CI/badge.svg)](https://github.com/nmoinvaz/minizip/actions)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/minizip.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:minizip)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/53d48ca8fec549f4a8b39cf95cba6ad6)](https://www.codacy.com/manual/nmoinvaz/minizip?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nmoinvaz/minizip&amp;utm_campaign=Badge_Grade)
 [![CodeFactor](https://www.codefactor.io/repository/github/nmoinvaz/minizip/badge)](https://www.codefactor.io/repository/github/nmoinvaz/minizip)
 [![License: Zlib](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://github.com/nmoinvaz/minizip/blob/master/LICENSE)
 [![codecov.io](https://codecov.io/github/nmoinvaz/minizip/coverage.svg?branch=dev)](https://codecov.io/github/nmoinvaz/minizip/)
@@ -12,8 +13,8 @@ Developed and maintained by Nathan Moinvaziri.
 
 ## Branches
 
-| Name | Description |
-|:- |:-|
+|Name|Description|
+|:-|:-|
 |[master](https://github.com/nmoinvaz/minizip/tree/master)|Modern rewrite that includes more advanced features, improvements in code maintainability and readability, and the reduction of duplicate code. Compatibility layer provided for older versions.|
 |[dev](https://github.com/nmoinvaz/minizip/tree/dev)|Latest development code|
 |[1.2](https://github.com/nmoinvaz/minizip/tree/1.2)|Drop-in replacement for zlib's minizip that includes WinZip AES encryption, disk splitting, I/O buffering and some additional fixes.|
@@ -35,7 +36,7 @@ the library as version 2 because it had become difficult to maintain and code re
 + Adding and removing entries from zip archives.
 + Read and write raw zip entry data.
 + Reading and writing zip archives from memory.
-+ Zlib, BZIP2, and LZMA compression methods.
++ Zlib, BZIP2, LZMA, and ZSTD compression methods.
 + Password protection through Traditional PKWARE and [WinZIP AES](https://www.winzip.com/aes_info.htm) encryption.
 + Buffered streaming for improved I/O performance.
 + NTFS timestamp support for UTC last modified, last accessed, and creation dates.
@@ -74,10 +75,12 @@ cmake --build .
 | MZ_ZLIB            | Enables ZLIB compression              |      ON       |
 | MZ_BZIP2           | Enables BZIP2 compression             |      ON       |
 | MZ_LZMA            | Enables LZMA compression              |      ON       |
+| MZ_ZSTD            | Enables ZSTD compression              |      ON       |
 | MZ_PKCRYPT         | Enables PKWARE traditional encryption |      ON       |
 | MZ_WZAES           | Enables WinZIP AES encryption         |      ON       |
 | MZ_LIBCOMP         | Enables Apple compression             |      OFF      |
 | MZ_OPENSSL         | Enables OpenSSL encryption            |      OFF      |
+| MZ_LIBBSD          | Builds with libbsd crypto random      |      ON       |
 | MZ_BRG             | Enables Brian Gladman's library       |      OFF      |
 | MZ_SIGNING         | Enables zip signing support           |      ON       |
 | MZ_COMPRESS_ONLY   | Only support compression              |      OFF      |
@@ -87,6 +90,7 @@ cmake --build .
 | MZ_BUILD_FUZZ_TEST | Builds minizip fuzz executables       |      OFF      |
 | MZ_CODE_COVERAGE   | Build with code coverage flags        |      OFF      |
 | MZ_PROJECT_SUFFIX  | Project name suffix for packaging     |               |
+| MZ_FILE32_API      | Builds using posix 32-bit file api    |      OFF      |
 
 ## Contents
 
@@ -108,6 +112,7 @@ cmake --build .
 | mz_strm_os\*       | Platform specific file stream                   |
 | mz_strm_wzaes.\*   | WinZIP AES stream                               |
 | mz_strm_zlib.\*    | Deflate stream using zlib                       |
+| mz_strm_zstd.\*    | ZSTD stream                                     |
 | mz_zip.\*          | Zip format                                      |
 | mz_zip_rw.\*       | Zip reader/writer                               |
 
@@ -119,6 +124,7 @@ cmake --build .
 + [BZIP2](https://www.sourceware.org/bzip2/) written by Julian Seward.
 + [liblzma](https://tukaani.org/xz/) written by Lasse Collin.
   + Modifications were made to support the ZIP file format specification
++ [ZSTD](https://github.com/facebook/zstd) from Facebook
 + [AES](https://github.com/BrianGladman/aes) and [SHA](https://github.com/BrianGladman/sha) libraries of Brian Gladman.
 
 ## Acknowledgments
