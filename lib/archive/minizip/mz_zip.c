@@ -1741,7 +1741,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
             }
             if ((zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD || zip->file_info.compression_method == MZ_COMPRESS_METHOD_WZZSTD)) {
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, zip->file_info.compressed_size);
-                mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_OUT_MAX, zip->file_info.uncompressed_size);       
+                mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_OUT_MAX, zip->file_info.uncompressed_size);
             }
         }
 
