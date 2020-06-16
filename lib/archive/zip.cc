@@ -41,7 +41,7 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code
     }
   }
   if (err = mz_zip_reader_open_file(reader, path.data()); err != MZ_OK) {
-    ec = bela::make_error_code(1, L"unable open file, minizip return: ", err);
+    ec = bela::make_error_code(1, L"unable open file, minizip result: ", err);
     return false;
   }
   if (err = mz_zip_reader_save_all(reader, destination.data());

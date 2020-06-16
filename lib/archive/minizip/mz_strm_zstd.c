@@ -149,7 +149,7 @@ int32_t mz_stream_zstd_read(void *stream, void *buf, int32_t size) {
 
         if (ZSTD_isError(errorCode))
         {
-            zstd->error = errorCode;
+            zstd->error = (int32_t)errorCode;
             break;
         }
 
