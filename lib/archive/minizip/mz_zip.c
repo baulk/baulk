@@ -1600,6 +1600,8 @@ static int32_t mz_zip_entry_close_int(void *handle) {
     return MZ_OK;
 }
 
+#define SAME_LZMA(m) (m == MZ_COMPRESS_METHOD_LZMA || m == MZ_COMPRESS_METHOD_LZMA2 || m == MZ_COMPRESS_METHOD_XZ)
+
 static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress_level, const char *password) {
     mz_zip *zip = (mz_zip *)handle;
     int64_t max_total_in = 0;
@@ -1619,6 +1621,8 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #endif
 #ifdef HAVE_LZMA
     case MZ_COMPRESS_METHOD_LZMA:
+    case MZ_COMPRESS_METHOD_LZMA2:
+    case MZ_COMPRESS_METHOD_XZ:
 #endif
 #ifdef HAVE_ZSTD
     case MZ_COMPRESS_METHOD_ZSTD:
@@ -1705,7 +1709,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
             mz_stream_bzip_create(&zip->compress_stream);
 #endif
 #ifdef HAVE_LZMA
-        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA)
+        else if (SAME_LZMA(zip->file_info.compression_method))
             mz_stream_lzma_create(&zip->compress_stream);
 #endif
 #ifdef HAVE_ZSTD
@@ -1735,7 +1739,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, max_total_in);
             }
-            if ((zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA) && (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER) == 0) {
+            if (SAME_LZMA(zip->file_info.compression_method) && (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER) == 0) {
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, zip->file_info.compressed_size);
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_OUT_MAX, zip->file_info.uncompressed_size);
             }
