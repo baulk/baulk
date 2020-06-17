@@ -165,10 +165,10 @@ In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk execu
 |Extended|Unzip Program|Limited|
 |---|---|---|
 |`exe`|-|-|
-|`zip`|Built-in, based on minizip|Does not support encryption, does not support Deflate64, Deflate64 can use `7z`|
+|`zip`|Built-in, based on minizip|Support deflate/bzip2/zstd, Not support encryption abd deflate64 (deflate64 can use `7z`)|
 |`msi`|Built-in, based on MSI API|-|
 |`7z`|Priority:</br>baulk7z-Baulk distribution</br>7z-installed using baulk install</br>7z-environment variables in the format of `tar.*` cannot be decompressed once Completed, so it is recommended to use `tar` to decompress `tar.*` compressed package|
-|`tar`|Priority:</br>baulktar-modern reconstruction of BaulkTar bsdtar</br>bsdtar-Baulk build</br>MSYS2 tar-carried by Git for Windows</br>Windows tar|Windows built-in Tar does not support xz (based on libarchive bsdtar), but bsdtar built by baulk does not support Deflate64 when decompressing zip|
+|`tar`|Priority:</br>baulktar-modern reconstruction of BaulkTar bsdtar</br>bsdtar-Baulk build</br>MSYS2 tar-carried by Git for Windows</br>Windows tar|Windows built-in Tar does not support xz (based on libarchive bsdtar), but bsdtar built by baulk does not support deflate64 when decompressing zip|
 
 In the manifest file, there may also be `links/launchers`, and baulk will create symbolic links for specific files according to the settings of `links`. With Visual Studio installed, baulk will create a launcher based on the `launchers` setting, if If Visual Studio is not installed, it will use `baulk-lnk` to create an analog launcher. If baulk runs on Windows x64 or ARM64 architecture, there will be some small differences, that is, the platform-related URL/Launchers/Links is preferred, as follows:
 
