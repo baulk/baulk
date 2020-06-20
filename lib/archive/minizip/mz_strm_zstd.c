@@ -1,5 +1,4 @@
 /* mz_strm_zstd.c -- Stream for zstd compress/decompress
-   Version 2.9.3, May 21, 2020
    part of the MiniZip project
 
    Copyright (C) 2010-2020 Nathan Moinvaziri
@@ -15,9 +14,7 @@
 #include "mz_strm.h"
 #include "mz_strm_zstd.h"
 
-#include <zstd.h> 
-#include <common/zstd_errors.h>
-#include <stdio.h>
+#include <zstd.h>
 
 /***************************************************************************/
 
@@ -115,7 +112,7 @@ int32_t mz_stream_zstd_read(void *stream, void *buf, int32_t size) {
     int32_t out_bytes = 0;
     int32_t bytes_to_read = 0;
     int32_t read = 0;
-    size_t error_code = 0;
+    size_t result = 0;
 
     zstd->out.dst = (void*)buf;
     zstd->out.size = (size_t)size;
@@ -142,15 +139,17 @@ int32_t mz_stream_zstd_read(void *stream, void *buf, int32_t size) {
         total_in_before = zstd->in.pos;
         total_out_before = zstd->out.pos;
 
-        error_code = ZSTD_decompressStream(zstd->zdstream, &zstd->out, &zstd->in);
+        result = ZSTD_decompressStream(zstd->zdstream, &zstd->out, &zstd->in);
 
-        if (ZSTD_isError(error_code)) {
-            zstd->error = error_code;
+        if (ZSTD_isError(result)) {
+            zstd->error = (int32_t)result;
             return MZ_DATA_ERROR;
         }
 
         total_in_after = zstd->in.pos;
         total_out_after = zstd->out.pos;
+        if ((zstd->max_total_out != -1) && (int64_t)total_out_after > zstd->max_total_out)
+            total_out_after = (uint64_t)zstd->max_total_out;
 
         in_bytes = (int32_t)(total_in_after - total_in_before);
         out_bytes = (int32_t)(total_out_after - total_out_before);
@@ -160,7 +159,6 @@ int32_t mz_stream_zstd_read(void *stream, void *buf, int32_t size) {
 
         zstd->total_in += in_bytes;
         zstd->total_out += out_bytes;
-
 
     } while (zstd->total_in != zstd->max_total_in && zstd->out.pos != zstd->out.size);
 
@@ -183,7 +181,7 @@ static int32_t mz_stream_zstd_compress(void *stream, ZSTD_EndDirective flush) {
     int32_t out_bytes = 0;
     size_t result = 0;
     int32_t err = 0;
-    
+
     do {
         if (zstd->out.pos == zstd->out.size) {
             err = mz_stream_zstd_flush(zstd);
@@ -219,25 +217,27 @@ static int32_t mz_stream_zstd_compress(void *stream, ZSTD_EndDirective flush) {
 #endif
 
 int32_t mz_stream_zstd_write(void *stream, const void *buf, int32_t size) {
-    mz_stream_zstd *zstd = (mz_stream_zstd *)stream;
-    int32_t err = size;
-
 #ifdef MZ_ZIP_NO_COMPRESSION
-    MZ_UNUSED(zstd);
+    MZ_UNUSED(stream);
     MZ_UNUSED(buf);
-    err = MZ_SUPPORT_ERROR;
+    MZ_UNUSED(size);
+    return MZ_SUPPORT_ERROR;
 #else
-    size_t result = 0;
+    mz_stream_zstd *zstd = (mz_stream_zstd *)stream;
+    int32_t err = MZ_OK;
 
     zstd->in.src = buf;
     zstd->in.pos = 0;
     zstd->in.size = size;
 
-    mz_stream_zstd_compress(stream, ZSTD_e_continue);
+    err = mz_stream_zstd_compress(stream, ZSTD_e_continue);
+    if (err != MZ_OK) {
+        return err;
+    }
 
     zstd->total_in += size;
+    return size;
 #endif
-    return err;
 }
 
 int64_t mz_stream_zstd_tell(void *stream) {
@@ -320,10 +320,6 @@ int32_t mz_stream_zstd_set_prop_int64(void *stream, int32_t prop, int64_t value)
     case MZ_STREAM_PROP_TOTAL_IN_MAX:
         zstd->max_total_in = value;
         return MZ_OK;
-    case MZ_STREAM_PROP_TOTAL_OUT_MAX:
-        if (value > 0)
-            zstd->max_total_out = value;
-        return MZ_OK;  
     }
     return MZ_EXIST_ERROR;
 }
@@ -334,6 +330,7 @@ void *mz_stream_zstd_create(void **stream) {
     if (zstd != NULL) {
         memset(zstd, 0, sizeof(mz_stream_zstd));
         zstd->stream.vtbl = &mz_stream_zstd_vtbl;
+        zstd->max_total_out = -1;
     }
     if (stream != NULL)
         *stream = zstd;

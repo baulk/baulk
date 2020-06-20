@@ -1,5 +1,4 @@
 /* mz_crypt_win32.c -- Crypto/hash functions for Windows
-   Version 2.9.3, May 21, 2020
    part of the MiniZip project
 
    Copyright (C) 2010-2020 Nathan Moinvaziri
@@ -9,7 +8,9 @@
    See the accompanying LICENSE file for the full text of the license.
 */
 
+#ifdef _MSC_VER
 #pragma comment(lib, "crypt32.lib")
+#endif
 
 #include "mz.h"
 #include "mz_os.h"

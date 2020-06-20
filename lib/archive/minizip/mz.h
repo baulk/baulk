@@ -1,5 +1,4 @@
 /* mz.h -- Errors codes, zip flags and magic
-   Version 2.9.3, May 21, 2020
    part of the MiniZip project
 
    Copyright (C) 2010-2020 Nathan Moinvaziri
@@ -62,13 +61,10 @@
 /* MZ_COMPRESS */
 #define MZ_COMPRESS_METHOD_STORE        (0)
 #define MZ_COMPRESS_METHOD_DEFLATE      (8)
-#define MZ_COMPRESS_METHOD_DEFLATE64    (9) //Unimplemented
 #define MZ_COMPRESS_METHOD_BZIP2        (12)
 #define MZ_COMPRESS_METHOD_LZMA         (14)
 #define MZ_COMPRESS_METHOD_ZSTD         (20)
-#define MZ_COMPRESS_METHOD_LZMA2        (33)
 #define MZ_COMPRESS_METHOD_WZZSTD       (93)
-#define MZ_COMPRESS_METHOD_XZ           (95)
 #define MZ_COMPRESS_METHOD_AES          (99)
 
 #define MZ_COMPRESS_LEVEL_DEFAULT       (-1)
@@ -144,7 +140,7 @@
 #define MZ_UNUSED(SYMBOL)               ((void)SYMBOL)
 
 #ifndef MZ_CUSTOM_ALLOC
-#define MZ_ALLOC(SIZE)                  (malloc(SIZE))
+#define MZ_ALLOC(SIZE)                  (malloc((SIZE)))
 #endif
 #ifndef MZ_CUSTOM_FREE
 #define MZ_FREE(PTR)                    (free(PTR))

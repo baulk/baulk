@@ -1,5 +1,4 @@
 /* zip.c -- Zip manipulation
-   Version 2.9.3, May 21, 2020
    part of the MiniZip project
 
    Copyright (C) 2010-2020 Nathan Moinvaziri
@@ -1600,8 +1599,6 @@ static int32_t mz_zip_entry_close_int(void *handle) {
     return MZ_OK;
 }
 
-#define SAME_LZMA(m) (m == MZ_COMPRESS_METHOD_LZMA || m == MZ_COMPRESS_METHOD_LZMA2 || m == MZ_COMPRESS_METHOD_XZ)
-
 static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress_level, const char *password) {
     mz_zip *zip = (mz_zip *)handle;
     int64_t max_total_in = 0;
@@ -1621,8 +1618,6 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #endif
 #ifdef HAVE_LZMA
     case MZ_COMPRESS_METHOD_LZMA:
-    case MZ_COMPRESS_METHOD_LZMA2:
-    case MZ_COMPRESS_METHOD_XZ:
 #endif
 #ifdef HAVE_ZSTD
     case MZ_COMPRESS_METHOD_ZSTD:
@@ -1709,7 +1704,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
             mz_stream_bzip_create(&zip->compress_stream);
 #endif
 #ifdef HAVE_LZMA
-        else if (SAME_LZMA(zip->file_info.compression_method))
+        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA)
             mz_stream_lzma_create(&zip->compress_stream);
 #endif
 #ifdef HAVE_ZSTD
@@ -1725,6 +1720,8 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
         if (zip->open_mode & MZ_OPEN_MODE_WRITE) {
             mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_COMPRESS_LEVEL, compress_level);
         } else {
+            int32_t set_end_of_stream = 0;
+
 #ifndef HAVE_LIBCOMP
             if (zip->entry_raw || zip->file_info.compression_method == MZ_COMPRESS_METHOD_STORE || zip->file_info.flag & MZ_ZIP_FLAG_ENCRYPTED)
 #endif
@@ -1739,11 +1736,18 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, max_total_in);
             }
-            if (SAME_LZMA(zip->file_info.compression_method) && (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER) == 0) {
-                mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, zip->file_info.compressed_size);
-                mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_OUT_MAX, zip->file_info.uncompressed_size);
+
+            switch (zip->file_info.compression_method) {
+            case MZ_COMPRESS_METHOD_LZMA:
+                set_end_of_stream = (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER);
+                break;
+            case MZ_COMPRESS_METHOD_ZSTD:
+            case MZ_COMPRESS_METHOD_WZZSTD:
+                set_end_of_stream = 1;
+                break;
             }
-            if ((zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD || zip->file_info.compression_method == MZ_COMPRESS_METHOD_WZZSTD)) {
+
+            if (set_end_of_stream) {
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_IN_MAX, zip->file_info.compressed_size);
                 mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_TOTAL_OUT_MAX, zip->file_info.uncompressed_size);
             }
