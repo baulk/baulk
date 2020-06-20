@@ -1621,7 +1621,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #endif
 #ifdef HAVE_ZSTD
     case MZ_COMPRESS_METHOD_ZSTD:
-    case MZ_COMPRESS_METHOD_WZZSTD:
+    case MZ_COMPRESS_METHOD_OLDZSTD:
 #endif
         err = MZ_OK;
         break;
@@ -1709,7 +1709,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #endif
 #ifdef HAVE_ZSTD
         else if ((zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD) ||
-                 (zip->file_info.compression_method == MZ_COMPRESS_METHOD_WZZSTD))
+                 (zip->file_info.compression_method == MZ_COMPRESS_METHOD_OLDZSTD))
             mz_stream_zstd_create(&zip->compress_stream);
 #endif
         else
@@ -1742,7 +1742,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
                 set_end_of_stream = (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER);
                 break;
             case MZ_COMPRESS_METHOD_ZSTD:
-            case MZ_COMPRESS_METHOD_WZZSTD:
+            case MZ_COMPRESS_METHOD_OLDZSTD:
                 set_end_of_stream = 1;
                 break;
             }

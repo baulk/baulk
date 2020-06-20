@@ -816,9 +816,9 @@ int32_t mz_zip_reader_save_all(void *handle, const char *destination_dir) {
     mz_zip_reader *reader = (mz_zip_reader *)handle;
     int32_t err = MZ_OK;
     uint8_t *utf8_string = NULL;
-    char path[512];
-    char utf8_name[256];
-    char resolved_name[256];
+    char path[4096];
+    char utf8_name[512];
+    char resolved_name[512];
 
     err = mz_zip_reader_goto_first_entry(handle);
 
