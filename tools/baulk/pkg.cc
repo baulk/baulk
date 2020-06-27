@@ -114,6 +114,19 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     }
     return 1;
   }
+  if (bela::EqualsIgnoreCase(pkg.extension, L"exe")) {
+    auto fn = baulk::fs::FileName(pkgfile);
+    auto rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().wstring());
+    if (!bela::EqualsIgnoreCase(fn, rfn)) {
+      auto expnadfile = bela::StringCat(pkgdir, L"/", fn);
+      auto target = bela::StringCat(pkgdir, L"/", rfn);
+      if (MoveFileEx(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
+        ec = bela::make_system_error_code();
+        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n",
+                      expnadfile, target, ec.message);
+      }
+    }
+  }
   if (!pkgold.empty()) {
     baulk::fs::PathRemove(pkgold, ec);
   }

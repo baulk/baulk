@@ -18,9 +18,8 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_cod
   if (!baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }
-  auto fn = baulk::fs::FileName(outdir);
-  auto extension = std::filesystem::path(src).extension().wstring();
-  auto newfile = bela::StringCat(outdir, L"\\", fn, extension);
+  auto fn = baulk::fs::FileName(src);
+  auto newfile = bela::StringCat(outdir, L"\\", fn);
   auto newfileold = bela::StringCat(newfile, L".old");
   if (bela::PathExists(newfile)) {
     if (MoveFileW(newfile.data(), newfileold.data()) != TRUE) {
