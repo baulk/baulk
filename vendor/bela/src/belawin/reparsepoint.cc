@@ -227,7 +227,8 @@ bool ReparsePoint::Analyze(std::wstring_view file, bela::error_code &ec) {
   if (!reparser.FileDeviceLookup(file, ec)) {
     return false;
   }
-  auto tagvalue = reparser.buffer->ReparseTag;
+  // bind tagvalue
+  tagvalue = reparser.buffer->ReparseTag;
   for (auto a : av) {
     if (a.tag == tagvalue) {
       return a.imp(reparser.buffer, values, ec);
