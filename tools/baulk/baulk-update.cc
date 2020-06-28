@@ -174,7 +174,7 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring_view release) {
     }
     if (svv[svv.size() - 2] == release) {
       bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
-      return true;
+      return false;
     }
     if (svv.back().find(archfilesuffix()) != std::wstring_view::npos) {
       url = bela::StringCat(L"https://github.com", filename);
