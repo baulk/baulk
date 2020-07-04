@@ -270,6 +270,10 @@ void Response::ParseHeadersString(std::wstring_view hdr) {
   }
 }
 
+inline std::wstring_view wstring_cast(const char *data, size_t n) {
+  return std::wstring_view{reinterpret_cast<const wchar_t *>(data), n / 2};
+}
+
 std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstring_view url,
                                             std::wstring_view contenttype, std::wstring_view body,
                                             bela::error_code &ec) {
@@ -342,6 +346,12 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
     return std::nullopt;
   }
   Response resp;
+  DWORD dwSize = sizeof(resp.statuscode);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
+                          &resp.statuscode, &dwSize, nullptr) != TRUE) {
+    ec = make_net_error_code();
+    return std::nullopt;
+  }
   DWORD headerBufferLength = 0;
   query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, headerBufferLength);
   std::string hdbf;
@@ -351,16 +361,9 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
     ec = make_net_error_code();
     return std::nullopt;
   }
-  resp.ParseHeadersString(
-      std::wstring_view{reinterpret_cast<const wchar_t *>(hdbf.data()), headerBufferLength / 2});
+  resp.ParseHeadersString(wstring_cast(hdbf.data(), headerBufferLength));
   std::vector<char> readbuf;
   readbuf.reserve(64 * 1024);
-  DWORD dwSize = sizeof(resp.statuscode);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
-                          &resp.statuscode, &dwSize, nullptr) != TRUE) {
-    ec = make_net_error_code();
-    return std::nullopt;
-  }
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(hRequest, &dwSize) != TRUE) {
