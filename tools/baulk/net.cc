@@ -192,7 +192,7 @@ std::string UrlDecode(std::wstring_view str) {
   for (size_t i = 0; i < len; i++) {
     auto ch = p[i];
     if (ch != '%') {
-      buf.push_back(ch);
+      buf += static_cast<char>(ch);
       continue;
     }
     if (i + 3 > len) {
@@ -202,7 +202,7 @@ std::string UrlDecode(std::wstring_view str) {
     auto c2 = static_cast<unsigned char>(p[i + 2]);
     auto n = decodehlen2(c1, c2);
     if (n > 0) {
-      buf.push_back(static_cast<char>(n));
+      buf += static_cast<char>(n);
     }
     i += 2;
   }
@@ -307,7 +307,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   if (!hkv.empty()) {
     auto flattened_headers = flatten_http_headers(hkv, cookies);
     if (WinHttpAddRequestHeaders(hRequest, flattened_headers.data(),
-                                 static_cast<size_t>(flattened_headers.size()),
+                                 static_cast<DWORD>(flattened_headers.size()),
                                  WINHTTP_ADDREQ_FLAG_ADD) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
@@ -317,14 +317,15 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
     auto addheader =
         bela::StringCat(L"Content-Type: ", contenttype.empty() ? contenttype : L"text/plain",
                         L"\r\nContent-Length: ", body.size(), L"\r\n");
-    if (WinHttpAddRequestHeaders(hRequest, addheader.data(), static_cast<size_t>(addheader.size()),
+    if (WinHttpAddRequestHeaders(hRequest, addheader.data(), static_cast<DWORD>(addheader.size()),
                                  WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
     if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                           const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())), body.size(),
-                           body.size(), 0) != TRUE) {
+                           const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())),
+                           static_cast<DWORD>(body.size()), static_cast<DWORD>(body.size()),
+                           0) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }

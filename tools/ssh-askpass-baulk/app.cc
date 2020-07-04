@@ -6,7 +6,7 @@
 #include <bela/terminal.hpp>
 #include <baulkversion.h>
 #include "app.hpp"
-#include "resource.h"        // define id's
+#include "resource.h" // define id's
 
 namespace baulk {
 App::~App() {
@@ -39,7 +39,6 @@ INT_PTR WINAPI App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 bool App::calculateWindow(int &x, int &y, std::wstring &prompttext) {
   auto hdc = GetDC(hPrompt); // test font max length
-  SIZE size;
   std::vector<std::wstring_view> strv = bela::StrSplit(prompt, bela::ByChar('\n'));
   SIZE cursize{0};
   for (const auto &sv : strv) {
@@ -51,7 +50,7 @@ bool App::calculateWindow(int &x, int &y, std::wstring &prompttext) {
       prompttext.append(L"\r\n");
     }
     prompttext.append(s);
-    GetTextExtentPoint32W(hdc, s.data(), s.size(), &cursize);
+    GetTextExtentPoint32W(hdc, s.data(), static_cast<int>(s.size()), &cursize);
     x = (std::max)(x, static_cast<int>(cursize.cx));
     y += cursize.cy + 5;
   }
