@@ -9,12 +9,12 @@
 #include <baulkenv.hpp>
 
 namespace baulk::env {
-#ifdef _M_X64
-// Always build x64 binary
-[[maybe_unused]] constexpr std::wstring_view arch = L"x64"; // Hostx64 x64
-#else
-[[maybe_unused]] constexpr std::wstring_view arch = L"x86"; // Hostx86 x86
-#endif
+// #ifdef _M_X64
+// // Always build x64 binary
+// [[maybe_unused]] constexpr std::wstring_view arch = L"x64"; // Hostx64 x64
+// #else
+// [[maybe_unused]] constexpr std::wstring_view arch = L"x86"; // Hostx86 x86
+// #endif
 
 struct VisualStudioInstance {
   std::wstring installationPath;
@@ -162,16 +162,18 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt", L"\\shared", L"\\winrt"};
+  constexpr std::wstring_view incs[] = {L"\\um",       L"\\ucrt",   L"km",
+                                        L"\\cppwinrt", L"\\shared", L"\\winrt"};
   for (auto i : incs) {
     JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, i);
   }
   // libs
   JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\um\\", arch);
   JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\ucrt\\", arch);
+  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, L"\\km\\", arch);
   // Paths
-  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", arch);
-  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", arch);
+  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", HostArch);
+  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", HostArch);
 #ifdef _M_X64
   JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"),
           LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
@@ -231,8 +233,8 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
-  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", arch, L"\\",
-          arch);
+  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch,
+          L"\\", arch);
   // IDE tools
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\VC\VCPackages)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE)");
@@ -258,8 +260,9 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
     JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\Llvm\bin)");
   }
   // add libpaths
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)",
+          HostArch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", HostArch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
           LR"(\lib\x86\store\references)");
   auto ifcpath =

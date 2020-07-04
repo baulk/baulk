@@ -27,6 +27,8 @@ Usage: baulkterminal [option] ...
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
+  -A|--arch
+               Select a specific arch, use native architecture by default
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -53,6 +55,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"vs", bela::no_argument, L'V')      // load visual studio environment
       .Add(L"shell", bela::required_argument, L'S')
       .Add(L"cwd", bela::required_argument, L'W')
+      .Add(L"arch", bela::required_argument, L'A')
       .Add(L"conhost", bela::no_argument, 1001) // disable windows termainl
       .Add(L"clang", bela::no_argument, 1002)
       .Add(L"manifest", bela::required_argument, 1003);
@@ -77,6 +80,17 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           break;
         case 'W':
           cwd = oa;
+          break;
+        case 'A':
+          if (bela::EqualsIgnoreCase(oa, L"x64") || bela::EqualsIgnoreCase(oa, L"arm64") ||
+              bela::EqualsIgnoreCase(oa, L"x86")) {
+            arch = oa;
+          } else {
+            auto msg = bela::StringCat(L"Invalid arch: ", oa);
+            bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE,
+                                 bela::mbs_t::FATAL);
+          }
+
           break;
         case 1001:
           conhost = true;
@@ -144,8 +158,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Append(*wt);
       if (!executor.Cwd().empty()) {
-        ea.Append(L"--startingDirectory");
-        ea.Append(executor.Cwd());
+        ea.Append(L"--startingDirectory").Append(executor.Cwd()).Append(L"--");
       }
     }
   }

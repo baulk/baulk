@@ -5,10 +5,24 @@
 #include <bela/env.hpp>
 
 namespace baulk::env {
+
+#ifdef _M_X64
+// Always build x64 binary
+[[maybe_unused]] constexpr std::wstring_view HostArch = L"x64"; // Hostx64 x64
+#else
+[[maybe_unused]] constexpr std::wstring_view HostArch = L"x86"; // Hostx86 x86
+#endif
+
 struct Searcher {
-  Searcher(bela::env::Derivator &dev_) : dev{dev_} {}
+  Searcher(bela::env::Derivator &dev_, std::wstring_view arch_ = HostArch)
+      : dev{dev_}, arch(arch_) {
+    if (arch.empty()) {
+      arch = HostArch;
+    }
+  }
   using vector_t = std::vector<std::wstring>;
   bela::env::Derivator &dev;
+  std::wstring arch;
   vector_t paths;
   vector_t libs;
   vector_t includes;

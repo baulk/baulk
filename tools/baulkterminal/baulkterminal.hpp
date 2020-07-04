@@ -54,6 +54,7 @@ private:
   std::wstring manifest; // env manifest file
   std::wstring shell;
   std::wstring cwd;
+  std::wstring arch;
   Boolean usevs;
   Boolean clang;
   Boolean cleanup;

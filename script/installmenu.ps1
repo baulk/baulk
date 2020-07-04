@@ -4,6 +4,7 @@ $BaulkTerminal = Join-Path -Path $BaulkRoot -ChildPath "baulkterminal.exe"
 
 if (!(Test-Path $BaulkTerminal)) {
     Write-Host -ForegroundColor Red "$BaulkTerminal not exists"
+    Exit 1
 }
 
 New-Item -Path 'Registry::HKEY_CLASSES_ROOT\Directory\shell\baulk' -Force | Out-Null

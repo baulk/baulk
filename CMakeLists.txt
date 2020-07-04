@@ -118,6 +118,11 @@ install(FILES "script/installmenu.ps1" DESTINATION script)
 install(FILES "script/uninstallmenu.bat" DESTINATION script)
 install(FILES "script/uninstallmenu.ps1" DESTINATION script)
 
+install(FILES "script/arm64/installmenu.bat" DESTINATION script/arm64)
+install(FILES "script/arm64/installmenu.ps1" DESTINATION script/arm64)
+install(FILES "script/arm64/uninstallmenu.bat" DESTINATION script/arm64)
+install(FILES "script/arm64/uninstallmenu.ps1" DESTINATION script/arm64)
+
 add_subdirectory(vendor/bela)
 add_subdirectory(lib/archive)
 add_subdirectory(lib/env)

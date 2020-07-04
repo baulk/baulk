@@ -100,7 +100,7 @@ bool Executor::PrepareEnv(bela::error_code &ec) {
 }
 
 std::optional<std::wstring> Executor::MakeEnv(bela::error_code &ec) {
-  baulk::env::Searcher searcher(dev);
+  baulk::env::Searcher searcher(dev, arch);
   if (!searcher.InitializeBaulk(ec)) {
     return std::nullopt;
   }
