@@ -43,7 +43,7 @@ add_executable(
 target_link_libraries(
   baulk
   baulkarchive
-  blake3
+  belahash
   belawin
   winhttp
   ws2_32

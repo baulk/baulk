@@ -12,9 +12,10 @@ int cmd_b3sum(const argv_t &argv) {
   }
   bela::error_code ec;
   for (const auto a : argv) {
-    auto hv = baulk::hash::FileHashBLAKE3(a, ec);
+    auto hv = baulk::hash::FileHash(a, baulk::hash::hash_t::BLAKE3, ec);
     if (!hv) {
-      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 hash %s\n", ec.message);
+      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 checksum: \x1b[31m%s\x1b[0m\n", a,
+                    ec.message);
       continue;
     }
     bela::FPrintF(stdout, L"%s %s\n", *hv, baulk::fs::FileName(a));
