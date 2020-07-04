@@ -106,7 +106,7 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
       goto lt10_000;
     digits = i / 100;
     i -= digits * 100;
-    *buffer++ = '0' + digits;
+    *buffer++ = static_cast<wchar_t>('0' + digits);
     goto lt100;
   }
   if (i < 1000000) { //    1,000,000
@@ -114,7 +114,7 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
       goto lt1_000_000;
     digits = i / 10000; //    10,000
     i -= digits * 10000;
-    *buffer++ = '0' + digits;
+    *buffer++ = static_cast<wchar_t>('0' + digits);
     goto lt10_000;
   }
   if (i < 100000000) { //    100,000,000
@@ -122,13 +122,13 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
       goto lt100_000_000;
     digits = i / 1000000; //   1,000,000
     i -= digits * 1000000;
-    *buffer++ = '0' + digits;
+    *buffer++ = static_cast<wchar_t>('0' + digits);
     goto lt1_000_000;
   }
   // we already know that i < 1,000,000,000
   digits = i / 100000000; //   100,000,000
   i -= digits * 100000000;
-  *buffer++ = '0' + digits;
+  *buffer++ = static_cast<wchar_t>('0' + digits);
   goto lt100_000_000;
 }
 
@@ -578,7 +578,7 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   if (exp > 99) {
     int dig1 = exp / 100;
     exp -= dig1 * 100;
-    *out++ = L'0' + dig1;
+    *out++ = static_cast<wchar_t>(L'0' + dig1);
   }
   PutTwoDigits(exp, out);
   out += 2;

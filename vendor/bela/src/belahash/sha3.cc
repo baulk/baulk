@@ -283,7 +283,7 @@ void Hasher::Finalize(uint8_t *out, size_t out_len) {
   }
 
   assert(block_size > digest_length);
-  if (out != nullptr) {
+  if (out != nullptr && out_len >= digest_length) {
     me64_to_le_str(out, hash, digest_length);
   }
 }

@@ -127,7 +127,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           d += octal_size;
           break;
         }
-        *d++ = ch;
+        *d++ = static_cast<wchar_t>(ch);
         break;
       }
       case L'x':
@@ -162,7 +162,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           d += hex_size;
           break;
         }
-        *d++ = ch;
+        *d++ = static_cast<wchar_t>(ch);
         break;
       }
       case 'u': {

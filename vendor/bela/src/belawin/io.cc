@@ -31,7 +31,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
       out.resize(wsv.size());
       wchar_t *p = out.data();
       for (size_t i = 0; i < wsv.size(); i++) {
-        p[i] = bela::swapbe(wsv[i]);
+        p[i] = static_cast<wchar_t>(bela::swapbe(static_cast<uint16_t>(wsv[i])));
       }
       return true;
     }

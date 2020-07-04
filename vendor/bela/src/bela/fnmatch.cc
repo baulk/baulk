@@ -210,8 +210,8 @@ escaped:
 }
 
 static inline int CaseFold(int k) {
-  int c = towupper(k);
-  return c == k ? towlower(k) : c;
+  int c = towupper(static_cast<wint_t>(k));
+  return c == k ? towlower(static_cast<wint_t>(k)) : c;
 }
 
 static int MatchBracket(const char16_t *p, int k, int kfold) {
@@ -259,7 +259,8 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
         char16_t buf[16];
         memcpy(buf, p0, (p - 1 - p0) * sizeof(char16_t));
         buf[p - 1 - p0] = 0;
-        if (Fniswctype(k, Fnwctype(buf)) || Fniswctype(kfold, Fnwctype(buf))) {
+        if (Fniswctype(static_cast<wint_t>(k), Fnwctype(buf)) ||
+            Fniswctype(static_cast<wint_t>(kfold), Fnwctype(buf))) {
           return !inv;
         }
       }
@@ -274,7 +275,7 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
       }
       p += l - 1;
     }
-    if (wc == k || wc == kfold) {
+    if (wc == static_cast<char32_t>(k) || wc == static_cast<char32_t>(kfold)) {
       return !inv;
     }
   }
@@ -454,7 +455,7 @@ bool FnMatch(std::u16string_view pattern, std::u16string_view text, int flags) {
   return FnMatchInternal(pattern, text, flags) == 0;
 }
 
-constexpr inline std::u16string_view u16sv(std::wstring_view sv) {
+inline std::u16string_view u16sv(std::wstring_view sv) {
   return std::u16string_view{reinterpret_cast<const char16_t *>(sv.data()), sv.size()};
 }
 

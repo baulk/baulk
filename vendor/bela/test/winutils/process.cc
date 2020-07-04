@@ -12,7 +12,7 @@ int stty_size() {
   return 0;
 }
 
-int wmain(int argc, wchar_t **argv) {
+int wmain() {
   stty_size();
   bela::process::Process p;
   if (p.Capture(L"vswhere", L"-format", L"json", L"-utf8") == 0) {

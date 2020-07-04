@@ -1,4 +1,4 @@
-/* 
+/*
  *  Port from rhash. origin license:
  * sha512.c - an implementation of SHA-384/512 hash functions
  * based on FIPS 180-3 (Federal Information Processing Standart).
@@ -227,7 +227,7 @@ void Hasher::Finalize(uint8_t *out, size_t out_len) {
   }
   message[15] = bela::swapbe(length << 3);
   sha512_process_block(hash, message);
-  if (out != nullptr) {
+  if (out != nullptr && out_len >= digest_length) {
     be64_copy(out, 0, hash, digest_length);
   }
 }

@@ -29,7 +29,7 @@ $checks = "-*,clang-analyzer-*,-clang-analyzer-cplusplus*,boost-*,performance-*,
 
 Write-Host "Use $clangtidy"
 
-$includes = ("*.cc", "*.c", "*.cxx", "*.cpp", "*.c++");
+$includes = ("*.cc", "*.cxx", "*.cpp", "*.c++");
 Get-ChildItem -Force -Recurse -File -Path "$PSScriptRoot\src" -Include $includes | ForEach-Object {
     &"$clangtidy" $_.FullName -checks=$checks -- -m64 -x c++ -std=c++17 -ferror-limit=1000 -D_WIN64 -DNDEBUG -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -I"$PSScriptRoot/include" -Wall -Wextra -Wshadow -Wimplicit-fallthrough
 }
