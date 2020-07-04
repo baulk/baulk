@@ -47,17 +47,14 @@ target_link_libraries(
   belawin
   winhttp
   ws2_32
-  Msi
-  XmlLite)
+  Msi)
 
 target_link_libraries(
   baulk-update
   baulkarchive
   belawin
   winhttp
-  ws2_32
-  Msi
-  XmlLite)
+  ws2_32)
 
 if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
