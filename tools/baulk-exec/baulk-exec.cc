@@ -126,8 +126,8 @@ struct baulkcommand_t {
   }
 };
 void Usage() {
-  constexpr std::wstring_view usage = LR"(baulkexec - Baulk extend executor
-Usage: baulkexec [option] command args ...
+  constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
+Usage: baulk-exec [option] command args ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
@@ -137,7 +137,7 @@ Usage: baulkexec [option] command args ...
   --clang          Add Visual Studio's built-in clang to the PATH environment variable
 
 example:
-  baulkexec -V --vs TUNNEL_DEBUG=1 pwsh
+  baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
 
 )";
   bela::terminal::WriteAuto(stderr, usage);
