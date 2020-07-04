@@ -110,10 +110,10 @@ bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_
       {L"SHA384", hash_t::SHA384},     // SHA384
       {L"SHA512", hash_t::SHA512},     // SHA512
       {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
-      {L"SHA3_224", hash_t::SHA3_224}, // SHA3-224
-      {L"SHA3_256", hash_t::SHA3_256}, // SHA3-256
-      {L"SHA3_384", hash_t::SHA3_384}, // SHA3-384
-      {L"SHA3_512", hash_t::SHA3_512}, // SHA3-512
+      {L"SHA3-224", hash_t::SHA3_224}, // SHA3-224
+      {L"SHA3-256", hash_t::SHA3_256}, // SHA3-256
+      {L"SHA3-384", hash_t::SHA3_384}, // SHA3-384
+      {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
   };
   std::wstring_view value = hashvalue;
   auto m = hash_t::SHA256;

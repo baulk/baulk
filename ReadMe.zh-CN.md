@@ -145,7 +145,21 @@ baulk install cmake git 7z
 }
 ```
 
-baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy，当然也可以通过设置环境变量和命令行参数设置代理。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，Baulk 支持的哈希前缀为 `SHA256` 和 `BLAKE3`。
+baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的压缩包且哈希值匹配时，则使用本地缓存，baulk 使用 WinHTTP 下载压缩包，目前能够较好的支持 HTTP Proxy，当然也可以通过设置环境变量和命令行参数设置代理。baulk 允许清单中没有设置哈希。baulk 的哈希设置为 `HashPrefix:HashContent` 格式，没有哈希前缀时，默认为 `SHA256`，下表是 baulk 支持的哈希算法。
+
+|哈希算法|前缀|备注|
+|---|---|---|
+|SHA224|`SHA224`||
+|SHA256|`SHA256`||
+|SHA384|`SHA224`||
+|SHA512|`SHA224`||
+|SHA3-224|`SHA3-224`||
+|SHA3-256|`SHA3-256`, `SHA3`|`SHA3` 前缀特定的 ☞ `SHA3-256`|
+|SHA3-384|`SHA3-384`||
+|SHA3-512|`SHA3-512`||
+|BLAKE3|`BLAKE3`||
+
+
 
 在 baulk 中 `extension` 支持 `zip`, `msi`, `7z`, `exe`，`tar`，baulk 按照 `extension` 的类型执行相应的解压缩程序。扩展的解压程序如下：
 

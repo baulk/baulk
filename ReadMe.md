@@ -158,7 +158,19 @@ baulk install cmake git 7z
 }
 ```
 
-baulk downloads the compressed package according to the URL set in the list. If there is a compressed package with the same name and the hash value matches locally, the local cache is used. baulk uses WinHTTP to download the compressed package. Currently it can better support HTTP Proxy, of course, it can also be passed Set the environment variables and command line parameters to set the proxy. baulk allows no hashes to be set in the list. The hash of baulk is set to `HashPrefix:HashContent` format. If there is no hash prefix, the default is `SHA256`. The hash prefixes supported by Baulk are `SHA256` and `BLAKE3`.
+baulk downloads the compressed package according to the URL set in the list. If there is a compressed package with the same name and the hash value matches locally, the local cache is used. baulk uses WinHTTP to download the compressed package. Currently it can better support HTTP Proxy, of course, it can also be passed Set the environment variables and command line parameters to set the proxy. baulk allows no hashes to be set in the list. The hash of baulk is set to `HashPrefix:HashContent` format. If there is no hash prefix, the default is `SHA256`. The following table is the hash algorithm supported by baulk.
+
+|Hash algorithm|Prefix|Remarks|
+|---|---|---|
+|SHA224|`SHA224`||
+|SHA256|`SHA256`||
+|SHA384|`SHA224`||
+|SHA512|`SHA224`||
+|SHA3-224|`SHA3-224`||
+|SHA3-256|`SHA3-256`, `SHA3`|`SHA3` prefix specific ☞ `SHA3-256`|
+|SHA3-384|`SHA3-384`||
+|SHA3-512|`SHA3-512`||
+|BLAKE3|`BLAKE3`||
 
 In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk executes the corresponding decompression program according to the type of `extension`. The extended decompression procedure is as follows:
 
