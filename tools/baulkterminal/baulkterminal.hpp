@@ -4,6 +4,7 @@
 #pragma once
 #include <bela/base.hpp>
 #include <bela/env.hpp>
+#include <vector>
 
 namespace baulkterminal {
 constexpr const wchar_t *string_nullable(std::wstring_view str) {
@@ -55,6 +56,7 @@ private:
   std::wstring shell;
   std::wstring cwd;
   std::wstring arch;
+  std::vector<std::wstring> venvs;
   Boolean usevs;
   Boolean clang;
   Boolean cleanup;

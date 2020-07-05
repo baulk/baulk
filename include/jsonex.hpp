@@ -44,8 +44,14 @@ public:
   }
   template <typename T> bool array(std::string_view name, std::vector<T> &arr) {
     if (auto it = obj.find(name); it != obj.end()) {
-      for (const auto &o : it.value()) {
-        arr.emplace_back(bela::ToWide(o.get<std::string_view>()));
+      if (it.value().is_array()) {
+        for (const auto &o : it.value()) {
+          arr.emplace_back(bela::ToWide(o.get<std::string_view>()));
+        }
+        return true;
+      }
+      if (it.value().is_string()) {
+        arr.emplace_back(bela::ToWide(it.value().get<std::string_view>()));
       }
       return true;
     }
@@ -53,8 +59,16 @@ public:
   }
   template <typename T> bool patharray(std::string_view name, std::vector<T> &arr) {
     if (auto it = obj.find(name); it != obj.end()) {
-      for (const auto &o : it.value()) {
-        auto p = bela::ToWide(o.get<std::string_view>());
+      if (it.value().is_array()) {
+        for (const auto &o : it.value()) {
+          auto p = bela::ToWide(o.get<std::string_view>());
+          FromSlash(p);
+          arr.emplace_back(std::move(p));
+        }
+        return true;
+      }
+      if (it.value().is_string()) {
+        auto p = bela::ToWide(it.value().get<std::string_view>());
         FromSlash(p);
         arr.emplace_back(std::move(p));
       }

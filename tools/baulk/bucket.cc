@@ -127,7 +127,11 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     ja.patharray("links", pkg.links);
     ja.patharray("launchers", pkg.launchers);
 #endif
-
+    if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
+      baulk::json::JsonAssignor jea(it.value());
+      ja.array("paths", pkg.venv.paths);
+      ja.array("envs", pkg.venv.envs);
+    }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package meta json: ", bela::ToWide(e.what()));
     return std::nullopt;

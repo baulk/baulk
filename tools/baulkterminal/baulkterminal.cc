@@ -81,17 +81,16 @@ bool Executor::ParseArgv(bela::error_code &ec) {
         case 'W':
           cwd = oa;
           break;
-        case 'A':
-          if (bela::EqualsIgnoreCase(oa, L"x64") || bela::EqualsIgnoreCase(oa, L"arm64") ||
-              bela::EqualsIgnoreCase(oa, L"x86")) {
-            arch = oa;
+        case 'A': {
+          auto larch = bela::AsciiStrToLower(oa);
+          if (larch == L"x64" || larch == L"arm64" || larch == L"x86" || larch == L"arm") {
+            arch = larch;
           } else {
             auto msg = bela::StringCat(L"Invalid arch: ", oa);
             bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE,
                                  bela::mbs_t::FATAL);
           }
-
-          break;
+        } break;
         case 1001:
           conhost = true;
           break;
