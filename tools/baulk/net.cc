@@ -141,6 +141,10 @@ inline void EnableTlsProxy(HINTERNET hSession) {
   DWORD secure_protocols(WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 | WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3);
   WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols,
                    sizeof(secure_protocols));
+  // Enable HTTP2
+  DWORD dwFlags = WINHTTP_PROTOCOL_FLAG_HTTP2;
+  DWORD dwSize = sizeof(dwFlags);
+  WinHttpSetOption(hSession, WINHTTP_OPTION_ENABLE_HTTP_PROTOCOL, &dwFlags, sizeof(dwFlags));
 }
 
 inline bool BodyLength(HINTERNET hReq, uint64_t &len) {
@@ -209,6 +213,10 @@ std::string UrlDecode(std::wstring_view str) {
   return buf;
 }
 
+inline std::wstring_view wstring_cast(const char *data, size_t n) {
+  return std::wstring_view{reinterpret_cast<const wchar_t *>(data), n / 2};
+}
+
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
 // update filename
 inline bool Disposition(HINTERNET hReq, std::wstring &fn) {
@@ -252,26 +260,40 @@ std::wstring flatten_http_headers(const headers_t &headers,
   return flattened_headers;
 }
 
-static inline void query_header_length(HINTERNET request_handle, DWORD header, DWORD &length) {
-  WinHttpQueryHeaders(request_handle, header, WINHTTP_HEADER_NAME_BY_INDEX,
-                      WINHTTP_NO_OUTPUT_BUFFER, &length, WINHTTP_NO_HEADER_INDEX);
-}
-
-void Response::ParseHeadersString(std::wstring_view hdr) {
-  constexpr std::wstring_view content_type = L"Content-Type";
+bool resolve_response_header(HINTERNET hRequest, Response &resp, bela::error_code &ec) {
+  DWORD dwOption = 0;
+  DWORD dwlen = sizeof(dwOption);
+  WinHttpQueryOption(hRequest, WINHTTP_OPTION_HTTP_PROTOCOL_USED, &dwOption, &dwlen);
+  if ((dwOption & WINHTTP_PROTOCOL_FLAG_HTTP2) != 0) {
+    resp.protocol = Protocol::HTTP20;
+  }
+  DWORD dwSize = sizeof(resp.statuscode);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
+                          &resp.statuscode, &dwSize, nullptr) != TRUE) {
+    ec = make_net_error_code();
+    return false;
+  }
+  WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX,
+                      WINHTTP_NO_OUTPUT_BUFFER, &dwSize, WINHTTP_NO_HEADER_INDEX); // ignore error
+  std::string buffer;
+  buffer.resize(dwSize);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX,
+                          buffer.data(), &dwSize, WINHTTP_NO_HEADER_INDEX) != TRUE) {
+    ec = make_net_error_code();
+    return false;
+  }
+  auto hdr = wstring_cast(buffer.data(), dwSize);
   std::vector<std::wstring_view> hlines =
       bela::StrSplit(hdr, bela::ByString(L"\r\n"), bela::SkipEmpty());
-  for (const auto ln : hlines) {
+  for (size_t i = 1; i < hlines.size(); i++) {
+    auto ln = hlines[i];
     if (auto pos = ln.find(':'); pos != std::wstring_view::npos) {
       auto k = bela::StripTrailingAsciiWhitespace(ln.substr(0, pos));
       auto v = bela::StripTrailingAsciiWhitespace(ln.substr(pos + 1));
-      hkv.emplace(k, v);
+      resp.hkv.emplace(k, v);
     }
   }
-}
-
-inline std::wstring_view wstring_cast(const char *data, size_t n) {
-  return std::wstring_view{reinterpret_cast<const wchar_t *>(data), n / 2};
+  return true;
 }
 
 std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstring_view url,
@@ -346,38 +368,26 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
     return std::nullopt;
   }
   Response resp;
-  DWORD dwSize = sizeof(resp.statuscode);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
-                          &resp.statuscode, &dwSize, nullptr) != TRUE) {
-    ec = make_net_error_code();
+  if (!resolve_response_header(hRequest, resp, ec)) {
     return std::nullopt;
   }
-  DWORD headerBufferLength = 0;
-  query_header_length(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, headerBufferLength);
-  std::string hdbf;
-  hdbf.resize(headerBufferLength);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX,
-                          hdbf.data(), &headerBufferLength, WINHTTP_NO_HEADER_INDEX) != TRUE) {
-    ec = make_net_error_code();
-    return std::nullopt;
-  }
-  resp.ParseHeadersString(wstring_cast(hdbf.data(), headerBufferLength));
-  std::vector<char> readbuf;
-  readbuf.reserve(64 * 1024);
+  std::vector<char> buffer;
+  buffer.reserve(64 * 1024);
+  DWORD dwSize = 0;
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(hRequest, &dwSize) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
-    if (readbuf.size() < dwSize) {
-      readbuf.resize(static_cast<size_t>(dwSize) * 2);
+    if (buffer.size() < dwSize) {
+      buffer.resize(static_cast<size_t>(dwSize) * 2);
     }
-    if (WinHttpReadData(hRequest, (LPVOID)readbuf.data(), dwSize, &downloaded_size) != TRUE) {
+    if (WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &downloaded_size) != TRUE) {
       ec = make_net_error_code();
       return std::nullopt;
     }
-    resp.body.append(readbuf.data(), dwSize);
+    resp.body.append(buffer.data(), dwSize);
   } while (dwSize > 0);
   return std::make_optional(std::move(resp));
 }
@@ -444,8 +454,8 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
   }
   size_t total_downloaded_size = 0;
   DWORD dwSize = 0;
-  std::vector<char> buf;
-  buf.reserve(64 * 1024);
+  std::vector<char> buffer;
+  buffer.reserve(64 * 1024);
   auto file = FilePart::MakeFilePart(dest, ec);
   bar.FileName(uc.filename);
   bar.Execute();
@@ -460,15 +470,15 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
       bar.MarkFault();
       return std::nullopt;
     }
-    if (buf.size() < dwSize) {
-      buf.resize(static_cast<size_t>(dwSize) * 2);
+    if (buffer.size() < dwSize) {
+      buffer.resize(static_cast<size_t>(dwSize) * 2);
     }
-    if (WinHttpReadData(hRequest, (LPVOID)buf.data(), dwSize, &downloaded_size) != TRUE) {
+    if (WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &downloaded_size) != TRUE) {
       ec = make_net_error_code();
       bar.MarkFault();
       return std::nullopt;
     }
-    file->Write(buf.data(), downloaded_size);
+    file->Write(buffer.data(), downloaded_size);
     total_downloaded_size += downloaded_size;
     bar.Update(total_downloaded_size);
   } while (dwSize > 0);

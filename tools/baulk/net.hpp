@@ -67,11 +67,13 @@ struct StringCaseInsensitiveEq {
 };
 using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
                                       StringCaseInsensitiveEq>;
+// HTTP Response
+enum class Protocol { HTTP11, HTTP20, HTTP30 };
 struct Response {
   headers_t hkv;
   std::string body;
   long statuscode{0};
-  void ParseHeadersString(std::wstring_view hdr);
+  Protocol protocol{Protocol::HTTP11};
   [[nodiscard]] bool IsSuccessStatusCode() const { return statuscode >= 200 && statuscode <= 299; }
 };
 
