@@ -127,9 +127,11 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
       {L"install", baulk::commands::cmd_install},     // install
+      {L"i", baulk::commands::cmd_install},           // install
       {L"list", baulk::commands::cmd_list},           // list installed
       {L"search", baulk::commands::cmd_search},       // search from bucket
       {L"uninstall", baulk::commands::cmd_uninstall}, // uninstall
+      {L"u", baulk::commands::cmd_uninstall},         // uninstall
       {L"update", baulk::commands::cmd_update},       // update bucket
       {L"upgrade", baulk::commands::cmd_upgrade},     // upgrade
       {L"freeze", baulk::commands::cmd_freeze},       // freeze

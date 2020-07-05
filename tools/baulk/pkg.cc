@@ -21,6 +21,24 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     j["version"] = bela::ToNarrow(pkg.version);
     j["bucket"] = bela::ToNarrow(pkg.bucket);
     j["date"] = baulk::time::TimeNow();
+    if (!pkg.venv.empty()) {
+      nlohmann::json venv;
+      if (!pkg.venv.paths.empty()) {
+        nlohmann::json pv;
+        for (const auto &p : pkg.venv.paths) {
+          pv.push_back(bela::ToNarrow(p));
+        }
+        venv["path"] = pv;
+      }
+      if (!pkg.venv.envs.empty()) {
+        nlohmann::json ev;
+        for (const auto &e : pkg.venv.envs) {
+          ev.push_back(bela::ToNarrow(e));
+        }
+        venv["env"] = ev;
+      }
+      j["venv"] = venv;
+    }
     auto file = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
     if (!baulk::fs::MakeDir(file, ec)) {
       return false;

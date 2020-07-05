@@ -128,15 +128,15 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     ja.patharray("launchers", pkg.launchers);
 #endif
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
+      DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
       baulk::json::JsonAssignor jea(it.value());
-      ja.array("paths", pkg.venv.paths);
-      ja.array("envs", pkg.venv.envs);
+      jea.array("path", pkg.venv.paths);
+      jea.array("env", pkg.venv.envs);
     }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package meta json: ", bela::ToWide(e.what()));
     return std::nullopt;
   }
-
   return std::make_optional(std::move(pkg));
 }
 

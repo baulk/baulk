@@ -30,8 +30,7 @@ int install_pkg(std::wstring_view name) {
     return 1;
   }
   if (pkg->urls.empty()) {
-    bela::FPrintF(stderr, L"baulk: '%s' does not support \x1b[31m%s\x1b[0m\n", name,
-                  architecture());
+    bela::FPrintF(stderr, L"baulk: '%s' not support \x1b[31m%s\x1b[0m\n", name, architecture());
     return 1;
   }
   return baulk::package::BaulkInstall(*pkg);

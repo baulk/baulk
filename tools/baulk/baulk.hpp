@@ -111,7 +111,7 @@ struct LinkMeta {
   std::wstring alias;
 };
 
-struct ViEnv {
+struct BaulkVirtualEnv {
   std::vector<std::wstring> paths;
   std::vector<std::wstring> envs;
   bool empty() const { return paths.empty() && envs.empty(); }
@@ -127,7 +127,7 @@ struct Package {
   std::vector<std::wstring> urls;
   std::vector<LinkMeta> links;
   std::vector<LinkMeta> launchers;
-  ViEnv venv;
+  BaulkVirtualEnv venv;
   int weights{0}; // Weights derived from bucket
 };
 
