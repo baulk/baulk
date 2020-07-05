@@ -482,6 +482,12 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
     total_downloaded_size += downloaded_size;
     bar.Update(total_downloaded_size);
   } while (dwSize > 0);
+  if (blen != 0 && total_downloaded_size < blen) {
+    bar.MarkFault();
+    bar.MarkCompleted();
+    ec = bela::make_error_code(1, L"connection has been disconnected");
+    return std::nullopt;
+  }
   file->Finish();
   bar.MarkCompleted();
   return std::make_optional(std::move(dest));
