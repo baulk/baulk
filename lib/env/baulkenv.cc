@@ -283,6 +283,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
   if (bela::PathExists(baulkexe)) {
     JoinForceEnv(paths, *exepath);
     JoinForceEnv(paths, *exepath, L"\\links");
+    baulkbindir = *exepath;
     return true;
   }
   std::wstring baulkroot(*exepath);
@@ -291,6 +292,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
     if (bela::PathExists(baulkexe)) {
       JoinForceEnv(paths, baulkroot, L"\\bin");
       JoinForceEnv(paths, baulkroot, L"\\bin\\links");
+      baulkbindir = bela::StringCat(baulkroot, L"\\bin");
       return true;
     }
     bela::PathStripName(baulkroot);

@@ -3,6 +3,7 @@
 #define BAULK_BAULKENV_HPP
 #include <bela/path.hpp>
 #include <bela/env.hpp>
+#include <bela/base.hpp>
 
 namespace baulk::env {
 
@@ -23,6 +24,7 @@ struct Searcher {
   using vector_t = std::vector<std::wstring>;
   bela::env::Derivator &dev;
   std::wstring arch;
+  std::wstring baulkbindir;
   vector_t paths;
   vector_t libs;
   vector_t includes;
@@ -64,6 +66,9 @@ struct Searcher {
   bool InitializeVisualStudioEnv(bool clang, bela::error_code &ec);
   bool InitializeBaulk(bela::error_code &ec);
   bool InitializeGit(bool cleanup, bela::error_code &ec);
+  bool InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec);
+  // dot not call
+  bool InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec);
 };
 
 } // namespace baulk::env

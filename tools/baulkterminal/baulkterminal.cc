@@ -29,6 +29,8 @@ Usage: baulkterminal [option] ...
                Set the shell startup directory
   -A|--arch
                Select a specific arch, use native architecture by default
+  -E|--venv
+               Choose to load a specific package virtual environment
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -56,7 +58,8 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"shell", bela::required_argument, L'S')
       .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"arch", bela::required_argument, L'A')
-      .Add(L"conhost", bela::no_argument, 1001) // disable windows termainl
+      .Add(L"venv", bela::required_argument, L'E') // virtual env support
+      .Add(L"conhost", bela::no_argument, 1001)    // disable windows termainl
       .Add(L"clang", bela::no_argument, 1002)
       .Add(L"manifest", bela::required_argument, 1003);
   auto ret = pa.Execute(
@@ -85,12 +88,15 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           auto larch = bela::AsciiStrToLower(oa);
           if (larch == L"x64" || larch == L"arm64" || larch == L"x86" || larch == L"arm") {
             arch = larch;
-          } else {
-            auto msg = bela::StringCat(L"Invalid arch: ", oa);
-            bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE,
-                                 bela::mbs_t::FATAL);
+            break;
           }
+          auto msg = bela::StringCat(L"Invalid arch: ", oa);
+          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE,
+                               bela::mbs_t::FATAL);
         } break;
+        case 'E':
+          venvs.push_back(oa);
+          break;
         case 1001:
           conhost = true;
           break;

@@ -133,6 +133,8 @@ Usage: baulk-exec [option] command args ...
   -V|--verbose     Make the operation more talkative
   -C|--cleanup     Create clean environment variables to avoid interference
   -W|--cwd         Set the command startup directory
+  -A|--arch        Select a specific arch, use native architecture by default
+  -E|--venv        Choose to load a specific package virtual environment
   --vs             Load Visual Studio related environment variables
   --clang          Add Visual Studio's built-in clang to the PATH environment variable
 
@@ -155,12 +157,16 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
       .Add(L"version", bela::no_argument, L'v')
       .Add(L"verbose", bela::no_argument, L'V')
       .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
+      .Add(L"arch", bela::required_argument, L'A')
       .Add(L"cwd", bela::required_argument, L'W')
+      .Add(L"venv", bela::required_argument, L'E')
       .Add(L"vs", bela::no_argument, 1001) // load visual studio environment
       .Add(L"clang", bela::no_argument, 1002);
   bool cleanup = false;
   bool usevs = false;
   bool clang = false;
+  std::wstring arch;
+  std::vector<std::wstring> venvs;
   bela::error_code ec;
   auto ret = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
@@ -179,6 +185,17 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
           break;
         case 'W':
           cmd.cwd = oa;
+          break;
+        case 'A': {
+          auto larch = bela::AsciiStrToLower(oa);
+          if (larch == L"x64" || larch == L"arm64" || larch == L"x86" || larch == L"arm") {
+            arch = larch;
+            break;
+          }
+          bela::FPrintF(stderr, L"baulk: invalid arch '%s'\n", oa);
+        } break;
+        case 'E':
+          venvs.push_back(oa);
           break;
         case 1001:
           usevs = true;
@@ -214,7 +231,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
     }
     dev.SetEnv(arg.substr(0, pos), arg.substr(pos + 1));
   }
-  baulk::env::Searcher searcher(dev);
+  baulk::env::Searcher searcher(dev, arch);
   if (!searcher.InitializeBaulk(ec)) {
     bela::FPrintF(stderr, L"InitializeBaulk failed %s\n", ec.message);
     return false;
@@ -231,7 +248,10 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
       return false;
     }
   }
-
+  searcher.InitializeVirtualEnv(venvs, ec);
+  if (ec) {
+    bela::FPrintF(stderr, L"parse venv: %s\n", ec.message);
+  }
   if (cleanup) {
     DbgPrint(L"use cleaned env");
     cmd.env = searcher.CleanupEnv();

@@ -113,6 +113,7 @@ std::optional<std::wstring> Executor::MakeEnv(bela::error_code &ec) {
       return std::nullopt;
     }
   }
+  searcher.InitializeVirtualEnv(venvs, ec);
   if (cleanup) {
     return std::make_optional(searcher.CleanupEnv());
   }
