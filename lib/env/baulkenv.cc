@@ -101,6 +101,34 @@ std::wstring Searcher::CleanupEnv() {
   }
   return dev.CleanupEnv(bela::env::JoinEnv(paths));
 }
+using StringCaseSet = bela::flat_hash_set<std::wstring, bela::env::StringCaseInsensitiveHash,
+                                          bela::env::StringCaseInsensitiveEq>;
+// RegroupPath todo
+std::wstring RegroupPath(const std::vector<std::wstring> &paths) {
+  auto oldpath = bela::GetEnv(L"path");
+  std::vector<std::wstring_view> oldpaths =
+      bela::StrSplit(oldpath, bela::ByChar(bela::env::Separator), bela::SkipEmpty());
+  std::vector<std::wstring> newpaths;
+  StringCaseSet sets;
+  sets.reserve(paths.size() + oldpaths.size());
+  for (const auto &p : paths) {
+    auto p_ = bela::PathCat(p);
+    if (sets.find(p_) != sets.end()) {
+      continue;
+    }
+    newpaths.emplace_back(p_);
+    sets.emplace(p_);
+  }
+  for (const auto &p : oldpaths) {
+    auto p_ = bela::PathCat(p);
+    if (sets.find(p_) != sets.end()) {
+      continue;
+    }
+    newpaths.emplace_back(p_);
+    sets.emplace(p_);
+  }
+  return bela::env::JoinEnv(newpaths);
+}
 
 std::wstring Searcher::MakeEnv() {
   if (!libs.empty()) {
@@ -112,12 +140,7 @@ std::wstring Searcher::MakeEnv() {
   if (!libpaths.empty()) {
     dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
   }
-  auto oldpath = bela::GetEnv(L"path");
-  std::vector<std::wstring_view> ov =
-      bela::StrSplit(oldpath, bela::ByChar(bela::env::Separator), bela::SkipEmpty());
-  auto newpath =
-      bela::StringCat(bela::env::JoinEnv(paths), bela::env::Separators, bela::env::JoinEnv(ov));
-  dev.SetEnv(L"path", newpath);
+  dev.SetEnv(L"path", RegroupPath(paths));
   return dev.MakeEnv();
 }
 

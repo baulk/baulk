@@ -43,10 +43,6 @@ private:
 bool IsExecutablePath(std::wstring_view p);
 std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
 
-inline std::wstring BaseName(std::wstring_view p) {
-  return std::filesystem::path(p).parent_path().wstring();
-}
-
 inline std::wstring FileName(std::wstring_view p) {
   return std::filesystem::path(p).filename().wstring();
 }
