@@ -69,7 +69,7 @@ constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nul
 bool IsSubsytemConsole(std::wstring_view exe) {
   std::wstring target;
   if (!bela::ExecutableExistsInPath(exe, target)) {
-    bela::FPrintF(stderr, L"unable found target: '%s'\n", target);
+    bela::FPrintF(stderr, L"unable found target: '%s'\n", exe);
     return false;
   }
   bela::error_code ec;
