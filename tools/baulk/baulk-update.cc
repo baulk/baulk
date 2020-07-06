@@ -6,6 +6,7 @@
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/process.hpp>
+#include <bela/parseargv.hpp>
 #include <jsonex.hpp>
 #include <zip.hpp>
 #include "fs.hpp"
@@ -15,7 +16,7 @@
 // https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c
 
 namespace baulk {
-bool IsDebugMode = true;
+bool IsDebugMode = false;
 bool IsForceMode = false;
 constexpr size_t UerAgentMaximumLength = 64;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
@@ -142,7 +143,8 @@ bool ResolveBaulkRev(std::wstring &releasename) {
   return false;
 }
 
-bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring_view release) {
+bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version,
+                                 std::wstring_view oldver) {
   // https://github.com/baulk/baulk/releases/latest
   constexpr std::wstring_view latest = L"https://github.com/baulk/baulk/releases/latest";
   bela::error_code ec;
@@ -156,12 +158,12 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring_view release) {
   for (;;) {
     auto pos = resp->body.find(urlprefix, index);
     if (pos == std::wstring::npos) {
-      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", oldver);
       return false;
     }
     auto pos2 = resp->body.find('"', pos);
     if (pos2 == std::wstring::npos) {
-      bela::FPrintF(stderr, L"baulk upgrade get %s: \x1b[31minvalid html url\x1b[0m\n", release);
+      bela::FPrintF(stderr, L"baulk upgrade get %s: \x1b[31minvalid html url\x1b[0m\n", oldver);
       return false;
     }
     std::wstring filename = bela::ToWide(resp->body.data() + pos, pos2 - pos);
@@ -172,22 +174,24 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring_view release) {
     if (svv.size() <= 2) {
       continue;
     }
-    if (svv[svv.size() - 2] == release) {
-      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+    auto newrev = svv[svv.size() - 2];
+    if (newrev == oldver) {
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", oldver);
       return false;
     }
+    version = newrev;
     if (svv.back().find(archfilesuffix()) != std::wstring_view::npos) {
       url = bela::StringCat(L"https://github.com", filename);
       DbgPrint(L"Found new release %s", filename);
       return true;
     }
   }
-  bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", release);
+  bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", oldver);
   return false;
 }
 
 // https://api.github.com/repos/baulk/baulk/releases/latest todo
-bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
+bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   std::wstring releasename;
   if (!ResolveBaulkRev(releasename)) {
     bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n",
@@ -196,12 +200,12 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
   if (!bela::StartsWith(releasename, releaseprefix)) {
     baulk::DbgPrint(L"baulk refname '%s' not public release", releasename);
-    if (!forcemode) {
+    if (!baulk::IsForceMode) {
       return false;
     }
   }
-  auto release = bela::StripPrefix(releasename, releaseprefix);
-  baulk::DbgPrint(L"detect current release %s", release);
+  auto oldver = bela::StripPrefix(releasename, releaseprefix);
+  baulk::DbgPrint(L"detect current version %s", oldver);
   bela::error_code ec;
   auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
   if (!resp) {
@@ -212,10 +216,11 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
     /* code */
     auto obj = nlohmann::json::parse(resp->body);
     auto tagname = bela::ToWide(obj["tag_name"].get<std::string_view>());
-    if (release == tagname) {
-      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m", release);
+    if (oldver == tagname) {
+      bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m", version);
       return false;
     }
+    version = tagname;
     auto it = obj.find("assets");
     if (it == obj.end()) {
       bela::FPrintF(stderr, L"\x1b[33mbaulk/%s build is not yet complete\x1b[0m", tagname);
@@ -231,7 +236,7 @@ bool ReleaseIsUpgradable(std::wstring &url, bool forcemode) {
     }
     //
   } catch (const std::exception &) {
-    return ReleaseIsUpgradableFallback(url, release);
+    return ReleaseIsUpgradableFallback(url, version, oldver);
   }
   return false;
 }
@@ -249,10 +254,15 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
   }
   if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
       TRUE) {
+    if (!baulk::IsDebugMode) {
+      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mupdate %s done\x1b[0m", target);
+      return true;
+    }
     baulk::DbgPrint(L"update %s done", target);
     return true;
   }
-  return true;
+  ec = bela::make_system_error_code();
+  return false;
 }
 
 int ExecuteInternal(wchar_t *cmdline) {
@@ -283,9 +293,10 @@ int PostUpdate() {
   return ExecuteInternal(ea.data());
 }
 
-int BaulkUpdate(bool forcemode) {
+int BaulkUpdate() {
   std::wstring url;
-  if (!ReleaseIsUpgradable(url, forcemode)) {
+  std::wstring version;
+  if (!ReleaseIsUpgradable(url, version)) {
     return 0;
   }
   auto filename = baulk::net::UrlFileName(url);
@@ -338,6 +349,9 @@ int BaulkUpdate(bool forcemode) {
     }
     UpdateFile(p.path().wstring(), target);
   }
+  if (!baulk::IsDebugMode) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mbaulk has been upgraded to %s\x1b[0m\n", version);
+  }
 
   auto srcupdater = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(srcupdater)) {
@@ -352,14 +366,80 @@ int BaulkUpdate(bool forcemode) {
 
 } // namespace baulk
 
+void Usage() {
+  constexpr std::wstring_view usage = LR"(baulk-update - Baulk self update utility
+Usage: baulk-update [option]
+  -h|--help        Show usage text and quit
+  -v|--version     Show version number and quit
+  -V|--verbose     Make the operation more talkative
+  -F|--force       Turn on force mode. such as force update frozen package
+  -A|--user-agent  Send User-Agent <name> to server
+  --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+
+)";
+  bela::terminal::WriteAuto(stderr, usage);
+}
+
+void Version() {
+  bela::FPrintF(stdout, L"baulk-update %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
+                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
+}
+
+bool ParseArgv(int argc, wchar_t **argv) {
+  bela::ParseArgv pa(argc, argv);
+  pa.Add(L"help", bela::no_argument, 'h')
+      .Add(L"version", bela::no_argument, 'v')
+      .Add(L"verbose", bela::no_argument, 'V')
+      .Add(L"force", bela::no_argument, L'F')
+      .Add(L"", bela::no_argument, L'f')
+      .Add(L"profile", bela::required_argument, 'P')
+      .Add(L"user-agent", bela::required_argument, 'A')
+      .Add(L"https-proxy", bela::required_argument, 1001);
+
+  bela::error_code ec;
+  auto result = pa.Execute(
+      [&](int val, const wchar_t *oa, const wchar_t *) {
+        switch (val) {
+        case 'h':
+          Usage();
+          exit(0);
+        case 'v':
+          Version();
+          exit(0);
+        case 'V':
+          baulk::IsDebugMode = true;
+          break;
+        case 'f':
+          [[fallthrough]];
+        case 'F':
+          baulk::IsForceMode = true;
+          break;
+        case 'A':
+          if (auto len = wcslen(oa); len < 256) {
+            wmemcmp(baulk::UserAgent, oa, len);
+            baulk::UserAgent[len] = 0;
+          }
+          break;
+        case 1001:
+          SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
+          break;
+        default:
+          return false;
+        }
+        return true;
+      },
+      ec);
+  if (!result) {
+    bela::FPrintF(stderr, L"baulk-update ParseArgv error: %s\n", ec.message);
+    return false;
+  }
+  return true;
+}
+
 int wmain(int argc, wchar_t **argv) {
-  constexpr std::wstring_view forcestr = L"--force";
-  bool forcemode = false;
-  for (int i = 1; i < argc; i++) {
-    if (forcestr == argv[i]) {
-      forcemode = true;
-    }
+  if (!ParseArgv(argc, argv)) {
+    return 1;
   }
   baulk::InitializeBaulk();
-  return baulk::BaulkUpdate(forcemode);
+  return baulk::BaulkUpdate();
 }
