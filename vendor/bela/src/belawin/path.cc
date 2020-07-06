@@ -245,7 +245,7 @@ inline bool PathFileIsExists(std::wstring_view file) {
 }
 
 bool HasExt(std::wstring_view file) {
-  auto pos = file.find(L'.');
+  auto pos = rfile.find(L'.');
   if (pos == std::wstring_view::npos) {
     return false;
   }
