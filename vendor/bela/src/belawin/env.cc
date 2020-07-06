@@ -284,7 +284,7 @@ std::wstring CleanupEnvT(std::wstring_view prependpath, ContainerT &envb) {
   auto systemroot = bela::GetEnv(L"SystemRoot");
   auto newpath =
       bela::StringCat(L"Path=", prependpath, L";", systemroot, L"\\System32;", systemroot, L";",
-                      systemroot, L"\\Wbem;", systemroot, L"\\WindowsPowerShell\\v1.0\\");
+                      systemroot, L"\\Wbem;", systemroot, L"\\System32\\WindowsPowerShell\\v1.0\\");
   std::wstring ne;
   for (wchar_t const *lastch{envs}; *lastch != '\0'; ++lastch) {
     const auto len = ::wcslen(lastch);
