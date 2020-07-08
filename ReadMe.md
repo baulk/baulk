@@ -188,7 +188,7 @@ In the manifest file, there may also be `links/launchers`, and baulk will create
 |---|---|---|---|---|
 |x86|url|launchers|links|-|
 |x64|url64, url|launchers64, launchers|links64, links|If the launchers/links of different architectures have the same goal, you don’t need to set them separately|
-|ARM64|urlamr64, url|launchersarm64, launchers|linksarm64, links|If launchers/links of different architectures have the same goal, you don’t need to set them separately|
+|ARM64|urlarm64, url|launchersarm64, launchers|linksarm64, links|If launchers/links of different architectures have the same goal, you don’t need to set them separately|
 
 
 Tips: In Windows, after starting the process, we can use `GetModuleFileNameW` to get the binary file path of the process, but when the process starts from the symbolic link, the path of the symbolic link will be used. If we only use `links` in baulk to create symbolic links to the `links` directory, there may be a problem that a specific `dll` cannot be loaded, so here we use the `launcher` mechanism to solve this problem.
