@@ -7,7 +7,7 @@
 
 namespace baulk::commands {
 
-bool FileIsExpired(std::wstring_view file, const FILETIME *fnow) {
+bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
   FILETIME ftCreate, ftAccess, ftWrite;
   auto FileHandle =
       CreateFileW(file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
@@ -24,10 +24,11 @@ bool FileIsExpired(std::wstring_view file, const FILETIME *fnow) {
     bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec.message);
     return false;
   }
-  constexpr auto expires = 30 * 24 * 3600 * 1000LL;
-  auto diffInTicks = reinterpret_cast<const LARGE_INTEGER *>(fnow)->QuadPart -
-                     reinterpret_cast<const LARGE_INTEGER *>(&ftCreate)->QuadPart;
-  auto diffInMillis = diffInTicks / 10000;
+  constexpr auto expires = 30 * 24 * 3600 * 1000LL; // ms
+  ULARGE_INTEGER uc;
+  uc.HighPart = ftCreate.dwHighDateTime;
+  uc.LowPart = ftCreate.dwLowDateTime;
+  auto diffInMillis = (ufnow - uc.QuadPart) / 10000;
   return diffInMillis > expires;
 }
 
@@ -42,13 +43,16 @@ int cmd_cleancache(const argv_t &argv) {
     bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec.message);
     return 1;
   }
+  ULARGE_INTEGER ul;
+  ul.LowPart = fnow.dwLowDateTime;
+  ul.HighPart = fnow.dwHighDateTime;
   for (auto &p : std::filesystem::directory_iterator(pkgtemp)) {
     auto path_ = p.path().wstring();
-    if (baulk::IsForceMode) {
+    if (baulk::IsForceMode || p.is_directory()) {
       baulk::fs::PathRemoveEx(path_, ec);
       continue;
     }
-    if (FileIsExpired(path_, &fnow)) {
+    if (FileIsExpired(path_, ul.QuadPart)) {
       DbgPrint(L"%s expired", path_);
       baulk::fs::PathRemoveEx(path_, ec);
       continue;
