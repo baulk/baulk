@@ -177,7 +177,7 @@ baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的
 |---|---|---|---|---|
 |x86|url|launchers|links|-|
 |x64|url64, url|launchers64, launchers|links64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
-|ARM64|urlamr64, url|launchersarm64, launchers|linksarm64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
+|ARM64|urlarm64, url|launchersarm64, launchers|linksarm64, links|如不同架构的 launchers/links 目标一致，可以不用单独设置|
 
 
 Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW` 获得进程的二进制文件路径，但当进程从符号链接启动时则会使用符号链接的路径。如果我们在 baulk 中只使用 `links` 创建符号链接到 `links` 目录则可能会出现无法加载特定 `dll` 的问题，因此，这里我们使用 `launcher` 机制解决这个问题。
