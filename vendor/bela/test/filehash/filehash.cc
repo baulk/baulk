@@ -26,6 +26,8 @@ int wmain(int argc, wchar_t **argv) {
   h8.Initialize(bela::hash::sha3::HashBits::SHA3512);
   bela::hash::blake3::Hasher h9;
   h9.Initialize();
+  bela::hash::sm3::Hasher h10;
+  h10.Initialize();
   FILE *fd = nullptr;
   if (auto e = _wfopen_s(&fd, argv[1], L"rb"); e != 0) {
     auto ec = bela::make_stdc_error_code(e);
@@ -45,6 +47,7 @@ int wmain(int argc, wchar_t **argv) {
     h7.Update(buffer, n);
     h8.Update(buffer, n);
     h9.Update(buffer, n);
+    h10.Update(buffer, n);
     if (n < sizeof(buffer)) {
       break;
     }
@@ -58,5 +61,6 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stdout, L"SHA3-384: %s\n", h7.Finalize());
   bela::FPrintF(stdout, L"SHA3-512: %s\n", h8.Finalize());
   bela::FPrintF(stdout, L"BLAKE3: %s\n", h9.Finalize());
+  bela::FPrintF(stdout, L"SM3: %s\n", h10.Finalize());
   return 0;
 }

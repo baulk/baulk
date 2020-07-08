@@ -198,6 +198,27 @@ struct Hasher {
 };
 } // namespace blake3
 
+namespace sm3 {
+constexpr auto sm3_digest_length = 32;
+constexpr auto sm3_block_size = 64;
+struct Hasher {
+  uint32_t Nl{0};
+  uint32_t Nh{0};
+  uint32_t digest[8]; /*!< intermediate digest state  */
+  uint8_t block[64];  /*!< data block being processed */
+  void Initialize();
+  void Update(const void *input, size_t input_len);
+  void Finalize(uint8_t *out, size_t out_len);
+  std::wstring Finalize() {
+    uint8_t buf[sm3_digest_length];
+    Finalize(buf, sizeof(buf));
+    std::wstring s;
+    HashEncode(buf, sizeof(buf), s);
+    return s;
+  }
+};
+} // namespace sm3
+
 } // namespace bela::hash
 
 #endif

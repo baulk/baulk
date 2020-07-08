@@ -17,6 +17,7 @@ add_library(belahash STATIC
   sha256.cc
   sha512.cc
   sha3.cc
+  sm3.cc
   blake3/blake3.c
   blake3/blake3_dispatch.c
   blake3/blake3_portable.c
