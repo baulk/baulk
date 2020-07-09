@@ -66,12 +66,13 @@ constexpr const wchar_t *string_nullable(std::wstring_view str) {
 }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
-bool IsSubsytemConsole(std::wstring_view exe) {
+bool IsSubsytemConsole(std::wstring_view exe, std::wstring &rtarget) {
   std::wstring target;
   if (!bela::ExecutableExistsInPath(exe, target)) {
     bela::FPrintF(stderr, L"unable found target: '%s'\n", exe);
     return false;
   }
+  rtarget = target;
   bela::error_code ec;
   auto realexe = bela::RealPathEx(target, ec);
   if (!realexe) {
@@ -92,7 +93,8 @@ struct baulkcommand_t {
   std::wstring cwd;
   int operator()() {
     auto arg0 = argv[0];
-    auto isconsole = IsSubsytemConsole(arg0);
+    std::wstring target;
+    auto isconsole = IsSubsytemConsole(arg0, target);
     DbgPrint(L"Arg0 %s subsystem is console: %b", arg0, isconsole);
     bela::EscapeArgv ea;
     ea.Assign(arg0);
@@ -104,7 +106,7 @@ struct baulkcommand_t {
     SecureZeroMemory(&si, sizeof(si));
     SecureZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
-    if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+    if (CreateProcessW(target.empty() ? nullptr : target.data(), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                        nullptr, string_nullable(cwd), &si, &pi) != TRUE) {
       auto ec = bela::make_system_error_code();
       bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
