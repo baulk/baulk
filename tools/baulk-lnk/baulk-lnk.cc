@@ -124,17 +124,13 @@ int wmain(int argc, wchar_t **argv) {
   }
   DbgPrint(L"resolve target: %s\n", *target);
   auto isconsole = IsSubsytemConsole(*target);
-  bela::EscapeArgv ea;
-  ea.Assign(*target);
-  for (int i = 1; i < argc; i++) {
-    ea.Append(argv[i]);
-  }
+  std::wstring newcmd(GetCommandLineW());
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+  if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                      nullptr, nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
