@@ -109,7 +109,7 @@ struct baulkcommand_t {
     if (CreateProcessW(target.empty() ? nullptr : target.data(), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                        nullptr, string_nullable(cwd), &si, &pi) != TRUE) {
       auto ec = bela::make_system_error_code();
-      bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
+      bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n",arg0, ec.message);
       return -1;
     }
     CloseHandle(pi.hThread);
