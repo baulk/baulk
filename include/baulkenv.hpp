@@ -24,6 +24,7 @@ struct Searcher {
   using vector_t = std::vector<std::wstring>;
   bela::env::Derivator &dev;
   std::wstring arch;
+  std::wstring baulkroot;
   std::wstring baulkbindir;
   vector_t paths;
   vector_t libs;

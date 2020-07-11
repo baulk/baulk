@@ -90,23 +90,29 @@ std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
   return bela::ExpandEnv(L"%LOCALAPPDATA%\\baulk\\baulk.json");
 }
 
-bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
-  //
-  locale.resize(64);
-  if (auto n = GetUserDefaultLocaleName(locale.data(), 64); n != 0 && n < 64) {
-    locale.resize(n);
-  } else {
-    locale.clear();
+inline std::wstring BaulkLocaleName() {
+  std::wstring s;
+  s.resize(64);
+  if (auto n = GetUserDefaultLocaleName(s.data(), 64); n != 0 && n < 64) {
+    s.resize(n);
+    return s;
   }
-  baulk::DbgPrint(L"Baulk locale name %s\n", locale);
+  return L"";
+}
+
+inline std::wstring BaulkRootPath() {
   bela::error_code ec;
   if (auto exedir = bela::ExecutableParent(ec); exedir) {
-    root.assign(std::move(*exedir));
-    bela::PathStripName(root);
-  } else {
-    bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
-    root = L".";
+    return std::wstring(bela::DirName(*exedir));
   }
+  bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
+  return L".";
+}
+
+bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
+  locale = BaulkLocaleName();
+  baulk::DbgPrint(L"Baulk locale name %s\n", locale);
+  root = BaulkRootPath();
   baulk::DbgPrint(L"Expand root '%s'\n", root);
   profile = ProfileResolve(profile_, root);
   baulk::DbgPrint(L"Expand profile to '%s'", profile);
@@ -122,6 +128,10 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
   auto closer = bela::finally([&] { fclose(fd); });
   try {
     auto json = nlohmann::json::parse(fd);
+    // overload locale
+    if (auto it = json.find("locale"); it != json.end() && it.value().is_string()) {
+      locale = bela::ToWide(it.value().get<std::string_view>());
+    }
     const auto &bks = json["bucket"];
     for (auto &b : bks) {
       auto desc = bela::ToWide(b["description"].get<std::string_view>());

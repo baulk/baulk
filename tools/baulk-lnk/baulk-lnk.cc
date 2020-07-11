@@ -52,27 +52,6 @@ bool IsSubsytemConsole(std::wstring_view exe) {
   return pe->subsystem == bela::pe::Subsystem::CUI;
 }
 
-std::wstring_view DirName(std::wstring_view s) {
-  auto i = s.size() - 1;
-  auto p = s.data();
-  for (; bela::IsPathSeparator(p[i]); i--) {
-    if (i == 0) {
-      return L"";
-    }
-  }
-  for (; !bela::IsPathSeparator(p[i]); i--) {
-    if (i == 0) {
-      return L"";
-    }
-  }
-  for (; bela::IsPathSeparator(p[i]); i--) {
-    if (i == 0) {
-      return L"";
-    }
-  }
-  return std::wstring_view{s.data(), i + 1};
-}
-
 std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_code &ec) {
   // avoid commandline forged
   constexpr std::wstring_view baulklinkmeta = L"\\baulk.linkmeta.json";
@@ -81,7 +60,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
     return std::nullopt;
   }
   auto launcher = bela::BaseName(*exe);
-  auto parent = DirName(*exe);
+  auto parent = bela::DirName(*exe);
   auto linkmeta = bela::StringCat(parent, baulklinkmeta);
   try {
     /* code */
@@ -101,7 +80,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
                                  metadata);
       return std::nullopt;
     }
-    auto baulkroot = DirName(parent);
+    auto baulkroot = bela::DirName(parent);
     auto target = bela::StringCat(baulkroot, L"\\pkgs\\", tv[0], L"\\", tv[1]);
     return std::make_optional(std::move(target));
   } catch (const std::exception &e) {
@@ -130,8 +109,8 @@ int wmain(int argc, wchar_t **argv) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     nullptr, nullptr, &si, &pi) != TRUE) {
+  if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE,
+                     CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
     return -1;

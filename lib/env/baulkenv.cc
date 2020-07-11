@@ -307,18 +307,20 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
     JoinForceEnv(paths, *exepath);
     JoinForceEnv(paths, *exepath, L"\\links");
     baulkbindir = *exepath;
+    baulkroot = bela::DirName(baulkbindir);
     return true;
   }
-  std::wstring baulkroot(*exepath);
+  std::wstring bkroot(*exepath);
   for (size_t i = 0; i < 5; i++) {
-    auto baulkexe = bela::StringCat(baulkroot, L"\\bin\\baulk.exe");
+    auto baulkexe = bela::StringCat(bkroot, L"\\bin\\baulk.exe");
     if (bela::PathExists(baulkexe)) {
-      JoinForceEnv(paths, baulkroot, L"\\bin");
-      JoinForceEnv(paths, baulkroot, L"\\bin\\links");
+      JoinForceEnv(paths, bkroot, L"\\bin");
+      JoinForceEnv(paths, bkroot, L"\\bin\\links");
+      baulkroot = bkroot;
       baulkbindir = bela::StringCat(baulkroot, L"\\bin");
       return true;
     }
-    bela::PathStripName(baulkroot);
+    bela::PathStripName(bkroot);
   }
   ec = bela::make_error_code(1, L"unable found baulk.exe");
   return false;

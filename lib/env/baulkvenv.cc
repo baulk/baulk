@@ -45,6 +45,7 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
   bela::env::Derivator xdev;
   xdev.SetEnv(L"PKGROOT", bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname));
   xdev.SetEnv(L"BAULK_BINDIR", baulkbindir);
+  xdev.SetEnv(L"BAULK_ROOT", baulkroot);
   for (const auto &p : venv.paths) {
     std::wstring path_;
     xdev.ExpandEnv(p, path_);

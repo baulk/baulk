@@ -14,7 +14,11 @@ constexpr const size_t PathMax = 0x8000;
 inline constexpr bool IsPathSeparator(wchar_t c) {
   return c == PathSeparator || c == PathUnixSeparator;
 }
+// BaseName DirName - parse pathname components
 std::wstring_view BaseName(std::wstring_view name);
+// BaseName DirName - parse pathname components
+std::wstring_view DirName(std::wstring_view path);
+
 std::vector<std::wstring_view> SplitPath(std::wstring_view sv);
 void PathStripName(std::wstring &s);
 std::wstring PathAbsolute(std::wstring_view p);
