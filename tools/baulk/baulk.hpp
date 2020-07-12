@@ -113,8 +113,11 @@ struct LinkMeta {
 
 struct BaulkVirtualEnv {
   std::vector<std::wstring> paths;
+  std::vector<std::wstring> includes;
+  std::vector<std::wstring> libs;
   std::vector<std::wstring> envs;
-  bool empty() const { return paths.empty() && envs.empty(); }
+
+  bool empty() const { return paths.empty() && includes.empty() && libs.empty() && envs.empty(); }
 };
 
 struct Package {

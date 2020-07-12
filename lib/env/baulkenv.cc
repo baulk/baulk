@@ -9,13 +9,7 @@
 #include <baulkenv.hpp>
 
 namespace baulk::env {
-// #ifdef _M_X64
-// // Always build x64 binary
-// [[maybe_unused]] constexpr std::wstring_view arch = L"x64"; // Hostx64 x64
-// #else
-// [[maybe_unused]] constexpr std::wstring_view arch = L"x86"; // Hostx86 x86
-// #endif
-
+// Visual studio instance
 struct VisualStudioInstance {
   std::wstring installationPath;
   std::wstring installationVersion;

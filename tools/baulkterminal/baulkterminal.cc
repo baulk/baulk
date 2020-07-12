@@ -27,10 +27,12 @@ Usage: baulkterminal [option] ...
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
+  -T|--title
+               Set the Windows terminal title
   -A|--arch
                Select a specific arch, use native architecture by default
   -E|--venv
-               Choose to load a specific package virtual environment
+               Choose to load one/more specific package virtual environment
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -163,8 +165,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Append(*wt);
       if (!executor.Cwd().empty()) {
-        ea.Append(L"--startingDirectory").Append(executor.Cwd()).Append(L"--");
+        ea.Append(L"--startingDirectory").Append(executor.Cwd());
       }
+      ea.Append(L"--");
     }
   }
   auto shell = executor.MakeShell();

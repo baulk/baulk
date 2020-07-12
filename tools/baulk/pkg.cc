@@ -15,6 +15,16 @@
 
 namespace baulk::package {
 
+inline void AddArray(nlohmann::json &root, const char *name, const std::vector<std::wstring> &av) {
+  if (!av.empty()) {
+    nlohmann::json jea;
+    for (const auto &a : av) {
+      jea.emplace_back(bela::ToNarrow(a));
+    }
+    root[name] = std::move(jea);
+  }
+}
+
 bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
   try {
     nlohmann::json j;
@@ -23,21 +33,11 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     j["date"] = baulk::time::TimeNow();
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
-      if (!pkg.venv.paths.empty()) {
-        nlohmann::json pv;
-        for (const auto &p : pkg.venv.paths) {
-          pv.push_back(bela::ToNarrow(p));
-        }
-        venv["path"] = pv;
-      }
-      if (!pkg.venv.envs.empty()) {
-        nlohmann::json ev;
-        for (const auto &e : pkg.venv.envs) {
-          ev.push_back(bela::ToNarrow(e));
-        }
-        venv["env"] = ev;
-      }
-      j["venv"] = venv;
+      AddArray(venv, "path", pkg.venv.paths);
+      AddArray(venv, "include", pkg.venv.includes);
+      AddArray(venv, "lib", pkg.venv.libs);
+      AddArray(venv, "env", pkg.venv.envs);
+      j["venv"] = std::move(venv);
     }
     auto file = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
     if (!baulk::fs::MakeDir(file, ec)) {

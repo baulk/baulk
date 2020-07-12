@@ -20,6 +20,8 @@ bool Searcher::InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela
 struct BaulkVirtualEnv {
   std::vector<std::wstring> paths;
   std::vector<std::wstring> envs;
+  std::vector<std::wstring> includes;
+  std::vector<std::wstring> libs;
 };
 
 bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec) {
@@ -37,24 +39,35 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
       baulk::json::JsonAssignor jea(it.value());
       jea.array("path", venv.paths);
       jea.array("env", venv.envs);
+      jea.array("include", venv.includes);
+      jea.array("lib", venv.libs);
     }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
     return false;
   }
   bela::env::Derivator xdev;
-  xdev.SetEnv(L"PKGROOT", bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname));
+  auto baulkpkgdir = bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname);
+  xdev.SetEnv(L"PKGROOT", baulkpkgdir);
+  xdev.SetEnv(L"BAULK_PKGDIR", baulkpkgdir);
   xdev.SetEnv(L"BAULK_BINDIR", baulkbindir);
   xdev.SetEnv(L"BAULK_ROOT", baulkroot);
-  for (const auto &p : venv.paths) {
-    std::wstring path_;
-    xdev.ExpandEnv(p, path_);
-    JoinEnv(paths, path_);
-  }
+  std::wstring buffer;
+  auto joinExpandEnv = [&](const vector_t &load, vector_t &save) {
+    for (const auto &x : load) {
+      buffer.clear();
+      xdev.ExpandEnv(x, buffer);
+      JoinEnv(save, buffer);
+    }
+  };
+  joinExpandEnv(venv.paths, paths);
+  joinExpandEnv(venv.includes, includes);
+  joinExpandEnv(venv.libs, libs);
+  // set env k=v
   for (const auto &e : venv.envs) {
-    std::wstring value;
-    xdev.ExpandEnv(e, value);
-    dev.PutEnv(value);
+    buffer.clear();
+    xdev.ExpandEnv(e, buffer);
+    dev.PutEnv(buffer);
   }
   return true;
 }

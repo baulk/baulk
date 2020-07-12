@@ -1,13 +1,13 @@
 //
-#ifndef BAULKTERMINAL_FS_HPP
-#define BAULKTERMINAL_FS_HPP
+#ifndef BAULK_PWSH_HPP
+#define BAULK_PWSH_HPP
 #include <bela/base.hpp>
 #include <bela/env.hpp>
 #include <bela/path.hpp>
 #include <bela/numbers.hpp>
 #include <filesystem>
 
-namespace baulkterminal {
+namespace baulk::pwsh {
 enum struct prerelease : std::uint8_t {
   alpha = 0, // alpha
   beta = 1,
@@ -40,6 +40,15 @@ std::wstring PwshNewest(const std::vector<PwshMeta> &pwshs) {
     }
   }
   return pwshs[pos].path;
+}
+
+std::wstring PwshPreview(const std::vector<PwshMeta> &pwshs) {
+  for (auto &p : pwshs) {
+    if (p.preview == prerelease::rc) {
+      return p.path;
+    }
+  }
+  return L"";
 }
 
 inline bool AccumulatePwsh(std::wstring_view dir, std::vector<PwshMeta> &pwshs) {
@@ -88,6 +97,26 @@ inline std::wstring PwshCore() {
   return L"";
 }
 
+inline std::wstring PwshCorePreview() {
+  std::vector<PwshMeta> pwshs;
+  if (AccumulatePwsh(L"%ProgramFiles%\\PowerShell", pwshs)) {
+    return PwshPreview(pwshs);
+  }
+#if defined(_M_AMD64) || defined(_M_ARM64)
+  // No point in looking for WOW if we're not somewhere it exists
+  if (AccumulatePwsh(L"%ProgramFiles(x86)%\\PowerShell", pwshs)) {
+    return PwshPreview(pwshs);
+  }
+#endif
+#if defined(_M_ARM64)
+  // no point in looking for WOA if we're not on ARM64
+  if (AccumulatePwsh(L"%ProgramFiles(Arm)%\\PowerShell", pwshs)) {
+    return PwshPreview(pwshs);
+  }
+#endif
+  return L"";
+}
+
 inline std::wstring PwshExePath() {
   if (auto pwsh = PwshCore(); !pwsh.empty()) {
     return pwsh;
@@ -100,6 +129,6 @@ inline std::wstring PwshExePath() {
   return L"";
 }
 
-} // namespace baulkterminal
+} // namespace baulk::pwsh
 
 #endif

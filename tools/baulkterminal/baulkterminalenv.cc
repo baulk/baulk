@@ -2,21 +2,34 @@
 #include <bela/io.hpp>
 #include <bela/process.hpp> // run vswhere
 #include <bela/path.hpp>
+#include <bela/match.hpp>
+#include <bela/strip.hpp>
 #include <filesystem>
 #include <regutils.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
+#include <pwsh.hpp>
 #include "baulkterminal.hpp"
-#include "fs.hpp"
 
 namespace baulkterminal {
+
+inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
+  auto argexe = bela::StripSuffix(arg, L".exe");
+  return bela::EqualsIgnoreCase(argexe, exe);
+}
+
 std::wstring Executor::MakeShell() const {
-  if (shell.empty() || bela::EqualsIgnoreCase(L"pwsh", shell)) {
-    if (auto pwsh = PwshExePath(); !pwsh.empty()) {
+  if (shell.empty() || NameEquals(shell, L"pwsh")) {
+    if (auto pwsh = baulk::pwsh::PwshExePath(); !pwsh.empty()) {
       return pwsh;
     }
   }
-  if (bela::EqualsIgnoreCase(L"bash", shell)) {
+  if (NameEquals(shell, L"pwsh-preview")) {
+    if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
+      return pwshpreview;
+    }
+  }
+  if (NameEquals(shell, L"bash")) {
     // git for windows
     bela::error_code ec;
     if (auto gw = baulk::regutils::GitForWindowsInstallPath(ec); gw) {
@@ -25,7 +38,7 @@ std::wstring Executor::MakeShell() const {
       }
     }
   }
-  if (bela::EqualsIgnoreCase(L"wsl", shell)) {
+  if (NameEquals(shell, L"wsl")) {
     return L"wsl.exe";
   }
   if (!shell.empty() && bela::PathExists(shell)) {

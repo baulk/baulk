@@ -3,9 +3,11 @@
 #include <bela/parseargv.hpp>
 #include <bela/process.hpp>
 #include <bela/subsitute.hpp>
+#include <bela/strip.hpp>
 #include <bela/pe.hpp>
 #include <baulkenv.hpp>
 #include <baulkrev.hpp>
+#include <pwsh.hpp>
 
 namespace baulk::exec {
 bool IsDebugMode = false;
@@ -66,6 +68,11 @@ constexpr const wchar_t *string_nullable(std::wstring_view str) {
 }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
+inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
+  auto argexe = bela::StripSuffix(arg, L".exe");
+  return bela::EqualsIgnoreCase(argexe, exe);
+}
+
 bool IsSubsytemConsole(std::wstring_view exe, std::wstring &rtarget) {
   std::wstring target;
   if (!bela::ExecutableExistsInPath(exe, target)) {
@@ -91,11 +98,31 @@ struct baulkcommand_t {
   argv_t argv;
   std::wstring env;
   std::wstring cwd;
+  bool cleaned{false};
   int operator()() {
-    auto arg0 = argv[0];
+    std::wstring arg0(argv[0]);
     std::wstring target;
-    auto isconsole = IsSubsytemConsole(arg0, target);
-    DbgPrint(L"Arg0 %s subsystem is console: %b", arg0, isconsole);
+    bool isconsole{false};
+    if (cleaned) {
+      if (NameEquals(arg0, L"pwsh")) {
+        if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
+          target.assign(std::move(pwshcore));
+          isconsole = true;
+          DbgPrint(L"Found installed pwsh %s", target);
+        }
+      } else if (NameEquals(arg0, L"pwsh-preview")) {
+        if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
+          target.assign(std::move(pwshpreview));
+          isconsole = true;
+          DbgPrint(L"Found installed pwsh-preview %s", target);
+        }
+      }
+    }
+    if (target.empty()) {
+      isconsole = IsSubsytemConsole(arg0, target);
+      DbgPrint(L"Arg0 %s subsystem is console: %b", arg0, isconsole);
+    }
+
     bela::EscapeArgv ea;
     ea.Assign(arg0);
     for (size_t i = 1; i < argv.size(); i++) {
@@ -106,10 +133,11 @@ struct baulkcommand_t {
     SecureZeroMemory(&si, sizeof(si));
     SecureZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
-    if (CreateProcessW(target.empty() ? nullptr : target.data(), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                       nullptr, string_nullable(cwd), &si, &pi) != TRUE) {
+    if (CreateProcessW(target.empty() ? nullptr : target.data(), ea.data(), nullptr, nullptr, FALSE,
+                       CREATE_UNICODE_ENVIRONMENT, nullptr, string_nullable(cwd), &si,
+                       &pi) != TRUE) {
       auto ec = bela::make_system_error_code();
-      bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n",arg0, ec.message);
+      bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec.message);
       return -1;
     }
     CloseHandle(pi.hThread);
@@ -275,6 +303,7 @@ int wmain(int argc, wchar_t **argv) {
       bela::FPrintF(stderr, L"SetEnvironmentStringsW %s\n", ec.message);
       return 1;
     }
+    cmd.cleaned = true;
   }
   return cmd();
 }
