@@ -7,6 +7,7 @@
     "url64.hash": "SHA256:9cb078b5026a900d61239c866161f0d9558ec759aa15c5b4c7e905370e868284",
     "extension": "zip",
     "venv": {
+        "category": "jvm",
         "path": "${PKGROOT}/bin",
         "env": [
             "JAVA_HOME=${PKGROOT}"

@@ -112,6 +112,7 @@ struct LinkMeta {
 };
 
 struct BaulkVirtualEnv {
+  std::wstring category;
   std::vector<std::wstring> paths;
   std::vector<std::wstring> includes;
   std::vector<std::wstring> libs;

@@ -130,6 +130,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
       DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
       baulk::json::JsonAssignor jea(it.value());
+      pkg.venv.category = jea.get("category");
       jea.array("path", pkg.venv.paths);
       jea.array("include", pkg.venv.includes);
       jea.array("lib", pkg.venv.libs);

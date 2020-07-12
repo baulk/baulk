@@ -33,6 +33,9 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     j["date"] = baulk::time::TimeNow();
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
+      if (!pkg.venv.category.empty()) {
+        venv["category"] = bela::ToNarrow(pkg.venv.category);
+      }
       AddArray(venv, "path", pkg.venv.paths);
       AddArray(venv, "include", pkg.venv.includes);
       AddArray(venv, "lib", pkg.venv.libs);

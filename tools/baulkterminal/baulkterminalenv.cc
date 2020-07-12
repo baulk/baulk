@@ -75,6 +75,8 @@ bool Executor::InitializeBaulkEnv(bela::error_code &ec) {
     if (!conhost.initialized) {
       conhost = ja.boolean("conshot");
     }
+    // array is emplace_back no call clear()
+    ja.array("venvs", venvs);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
     return false;
