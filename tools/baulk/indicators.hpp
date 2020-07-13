@@ -109,6 +109,7 @@ private:
   void Loop();
   void Draw();
 };
+bool CygwinTerminalSize(bela::terminal::terminal_size &termsz);
 } // namespace baulk
 
 #endif

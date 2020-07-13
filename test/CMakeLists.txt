@@ -22,6 +22,11 @@ add_executable(linkmeta_test linkmeta.cc)
 
 target_link_libraries(linkmeta_test belawin)
 
+
+add_executable(out_test out.cc)
+
+target_link_libraries(out_test belawin)
+
 add_executable(
   vsenv_test
   vsenv.cc
