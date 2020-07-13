@@ -5,8 +5,9 @@
 #include <atlbase.h>
 #include <atlwin.h>
 #include <atlctl.h>
-#include <d2d1.h>
+#include <d2d1_3.h>
 #include <d2d1helper.h>
+#include <d2d1svg.h>
 #include <dwrite.h>
 #include <wincodec.h>
 #include <vector>
@@ -76,7 +77,7 @@ struct Widget {
 
 class MainWindow : public CWindowImpl<MainWindow, CWindow, WindowTraits> {
 public:
-  MainWindow();
+  MainWindow(HINSTANCE hInstance) : hInst(hInstance) {}
   ~MainWindow();
   LRESULT InitializeWindow();
   DECLARE_WND_CLASS(AppWindowName)
@@ -105,6 +106,9 @@ private:
   ID2D1Factory *m_pFactory{nullptr};
   IDWriteTextFormat *writeTextFormat{nullptr};
   IDWriteFactory *writeFactory{nullptr};
+  // Image write
+  IWICImagingFactory2 *wicFactory{nullptr};
+  ID2D1Bitmap *bitmap{nullptr};
   //
   ID2D1HwndRenderTarget *renderTarget{nullptr};
   ID2D1SolidColorBrush *textBrush{nullptr};
@@ -118,6 +122,7 @@ private:
   void DiscardDeviceResources();
   HRESULT OnRender();
   D2D1_SIZE_U CalculateD2DWindowSize();
+  HICON hIcon{nullptr};
   void OnResize(UINT width, UINT height);
   ///////////
   bool InitializeBase(bela::error_code &ec);

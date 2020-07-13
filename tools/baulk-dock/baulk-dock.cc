@@ -1,5 +1,4 @@
-// main.cc : Defines the entry point for the application.
-//
+// baulk-dock entrypoint
 #include "appui.hpp"
 
 class dot_global_initializer {
@@ -18,19 +17,14 @@ public:
 private:
 };
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
-                      _In_ LPTSTR lpCmdLine, _In_ int nCmdShow) {
-  UNREFERENCED_PARAMETER(hPrevInstance);
-  UNREFERENCED_PARAMETER(lpCmdLine);
-  UNREFERENCED_PARAMETER(nCmdShow);
-  UNREFERENCED_PARAMETER(hInstance);
+// Main
+int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
   dot_global_initializer di;
   HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
   INITCOMMONCONTROLSEX info = {sizeof(INITCOMMONCONTROLSEX),
                                ICC_TREEVIEW_CLASSES | ICC_COOL_CLASSES | ICC_LISTVIEW_CLASSES};
   InitCommonControlsEx(&info);
-  // SetProcessDPIAware(); // Enable DPI
-  baulk::dock::MainWindow window;
+  baulk::dock::MainWindow window(hInstance);
   MSG msg;
   window.InitializeWindow();
   window.ShowWindow(SW_SHOW);
