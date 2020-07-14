@@ -249,6 +249,10 @@ example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
 ```
 
+## Baulk Dock
+
+![](./docs/images/baulk-dock.png)
+
 ## Baulk 的升级
 
 目前我们使用 Github Release Latest 机制实现 Baulk 自身的升级，在执行 Github Actions 时，当推送的新的 tag，Github Actions 会自动创建发行版并将二进制压缩包上传。在此过程中，tag 的信息会编译到 baulk 程序中，本地运行 `baulk-update` （请注意 baulk update 是更新 bucket 与 baulk-update 不是同一个命令）时，会检查本地的 baulk 是否处于 tag ，如果不是基于 Github Actions 构建，除非设置 `--force` 参数否则不会进行下一步检查，如果是基于 Github Actions 构建的 tag，则检查是否与 Github Release Latest 是否一致，不一致下载相应平台的二进制，然后更新 Baulk。

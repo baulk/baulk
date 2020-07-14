@@ -240,7 +240,7 @@ Usage: baulkterminal [option] ...
                Baulkterminal startup manifest file
 ```
 
-## Baulk actuator
+## Baulk executor
 
 baulk provides the `baulk-exec` command, through which we can execute some commands with the baulk environment as the background. For example, `baulk-exec pwsh` can load the baulk environment and then start pwsh. This actually has the same effect as baulkterminal, but baulk-exec can solve scenarios where Windows Terminal cannot be used, such as in a container, when performing CI/CD.
 
@@ -260,6 +260,10 @@ Usage: baulk-exec [option] command args ...
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
 ```
+
+## Baulk Dock
+
+![](./docs/images/baulk-dock.png)
 
 ## Baulk upgrade
 
