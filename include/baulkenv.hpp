@@ -14,6 +14,13 @@ namespace baulk::env {
 [[maybe_unused]] constexpr std::wstring_view HostArch = L"x86"; // Hostx86 x86
 #endif
 
+struct BaulkVirtualEnv {
+  std::vector<std::wstring> paths;
+  std::vector<std::wstring> envs;
+  std::vector<std::wstring> includes;
+  std::vector<std::wstring> libs;
+};
+
 struct Searcher {
   Searcher(bela::env::Derivator &dev_, std::wstring_view arch_ = HostArch)
       : dev{dev_}, arch(arch_) {
@@ -70,6 +77,7 @@ struct Searcher {
   bool InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec);
   // dot not call
   bool InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec);
+  bool InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec);
 };
 
 } // namespace baulk::env

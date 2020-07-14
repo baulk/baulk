@@ -294,16 +294,20 @@ void MainWindow::OnResize(UINT width, UINT height) {
 
 HRESULT MainWindow::InitializeControl() {
 #ifdef _M_X64
-  tables.Archs = {L"x64", L"ARM64", L"x86", L"ARM"};
+  tables.Archs = {L"x64", L"arm64", L"x86", L"arm"};
 #else
-  tables.Archs = {L"x86", L"x64", L"ARM", L"ARM64"};
+  tables.Archs = {L"x86", L"x64", L"arm64", L"arm"};
 #endif
   for (const auto &a : tables.Archs) {
-    ::SendMessage(hvsarchbox.hWnd, CB_ADDSTRING, 0, (LPARAM)a.data());
+    ::SendMessageW(hvsarchbox.hWnd, CB_ADDSTRING, 0, (LPARAM)a.data());
   }
+  ::SendMessageW(hvsarchbox.hWnd, CB_ADDSTRING, 0, (LPARAM)L"--none--");
+  ::SendMessageW(hvsarchbox.hWnd, CB_SETCURSEL, 0, 0);
   for (const auto e : tables.Envs) {
-    ::SendMessage(hvenvbox.hWnd, CB_ADDSTRING, 0, (LPARAM)e.Desc.data());
+    ::SendMessageW(hvenvbox.hWnd, CB_ADDSTRING, 0, (LPARAM)e.Desc.data());
   }
+  ::SendMessageW(hvenvbox.hWnd, CB_ADDSTRING, 0, (LPARAM)L"--none--");
+  ::SendMessageW(hvenvbox.hWnd, CB_SETCURSEL, static_cast<LPARAM>(tables.Envs.size()), 0);
   return S_OK;
 }
 
