@@ -12,6 +12,7 @@ int cmd_search(const argv_t &argv);
 int cmd_uninstall(const argv_t &argv);
 int cmd_update(const argv_t &argv);
 int cmd_upgrade(const argv_t &argv);
+int cmd_update_and_upgrade(const argv_t &argv);
 int cmd_freeze(const argv_t &argv);
 int cmd_unfreeze(const argv_t &argv);
 //

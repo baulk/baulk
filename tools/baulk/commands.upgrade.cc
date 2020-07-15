@@ -47,4 +47,13 @@ int cmd_upgrade(const argv_t &argv) {
   }
   return 0;
 }
+int cmd_update_and_upgrade(const argv_t &argv) {
+  baulk::DbgPrint(L"run baulk update");
+  if (auto i = baulk::commands::cmd_update(argv); i != 0) {
+    return i;
+  }
+  baulk::DbgPrint(L"run baulk upgrade");
+  return baulk::commands::cmd_upgrade(argv);
+}
+
 } // namespace baulk::commands

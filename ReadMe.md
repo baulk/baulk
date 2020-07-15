@@ -47,7 +47,7 @@ Usage: baulk [option] command pkg ...
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
   -F|--force       Turn on force mode. such as force update frozen package
-  -P|--profile     Set profile path. default: Path\to\baulk\config\baulk.json
+  -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
@@ -55,14 +55,19 @@ Usage: baulk [option] command pkg ...
 Command:
   list             List all installed packages
   search           Search for available packages, or specific package details
-  install          Install specific packages. upgrade if already installed.
-  uninstall        Uninstall specific packages
+  install          Install specific packages. upgrade if already installed. (alias: i)
+  uninstall        Uninstall specific packages. (alias: r)
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages
   freeze           Freeze specific package
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+
+Alias:
+  i  install
+  r  uninstall
+  u  update and upgrade
 
 ```
 

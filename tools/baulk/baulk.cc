@@ -41,14 +41,19 @@ Usage: baulk [option] command pkg ...
 Command:
   list             List all installed packages
   search           Search for available packages, or specific package details
-  install          Install specific packages. upgrade if already installed.
-  uninstall        Uninstall specific packages
+  install          Install specific packages. upgrade if already installed. (alias: i)
+  uninstall        Uninstall specific packages. (alias: r)
   update           Update ports metadata
   upgrade          Upgrade all upgradeable packages
   freeze           Freeze specific package
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+
+Alias:
+  i  install
+  r  uninstall
+  u  update and upgrade
 
 )";
   bela::error_code ec;
@@ -131,9 +136,10 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       {L"list", baulk::commands::cmd_list},             // list installed
       {L"search", baulk::commands::cmd_search},         // search from bucket
       {L"uninstall", baulk::commands::cmd_uninstall},   // uninstall
-      {L"u", baulk::commands::cmd_uninstall},           // uninstall
+      {L"r", baulk::commands::cmd_uninstall},           // uninstall
       {L"update", baulk::commands::cmd_update},         // update bucket
       {L"upgrade", baulk::commands::cmd_upgrade},       // upgrade
+      {L"u", baulk::commands::cmd_update_and_upgrade},  // update and upgrade
       {L"freeze", baulk::commands::cmd_freeze},         // freeze
       {L"unfreeze", baulk::commands::cmd_unfreeze},     // unfreeze
       {L"b3sum", baulk::commands::cmd_b3sum},           // b3sum
