@@ -280,7 +280,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
   }
   searcher.InitializeVirtualEnv(venvs, ec);
   if (ec) {
-    bela::FPrintF(stderr, L"parse venv: %s\n", ec.message);
+    bela::FPrintF(stderr, L"parse venv: \x1b[31m%s\x1b[0m\n", ec.message);
   }
   if (cleanup) {
     DbgPrint(L"use cleaned env");

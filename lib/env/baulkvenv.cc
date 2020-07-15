@@ -19,10 +19,13 @@ bool Searcher::InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela
 
 bool Searcher::InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv,
                                   bela::error_code &ec) {
-  auto lockfile = bela::StringCat(baulkbindir, L"\\etc\\", pkgname, L".local.json");
+  auto localfile = bela::StringCat(baulkbindir, L"\\etc\\", pkgname, L".local.json");
+  if (!bela::PathExists(localfile)) {
+    return false;
+  }
   FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {
-    ec = bela::make_stdc_error_code(en, bela::StringCat(L"open 'locks\\", pkgname, L".json' "));
+  if (auto en = _wfopen_s(&fd, localfile.data(), L"rb"); en != 0) {
+    ec = bela::make_stdc_error_code(en, bela::StringCat(L"open ", pkgname, L".local.json' "));
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -34,7 +37,7 @@ bool Searcher::InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &ve
     jea.array("include", venv.includes);
     jea.array("lib", venv.libs);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(1, pkgname, L".local.json: ", bela::ToWide(e.what()));
     return false;
   }
   return true;
@@ -65,9 +68,13 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
   InitializeLocalEnv(pkgname, venv, ec);
   bela::env::Derivator expanddev;
   auto baulkpkgroot = bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname);
+  auto baulketc = bela::StringCat(baulkbindir, L"\\etc");
+  auto baulkvfs = bela::StringCat(baulkbindir, L"\\vfs");
   expanddev.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
   expanddev.SetEnv(L"BAULK_BINDIR", baulkbindir);
   expanddev.SetEnv(L"BAULK_ROOT", baulkroot);
+  expanddev.SetEnv(L"BAULK_ETC", baulketc);
+  expanddev.SetEnv(L"BAULK_VFS", baulkvfs);
   std::wstring buffer;
   auto joinExpandEnv = [&](const vector_t &load, vector_t &save) {
     for (const auto &x : load) {
