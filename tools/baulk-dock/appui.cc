@@ -339,11 +339,20 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
   RECT rect;
-  SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-  int cx = rect.right - rect.left;
+  WINDOWPLACEMENT placement;
+  placement.length = sizeof(WINDOWPLACEMENT);
   auto w = MulDiv(480, dpiX, 96);
-  ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, MulDiv(320, dpiX, 96),
-                 SWP_NOZORDER | SWP_NOACTIVATE);
+  auto h = MulDiv(320, dpiX, 96);
+  if (LoadPlacement(placement)) {
+    placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + h;
+    placement.rcNormalPosition.right = placement.rcNormalPosition.left + w;
+    ::SetWindowPlacement(m_hWnd, &placement);
+  } else {
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+    int cx = rect.right - rect.left;
+    ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, h,
+                   SWP_NOZORDER | SWP_NOACTIVATE);
+  }
   RecreateFont(hFont, dpiY);
   SetIcon(hIcon, TRUE);
   //
@@ -388,6 +397,11 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 }
 
 LRESULT MainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  WINDOWPLACEMENT placement;
+  placement.length = sizeof(WINDOWPLACEMENT);
+  if (::GetWindowPlacement(m_hWnd, &placement) == TRUE) {
+    SavePlacement(placement);
+  }
   PostQuitMessage(0);
   return S_OK;
 }

@@ -126,6 +126,8 @@ private:
   void OnResize(UINT width, UINT height);
   ///////////
   bool InitializeBase(bela::error_code &ec);
+  bool LoadPlacement(WINDOWPLACEMENT &placement);
+  void SavePlacement(const WINDOWPLACEMENT &placement);
   /// member
   HINSTANCE hInst{nullptr};
   HFONT hFont{nullptr};

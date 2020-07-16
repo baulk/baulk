@@ -7,6 +7,7 @@
 #include <bela/picker.hpp>
 #include <bela/env.hpp>
 #include <bela/escapeargv.hpp>
+#include <bela/io.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
 #include <pwsh.hpp>
@@ -138,6 +139,53 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
     } while (finder.Next());
   }
   return true;
+}
+
+bool MainWindow::LoadPlacement(WINDOWPLACEMENT &placement) {
+  auto posfile = bela::StringCat(baulkroot, L"\\bin\\etc\\baulk-dock.pos.json");
+  FILE *fd = nullptr;
+  if (auto en = _wfopen_s(&fd, posfile.data(), L"rb"); en != 0) {
+    return false;
+  }
+  auto closer = bela::finally([&] { fclose(fd); });
+  try {
+    auto j = nlohmann::json::parse(fd);
+    placement.flags = j["flags"];
+    placement.ptMaxPosition.x = j["ptMaxPosition.X"];
+    placement.ptMaxPosition.y = j["ptMaxPosition.Y"];
+    placement.ptMinPosition.x = j["ptMinPosition.X"];
+    placement.ptMinPosition.y = j["ptMinPosition.Y"];
+    placement.showCmd = j["showCmd"];
+    placement.rcNormalPosition.bottom = j["rcNormalPosition.bottom"];
+    placement.rcNormalPosition.left = j["rcNormalPosition.left"];
+    placement.rcNormalPosition.right = j["rcNormalPosition.right"];
+    placement.rcNormalPosition.top = j["rcNormalPosition.top"];
+  } catch (const std::exception &) {
+    return false;
+  }
+  return true;
+}
+void MainWindow::SavePlacement(const WINDOWPLACEMENT &placement) {
+  auto etcdir = bela::StringCat(baulkroot, L"\\bin\\etc");
+  std::error_code e;
+  if (std::filesystem::create_directories(etcdir, e); e) {
+    return;
+  }
+  auto posfile = bela::StringCat(etcdir, L"\\baulk-dock.pos.json");
+  nlohmann::json j;
+  j["flags"] = placement.flags;
+  j["ptMaxPosition.X"] = placement.ptMaxPosition.x;
+  j["ptMaxPosition.Y"] = placement.ptMaxPosition.y;
+  j["ptMinPosition.X"] = placement.ptMinPosition.x;
+  j["ptMinPosition.Y"] = placement.ptMinPosition.y;
+  j["showCmd"] = placement.showCmd;
+  j["rcNormalPosition.bottom"] = placement.rcNormalPosition.bottom;
+  j["rcNormalPosition.left"] = placement.rcNormalPosition.left;
+  j["rcNormalPosition.right"] = placement.rcNormalPosition.right;
+  j["rcNormalPosition.top"] = placement.rcNormalPosition.top;
+  auto s = j.dump(4);
+  bela::error_code ec;
+  bela::io::WriteTextAtomic(s, posfile, ec);
 }
 
 template <size_t Len = 256> std::wstring GetCwd() {
