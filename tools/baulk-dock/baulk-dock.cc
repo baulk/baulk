@@ -1,5 +1,5 @@
 // baulk-dock entrypoint
-#include "appui.hpp"
+#include "app.hpp"
 
 class dot_global_initializer {
 public:

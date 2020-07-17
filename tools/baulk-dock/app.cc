@@ -12,7 +12,7 @@
 #include <array>
 #include <bela/picker.hpp>
 #include <baulkversion.h>
-#include "appui.hpp"
+#include "app.hpp"
 
 namespace baulk::dock {
 // style

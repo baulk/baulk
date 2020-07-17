@@ -3,8 +3,8 @@
 add_executable(
   baulk-dock WIN32
   baulk-dock.cc
-  appui.cc
-  apputils.cc
+  app.cc
+  appenv.cc
   baulk-dock.rc
   baulk-dock.manifest)
 
