@@ -338,16 +338,16 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   // Adjust window initialize use real DPI
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
-  RECT rect;
+
   WINDOWPLACEMENT placement;
   placement.length = sizeof(WINDOWPLACEMENT);
   auto w = MulDiv(480, dpiX, 96);
   auto h = MulDiv(320, dpiX, 96);
   if (LoadPlacement(placement)) {
-    placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + h;
-    placement.rcNormalPosition.right = placement.rcNormalPosition.left + w;
-    ::SetWindowPlacement(m_hWnd, &placement);
+    ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top,
+                   w, h, SWP_NOZORDER | SWP_NOACTIVATE);
   } else {
+    RECT rect;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
     int cx = rect.right - rect.left;
     ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, h,
