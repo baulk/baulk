@@ -282,6 +282,10 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
   if (ec) {
     bela::FPrintF(stderr, L"parse venv: \x1b[31m%s\x1b[0m\n", ec.message);
   }
+  if (IsDebugMode && !searcher.availableEnv.empty()) {
+    auto as = bela::StrJoin(searcher.availableEnv, L" ");
+    DbgPrint(L"Turn on venv: %s", as);
+  }
   if (cleanup) {
     DbgPrint(L"use cleaned env");
     cmd.env = searcher.CleanupEnv();
