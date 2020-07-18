@@ -290,35 +290,49 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   dev.SetEnv(L"VCIDEInstallDir", bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
   return true;
 }
+inline bool PathFileIsExists(std::wstring_view file) {
+  auto at = GetFileAttributesW(file.data());
+  return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
 
-bool Searcher::InitializeBaulk(bela::error_code &ec) {
+std::optional<std::wstring> SearchBaulkRoot(bela::error_code &ec) {
   auto exepath = bela::ExecutableFinalPathParent(ec);
   if (!exepath) {
-    return false;
+    return std::nullopt;
   }
   auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
-  if (bela::PathExists(baulkexe)) {
-    JoinForceEnv(paths, *exepath);
-    JoinForceEnv(paths, *exepath, L"\\links");
-    baulkbindir = *exepath;
-    baulkroot = bela::DirName(baulkbindir);
-    return true;
+  if (PathFileIsExists(baulkexe)) {
+    return std::make_optional<std::wstring>(bela::DirName(*exepath));
   }
-  std::wstring bkroot(*exepath);
+  std::wstring_view baulkroot(*exepath);
   for (size_t i = 0; i < 5; i++) {
-    auto baulkexe = bela::StringCat(bkroot, L"\\bin\\baulk.exe");
-    if (bela::PathExists(baulkexe)) {
-      JoinForceEnv(paths, bkroot, L"\\bin");
-      JoinForceEnv(paths, bkroot, L"\\bin\\links");
-      baulkroot = bkroot;
-      baulkbindir = bela::StringCat(baulkroot, L"\\bin");
-      return true;
+    if (baulkroot == L".") {
+      break;
     }
-    bela::PathStripName(bkroot);
+    auto baulkexe = bela::StringCat(baulkroot, L"\\bin\\baulk.exe");
+    if (PathFileIsExists(baulkexe)) {
+      return std::make_optional<std::wstring>(baulkroot);
+    }
+    baulkroot = bela::DirName(baulkroot);
   }
   ec = bela::make_error_code(1, L"unable found baulk.exe");
-  return false;
+  return std::nullopt;
 }
+
+bool Searcher::InitializeBaulk(bela::error_code &ec) {
+  auto bkroot = SearchBaulkRoot(ec);
+  if (!bkroot) {
+    return false;
+  }
+  baulkroot.assign(std::move(*bkroot));
+  baulkbindir = bela::StringCat(baulkroot, L"\\bin");
+  baulketc = bela::StringCat(baulkroot, L"\\bin\\etc");
+  baulkvfs = bela::StringCat(baulkroot, L"\\bin\\vfs");
+  JoinForceEnv(paths, baulkroot, L"\\bin");
+  JoinForceEnv(paths, baulkroot, L"\\bin\\links");
+  return true;
+}
+
 bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
   std::wstring git;
   if (bela::ExecutableExistsInPath(L"git.exe", git)) {

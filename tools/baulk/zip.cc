@@ -6,6 +6,7 @@
 #include <zip.hpp>
 #include "indicators.hpp"
 #include "fs.hpp"
+#include "baulk.hpp"
 
 namespace baulk::zip {
 // avoid filename too long
@@ -32,16 +33,25 @@ int32_t OnEntry(void *handle, void *userdata, mz_zip_file *file_info, const char
 
 bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   bela::terminal::terminal_size termsz{0};
-  if (bela::terminal::IsSameTerminal(stderr)) {
-    if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
-      CygwinTerminalSize(termsz);
-    } else {
-      bela::terminal::TerminalSize(stderr, termsz);
+  baulk::archive::zip::zip_closure closure{nullptr};
+  if (!baulk::IsQuietMode) {
+    if (bela::terminal::IsSameTerminal(stderr)) {
+      if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
+        CygwinTerminalSize(termsz);
+      } else {
+        bela::terminal::TerminalSize(stderr, termsz);
+      }
     }
+    closure.userdata = &termsz;
+    closure.entry = OnEntry;
   }
-  baulk::archive::zip::zip_closure closure{&termsz, nullptr, OnEntry};
-  auto flush = bela::finally([] { bela::FPrintF(stderr, L"\n"); });
-  return baulk::archive::zip::ZipExtract(src, outdir, ec, &closure);
+  if (!baulk::archive::zip::ZipExtract(src, outdir, ec, &closure)) {
+    return false;
+  }
+  if (!baulk::IsQuietMode) {
+    bela::FPrintF(stderr, L"\n");
+  }
+  return true;
 }
 
 } // namespace baulk::zip

@@ -48,6 +48,16 @@ public:
   std::wstring_view Cwd() const { return cwd; }
   std::wstring &Cwd() { return cwd; }
   std::wstring MakeShell() const;
+  std::wstring Title() const {
+    if (availableEnv.empty()) {
+      return L"Baulk Terminal";
+    }
+    auto firstenv = availableEnv[0];
+    if (availableEnv.size() > 1) {
+      return bela::StringCat(L"Baulk Terminal [", firstenv, L"...+", availableEnv.size() - 1, L"]");
+    }
+    return bela::StringCat(L"Baulk Terminal [", firstenv, L"]");
+  }
 
 private:
   bool InitializeBaulkEnv(bela::error_code &ec);
@@ -57,6 +67,7 @@ private:
   std::wstring cwd;
   std::wstring arch;
   std::vector<std::wstring> venvs;
+  std::vector<std::wstring> availableEnv;
   Boolean usevs;
   Boolean clang;
   Boolean cleanup;

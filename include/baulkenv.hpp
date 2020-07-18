@@ -32,11 +32,14 @@ struct Searcher {
   bela::env::Derivator &dev;
   std::wstring arch;
   std::wstring baulkroot;
+  std::wstring baulkvfs;
+  std::wstring baulketc;
   std::wstring baulkbindir;
   vector_t paths;
   vector_t libs;
   vector_t includes;
   vector_t libpaths;
+  vector_t availableEnv;
   bool JoinEnvInternal(vector_t &vec, std::wstring &&p) {
     if (bela::PathExists(p)) {
       vec.emplace_back(std::move(p));

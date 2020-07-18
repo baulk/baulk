@@ -5,6 +5,14 @@
 #include "commands.hpp"
 
 namespace baulk::commands {
+
+inline std::wstring StringCategory(baulk::Package &pkg) {
+  if (pkg.venv.category.empty()) {
+    return L"";
+  }
+  return bela::StringCat(L" \x1b[36m[", pkg.venv.category, L"]\x1b[0m");
+}
+
 // check upgradable
 int cmd_list_all() {
   baulk::fs::Finder finder;
@@ -30,13 +38,14 @@ int cmd_list_all() {
         upgradable++;
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
-                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
                       opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
+                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
+                      StringCategory(*opkg));
         continue;
       }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n", opkg->name, opkg->bucket,
-                    opkg->version);
+      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket,
+                    opkg->version, StringCategory(*opkg));
     } while (finder.Next());
   }
   bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n", upgradable);
@@ -60,13 +69,14 @@ int cmd_list(const argv_t &argv) {
     if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
       bela::FPrintF(stderr,
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
-                    L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
+                    L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
                     opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"");
+                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
+                    StringCategory(*opkg));
       continue;
     }
-    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s\n", opkg->name, opkg->bucket,
-                  opkg->version);
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket,
+                  opkg->version, StringCategory(*opkg));
   }
   return 0;
 }

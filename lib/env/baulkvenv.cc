@@ -12,7 +12,9 @@ namespace baulk::env {
 // baulk virtual env
 bool Searcher::InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec) {
   for (const auto &p : venvs) {
-    InitializeOneEnv(p, ec);
+    if (InitializeOneEnv(p, ec)) {
+      availableEnv.emplace_back(p);
+    }
   }
   return true;
 }
@@ -68,19 +70,18 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
   InitializeLocalEnv(pkgname, venv, ec);
   bela::env::Derivator expanddev;
   auto baulkpkgroot = bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname);
-  auto baulketc = bela::StringCat(baulkbindir, L"\\etc");
-  auto baulkvfs = bela::StringCat(baulkbindir, L"\\vfs");
-  expanddev.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
-  expanddev.SetEnv(L"BAULK_BINDIR", baulkbindir);
   expanddev.SetEnv(L"BAULK_ROOT", baulkroot);
   expanddev.SetEnv(L"BAULK_ETC", baulketc);
   expanddev.SetEnv(L"BAULK_VFS", baulkvfs);
+  expanddev.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
+  expanddev.SetEnv(L"BAULK_BINDIR", baulkbindir);
+
   std::wstring buffer;
   auto joinExpandEnv = [&](const vector_t &load, vector_t &save) {
     for (const auto &x : load) {
       buffer.clear();
       expanddev.ExpandEnv(x, buffer);
-      JoinEnv(save, buffer);
+      JoinForceEnv(save, buffer);
     }
   };
   joinExpandEnv(venv.paths, paths);

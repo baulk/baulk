@@ -20,8 +20,7 @@ struct bucket_metadata {
 class BucketUpdater {
 public:
   using bucket_status_t =
-      bela::flat_hash_map<std::wstring, bucket_metadata,
-                          baulk::net::StringCaseInsensitiveHash,
+      bela::flat_hash_map<std::wstring, bucket_metadata, baulk::net::StringCaseInsensitiveHash,
                           baulk::net::StringCaseInsensitiveEq>;
   BucketUpdater() = default;
   BucketUpdater(const BucketUpdater &) = delete;
@@ -37,16 +36,14 @@ private:
 };
 
 bool BucketUpdater::Initialize() {
-  bucketslock =
-      bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
+  bucketslock = bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
   FILE *fd = nullptr;
   if (auto en = _wfopen_s(&fd, bucketslock.data(), L"rb"); en != 0) {
     if (en == ENOENT) {
       return true;
     }
     auto ec = bela::make_stdc_error_code(en);
-    bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock,
-                  ec.message);
+    bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec.message);
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -59,8 +56,7 @@ bool BucketUpdater::Initialize() {
       auto name = a["name"].get<std::string_view>();
       auto latest = a["latest"].get<std::string_view>();
       auto time = a["time"].get<std::string_view>();
-      status.emplace(bela::ToWide(name),
-                     bucket_metadata{bela::ToWide(latest), std::string(time)});
+      status.emplace(bela::ToWide(name), bucket_metadata{bela::ToWide(latest), std::string(time)});
     }
   } catch (const std::exception &e) {
     bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
@@ -86,8 +82,7 @@ bool BucketUpdater::Immobilized() {
     auto meta = j.dump(4);
     bela::error_code ec;
     if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
-      bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock,
-                    ec.message);
+      bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
       return false;
     }
   } catch (const std::exception &e) {
@@ -102,29 +97,32 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   bela::error_code ec;
   auto latest = baulk::bucket::BucketNewest(bucket.url, ec);
   if (!latest) {
-    bela::FPrintF(stderr,
-                  L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n",
-                  bucket.name, ec.message);
+    bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name,
+                  ec.message);
     return false;
   }
   auto it = status.find(bucket.name);
-  if (it != status.end() &&
-      bela::EqualsIgnoreCase(it->second.latest, *latest)) {
+  if (it != status.end() && bela::EqualsIgnoreCase(it->second.latest, *latest)) {
     baulk::DbgPrint(L"bucket: %s is up to date. id: %s", bucket.name, *latest);
     return true;
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
   if (!baulk::bucket::BucketUpdate(bucket.url, bucket.name, *latest, ec)) {
-    bela::FPrintF(
-        stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n",
-        bucket.name, ec.message);
+    bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n",
+                  bucket.name, ec.message);
     return false;
   }
-  bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name,
-                *latest);
+  bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name, *latest);
   status[bucket.name] = bucket_metadata{*latest, baulk::time::TimeNow()};
   updated = true;
   return true;
+}
+
+inline std::wstring StringCategory(baulk::Package &pkg) {
+  if (pkg.venv.category.empty()) {
+    return L"";
+  }
+  return bela::StringCat(L" \x1b[36m[", pkg.venv.category, L"]\x1b[0m");
 }
 
 bool PackageScanUpdatable() {
@@ -149,19 +147,17 @@ bool PackageScanUpdatable() {
       baulk::Package pkg;
       if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
         upgradable++;
-        bela::FPrintF(
-            stderr,
-            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
-            L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s\n",
-            opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-            baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m"
-                                             : L"");
+        bela::FPrintF(stderr,
+                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
+                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
+                      opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
+                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
+                      StringCategory(pkg));
         continue;
       }
     } while (finder.Next());
   }
-  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n",
-                upgradable);
+  bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n", upgradable);
   return true;
 }
 

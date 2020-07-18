@@ -92,19 +92,16 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, Env
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
+  constexpr std::wstring_view space = L"                ";
   try {
     auto j = nlohmann::json::parse(fd);
+    auto version = bela::ToWide(j["version"].get<std::string_view>());
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
       node.Value = pkgname;
       node.Desc = pkgname;
       baulk::json::JsonAssignor jea(it.value());
       if (auto category = jea.get("category"); !category.empty()) {
-        if (category[0] >= 'a' && category[0] <= 'z') {
-          bela::StrAppend(&node.Desc, L" [", bela::ascii_toupper(category[0]),
-                          std::wstring_view(category.data() + 1, category.size() - 1), L"]");
-        } else {
-          bela::StrAppend(&node.Desc, L" [", category, L"]");
-        }
+        bela::StrAppend(&node.Desc, L"(", category, L")    ", version,L"");
       }
       return true;
     }

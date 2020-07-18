@@ -12,6 +12,8 @@
 #include <array>
 #include <bela/picker.hpp>
 #include <baulkversion.h>
+#include <bela/match.hpp>
+#include <strsafe.h>
 #include "app.hpp"
 
 namespace baulk::dock {
@@ -163,6 +165,9 @@ MainWindow::~MainWindow() {
   if (hFont != nullptr) {
     DeleteFont(hFont);
   }
+  if (hMonoFont != nullptr) {
+    DeleteFont(hMonoFont);
+  }
 }
 
 LRESULT MainWindow::InitializeWindow() {
@@ -311,7 +316,25 @@ HRESULT MainWindow::InitializeControl() {
   return S_OK;
 }
 
-bool RecreateFont(HFONT &hFont, int dpiY) {
+static int WINAPI EnumFontFamExProc(ENUMLOGFONTEX * /*lpelfe*/, NEWTEXTMETRICEX * /*lpntme*/,
+                                    int /*FontType*/, LPARAM lParam) {
+  LPARAM *l = (LPARAM *)lParam;
+  *l = TRUE;
+  return TRUE;
+}
+
+inline bool FontFamExists(std::wstring_view name) {
+  LOGFONTW logfont{0};
+  auto hdc = CreateCompatibleDC(nullptr);
+  LPARAM lParam = 0;
+  logfont.lfCharSet = DEFAULT_CHARSET;
+  auto hr = StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, name.data());
+  ::EnumFontFamiliesEx(hdc, &logfont, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)&lParam, 0);
+  DeleteDC(hdc);
+  return lParam == TRUE;
+}
+
+bool RecreateFontInternal(HFONT &hFont, int dpiY, std::wstring_view name) {
   if (hFont == nullptr) {
     hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
   }
@@ -321,7 +344,7 @@ bool RecreateFont(HFONT &hFont, int dpiY) {
   }
   logFont.lfHeight = -MulDiv(14, dpiY, 96);
   logFont.lfWeight = FW_NORMAL;
-  wcscpy_s(logFont.lfFaceName, L"Segoe UI");
+  wcscpy_s(logFont.lfFaceName, name.data());
   auto hNewFont = CreateFontIndirectW(&logFont);
   if (hNewFont == nullptr) {
     return false;
@@ -329,6 +352,19 @@ bool RecreateFont(HFONT &hFont, int dpiY) {
   DeleteObject(hFont);
   hFont = hNewFont;
   return true;
+}
+
+bool RecreateFont(HFONT &hFont, int dpiY, std::wstring_view name) {
+  constexpr const std::wstring_view monofonts[] = {L"Sarasa Term SC", L"Lucida Console"};
+  if (!bela::EqualsIgnoreCase(name, L"Mono")) {
+    return RecreateFontInternal(hFont, dpiY, name);
+  }
+  for (const auto m : monofonts) {
+    if (FontFamExists(m)) {
+      return RecreateFontInternal(hFont, dpiY, m);
+    }
+  }
+  return RecreateFontInternal(hFont, dpiY, L"Segoe UI");
 }
 
 /*
@@ -353,11 +389,12 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, h,
                    SWP_NOZORDER | SWP_NOACTIVATE);
   }
-  RecreateFont(hFont, dpiY);
+  RecreateFont(hFont, dpiY, L"Segoe UI");
+  RecreateFont(hMonoFont, dpiY, L"Mono");
   SetIcon(hIcon, TRUE);
   //
   auto MakeWindow = [&](LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y,
-                        int nWidth, int nHeight, HMENU hMenu, Widget &w) {
+                        int nWidth, int nHeight, HMENU hMenu, Widget &w, bool monofont = false) {
     auto hw = CreateWindowExW(wexstyle, lpClassName, lpWindowName, dwStyle, MulDiv(X, dpiX, 96),
                               MulDiv(Y, dpiY, 96), MulDiv(nWidth, dpiX, 96),
                               MulDiv(nHeight, dpiY, 96), m_hWnd, hMenu, hInst, nullptr);
@@ -369,7 +406,8 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     w.layout.top = Y;
     w.layout.right = X + nWidth;
     w.layout.bottom = Y + nHeight;
-    ::SendMessageW(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+    w.mono = monofont;
+    ::SendMessageW(hw, WM_SETFONT, monofont ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
     return true;
   };
 
@@ -426,13 +464,14 @@ LRESULT MainWindow::OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &
   ::SetWindowPos(m_hWnd, nullptr, prcNewWindow->left, prcNewWindow->top,
                  prcNewWindow->right - prcNewWindow->left, prcNewWindow->bottom - prcNewWindow->top,
                  SWP_NOZORDER | SWP_NOACTIVATE);
-  RecreateFont(hFont, dpiY);
+  RecreateFont(hFont, dpiY, L"Segoe UI");
+  RecreateFont(hMonoFont, dpiY, L"Mono");
   renderTarget->SetDpi(static_cast<float>(dpiX), static_cast<float>(dpiY));
   auto UpdateWindowPos = [&](const Widget &w) {
     ::SetWindowPos(w.hWnd, NULL, MulDiv(w.layout.left, dpiX, 96), MulDiv(w.layout.top, dpiY, 96),
                    MulDiv(w.layout.right - w.layout.left, dpiX, 96),
                    MulDiv(w.layout.bottom - w.layout.top, dpiY, 96), SWP_NOZORDER | SWP_NOACTIVATE);
-    ::SendMessageW(w.hWnd, WM_SETFONT, (WPARAM)hFont, TRUE);
+    ::SendMessageW(w.hWnd, WM_SETFONT, w.mono ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
   };
   UpdateWindowPos(hvsarchbox);
   UpdateWindowPos(hvenvbox);

@@ -158,6 +158,12 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::
     auto j = nlohmann::json::parse(fd);
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
     pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
+    if (auto it = j.find("venv"); it != j.end()) {
+      if (auto it_ = it.value().find("category");
+          it_ != it.value().end() && it_.value().is_string()) {
+        pkg.venv.category = bela::ToWide(it_.value().get<std::string_view>());
+      }
+    }
     // must get bucket name
     pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
   } catch (const std::exception &e) {

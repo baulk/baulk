@@ -72,6 +72,7 @@ struct BaulkDockTable {
 struct Widget {
   HWND hWnd{nullptr};
   RECT layout;
+  bool mono{false};
   bool Enable(bool enable) { return ::EnableWindow(hWnd, enable ? TRUE : FALSE) == TRUE; }
 };
 
@@ -131,6 +132,7 @@ private:
   /// member
   HINSTANCE hInst{nullptr};
   HFONT hFont{nullptr};
+  HFONT hMonoFont{nullptr};
   // combobox
   Widget hvsarchbox;
   Widget hvenvbox;
