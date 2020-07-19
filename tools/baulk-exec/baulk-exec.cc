@@ -180,8 +180,43 @@ void Version() {
                 BAULK_RELEASE_VERSION, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT, BAULK_BUILD_TIME);
 }
 
+std::wstring AvailableEnvTitle(const std::vector<std::wstring> &venvs) {
+  constexpr std::wstring_view bk = L"Baulk Terminal \U0001F496";
+  if (venvs.empty()) {
+    return std::wstring(bk);
+  }
+  auto firstenv = venvs[0];
+  if (venvs.size() > 1) {
+    return bela::StringCat(bk, L" [", firstenv, L"...+", venvs.size() - 1, L"]");
+  }
+  return bela::StringCat(bk, L" [", firstenv, L"]");
+}
+
+class TitleManager {
+public:
+  TitleManager() = default;
+  ~TitleManager() {
+    if (!title.empty()) {
+      SetConsoleTitleW(title.data());
+    }
+  }
+  bool UpdateTitle(std::wstring_view newtitle) {
+    wchar_t buffer[512] = {0};
+    auto n = GetConsoleTitleW(buffer, 512);
+    if (n == 0 || n >= 512) {
+      return false;
+    }
+    SetConsoleTitleW(newtitle.data());
+    title = buffer;
+    return true;
+  }
+
+private:
+  std::wstring title;
+};
+
 // ParseArgv todo
-bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
+bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, TitleManager &tm) {
   bela::ParseArgv pa(argc, argv, true);
   pa.Add(L"help", bela::no_argument, L'h')
       .Add(L"version", bela::no_argument, L'v')
@@ -286,6 +321,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
     auto as = bela::StrJoin(searcher.availableEnv, L" ");
     DbgPrint(L"Turn on venv: %s", as);
   }
+  auto newtitle = AvailableEnvTitle(searcher.availableEnv);
+  tm.UpdateTitle(newtitle);
   if (cleanup) {
     DbgPrint(L"use cleaned env");
     cmd.env = searcher.CleanupEnv();
@@ -298,7 +335,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd) {
 
 int wmain(int argc, wchar_t **argv) {
   baulk::exec::baulkcommand_t cmd;
-  if (!baulk::exec::ParseArgv(argc, argv, cmd)) {
+  baulk::exec::TitleManager tm;
+  if (!baulk::exec::ParseArgv(argc, argv, cmd, tm)) {
     return 1;
   }
   if (!cmd.env.empty()) {
