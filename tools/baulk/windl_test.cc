@@ -1,6 +1,7 @@
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
 #include <bela/comutils.hpp>
+#include <bela/path.hpp>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <xml.hpp>
@@ -68,7 +69,17 @@ bool resolve_dns() {
   return true;
 }
 
+inline std::wstring UrlPathName(std::wstring_view urlpath) {
+  std::vector<std::wstring_view> pv = bela::SplitPath(urlpath);
+  if (pv.empty()) {
+    return L"index.html";
+  }
+  return std::wstring(pv.back());
+}
+
 int wmain(int argc, wchar_t **argv) {
+  bela::FPrintF(stderr, L"filename [%s] [%s]\n", UrlPathName(L"jackson/dl.zip"),
+                UrlPathName(L"../../jack"));
   auto s = bela::resolve_module_error_message(L"winhttp.dll", ERROR_FILE_NOT_FOUND, L"dump ");
   bela::FPrintF(stderr, L"%s\n", s);
   s = bela::resolve_system_error_message(ERROR_FILE_NOT_FOUND, L"dump ");

@@ -235,13 +235,14 @@ inline bool Disposition(HINTERNET hReq, std::wstring &fn) {
     if (bela::ConsumePrefix(&s, fns)) {
       bela::ConsumePrefix(&s, L"\"");
       bela::ConsumeSuffix(&s, L"\"");
-      fn = s;
+      fn = UrlPathName(s);
       return true;
     }
     if (bela::ConsumePrefix(&s, fnsu)) {
       bela::ConsumePrefix(&s, L"\"");
       bela::ConsumeSuffix(&s, L"\"");
-      fn = bela::ToWide(UrlDecode(s));
+      auto wn = bela::ToWide(UrlDecode(s));
+      fn = UrlPathName(wn);
       return true;
     }
   }
