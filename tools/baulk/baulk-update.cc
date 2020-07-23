@@ -11,6 +11,7 @@
 #include <zip.hpp>
 #include "fs.hpp"
 #include "net.hpp"
+#include "outfile.hpp"
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables
 // https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c
@@ -313,12 +314,7 @@ int BaulkUpdate() {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     return 1;
   }
-  std::wstring outdir(*baulkfile);
-  if (auto pos = outdir.rfind('.'); pos != std::wstring::npos) {
-    outdir.resize(pos);
-  } else {
-    outdir.append(L".out");
-  }
+  auto outdir = baulk::ArchiveExtensionConversion(*baulkfile);
   if (bela::PathExists(outdir)) {
     baulk::fs::PathRemoveEx(outdir, ec);
   }

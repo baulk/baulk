@@ -12,6 +12,7 @@
 #include "hash.hpp"
 #include "fs.hpp"
 #include "decompress.hpp"
+#include "outfile.hpp"
 
 namespace baulk::package {
 
@@ -102,13 +103,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
     return 1;
   }
-  auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir, L"\\");
-  auto basename = bela::BaseName(pkgfile);
-  if (auto pos = basename.rfind('.'); pos != std::wstring_view::npos) {
-    outdir.append(basename.substr(0, pos));
-  } else {
-    bela::StrAppend(&outdir, basename, L".out");
-  }
+  auto outdir = baulk::ArchiveExtensionConversion(pkgfile);
   baulk::DbgPrint(L"Decompress %s to %s\n", pkg.name, outdir);
   bela::error_code ec;
   if (bela::PathExists(outdir)) {
