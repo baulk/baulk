@@ -102,11 +102,12 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
     return 1;
   }
-  std::wstring outdir(pkgfile);
-  if (auto pos = outdir.rfind('.'); pos != std::wstring::npos) {
-    outdir.resize(pos);
+  auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir, L"\\");
+  auto basename = bela::BaseName(pkgfile);
+  if (auto pos = basename.rfind('.'); pos != std::wstring_view::npos) {
+    outdir.append(basename.substr(0, pos));
   } else {
-    outdir.append(L".out");
+    bela::StrAppend(&outdir, basename, L".out");
   }
   baulk::DbgPrint(L"Decompress %s to %s\n", pkg.name, outdir);
   bela::error_code ec;

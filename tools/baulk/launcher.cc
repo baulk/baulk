@@ -100,7 +100,8 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
       }
       auto file = bela::StringCat(linkbindir, L"\\", bela::ToWide(it.key()));
       if (!std::filesystem::remove(file, e)) {
-        bela::FPrintF(stderr, L"baulk remove link %s error: %s\n", file, e.message());
+        auto ec = bela::from_std_error_code(e);
+        baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, ec.message);
       }
     }
     obj["updated"] = baulk::time::TimeNow();
