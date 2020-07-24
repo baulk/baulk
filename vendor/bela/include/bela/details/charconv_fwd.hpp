@@ -1,4 +1,8 @@
 // Porting from MSVC STL
+// xcharconv.h internal header
+
+// Copyright (c) Microsoft Corporation.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #ifndef BELA_DETAILS_CHARCONV_FWD_HPP
 #define BELA_DETAILS_CHARCONV_FWD_HPP
 #include <type_traits>

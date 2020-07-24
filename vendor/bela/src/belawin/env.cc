@@ -268,8 +268,9 @@ template <typename ContainerT = Derivator::value_type> std::wstring MakeEnvT(Con
   ne.push_back('\0');
   return ne;
 }
+
 template <typename ContainerT = Derivator::value_type>
-std::wstring CleanupEnvT(std::wstring_view prependpath, ContainerT &envb) {
+std::wstring CleanupEnvT(std::wstring_view prepend_to_path, ContainerT &envb) {
   LPWCH envs{nullptr};
   auto deleter = bela::finally([&] {
     if (envs) {
@@ -282,9 +283,13 @@ std::wstring CleanupEnvT(std::wstring_view prependpath, ContainerT &envb) {
     return L"";
   }
   auto systemroot = bela::GetEnv(L"SystemRoot");
-  auto newpath =
-      bela::StringCat(L"Path=", prependpath, L";", systemroot, L"\\System32;", systemroot, L";",
-                      systemroot, L"\\Wbem;", systemroot, L"\\System32\\WindowsPowerShell\\v1.0");
+  auto system32_env = bela::StringCat(systemroot, L"\\System32");
+  auto newpath = bela::StringCat(
+      L"Path=", prepend_to_path, L";",             // prepandpath
+      system32_env, L";",                          // C:\\Windows\\System32
+      systemroot, L";",                            // C:\\Windows
+      system32_env, L"\\Wbem;",                    // C:\\Windows\\System32\\Wbem
+      system32_env, L"\\WindowsPowerShell\\v1.0"); // C:\\Windows\\System32\\WindowsPowerShell\\v1.0
   std::wstring ne;
   for (wchar_t const *lastch{envs}; *lastch != '\0'; ++lastch) {
     const auto len = ::wcslen(lastch);
@@ -347,7 +352,7 @@ bool Derivator::PutEnv(std::wstring_view nv, bool force) {
   return it->second;
 }
 
-bool Derivator::AppendEnv(std::wstring_view key, std::wstring &s) const {
+bool Derivator::AppendFromEnv(std::wstring_view key, std::wstring &s) const {
   auto it = envb.find(key);
   if (it == envb.end()) {
     return false;
@@ -370,7 +375,7 @@ bool Derivator::ExpandEnv(std::wstring_view raw, std::wstring &w, bool strict) c
           w.push_back(raw[j]);
         }
       } else {
-        if (!AppendEnv(name, w)) {
+        if (!AppendFromEnv(name, w)) {
           if (!strict) {
             os_expand_env(std::wstring(name), w);
           }
@@ -424,7 +429,7 @@ bool DerivatorMT::PutEnv(std::wstring_view nv, bool force) {
   return it->second;
 }
 
-bool DerivatorMT::AppendEnv(std::wstring_view key, std::wstring &s) {
+bool DerivatorMT::AppendFromEnv(std::wstring_view key, std::wstring &s) {
   auto it = envb.find(key);
   if (it == envb.end()) {
     return false;
@@ -446,7 +451,7 @@ bool DerivatorMT::ExpandEnv(std::wstring_view raw, std::wstring &w, bool strict)
           w.push_back(raw[j]);
         }
       } else {
-        if (!AppendEnv(name, w)) {
+        if (!AppendFromEnv(name, w)) {
           if (!strict) {
             os_expand_env(std::wstring(name), w);
           }

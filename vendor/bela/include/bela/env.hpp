@@ -120,7 +120,7 @@ public:
   std::wstring CleanupEnv(std::wstring_view prependpath) const;
 
 private:
-  bool AppendEnv(std::wstring_view key, std::wstring &s) const;
+  bool AppendFromEnv(std::wstring_view key, std::wstring &s) const;
   value_type envb;
 };
 
@@ -145,7 +145,7 @@ public:
   std::wstring CleanupEnv(std::wstring_view prependpath) const;
 
 private:
-  bool AppendEnv(std::wstring_view key, std::wstring &s);
+  bool AppendFromEnv(std::wstring_view key, std::wstring &s);
   value_type envb;
 };
 

@@ -1,4 +1,55 @@
-/////////////
+// PORT from absl::StrCat
+//
+// Copyright 2017 The Abseil Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// -----------------------------------------------------------------------------
+// File: str_cat.h
+// -----------------------------------------------------------------------------
+//
+// This package contains functions for efficiently concatenating and appending
+// strings: `StrCat()` and `StrAppend()`. Most of the work within these routines
+// is actually handled through use of a special AlphaNum type, which was
+// designed to be used as a parameter type that efficiently manages conversion
+// to strings and avoids copies in the above operations.
+//
+// Any routine accepting either a string or a number may accept `AlphaNum`.
+// The basic idea is that by accepting a `const AlphaNum &` as an argument
+// to your function, your callers will automagically convert bools, integers,
+// and floating point values to strings for you.
+//
+// NOTE: Use of `AlphaNum` outside of the //absl/strings package is unsupported
+// except for the specific case of function parameters of type `AlphaNum` or
+// `const AlphaNum &`. In particular, instantiating `AlphaNum` directly as a
+// stack variable is not supported.
+//
+// Conversion from 8-bit values is not accepted because, if it were, then an
+// attempt to pass ':' instead of ":" might result in a 58 ending up in your
+// result.
+//
+// Bools convert to "0" or "1". Pointers to types other than `char *` are not
+// valid inputs. No output is generated for null `char *` pointers.
+//
+// Floating point numbers are formatted with six-digit precision, which is
+// the default for "std::cout <<" or printf "%g" (the same as "%.6g").
+//
+// You can convert to hexadecimal output rather than decimal output using the
+// `Hex` type contained here. To do so, pass `Hex(my_int)` as a parameter to
+// `StrCat()` or `StrAppend()`. You may specify a minimum hex field width using
+// a `PadSpec` enum.
+//
+// -----------------------------------------------------------------------------
 #ifndef BELA_NARROW_STRCAT_HPP
 #define BELA_NARROW_STRCAT_HPP
 #pragma once

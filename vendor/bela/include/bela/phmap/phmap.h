@@ -137,18 +137,19 @@ constexpr bool IsNoThrowSwappable() {
 // --------------------------------------------------------------------------
 template <typename T>
 int TrailingZeros(T x) {
-  return sizeof(T) == 8 ? base_internal::CountTrailingZerosNonZero64(
-                              static_cast<uint64_t>(x))
-                        : base_internal::CountTrailingZerosNonZero32(
-                              static_cast<uint32_t>(x));
+    PHMAP_IF_CONSTEXPR(sizeof(T) == 8)
+        return base_internal::CountTrailingZerosNonZero64(static_cast<uint64_t>(x));
+    else
+        return base_internal::CountTrailingZerosNonZero32(static_cast<uint32_t>(x));
 }
 
 // --------------------------------------------------------------------------
 template <typename T>
 int LeadingZeros(T x) {
-  return sizeof(T) == 8
-             ? base_internal::CountLeadingZeros64(static_cast<uint64_t>(x))
-             : base_internal::CountLeadingZeros32(static_cast<uint32_t>(x));
+    PHMAP_IF_CONSTEXPR(sizeof(T) == 8)
+        return base_internal::CountLeadingZeros64(static_cast<uint64_t>(x));
+    else
+        return base_internal::CountLeadingZeros32(static_cast<uint32_t>(x));
 }
 
 // --------------------------------------------------------------------------
@@ -1432,7 +1433,12 @@ public:
 
     // This overload is necessary because otherwise erase<K>(const K&) would be
     // a better match if non-const iterator is passed as an argument.
-    iterator erase(iterator it) { _erase(it++); return it; }
+    iterator erase(iterator it) {
+        auto res = it;
+        ++res;
+        _erase(it);
+        return res;
+    }
 
     iterator erase(const_iterator first, const_iterator last) {
         while (first != last) {
@@ -3221,7 +3227,7 @@ protected:
     }
 
     static size_t subidx(size_t hashval) {
-        return (hashval ^ (hashval >> N)) & mask;
+        return ((hashval >> 8) ^ (hashval >> 16) ^ (hashval >> 24)) & mask;
     }
 
     template <class K>
