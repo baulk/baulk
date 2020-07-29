@@ -94,14 +94,14 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, Env
   auto closer = bela::finally([&] { fclose(fd); });
   constexpr std::wstring_view space = L"                ";
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     auto version = bela::ToWide(j["version"].get<std::string_view>());
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
       node.Value = pkgname;
       node.Desc = pkgname;
       baulk::json::JsonAssignor jea(it.value());
       if (auto category = jea.get("category"); !category.empty()) {
-        bela::StrAppend(&node.Desc, L"(", category, L")    ", version,L"");
+        bela::StrAppend(&node.Desc, L"(", category, L")    ", version, L"");
       }
       return true;
     }
@@ -147,7 +147,7 @@ bool MainWindow::LoadPlacement(WINDOWPLACEMENT &placement) {
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     placement.flags = j["flags"];
     placement.ptMaxPosition.x = j["ptMaxPosition.X"];
     placement.ptMaxPosition.y = j["ptMaxPosition.Y"];

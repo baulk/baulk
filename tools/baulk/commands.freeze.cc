@@ -17,7 +17,7 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    json = nlohmann::json::parse(fd);
+    json = nlohmann::json::parse(fd,nullptr, true, true);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
     return false;

@@ -5,8 +5,7 @@
 #include <filesystem>
 
 inline bool DirSkipFaster(const wchar_t *dir) {
-  return (dir[0] == L'.' &&
-          (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
+  return (dir[0] == L'.' && (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
 }
 
 class Finder {
@@ -21,13 +20,10 @@ public:
   }
   const WIN32_FIND_DATAW &FD() const { return wfd; }
   bool Ignore() const { return DirSkipFaster(wfd.cFileName); }
-  bool IsDir() const {
-    return (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-  }
+  bool IsDir() const { return (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; }
   std::wstring_view Name() const { return std::wstring_view(wfd.cFileName); }
   bool Next() { return FindNextFileW(hFind, &wfd) == TRUE; }
-  bool First(std::wstring_view dir, std::wstring_view suffix,
-             bela::error_code &ec) {
+  bool First(std::wstring_view dir, std::wstring_view suffix, bela::error_code &ec) {
     auto d = bela::StringCat(dir, L"\\", suffix);
     hFind = FindFirstFileW(d.data(), &wfd);
     if (hFind == INVALID_HANDLE_VALUE) {
@@ -79,9 +75,9 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   auto dir = std::filesystem::absolute(argv[1]).wstring();
-//   if (!dir.empty() && bela::IsPathSeparator(dir.back())) {
-//     dir.pop_back();
-//   }
+  //   if (!dir.empty() && bela::IsPathSeparator(dir.back())) {
+  //     dir.pop_back();
+  //   }
   auto ud = UniqueSubdirectory(dir);
   if (ud) {
     bela::FPrintF(stderr, L"Unique subdir: %s\n", *ud);

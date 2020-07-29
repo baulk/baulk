@@ -5,8 +5,7 @@
 #include <bela/base.hpp>
 
 namespace baulk::json {
-//
-
+// FromSlash
 inline void FromSlash(std::wstring &s) {
   for (auto &c : s) {
     if (c == '/') {

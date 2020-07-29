@@ -32,7 +32,7 @@ bool Searcher::InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &ve
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     baulk::json::JsonAssignor jea(j);
     jea.array("path", venv.paths);
     jea.array("env", venv.envs);
@@ -55,7 +55,7 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
   auto closer = bela::finally([&] { fclose(fd); });
   BaulkVirtualEnv venv;
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
       baulk::json::JsonAssignor jea(it.value());
       jea.array("path", venv.paths);

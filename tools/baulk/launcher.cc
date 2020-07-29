@@ -30,7 +30,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
     }
     auto closer = bela::finally([&] { fclose(fd); });
     try {
-      obj = nlohmann::json::parse(fd);
+      obj = nlohmann::json::parse(fd, nullptr, true, true);
     } catch (const std::exception &e) {
       DbgPrint(L"Parse link meta json %s", e.what());
     }
@@ -73,7 +73,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     }
     auto closer = bela::finally([&] { fclose(fd); });
     try {
-      obj = nlohmann::json::parse(fd);
+      obj = nlohmann::json::parse(fd, nullptr, true, true);
     } catch (const std::exception &) {
     }
   }();

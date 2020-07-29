@@ -126,8 +126,7 @@ start "$0" %*)";
 } // namespace internal
 
 // GenerateLinkSource generate link sources
-std::wstring GenerateLinkSource(std::wstring_view target,
-                                bela::pe::Subsystem subs) {
+std::wstring GenerateLinkSource(std::wstring_view target, bela::pe::Subsystem subs) {
   std::wstring escapetarget;
   escapetarget.reserve(target.size() + 10);
   for (auto c : target) {
@@ -142,8 +141,7 @@ std::wstring GenerateLinkSource(std::wstring_view target,
   }
   return bela::Substitute(internal::windowstemplate, escapetarget);
 }
-std::wstring GenerateBatLinkSource(std::wstring_view target,
-                                   bela::pe::Subsystem subs) {
+std::wstring GenerateBatLinkSource(std::wstring_view target, bela::pe::Subsystem subs) {
   if (subs == bela::pe::Subsystem::CUI) {
     return bela::Substitute(internal::batchconsoletemplate, target);
   }

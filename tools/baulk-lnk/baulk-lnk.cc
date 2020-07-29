@@ -70,7 +70,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
       return std::nullopt;
     }
     auto closer = bela::finally([&] { fclose(fd); });
-    auto j0 = nlohmann::json::parse(fd);
+    auto j0 = nlohmann::json::parse(fd, nullptr, true, true);
     auto links = j0.at("links");
     auto metadata = bela::ToWide(links.at(bela::ToNarrow(launcher)).get<std::string>());
     std::vector<std::wstring_view> tv =

@@ -12,6 +12,5 @@ inline std::string_view StripExtension(std::string_view filename) {
 
 int main() {
   std::cout << "cl.exe " << StripExtension("cl.exe") << std::endl;
-  std::cout << "Current root name is: " << fs::current_path().root_name()
-            << std::endl;
+  std::cout << "Current root name is: " << fs::current_path().root_name() << std::endl;
 }

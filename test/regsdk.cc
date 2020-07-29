@@ -20,10 +20,8 @@ bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
   return false;
 }
 
-std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
-                                                   bela::error_code &ec) {
-  auto file = bela::StringCat(
-      vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
+std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
+  auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
   auto line = bela::io::ReadLine(file, ec);
   if (!line) {
     return std::nullopt;
@@ -40,8 +38,7 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   std::wstring sdkversion;
-  if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion,
-                        sdkversion)) {
+  if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion)) {
     bela::FPrintF(stderr, L"invalid sdk version");
     return 1;
   }

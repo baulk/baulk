@@ -26,7 +26,7 @@ struct VisualStudioInstance {
   bool isPrerelease{false};
   bool Encode(const std::string_view result, bela::error_code &ec) {
     try {
-      auto j0 = nlohmann::json::parse(result);
+      auto j0 = nlohmann::json::parse(result, nullptr, true, true);
       if (!j0.is_array() || j0.empty()) {
         ec = bela::make_error_code(1, L"empty visual studio instance");
         return false;

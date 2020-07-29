@@ -215,7 +215,7 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   }
   try {
     /* code */
-    auto obj = nlohmann::json::parse(resp->body);
+    auto obj = nlohmann::json::parse(resp->body, nullptr, true, true);
     auto tagname = bela::ToWide(obj["tag_name"].get<std::string_view>());
     if (oldver == tagname) {
       bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m", version);

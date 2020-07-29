@@ -55,7 +55,7 @@ bool Executor::InitializeBaulkEnv(bela::error_code &ec) {
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto obj = nlohmann::json::parse(fd);
+    auto obj = nlohmann::json::parse(fd, nullptr, true, true);
     if (auto it = obj.find("env"); it != obj.end()) {
       for (const auto &kv : it.value().items()) {
         auto value = bela::ToWide(kv.value().get<std::string_view>());

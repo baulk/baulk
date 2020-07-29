@@ -78,7 +78,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
   pkg.name = pkgname;
   pkg.bucket = bucket;
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     baulk::json::JsonAssignor ja(j);
     pkg.description = ja.get("description");
     pkg.version = ja.get("version");
@@ -155,7 +155,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::
   baulk::Package pkg;
   pkg.name = pkgname;
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
     pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
     if (auto it = j.find("venv"); it != j.end()) {

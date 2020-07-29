@@ -48,7 +48,7 @@ bool BucketUpdater::Initialize() {
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto j = nlohmann::json::parse(fd);
+    auto j = nlohmann::json::parse(fd, nullptr, true, true);
     for (const auto &a : j) {
       if (!a.is_object()) {
         continue;

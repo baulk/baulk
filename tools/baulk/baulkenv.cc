@@ -127,7 +127,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
   }
   auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto json = nlohmann::json::parse(fd);
+    auto json = nlohmann::json::parse(fd, nullptr, true, true);
     // overload locale
     if (auto it = json.find("locale"); it != json.end() && it.value().is_string()) {
       locale = bela::ToWide(it.value().get<std::string_view>());
