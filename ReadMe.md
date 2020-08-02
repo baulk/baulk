@@ -204,7 +204,7 @@ When running `baulk install`, if the software has already been installed, there 
 
 There is also a `freeze/unfreeze` command in baulk. `baulk freeze` will freeze specific packages. Using `baulk install/baulk upgrade` will skip the upgrade of these packages. However, if `baulk install/baulk upgrade` is used The `--force/-f` parameter will force the upgrade of the corresponding package. We can also use `baulk unfreeze` to unfreeze specific packages.
 
-In baulk, we can use `baulk search pattern` to search for packages added in the bucket, where `pattern` is based on file name matching, and the rules are similar to [POSIX fnmatch](https://linux.die.net/man/3 /fnmatch). Running `baulk search *` will list all packages.
+In baulk, we can use `baulk search pattern` to search for packages added in the bucket, where `pattern` is based on file name matching, and the rules are similar to [POSIX fnmatch](https://linux.die.net/man/3/fnmatch). Running `baulk search *` will list all packages.
 
 In baulk, we can use `baulk list` to list all installed packages, and `baulk list pkgname` to list specific packages.
 
