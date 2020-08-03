@@ -113,8 +113,23 @@ enum class FileAttribute : DWORD {
 }
 
 // std::wstring_view ::data() must Null-terminated string
-bool PathExists(std::wstring_view src, FileAttribute fa = FileAttribute::None);
+[[nodiscard]] inline bool PathExists(std::wstring_view src,
+                                     FileAttribute fa = FileAttribute::None) {
+  // GetFileAttributesExW()
+  auto a = GetFileAttributesW(src.data());
+  if (a == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  return fa == FileAttribute::None ? true : ((static_cast<DWORD>(fa) & a) != 0);
+}
+
+[[nodiscard]] inline bool PathFileIsExists(std::wstring_view file) {
+  auto at = GetFileAttributesW(file.data());
+  return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
+bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe,
+                            const std::vector<std::wstring> &paths);
 // Use GetFinalPathNameByHandleW
 std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code &ec);
 std::optional<std::wstring> RealPath(std::wstring_view src, bela::error_code &ec);

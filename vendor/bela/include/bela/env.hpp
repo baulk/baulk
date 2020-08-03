@@ -34,6 +34,17 @@ template <size_t Len = 256> std::wstring GetEnv(std::wstring_view val) {
   s.resize(nlen);
   return s;
 }
+
+inline void MakePathEnv(std::vector<std::wstring> &paths) {
+  auto systemroot = bela::GetEnv(L"SystemRoot");
+  auto system32_env = bela::StringCat(systemroot, L"\\System32");
+  paths.emplace_back(system32_env);                             // C:\\Windows\\System32
+  paths.emplace_back(systemroot);                               // C:\\Windows
+  paths.emplace_back(bela::StringCat(system32_env, L"\\Wbem")); // C:\\Windows\\System32\\Wbem
+  // C:\\Windows\\System32\\WindowsPowerShell\\v1.0
+  paths.emplace_back(bela::StringCat(system32_env, L"\\\\WindowsPowerShell\\v1.0"));
+}
+
 std::wstring ExpandEnv(std::wstring_view sv);
 std::wstring PathUnExpand(std::wstring_view sv);
 
