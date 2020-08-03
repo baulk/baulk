@@ -9,6 +9,7 @@ namespace baulk {
 bool IsDebugMode = false;
 bool IsForceMode = false;
 bool IsQuietMode = false;
+bool IsTraceMode = false;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
@@ -37,6 +38,7 @@ Usage: baulk [option] command pkg ...
   -F|--force       Turn on force mode. such as force update frozen package
   -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
+  -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
 
@@ -86,7 +88,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
-      .Add(L"exec");                                            // subcommand
+      .Add(L"trace", baulk::cli::no_argument, 'T')
+      .Add(L"exec"); // subcommand
   bela::error_code ec;
   auto result = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
@@ -109,7 +112,9 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
         case 'F':
           baulk::IsForceMode = true;
           break;
-
+        case 'T':
+          baulk::IsTraceMode = true;
+          break;
         case 'A':
           if (auto len = wcslen(oa); len < 256) {
             wmemcmp(baulk::UserAgent, oa, len);

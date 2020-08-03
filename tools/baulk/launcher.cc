@@ -141,8 +141,8 @@ public:
   LinkExecutor &operator=(const LinkExecutor &) = delete;
   ~LinkExecutor() {
     if (!baulktemp.empty()) {
-      // std::error_code ec;
-      // std::filesystem::remove_all(baulktemp, ec);
+      std::error_code ec;
+      std::filesystem::remove_all(baulktemp, ec);
     }
   }
   bool Initialize(bela::error_code &ec);

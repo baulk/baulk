@@ -10,6 +10,7 @@ namespace baulk {
 extern bool IsDebugMode;
 extern bool IsForceMode;
 extern bool IsQuietMode;
+extern bool IsTraceMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 // DbgPrint added newline

@@ -218,6 +218,70 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
 
 // $installationPath/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt
 
+inline bool PathFileIsExists(std::wstring_view file) {
+  auto at = GetFileAttributesW(file.data());
+  return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
+
+bool HasExt(std::wstring_view file) {
+  auto pos = file.rfind(L'.');
+  if (pos == std::wstring_view::npos) {
+    return false;
+  }
+  return (file.find_last_of(L":\\/") < pos);
+}
+
+bool FindExecutable(std::wstring_view file, const std::vector<std::wstring> &exts,
+                    std::wstring &p) {
+  if (HasExt(file) && PathFileIsExists(file)) {
+    p = file;
+    return true;
+  }
+  std::wstring newfile;
+  newfile.reserve(file.size() + 8);
+  newfile.assign(file);
+  auto rawsize = newfile.size();
+  for (const auto &e : exts) {
+    // rawsize always < newfile.size();
+    // std::char_traits::assign
+    newfile.resize(rawsize);
+    newfile.append(e);
+    if (PathFileIsExists(newfile)) {
+      p.assign(std::move(newfile));
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Executor::ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
+  constexpr std::wstring_view defaultexts[] = {L".com", L".exe", L".bat", L".cmd"};
+  std::wstring suffixwapper;
+  auto pathext = bela::GetEnv<64>(L"PATHEXT");
+  std::vector<std::wstring> exts;
+  if (!pathext.empty()) {
+    bela::AsciiStrToLower(&pathext); // tolower
+    exts = bela::StrSplit(pathext, bela::ByChar(L';'), bela::SkipEmpty());
+  } else {
+    exts.assign(std::begin(defaultexts), std::end(defaultexts));
+  }
+  if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
+    auto ncmd = bela::PathAbsolute(cmd);
+    return FindExecutable(ncmd, exts, exe);
+  }
+  auto cwdfile = bela::PathAbsolute(cmd);
+  if (FindExecutable(cwdfile, exts, exe)) {
+    return true;
+  }
+  for (auto p : paths) {
+    auto pfile = bela::PathCat(p, cmd);
+    if (FindExecutable(pfile, exts, exe)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Executor::Initialize(bela::error_code &ec) {
   Searcher searcher;
   if (!searcher.InitializeVisualStudioEnv(ec)) {
@@ -226,6 +290,16 @@ bool Executor::Initialize(bela::error_code &ec) {
   if (!searcher.InitializeWindowsKitEnv(ec)) {
     return false;
   }
+
+  // paths.assign(searcher.paths);
+  auto systemroot = bela::GetEnv(L"SystemRoot");
+  auto system32_env = bela::StringCat(systemroot, L"\\System32");
+  paths.reserve(4 + paths.size());
+  paths.assign(searcher.paths.begin(), searcher.paths.end());
+  paths.emplace_back(system32_env);
+  paths.emplace_back(systemroot);
+  paths.emplace_back(bela::StringCat(system32_env, L"\\Wbem"));
+  paths.emplace_back(bela::StringCat(system32_env, L"\\\\WindowsPowerShell\\v1.0"));
   env = searcher.CleanupEnv();
   initialized = true;
   return true;

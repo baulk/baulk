@@ -19,6 +19,14 @@ public:
     if (!cwd.empty()) {
       process.Chdir(cwd);
     }
+    std::wstring exe;
+    if (ExecutableExistsInPath(cmd, exe)) {
+      if (auto exitcode = process.Execute(exe, std::forward<Args>(args)...); exitcode != 0) {
+        ec = process.ErrorCode();
+        return exitcode;
+      }
+      return 0;
+    }
     if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...); exitcode != 0) {
       ec = process.ErrorCode();
       return exitcode;
@@ -29,7 +37,9 @@ public:
   bool Initialized() const { return initialized; }
 
 private:
+  bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
   std::wstring env;
+  std::vector<std::wstring> paths;
   bela::error_code ec;
   bool initialized{false};
 };
