@@ -140,7 +140,7 @@ public:
   LinkExecutor(const LinkExecutor &) = delete;
   LinkExecutor &operator=(const LinkExecutor &) = delete;
   ~LinkExecutor() {
-    if (!baulktemp.empty()) {
+    if (!baulktemp.empty() && !baulk::IsTraceMode) {
       std::error_code ec;
       std::filesystem::remove_all(baulktemp, ec);
     }

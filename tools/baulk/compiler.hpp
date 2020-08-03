@@ -2,6 +2,7 @@
 #ifndef BAULK_COMPILER_HPP
 #define BAULK_COMPILER_HPP
 #include <bela/process.hpp>
+#include <bela/path.hpp>
 
 namespace baulk::compiler {
 class Executor {
@@ -20,7 +21,7 @@ public:
       process.Chdir(cwd);
     }
     std::wstring exe;
-    if (ExecutableExistsInPath(cmd, exe)) {
+    if (bela::ExecutableExistsInPath(cmd, exe, paths)) {
       if (auto exitcode = process.Execute(exe, std::forward<Args>(args)...); exitcode != 0) {
         ec = process.ErrorCode();
         return exitcode;
@@ -37,7 +38,6 @@ public:
   bool Initialized() const { return initialized; }
 
 private:
-  bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
   std::wstring env;
   std::vector<std::wstring> paths;
   bela::error_code ec;
