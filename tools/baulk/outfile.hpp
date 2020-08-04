@@ -9,14 +9,20 @@ inline std::wstring ArchiveExtensionConversion(std::wstring_view p) {
                                         L".7z",
                                         L".exe",
                                         L".msi",
-                                        L".rar"
+                                        L".rar",
                                         L".tar",
                                         L".tar.gz",
+                                        L".tgz",
                                         L".tar.xz",
+                                        L".txz",
                                         L".tar.sz",
-                                        L".tar.bz",
+                                        L".tsz",
+                                        L".tar.bz2",
+                                        L".tbz2",
                                         L".tar.br",
-                                        L".tar.zst"};
+                                        L".tbr",
+                                        L".tar.zst",
+                                        L".tzst"};
   for (const auto e : exts) {
     if (bela::EndsWithIgnoreCase(p, e)) {
       return std::wstring(p.substr(0, p.size() - e.size()));
