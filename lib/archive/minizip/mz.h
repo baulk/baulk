@@ -14,7 +14,7 @@
 /***************************************************************************/
 
 /* MZ_VERSION */
-#define MZ_VERSION                      ("2.9.3")
+#define MZ_VERSION                      ("2.10.0")
 
 /* MZ_ERROR */
 #define MZ_OK                           (0)  /* zlib */
@@ -63,7 +63,6 @@
 #define MZ_COMPRESS_METHOD_DEFLATE      (8)
 #define MZ_COMPRESS_METHOD_BZIP2        (12)
 #define MZ_COMPRESS_METHOD_LZMA         (14)
-#define MZ_COMPRESS_METHOD_OLDZSTD      (20)
 #define MZ_COMPRESS_METHOD_ZSTD         (93)
 #define MZ_COMPRESS_METHOD_AES          (99)
 
@@ -159,9 +158,12 @@
 #include <string.h> /* memset, strncpy, strlen */
 #include <limits.h>
 
-#if defined(HAVE_STDINT_H) || \
-   (defined(__has_include) && __has_include(<stdint.h>))
+#if defined(HAVE_STDINT_H)
 #  include <stdint.h>
+#elif defined(__has_include)
+#  if __has_include(<stdint.h>)
+#    include <stdint.h>
+#  endif
 #endif
 
 #ifndef __INT8_TYPE__
@@ -189,9 +191,12 @@ typedef unsigned int       uint32_t;
 typedef unsigned long long uint64_t;
 #endif
 
-#if defined(HAVE_INTTYPES_H) || \
-   (defined(__has_include) && __has_include(<inttypes.h>))
+#if defined(HAVE_INTTYPES_H)
 #  include <inttypes.h>
+#elif defined(__has_include)
+#  if __has_include(<inttypes.h>)
+#    include <inttypes.h>
+#  endif
 #endif
 
 #ifndef PRId8

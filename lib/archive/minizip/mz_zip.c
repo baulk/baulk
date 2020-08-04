@@ -1224,7 +1224,7 @@ static int32_t mz_zip_recover_cd(void *handle) {
             mz_stream_seek(zip->stream, local_file_info.compressed_size, MZ_SEEK_CUR);
         }
 
-        while (1) {
+        for (;;) {
             /* Search for the next local header */
             err = mz_stream_find(zip->stream, (const void *)local_header_magic, sizeof(local_header_magic),
                     INT64_MAX, &next_header_pos);
@@ -1267,6 +1267,8 @@ static int32_t mz_zip_recover_cd(void *handle) {
                     }
 
                     compressed_end_pos = descriptor_pos;
+                } else if (eof) {
+                    compressed_end_pos = next_header_pos;
                 } else if (local_file_info.flag & MZ_ZIP_FLAG_DATA_DESCRIPTOR) {
                     /* Wrong local file entry found, keep searching */
                     next_header_pos += 1;
@@ -1621,7 +1623,6 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #endif
 #ifdef HAVE_ZSTD
     case MZ_COMPRESS_METHOD_ZSTD:
-    case MZ_COMPRESS_METHOD_OLDZSTD:
 #endif
         err = MZ_OK;
         break;
@@ -1708,8 +1709,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
             mz_stream_lzma_create(&zip->compress_stream);
 #endif
 #ifdef HAVE_ZSTD
-        else if ((zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD) ||
-                 (zip->file_info.compression_method == MZ_COMPRESS_METHOD_OLDZSTD))
+        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD)
             mz_stream_zstd_create(&zip->compress_stream);
 #endif
         else
@@ -1742,7 +1742,6 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
                 set_end_of_stream = (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER);
                 break;
             case MZ_COMPRESS_METHOD_ZSTD:
-            case MZ_COMPRESS_METHOD_OLDZSTD:
                 set_end_of_stream = 1;
                 break;
             }
