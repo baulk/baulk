@@ -274,7 +274,17 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
 #endif
   if (clang) {
     // VC\Tools\Llvm\bin
+#ifdef _M_X64
+    if (auto llvmdir = bela::StringCat(vsi->installationPath, LR"(\VC\Tools\Llvm\x64\bin)");
+        bela::PathExists(llvmdir)) {
+      JoinForceEnv(paths, llvmdir);
+    } else {
+      JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\Llvm\bin)");
+    }
+
+#else
     JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\Llvm\bin)");
+#endif
   }
   // add libpaths
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)",
