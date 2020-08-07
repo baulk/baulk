@@ -3,6 +3,7 @@
 #define BELA_WIN_PATH_HPP
 #pragma once
 #include "strcat.hpp"
+#include "match.hpp"
 #include "span.hpp"
 #include "base.hpp"
 
@@ -18,6 +19,29 @@ inline constexpr bool IsPathSeparator(wchar_t c) {
 std::wstring_view BaseName(std::wstring_view name);
 // BaseName DirName - parse pathname components
 std::wstring_view DirName(std::wstring_view path);
+
+inline std::wstring_view Extension(std::wstring_view path) {
+  for (auto i = static_cast<intptr_t>(path.size() - 1); i >= 0; i--) {
+    if (bela::IsPathSeparator(path[i])) {
+      break;
+    }
+    if (path[i] == '.') {
+      return path.substr(i);
+    }
+  }
+  return L"";
+}
+
+inline std::wstring_view ExtensionEx(std::wstring_view path) {
+  constexpr std::wstring_view complexExtensions[] = {L".tar.gz",  L".tar.xz", L".tar.sz",
+                                                     L".tar.bz2", L".tar.br", L".tar.zst"};
+  for (const auto e : complexExtensions) {
+    if (bela::EndsWithIgnoreCase(path, e)) {
+      return e;
+    }
+  }
+  return Extension(path);
+}
 
 std::vector<std::wstring_view> SplitPath(std::wstring_view sv);
 void PathStripName(std::wstring &s);

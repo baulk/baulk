@@ -64,21 +64,24 @@ std::wstring_view BaseName(std::wstring_view name) {
 }
 
 std::wstring_view DirName(std::wstring_view path) {
+  if (path.empty()) {
+    return L".";
+  }
   auto i = path.size() - 1;
   auto p = path.data();
   for (; IsPathSeparator(p[i]); i--) {
     if (i == 0) {
-      return path;
+      return L"/";
     }
   }
   for (; !IsPathSeparator(p[i]); i--) {
     if (i == 0) {
-      return path;
+      return L".";
     }
   }
   for (; IsPathSeparator(p[i]); i--) {
     if (i == 0) {
-      return path;
+      return L"/";
     }
   }
   return path.substr(0, i + 1);

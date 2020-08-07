@@ -1,3 +1,7 @@
+add_executable(ext_test ext.cc)
+
+target_link_libraries(ext_test belawin)
+
 add_executable(genlink_test genlinksrc.cc)
 
 target_link_libraries(genlink_test belawin)

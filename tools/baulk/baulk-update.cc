@@ -11,7 +11,6 @@
 #include <zip.hpp>
 #include "fs.hpp"
 #include "net.hpp"
-#include "outfile.hpp"
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables
 // https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c
@@ -294,6 +293,19 @@ int PostUpdate() {
   return ExecuteInternal(ea.data());
 }
 
+inline std::wstring UnarchivePath(std::wstring_view path) {
+  auto dir = bela::DirName(path);
+  auto filename = bela::BaseName(path);
+  auto extName = bela::ExtensionEx(filename);
+  if (filename.size() <= extName.size()) {
+    return bela::StringCat(dir, L"\\out");
+  }
+  if (extName.empty()) {
+    return bela::StringCat(dir, L"\\", filename, L".out");
+  }
+  return bela::StringCat(dir, L"\\", filename.substr(0, filename.size() - extName.size()));
+}
+
 int BaulkUpdate() {
   std::wstring url;
   std::wstring version;
@@ -314,7 +326,7 @@ int BaulkUpdate() {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     return 1;
   }
-  auto outdir = baulk::ArchiveExtensionConversion(*baulkfile);
+  auto outdir = UnarchivePath(*baulkfile);
   if (bela::PathExists(outdir)) {
     baulk::fs::PathRemoveEx(outdir, ec);
   }
