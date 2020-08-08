@@ -18,6 +18,7 @@
 namespace baulk {
 bool IsDebugMode = false;
 bool IsForceMode = false;
+bool IsInsecureMode = false;
 constexpr size_t UerAgentMaximumLength = 64;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 std::wstring BaulkRoot;
@@ -382,6 +383,7 @@ Usage: baulk-update [option]
   -V|--verbose     Make the operation more talkative
   -F|--force       Turn on force mode. such as force update frozen package
   -A|--user-agent  Send User-Agent <name> to server
+  -k|--insecure    Allow insecure server connections when using SSL
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
 )";
@@ -400,6 +402,7 @@ bool ParseArgv(int argc, wchar_t **argv) {
       .Add(L"verbose", bela::no_argument, 'V')
       .Add(L"force", bela::no_argument, L'F')
       .Add(L"", bela::no_argument, L'f')
+      .Add(L"insecure", bela::no_argument, L'k')
       .Add(L"profile", bela::required_argument, 'P')
       .Add(L"user-agent", bela::required_argument, 'A')
       .Add(L"https-proxy", bela::required_argument, 1001);
@@ -421,6 +424,9 @@ bool ParseArgv(int argc, wchar_t **argv) {
           [[fallthrough]];
         case 'F':
           baulk::IsForceMode = true;
+          break;
+        case 'k':
+          baulk::IsInsecureMode = true;
           break;
         case 'A':
           if (auto len = wcslen(oa); len < 256) {

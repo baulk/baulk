@@ -10,6 +10,7 @@ bool IsDebugMode = false;
 bool IsForceMode = false;
 bool IsQuietMode = false;
 bool IsTraceMode = false;
+bool IsInsecureMode = false;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
@@ -38,6 +39,7 @@ Usage: baulk [option] command pkg ...
   -F|--force       Turn on force mode. such as force update frozen package
   -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
+  -k|--insecure    Allow insecure server connections when using SSL
   -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
@@ -114,6 +116,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           break;
         case 'T':
           baulk::IsTraceMode = true;
+        case 'k':
+          baulk::IsInsecureMode = true;
           break;
         case 'A':
           if (auto len = wcslen(oa); len < 256) {

@@ -331,6 +331,12 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
     ec = make_net_error_code();
     return std::nullopt;
   }
+  if (baulk::IsInsecureMode) {
+    // Ignore check tls
+    DWORD dwFlags = SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE |
+                    SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
+    WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
+  }
   if (!hkv.empty()) {
     auto flattened_headers = flatten_http_headers(hkv, cookies);
     if (WinHttpAddRequestHeaders(hRequest, flattened_headers.data(),
@@ -425,6 +431,12 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
   if (hRequest == nullptr) {
     ec = make_net_error_code();
     return std::nullopt;
+  }
+  if (baulk::IsInsecureMode) {
+    // Ignore check tls
+    DWORD dwFlags = SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE |
+                    SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
+    WinHttpSetOption(hRequest, WINHTTP_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
   }
   if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0,
                          0) != TRUE) {

@@ -11,6 +11,7 @@ extern bool IsDebugMode;
 extern bool IsForceMode;
 extern bool IsQuietMode;
 extern bool IsTraceMode;
+extern bool IsInsecureMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 // DbgPrint added newline
