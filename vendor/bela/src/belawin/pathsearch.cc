@@ -11,7 +11,7 @@
 namespace bela {
 
 inline bool HasExt(std::wstring_view file) {
-  if (auto pos = file.rfind(L'.'); pos == std::wstring_view::npos) {
+  if (auto pos = file.rfind(L'.'); pos != std::wstring_view::npos) {
     return file.find_last_of(L":\\/") < pos;
   }
   return false;
@@ -45,7 +45,15 @@ inline void InitializeExtensions(std::vector<std::wstring> &exts) {
   auto pathext = GetEnv<64>(L"PATHEXT");
   if (!pathext.empty()) {
     bela::AsciiStrToLower(&pathext); // tolower
-    exts = bela::StrSplit(pathext, bela::ByChar(L';'), bela::SkipEmpty());
+    std::vector<std::wstring_view> exts_ =
+        bela::StrSplit(pathext, bela::ByChar(L';'), bela::SkipEmpty());
+    for (const auto e : exts_) {
+      if (e.front() != '.') {
+        exts.emplace_back(bela::StringCat(L".", e));
+        continue;
+      }
+      exts.emplace_back(e);
+    }
     return;
   }
   exts.assign(std::begin(defaultexts), std::end(defaultexts));
