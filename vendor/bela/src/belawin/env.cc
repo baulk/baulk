@@ -56,7 +56,7 @@ constexpr std::wstring_view env_wstrings[] = {
     // Windows Terminal
     L"SESSIONNAME",
     L"WT_SESSION",
-    L"WSLENV"
+    L"WSLENV",
     // Enables proxy information to be passed to Curl, the underlying download
     // library in cmake.exe
     L"http_proxy",

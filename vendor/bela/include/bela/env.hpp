@@ -42,7 +42,7 @@ inline void MakePathEnv(std::vector<std::wstring> &paths) {
   paths.emplace_back(systemroot);                               // C:\\Windows
   paths.emplace_back(bela::StringCat(system32_env, L"\\Wbem")); // C:\\Windows\\System32\\Wbem
   // C:\\Windows\\System32\\WindowsPowerShell\\v1.0
-  paths.emplace_back(bela::StringCat(system32_env, L"\\\\WindowsPowerShell\\v1.0"));
+  paths.emplace_back(bela::StringCat(system32_env, L"\\WindowsPowerShell\\v1.0"));
 }
 
 std::wstring ExpandEnv(std::wstring_view sv);
