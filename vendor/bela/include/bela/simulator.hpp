@@ -114,7 +114,7 @@ public:
   // PathPushFront
   Simulator &PathPushFront(std::vector<std::wstring> &&paths_) {
     cachedEnv.clear();
-    paths_.reserve(paths_.size() + paths.size() + 1);
+    paths_.reserve(paths_.size() + paths.size());
     for (auto &p : paths) {
       paths_.emplace_back(std::move(p));
     }
@@ -125,7 +125,7 @@ public:
   Simulator &PathPushFront(const std::vector<std::wstring> &paths_) {
     cachedEnv.clear();
     auto paths__ = paths_;
-    paths__.reserve(paths_.size() + paths.size() + 1);
+    paths__.reserve(paths_.size() + paths.size());
     for (auto &p : paths) {
       paths__.emplace_back(p);
     }
@@ -141,12 +141,16 @@ public:
   // PathAppend copy
   Simulator &PathAppend(const std::vector<std::wstring> &paths_) {
     cachedEnv.clear();
-    paths.insert(paths.end(), paths.begin(), paths.end());
+    paths.reserve(paths.size() + paths_.size());
+    for (const auto &p : paths_) {
+      paths.emplace_back(p);
+    }
     return *this;
   }
   // PathAppend move
   Simulator &PathAppend(std::vector<std::wstring> &&paths_) {
     cachedEnv.clear();
+    paths.reserve(paths.size() + paths_.size());
     for (auto &p : paths_) {
       paths.emplace_back(std::move(p));
     }

@@ -47,43 +47,6 @@ std::wstring Executor::MakeShell() const {
   return L"cmd.exe";
 }
 
-bool Executor::InitializeBaulkEnv(bela::error_code &ec) {
-  FILE *fd = nullptr;
-  if (auto eo = _wfopen_s(&fd, manifest.data(), L"rb"); eo != 0) {
-    ec = bela::make_stdc_error_code(eo);
-    return false;
-  }
-  auto closer = bela::finally([&] { fclose(fd); });
-  try {
-    auto obj = nlohmann::json::parse(fd, nullptr, true, true);
-    if (auto it = obj.find("env"); it != obj.end()) {
-      for (const auto &kv : it.value().items()) {
-        auto value = bela::ToWide(kv.value().get<std::string_view>());
-        simulator.SetEnv(bela::ToWide(kv.key()), bela::WindowsExpandEnv(value), true);
-      }
-    }
-    baulk::json::JsonAssignor ja(obj);
-    if (!clang.initialized) {
-      clang = ja.boolean("clang");
-    }
-    if (!usevs.initialized) {
-      usevs = ja.boolean("usevs");
-    }
-    if (!cleanup.initialized) {
-      cleanup = ja.boolean("cleanup");
-    }
-    if (!conhost.initialized) {
-      conhost = ja.boolean("conshot");
-    }
-    // array is emplace_back no call clear()
-    ja.array("venvs", venvs);
-  } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
-    return false;
-  }
-  return true;
-}
-
 template <size_t Len = 256> std::wstring GetCwd() {
   std::wstring s;
   s.resize(Len);
@@ -110,9 +73,6 @@ bool Executor::PrepareEnv(bela::error_code &ec) {
   } else {
     simulator.InitializeEnv();
   }
-  if (!manifest.empty() && !InitializeBaulkEnv(ec)) {
-    return false;
-  }
   if (cwd.empty()) {
     cwd = GetCwd();
   }
@@ -120,9 +80,9 @@ bool Executor::PrepareEnv(bela::error_code &ec) {
   if (!searcher.InitializeBaulk(ec)) {
     return false;
   }
-  searcher.InitializeGit(cleanup(), ec);
+  searcher.InitializeGit(cleanup, ec);
   if (usevs) {
-    if (!searcher.InitializeVisualStudioEnv(clang(), ec)) {
+    if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
       return false;
     }
     if (!searcher.InitializeWindowsKitEnv(ec)) {
@@ -130,6 +90,7 @@ bool Executor::PrepareEnv(bela::error_code &ec) {
     }
   }
   searcher.InitializeVirtualEnv(venvs, ec);
+  searcher.FlushEnv();
   availableEnv.swap(searcher.availableEnv);
   return true;
 }

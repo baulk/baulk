@@ -37,8 +37,6 @@ Usage: baulkterminal [option] ...
                Use conhost not Windows terminal
   --clang
                Add Visual Studio's built-in clang to the PATH environment variable
-  --manifest
-               Baulkterminal startup manifest file
 )";
   bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage, BAULK_APPLINK,
                        bela::mbs_t::ABOUT);
@@ -62,8 +60,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"arch", bela::required_argument, L'A')
       .Add(L"venv", bela::required_argument, L'E') // virtual env support
       .Add(L"conhost", bela::no_argument, 1001)    // disable windows termainl
-      .Add(L"clang", bela::no_argument, 1002)
-      .Add(L"manifest", bela::required_argument, 1003);
+      .Add(L"clang", bela::no_argument, 1002);
   auto ret = pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
@@ -104,9 +101,6 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           break;
         case 1002:
           clang = true;
-          break;
-        case 1003:
-          manifest = oa;
           break;
         default:
           break;

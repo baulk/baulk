@@ -12,30 +12,6 @@ constexpr const wchar_t *string_nullable(std::wstring_view str) {
 }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
-struct Boolean {
-  bool initialized{false};
-  bool value{false};
-  explicit operator bool() const noexcept { return value; }
-  bool operator()() const noexcept { return value; }
-  Boolean() = default;
-  Boolean(const Boolean &) = default;
-  Boolean &operator=(const Boolean &) = default;
-  // other initialize
-  Boolean(bool val) : initialized(true), value(val) {}
-  Boolean &operator=(bool val) {
-    initialized = true;
-    value = val;
-    return *this;
-  }
-  Boolean &Delay(bool val) {
-    if (!initialized) {
-      value = val;
-      initialized = true;
-    }
-    return *this;
-  }
-};
-
 class Executor {
 public:
   Executor() = default;
@@ -44,7 +20,7 @@ public:
   bool ParseArgv(bela::error_code &ec);
   bool PrepareEnv(bela::error_code &ec);
   std::wstring MakeEnv() { return simulator.MakeEnv(); }
-  bool IsConhost() const { return conhost.value; } //
+  bool IsConhost() const { return conhost; } //
   std::wstring_view Cwd() const { return cwd; }
   std::wstring &Cwd() { return cwd; }
   std::wstring MakeShell() const;
@@ -60,18 +36,16 @@ public:
   }
 
 private:
-  bool InitializeBaulkEnv(bela::error_code &ec);
   bela::env::Simulator simulator;
-  std::wstring manifest; // env manifest file
   std::wstring shell;
   std::wstring cwd;
   std::wstring arch;
   std::vector<std::wstring> venvs;
   std::vector<std::wstring> availableEnv;
-  Boolean usevs;
-  Boolean clang;
-  Boolean cleanup;
-  Boolean conhost;
+  bool usevs{false};
+  bool clang{false};
+  bool cleanup{false};
+  bool conhost{false};
 };
 
 } // namespace baulkterminal
