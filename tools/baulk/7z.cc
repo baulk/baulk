@@ -1,6 +1,7 @@
 //
 #include <bela/path.hpp>
 #include <bela/process.hpp>
+#include <bela/simulator.hpp>
 #include "fs.hpp"
 
 namespace baulk::sevenzip {
@@ -20,7 +21,7 @@ inline std::optional<std::wstring> lookup_sevenzip() {
     return std::make_optional(std::move(s7z));
   }
   std::wstring s7z;
-  if (bela::ExecutableExistsInPath(L"7z.exe", s7z)) {
+  if (bela::env::ExecutableExistsInPath(L"7z.exe", s7z)) {
     return std::make_optional(std::move(s7z));
   }
   return std::nullopt;

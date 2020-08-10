@@ -59,7 +59,7 @@ bool Executor::InitializeBaulkEnv(bela::error_code &ec) {
     if (auto it = obj.find("env"); it != obj.end()) {
       for (const auto &kv : it.value().items()) {
         auto value = bela::ToWide(kv.value().get<std::string_view>());
-        dev.SetEnv(bela::ToWide(kv.key()), bela::ExpandEnv(value), true);
+        simulator.SetEnv(bela::ToWide(kv.key()), bela::WindowsExpandEnv(value), true);
       }
     }
     baulk::json::JsonAssignor ja(obj);
@@ -105,35 +105,33 @@ template <size_t Len = 256> std::wstring GetCwd() {
 }
 
 bool Executor::PrepareEnv(bela::error_code &ec) {
+  if (cleanup) {
+    simulator.InitializeCleanupEnv();
+  } else {
+    simulator.InitializeEnv();
+  }
   if (!manifest.empty() && !InitializeBaulkEnv(ec)) {
     return false;
   }
   if (cwd.empty()) {
     cwd = GetCwd();
   }
-  return true;
-}
-
-std::optional<std::wstring> Executor::MakeEnv(bela::error_code &ec) {
-  baulk::env::Searcher searcher(dev, arch);
+  baulk::env::Searcher searcher(simulator, arch);
   if (!searcher.InitializeBaulk(ec)) {
-    return std::nullopt;
+    return false;
   }
   searcher.InitializeGit(cleanup(), ec);
   if (usevs) {
     if (!searcher.InitializeVisualStudioEnv(clang(), ec)) {
-      return std::nullopt;
+      return false;
     }
     if (!searcher.InitializeWindowsKitEnv(ec)) {
-      return std::nullopt;
+      return false;
     }
   }
   searcher.InitializeVirtualEnv(venvs, ec);
   availableEnv.swap(searcher.availableEnv);
-  if (cleanup) {
-    return std::make_optional(searcher.CleanupEnv());
-  }
-  return std::make_optional(searcher.MakeEnv());
+  return true;
 }
 
 } // namespace baulkterminal

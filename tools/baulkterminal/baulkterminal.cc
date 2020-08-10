@@ -126,7 +126,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
 } // namespace baulkterminal
 
 std::optional<std::wstring> FindWindowsTerminal() {
-  auto wt = bela::ExpandEnv(L"%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe");
+  auto wt = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe");
   if (!bela::PathExists(wt)) {
     return std::nullopt;
   }
@@ -175,19 +175,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   if (bela::EndsWithIgnoreCase(shell, L"bash.exe")) {
     ea.Append(L"-i").Append(L"-l");
   }
-  auto env = executor.MakeEnv(ec);
-  if (!env) {
-    bela::BelaMessageBox(nullptr, L"unable initialize baulkterminal", ec.data(), nullptr,
-                         bela::mbs_t::FATAL);
-    return 1;
-  }
+  auto env = executor.MakeEnv();
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     baulkterminal::string_nullable(*env),
+                     baulkterminal::string_nullable(env),
                      baulkterminal::string_nullable(executor.Cwd()), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr,

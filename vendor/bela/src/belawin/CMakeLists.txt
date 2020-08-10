@@ -4,11 +4,11 @@ add_library(belawin STATIC
   env.cc
   io.cc
   path.cc
-  pathsearch.cc
   peimage.cc
   process.cc
   realpath.cc
   reparsepoint.cc
+  simulator.cc
   version.cc
 )
 

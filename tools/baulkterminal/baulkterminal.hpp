@@ -3,7 +3,7 @@
 #define BAULKTERMINAL_HPP
 #pragma once
 #include <bela/base.hpp>
-#include <bela/env.hpp>
+#include <bela/simulator.hpp>
 #include <vector>
 
 namespace baulkterminal {
@@ -43,7 +43,7 @@ public:
   Executor &operator=(const Executor &) = delete;
   bool ParseArgv(bela::error_code &ec);
   bool PrepareEnv(bela::error_code &ec);
-  std::optional<std::wstring> MakeEnv(bela::error_code &ec);
+  std::wstring MakeEnv() { return simulator.MakeEnv(); }
   bool IsConhost() const { return conhost.value; } //
   std::wstring_view Cwd() const { return cwd; }
   std::wstring &Cwd() { return cwd; }
@@ -61,7 +61,7 @@ public:
 
 private:
   bool InitializeBaulkEnv(bela::error_code &ec);
-  bela::env::Derivator dev;
+  bela::env::Simulator simulator;
   std::wstring manifest; // env manifest file
   std::wstring shell;
   std::wstring cwd;

@@ -62,7 +62,7 @@ private:
 };
 
 bool InitializeGitPath(std::wstring &git) {
-  if (bela::ExecutableExistsInPath(L"git.exe", git)) {
+  if (bela::env::ExecutableExistsInPath(L"git.exe", git)) {
     baulk::DbgPrint(L"Found git in path '%s'", git);
     return true;
   }
@@ -81,13 +81,13 @@ bool InitializeGitPath(std::wstring &git) {
 
 std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
   if (!profile.empty()) {
-    return bela::ExpandEnv(profile);
+    return bela::WindowsExpandEnv(profile);
   }
   auto p = bela::StringCat(root, L"\\config\\baulk.json");
   if (bela::PathExists(p)) {
     return p;
   }
-  return bela::ExpandEnv(L"%LOCALAPPDATA%\\baulk\\baulk.json");
+  return bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk\\baulk.json");
 }
 
 inline std::wstring BaulkLocaleName() {

@@ -1,4 +1,5 @@
-#include <bela/env.hpp>
+#include <bela/simulator.hpp>
+#include <bela/process.hpp>
 
 int LinkToApp(wchar_t *env) {
   STARTUPINFOW si;
@@ -21,10 +22,28 @@ int LinkToApp(wchar_t *env) {
   return exitCode;
 }
 
+int GoVersion(bela::env::Simulator *simulator) {
+  bela::process::Process p(simulator);
+  p.Execute(L"go", L"version");
+  return 0;
+}
+int CMDSet(bela::env::Simulator *simulator) {
+  bela::process::Process p(simulator);
+  p.Execute(L"cmd", L"/c", L"set");
+  return 0;
+}
+
 int wmain() {
-  bela::env::Derivator dev;
-  dev.SetEnv(L"GOPROXY", L"https://goproxy.io/");
-  dev.SetEnv(L"Path", L"C:/Dev");
-  auto envs = dev.CleanupEnv(L"C:/Go");
+  bela::env::Simulator simulator;
+  simulator.InitializeCleanupEnv();
+  simulator.SetEnv(L"GOPROXY", L"https://goproxy.io/");
+  simulator.PathAppend(L"C:\\Go\\bin");
+  simulator.PathAppend(L"C:\\Go\\bin");
+  GoVersion(&simulator);
+  CMDSet(&simulator);
+  simulator.PathOrganize();
+  CMDSet(&simulator);
+  // simulator.SetEnv(L"Path", L"C:/Dev");
+  auto envs = simulator.MakeEnv();
   return LinkToApp(envs.data());
 }

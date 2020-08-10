@@ -80,69 +80,27 @@ std::optional<VisualStudioInstance> LookupVisualStudioInstance(bela::error_code 
   }
   return std::make_optional(std::move(vsi));
 }
-// HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft
-// SDKs\Windows\v10.0 InstallationFolder ProductVersion
 
-std::wstring Searcher::CleanupEnv() {
+bool Searcher::FlushEnv() {
   if (!libs.empty()) {
-    dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
+    simulator.SetEnv(L"LIB", bela::JoinEnv(libs));
   }
   if (!includes.empty()) {
-    dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
+    simulator.SetEnv(L"INCLUDE", bela::JoinEnv(includes));
   }
   if (!libpaths.empty()) {
-    dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
+    simulator.SetEnv(L"LIBPATH", bela::JoinEnv(libpaths));
   }
-  return dev.CleanupEnv(bela::env::JoinEnv(paths));
-}
-using StringCaseSet = bela::flat_hash_set<std::wstring, bela::env::StringCaseInsensitiveHash,
-                                          bela::env::StringCaseInsensitiveEq>;
-// RegroupPath todo
-std::wstring RegroupPath(const std::vector<std::wstring> &paths) {
-  auto oldpath = bela::GetEnv(L"path");
-  std::vector<std::wstring_view> oldpaths =
-      bela::StrSplit(oldpath, bela::ByChar(bela::env::Separator), bela::SkipEmpty());
-  std::vector<std::wstring> newpaths;
-  StringCaseSet sets;
-  sets.reserve(paths.size() + oldpaths.size());
-  for (const auto &p : paths) {
-    auto p_ = bela::PathCat(p);
-    if (sets.find(p_) != sets.end()) {
-      continue;
-    }
-    newpaths.emplace_back(p_);
-    sets.emplace(p_);
-  }
-  for (const auto &p : oldpaths) {
-    auto p_ = bela::PathCat(p);
-    if (sets.find(p_) != sets.end()) {
-      continue;
-    }
-    newpaths.emplace_back(p_);
-    sets.emplace(p_);
-  }
-  return bela::env::JoinEnv(newpaths);
-}
-
-std::wstring Searcher::MakeEnv() {
-  if (!libs.empty()) {
-    dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
-  }
-  if (!includes.empty()) {
-    dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
-  }
-  if (!libpaths.empty()) {
-    dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
-  }
-  dev.SetEnv(L"path", RegroupPath(paths));
-  return dev.MakeEnv();
+  simulator.PathAppend(paths);
+  simulator.PathOrganize();
+  return true;
 }
 
 std::optional<std::wstring> FrameworkDir() {
 #ifdef _M_X64
-  auto dir = bela::ExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
+  auto dir = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
 #else
-  auto dir = bela::ExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
+  auto dir = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
 #endif
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     if (p.is_directory()) {
@@ -210,18 +168,18 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   // WindowsLibPath
   // C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.19041.0
   // C:\Program Files (x86)\Windows Kits\10\References\10.0.19041.0
-  dev.SetEnv(L"WindowsLibPath", bela::env::JoinEnv({unionmetadata, references}));
-  dev.SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
+  simulator.SetEnv(L"WindowsLibPath", bela::JoinEnv({unionmetadata, references}));
+  simulator.SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
 
   // ExtensionSdkDir
   if (auto ExtensionSdkDir =
-          bela::ExpandEnv(LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
+          bela::WindowsExpandEnv(LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
       bela::PathExists(ExtensionSdkDir)) {
-    dev.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
-  } else if (auto ExtensionSdkDir = bela::ExpandEnv(
+    simulator.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
+  } else if (auto ExtensionSdkDir = bela::WindowsExpandEnv(
                  LR"(%ProgramFiles(x86)%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
              bela::PathExists(ExtensionSdkDir)) {
-    dev.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
+    simulator.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
   }
   return true;
 }
@@ -295,9 +253,10 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   auto ifcpath =
       bela::StringCat(vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
   if (bela::PathExists(ifcpath)) {
-    dev.SetEnv(L"IFCPATH", ifcpath);
+    simulator.SetEnv(L"IFCPATH", ifcpath);
   }
-  dev.SetEnv(L"VCIDEInstallDir", bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
+  simulator.SetEnv(L"VCIDEInstallDir",
+                   bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
   return true;
 }
 inline bool PathFileIsExists(std::wstring_view file) {
@@ -345,7 +304,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
 
 bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
   std::wstring git;
-  if (bela::ExecutableExistsInPath(L"git.exe", git)) {
+  if (bela::env::ExecutableExistsInPath(L"git.exe", git)) {
     if (cleanup) {
       bela::PathStripName(git);
       JoinEnv(paths, git);

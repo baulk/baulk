@@ -1,5 +1,5 @@
 //////////
-#include <bela/env.hpp>
+#include <bela/simulator.hpp>
 #include <bela/terminal.hpp>
 
 namespace bela {
@@ -15,9 +15,10 @@ int wmain(int argc, wchar_t **argv) {
     auto k = bela::env::resovle_shell_name(s, off);
     bela::FPrintF(stderr, L"%s --> [%s] off: %d\n", s, k, off);
   }
-  bela::env::Derivator de;
-  de.AddBashCompatible(argc, argv);
-  de.PutEnv(L"JACK=ROSE");
+  bela::env::Simulator simulator;
+  simulator.InitializeCleanupEnv();
+  simulator.AddBashCompatible(argc, argv);
+  simulator.PutEnv(L"JACK=ROSE");
 
   const wchar_t *svv[] = {                                                 //
                           L"SystemRoot ${SystemRoot}, $ who $JACK ?$$$ |", //
@@ -27,11 +28,9 @@ int wmain(int argc, wchar_t **argv) {
                           L"App Argv0: $0 HOME: $HOME",
                           L"cmdline: $@"};
   for (auto s : svv) {
-    std::wstring s2;
-    de.ExpandEnv(s, s2);
-    bela::FPrintF(stderr, L"%s --> [%s]\n", s, s2);
+    bela::FPrintF(stderr, L"%s --> [%s]\n", s, simulator.ExpandEnv(s));
   }
-  auto path = bela::env::AppendEnv(L"Path", L"C:\\Program Files\\7-Zip", L"C:\\MSYS2");
+  auto path = bela::AppendEnv(L"Path", L"C:\\Program Files\\7-Zip", L"C:\\MSYS2");
   bela::FPrintF(stderr, L"Path: %s\n", path);
   return 0;
 }

@@ -151,9 +151,7 @@ enum class FileAttribute : DWORD {
   auto at = GetFileAttributesW(file.data());
   return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
 }
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe,
-                            const std::vector<std::wstring> &paths);
+
 // Use GetFinalPathNameByHandleW
 std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code &ec);
 std::optional<std::wstring> RealPath(std::wstring_view src, bela::error_code &ec);

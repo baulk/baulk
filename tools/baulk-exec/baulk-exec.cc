@@ -8,153 +8,12 @@
 #include <baulkenv.hpp>
 #include <baulkrev.hpp>
 #include <pwsh.hpp>
+#include "baulk-exec.hpp"
 
 namespace baulk::exec {
 bool IsDebugMode = false;
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  const bela::format_internal::FormatArg arg_array[] = {args...};
-  std::wstring str;
-  str.append(L"\x1b[33m* ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
-  if (str.back() == '\n') {
-    str.pop_back();
-  }
-  str.append(L"\x1b[0m\n");
-  return bela::terminal::WriteAuto(stderr, str);
-}
-inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  std::wstring_view msg(fmt);
-  if (!msg.empty() && msg.back() == '\n') {
-    msg.remove_suffix(1);
-  }
-  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
-}
+//
 
-template <typename... Args>
-bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  const bela::format_internal::FormatArg arg_array[] = {args...};
-  auto str = bela::StringCat(L"\x1b[32m* ", prefix, L" ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
-  if (str.back() == '\n') {
-    str.pop_back();
-  }
-  str.append(L"\x1b[0m\n");
-  return bela::terminal::WriteAuto(stderr, str);
-}
-inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  std::wstring_view msg(fmt);
-  if (!msg.empty() && msg.back() == '\n') {
-    msg.remove_suffix(1);
-  }
-  return bela::terminal::WriteAuto(stderr,
-                                   bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
-}
-
-using argv_t = std::vector<std::wstring_view>;
-constexpr const wchar_t *string_nullable(std::wstring_view str) {
-  return str.empty() ? nullptr : str.data();
-}
-constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
-
-inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
-  auto argexe = bela::StripSuffix(arg, L".exe");
-  return bela::EqualsIgnoreCase(argexe, exe);
-}
-
-bool IsSubsytemConsole(std::wstring_view exe, std::wstring &rtarget) {
-  std::wstring target;
-  if (!bela::ExecutableExistsInPath(exe, target)) {
-    bela::FPrintF(stderr, L"unable found target: '%s'\n", exe);
-    return false;
-  }
-  rtarget = target;
-  bela::error_code ec;
-  auto realexe = bela::RealPathEx(target, ec);
-  if (!realexe) {
-    DbgPrint(L"resolve realpath %s %s\n", target, ec.message);
-    return false;
-  }
-  DbgPrint(L"resolve realpath %s\n", *realexe);
-  auto pe = bela::pe::Expose(*realexe, ec);
-  if (!pe) {
-    return true;
-  }
-  return pe->subsystem == bela::pe::Subsystem::CUI;
-}
-
-struct baulkcommand_t {
-  argv_t argv;
-  std::wstring env;
-  std::wstring cwd;
-  bool cleaned{false};
-  int operator()() {
-    std::wstring arg0(argv[0]);
-    std::wstring target;
-    bool isconsole{false};
-    if (cleaned) {
-      if (NameEquals(arg0, L"pwsh")) {
-        if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
-          target.assign(std::move(pwshcore));
-          isconsole = true;
-          DbgPrint(L"Found installed pwsh %s", target);
-        }
-      } else if (NameEquals(arg0, L"pwsh-preview")) {
-        if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
-          target.assign(std::move(pwshpreview));
-          isconsole = true;
-          DbgPrint(L"Found installed pwsh-preview %s", target);
-        }
-      }
-    }
-    if (target.empty()) {
-      isconsole = IsSubsytemConsole(arg0, target);
-      DbgPrint(L"Arg0 %s subsystem is console: %b", arg0, isconsole);
-    }
-
-    bela::EscapeArgv ea;
-    ea.Assign(arg0);
-    for (size_t i = 1; i < argv.size(); i++) {
-      ea.Append(argv[i]);
-    }
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    SecureZeroMemory(&si, sizeof(si));
-    SecureZeroMemory(&pi, sizeof(pi));
-    si.cb = sizeof(si);
-    if (CreateProcessW(target.empty() ? nullptr : target.data(), ea.data(), nullptr, nullptr, FALSE,
-                       CREATE_UNICODE_ENVIRONMENT, nullptr, string_nullable(cwd), &si,
-                       &pi) != TRUE) {
-      auto ec = bela::make_system_error_code();
-      bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec.message);
-      return -1;
-    }
-    CloseHandle(pi.hThread);
-    SetConsoleCtrlHandler(nullptr, TRUE);
-    auto closer = bela::finally([&] {
-      SetConsoleCtrlHandler(nullptr, FALSE);
-      CloseHandle(pi.hProcess);
-    });
-    if (!isconsole) {
-      return 0;
-    }
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    DWORD exitCode;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
-    return exitCode;
-  }
-};
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
 Usage: baulk-exec [option] command args ...
@@ -215,9 +74,105 @@ private:
   std::wstring title;
 };
 
+class Executor {
+public:
+  Executor() = default;
+  Executor(const Executor &) = delete;
+  Executor &operator=(const Executor &) = delete;
+  bool ParseArgv(int argc, wchar_t **argv, TitleManager &tm);
+  int Exec();
+
+private:
+  bela::env::Simulator simulator;
+  argv_t argv;
+  std::wstring cwd;
+  bool cleanup{false};
+  bool console{true};
+  bool LookupPath(std::wstring_view exe, std::wstring &file);
+};
+
+bool Executor::LookupPath(std::wstring_view cmd, std::wstring &file) {
+  if (!simulator.LookupPath(cmd, file)) {
+    return false;
+  }
+  bela::error_code ec;
+  auto realexe = bela::RealPathEx(file, ec);
+  if (!realexe) {
+    DbgPrint(L"resolve realpath %s %s\n", file, ec.message);
+    return true;
+  }
+  DbgPrint(L"resolve realpath %s\n", *realexe);
+  if (auto pe = bela::pe::Expose(*realexe, ec); pe) {
+    console = (pe->subsystem == bela::pe::Subsystem::CUI);
+  }
+  return true;
+}
+
+inline bool IsPwshTarget(std::wstring_view arg0, std::wstring &target) {
+  if (NameEquals(arg0, L"pwsh")) {
+    if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
+      target.assign(std::move(pwshcore));
+      DbgPrint(L"Found installed pwsh %s", target);
+      return true;
+    }
+  }
+  if (NameEquals(arg0, L"pwsh-preview")) {
+    if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
+      target.assign(std::move(pwshpreview));
+      DbgPrint(L"Found installed pwsh-preview %s", target);
+      return true;
+    }
+  }
+  return false;
+}
+
+int Executor::Exec() {
+  std::wstring target;
+  std::wstring_view arg0(argv[0]);
+  if (!cleanup || !IsPwshTarget(arg0, target)) {
+    if (!LookupPath(arg0, target)) {
+      bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
+                    bela::StrJoin(simulator.Paths(), L"\n"));
+      return 1;
+    }
+  }
+  DbgPrint(L"target %s subsystem is console: %b", target, console);
+  bela::EscapeArgv ea;
+  ea.Assign(arg0);
+  for (size_t i = 1; i < argv.size(); i++) {
+    ea.Append(argv[i]);
+  }
+  auto env = simulator.MakeEnv();
+  STARTUPINFOW si;
+  PROCESS_INFORMATION pi;
+  SecureZeroMemory(&si, sizeof(si));
+  SecureZeroMemory(&pi, sizeof(pi));
+  si.cb = sizeof(si);
+  if (CreateProcessW(string_nullable(target), ea.data(), nullptr, nullptr, FALSE,
+                     CREATE_UNICODE_ENVIRONMENT, string_nullable(env), string_nullable(cwd), &si,
+                     &pi) != TRUE) {
+    auto ec = bela::make_system_error_code();
+    bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec.message);
+    return -1;
+  }
+  CloseHandle(pi.hThread);
+  SetConsoleCtrlHandler(nullptr, TRUE);
+  auto closer = bela::finally([&] {
+    SetConsoleCtrlHandler(nullptr, FALSE);
+    CloseHandle(pi.hProcess);
+  });
+  if (!console) {
+    return 0;
+  }
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  DWORD exitCode;
+  GetExitCodeProcess(pi.hProcess, &exitCode);
+  return exitCode;
+}
+
 // ParseArgv todo
-bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, TitleManager &tm) {
-  bela::ParseArgv pa(argc, argv, true);
+bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
+  bela::ParseArgv pa(argc, cargv, true);
   pa.Add(L"help", bela::no_argument, L'h')
       .Add(L"version", bela::no_argument, L'v')
       .Add(L"verbose", bela::no_argument, L'V')
@@ -227,7 +182,6 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, Title
       .Add(L"venv", bela::required_argument, L'E')
       .Add(L"vs", bela::no_argument, 1001) // load visual studio environment
       .Add(L"clang", bela::no_argument, 1002);
-  bool cleanup = false;
   bool usevs = false;
   bool clang = false;
   std::wstring arch;
@@ -249,7 +203,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, Title
           IsDebugMode = true;
           break;
         case 'W':
-          cmd.cwd = oa;
+          cwd = oa;
           break;
         case 'A': {
           auto larch = bela::AsciiStrToLower(oa);
@@ -284,19 +238,26 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, Title
     Usage();
     exit(1);
   }
-  bela::env::Derivator dev;
+  if (cleanup) {
+    DbgPrint(L"use cleaned env");
+    simulator.InitializeCleanupEnv();
+  } else {
+    simulator.InitializeEnv();
+  }
+
   for (size_t i = 0; i < Argv.size(); i++) {
     const auto arg = Argv[i];
     auto pos = arg.find(L'=');
     if (pos == std::wstring::npos) {
       for (size_t j = i; j < Argv.size(); j++) {
-        cmd.argv.emplace_back(Argv[j]);
+        argv.emplace_back(Argv[j]);
       }
       break;
     }
-    dev.SetEnv(arg.substr(0, pos), arg.substr(pos + 1));
+    simulator.SetEnv(arg.substr(0, pos), arg.substr(pos + 1));
   }
-  baulk::env::Searcher searcher(dev, arch);
+
+  baulk::env::Searcher searcher(simulator, arch);
   if (!searcher.InitializeBaulk(ec)) {
     bela::FPrintF(stderr, L"InitializeBaulk failed %s\n", ec.message);
     return false;
@@ -321,31 +282,18 @@ bool ParseArgv(int argc, wchar_t **argv, baulk::exec::baulkcommand_t &cmd, Title
     auto as = bela::StrJoin(searcher.availableEnv, L" ");
     DbgPrint(L"Turn on venv: %s", as);
   }
+  searcher.FlushEnv();
   auto newtitle = AvailableEnvTitle(searcher.availableEnv);
   tm.UpdateTitle(newtitle);
-  if (cleanup) {
-    DbgPrint(L"use cleaned env");
-    cmd.env = searcher.CleanupEnv();
-    return true;
-  }
-  cmd.env = searcher.MakeEnv();
   return true;
 }
 } // namespace baulk::exec
 
 int wmain(int argc, wchar_t **argv) {
-  baulk::exec::baulkcommand_t cmd;
+  baulk::exec::Executor executor;
   baulk::exec::TitleManager tm;
-  if (!baulk::exec::ParseArgv(argc, argv, cmd, tm)) {
+  if (!executor.ParseArgv(argc, argv, tm)) {
     return 1;
   }
-  if (!cmd.env.empty()) {
-    if (SetEnvironmentStringsW(cmd.env.data()) != TRUE) {
-      auto ec = bela::make_system_error_code();
-      bela::FPrintF(stderr, L"SetEnvironmentStringsW %s\n", ec.message);
-      return 1;
-    }
-    cmd.cleaned = true;
-  }
-  return cmd();
+  return executor.Exec();
 }

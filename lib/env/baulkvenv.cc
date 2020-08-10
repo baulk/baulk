@@ -68,19 +68,20 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
     return false;
   }
   InitializeLocalEnv(pkgname, venv, ec);
-  bela::env::Derivator expanddev;
+
+  auto newSimulator =simulator;
   auto baulkpkgroot = bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname);
-  expanddev.SetEnv(L"BAULK_ROOT", baulkroot);
-  expanddev.SetEnv(L"BAULK_ETC", baulketc);
-  expanddev.SetEnv(L"BAULK_VFS", baulkvfs);
-  expanddev.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
-  expanddev.SetEnv(L"BAULK_BINDIR", baulkbindir);
+  newSimulator.SetEnv(L"BAULK_ROOT", baulkroot);
+  newSimulator.SetEnv(L"BAULK_ETC", baulketc);
+  newSimulator.SetEnv(L"BAULK_VFS", baulkvfs);
+  newSimulator.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
+  newSimulator.SetEnv(L"BAULK_BINDIR", baulkbindir);
 
   std::wstring buffer;
   auto joinExpandEnv = [&](const vector_t &load, vector_t &save) {
     for (const auto &x : load) {
       buffer.clear();
-      expanddev.ExpandEnv(x, buffer);
+      newSimulator.ExpandEnv(x, buffer);
       JoinForceEnv(save, buffer);
     }
   };
@@ -90,8 +91,8 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
   // set env k=v
   for (const auto &e : venv.envs) {
     buffer.clear();
-    expanddev.ExpandEnv(e, buffer);
-    dev.PutEnv(buffer, true);
+    newSimulator.ExpandEnv(e, buffer);
+    simulator.PutEnv(buffer, true);
   }
   return true;
 }

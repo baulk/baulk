@@ -2,8 +2,8 @@
 #ifndef BAULK_BAULKENV_HPP
 #define BAULK_BAULKENV_HPP
 #include <bela/path.hpp>
-#include <bela/env.hpp>
 #include <bela/base.hpp>
+#include <bela/simulator.hpp>
 
 namespace baulk::env {
 
@@ -22,14 +22,14 @@ struct BaulkVirtualEnv {
 };
 
 struct Searcher {
-  Searcher(bela::env::Derivator &dev_, std::wstring_view arch_ = HostArch)
-      : dev{dev_}, arch(arch_) {
+  Searcher(bela::env::Simulator &simulator_, std::wstring_view arch_ = HostArch)
+      : simulator{simulator_}, arch(arch_) {
     if (arch.empty()) {
       arch = HostArch;
     }
   }
   using vector_t = std::vector<std::wstring>;
-  bela::env::Derivator &dev;
+  bela::env::Simulator &simulator;
   std::wstring arch;
   std::wstring baulkroot;
   std::wstring baulkvfs;
@@ -71,8 +71,6 @@ struct Searcher {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  std::wstring CleanupEnv();
-  std::wstring MakeEnv();
   bool InitializeWindowsKitEnv(bela::error_code &ec);
   bool InitializeVisualStudioEnv(bool clang, bela::error_code &ec);
   bool InitializeBaulk(bela::error_code &ec);
@@ -81,6 +79,7 @@ struct Searcher {
   // dot not call
   bool InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec);
   bool InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec);
+  bool FlushEnv();
 };
 
 } // namespace baulk::env
