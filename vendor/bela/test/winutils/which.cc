@@ -2,7 +2,7 @@
 #include <bela/strcat.hpp>
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
-#include <bela/env.hpp>
+#include <bela/simulator.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   std::wstring exe;
-  if (!bela::ExecutableExistsInPath(argv[1], exe)) {
+  if (!bela::env::ExecutableExistsInPath(argv[1], exe)) {
     bela::FPrintF(stderr, L"command not found: %s\n", argv[1]);
     return 1;
   }
@@ -19,7 +19,7 @@ int wmain(int argc, wchar_t **argv) {
   std::vector<std::wstring> paths;
   bela::MakePathEnv(paths);
   std::wstring exe2;
-  if (!bela::ExecutableExistsInPath(argv[1], exe2, paths)) {
+  if (!bela::env::ExecutableExistsInPath(argv[1], exe2, paths)) {
     bela::FPrintF(stderr, L"command not found: %s\n", argv[1]);
     return 1;
   }

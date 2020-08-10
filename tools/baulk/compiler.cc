@@ -123,14 +123,6 @@ struct Searcher {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  std::wstring CleanupEnv() const {
-    bela::env::Derivator dev;
-    dev.SetEnv(L"LIB", bela::env::JoinEnv(libs));
-    dev.SetEnv(L"INCLUDE", bela::env::JoinEnv(includes));
-    dev.SetEnv(L"LIBPATH", bela::env::JoinEnv(libpaths));
-    // dev.SetEnv(L"Path", bela::env::InsertEnv(L"Path", paths));
-    return dev.CleanupEnv(bela::env::JoinEnv(paths));
-  }
   bool InitializeWindowsKitEnv(bela::error_code &ec);
   bool InitializeVisualStudioEnv(bela::error_code &ec);
 };
@@ -219,6 +211,7 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
 // $installationPath/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt
 
 bool Executor::Initialize(bela::error_code &ec) {
+  simulator.InitializeCleanupEnv();
   Searcher searcher;
   if (!searcher.InitializeVisualStudioEnv(ec)) {
     return false;
@@ -226,11 +219,10 @@ bool Executor::Initialize(bela::error_code &ec) {
   if (!searcher.InitializeWindowsKitEnv(ec)) {
     return false;
   }
-  paths.reserve(searcher.paths.size() + 4);
-  paths.assign(searcher.paths.begin(), searcher.paths.end());
-  bela::MakePathEnv(paths);
-
-  env = searcher.CleanupEnv();
+  simulator.SetEnv(L"INCLUDE", bela::StrJoin(searcher.includes, bela::Separators));
+  simulator.SetEnv(L"LIB", bela::StrJoin(searcher.libs, bela::Separators));
+  simulator.SetEnv(L"LIBPATH", bela::StrJoin(searcher.libpaths, bela::Separators));
+  simulator.PathAppend(searcher.paths);
   initialized = true;
   return true;
 }

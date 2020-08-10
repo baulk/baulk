@@ -2,19 +2,24 @@
 #include <bela/process.hpp>
 
 namespace bela::process {
-int Process::ExecuteInternal(wchar_t *cmdline) {
-  // run a new process and wait
+// run a new process and wait
+int Process::ExecuteInternal(std::wstring_view file, wchar_t *cmdline) {
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (env.empty() && de.Size() != 0) {
-    env = de.MakeEnv();
+  std::wstring env;
+  std::wstring path;
+  if (simulator != nullptr) {
+    env = const_cast<bela::env::Simulator *>(simulator)->MakeEnv();
+    if (file.find_first_of(L":\\/") == std::wstring_view::npos) {
+      simulator->LookupPath(file, path);
+    }
   }
-  if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     reinterpret_cast<LPVOID>(string_nullable(env)), string_nullable(cwd), &si,
-                     &pi) != TRUE) {
+  if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, FALSE,
+                     CREATE_UNICODE_ENVIRONMENT, reinterpret_cast<LPVOID>(string_nullable(env)),
+                     string_nullable(cwd), &si, &pi) != TRUE) {
     ec = bela::make_system_error_code();
     return -1;
   }
@@ -42,8 +47,8 @@ struct process_capture_helper {
   process_capture_helper() : pi{} {}
   PROCESS_INFORMATION pi;
   HANDLE fdout{nullptr};
-  bool create_process_redirect(wchar_t *cmdline, std::wstring &env, std::wstring &cwd, DWORD flags,
-                               bela::error_code &ec) noexcept {
+  bool create_process_redirect(std::wstring &path, wchar_t *cmdline, std::wstring &env,
+                               std::wstring &cwd, DWORD flags, bela::error_code &ec) noexcept {
     STARTUPINFOW si;
     memset(&si, 0, sizeof(STARTUPINFOW));
     si.cb = sizeof(STARTUPINFOW);
@@ -112,12 +117,17 @@ struct process_capture_helper {
   }
 };
 
-int Process::CaptureInternal(wchar_t *cmdline, DWORD flags) {
+int Process::CaptureInternal(std::wstring_view file, wchar_t *cmdline, DWORD flags) {
   process_capture_helper helper;
-  if (env.empty() && de.Size() != 0) {
-    env = de.MakeEnv();
+  std::wstring env;
+  std::wstring path;
+  if (simulator != nullptr) {
+    env = const_cast<bela::env::Simulator *>(simulator)->MakeEnv();
+    if (file.find_first_of(L":\\/") == std::wstring_view::npos) {
+      simulator->LookupPath(file, path);
+    }
   }
-  if (!helper.create_process_redirect(cmdline, env, cwd, flags, ec)) {
+  if (!helper.create_process_redirect(path, cmdline, env, cwd, flags, ec)) {
     return 1;
   }
   return helper.wait_and_stream_output(out);

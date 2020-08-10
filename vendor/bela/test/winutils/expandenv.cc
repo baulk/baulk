@@ -33,7 +33,7 @@ int wmain() {
       //
   };
   for (auto s : svv) {
-    auto es = bela::ExpandEnv(s);
+    auto es = bela::WindowsExpandEnv(s);
     bela::FPrintF(stderr, L"[%s] Expand to [%s]\n", s, es);
   }
   auto ss = bela::PathUnExpand(L"%APPDATA%\\Microsoft\\WindowsApp\\wt.exe");

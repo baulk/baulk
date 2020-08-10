@@ -2,6 +2,7 @@
 #include <string_view>
 #include <bela/path.hpp>
 #include <bela/process.hpp>
+#include <bela/simulator.hpp>
 #include <regutils.hpp>
 #include "decompress.hpp"
 #include "fs.hpp"
@@ -30,7 +31,7 @@ inline bool initialize_baulktar(std::wstring &tar) {
   return false;
 }
 
-inline bool initialize_msys2tar(std::wstring &tar, bela::process::Process &p) {
+inline bool initialize_msys2tar(std::wstring &tar, bela::env::Simulator &simulator) {
   bela::error_code ec;
   auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
   if (!installPath) {
@@ -44,15 +45,13 @@ inline bool initialize_msys2tar(std::wstring &tar, bela::process::Process &p) {
 #ifdef _M_X64
   auto xz64 = bela::StringCat(*installPath, L"\\mingw64\\bin\\xz.exe");
   if (bela::PathExists(xz64)) {
-    p.SetEnv(L"PATH",
-             bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath, L"\\mingw64\\bin"));
+    simulator.PathAppend(bela::StringCat(*installPath, L"\\mingw64\\bin"));
     return true;
   }
 #endif
   auto xz = bela::StringCat(*installPath, L"\\mingw32\\bin\\xz.exe");
   if (bela::PathExists(xz)) {
-    p.SetEnv(L"PATH",
-             bela::StringCat(bela::GetEnv(L"PATH"), L";", *installPath, L"\\mingw32\\bin"));
+    simulator.PathAppend(bela::StringCat(*installPath, L"\\mingw64\\bin"));
   }
   return true;
 }
@@ -61,13 +60,15 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_cod
   if (!baulk::fs::MakeDir(outdir, ec)) {
     return false;
   }
-  bela::process::Process process;
+  bela::env::Simulator simulator;
+  simulator.InitializeEnv();
   std::wstring tar;
-  if (!initialize_baulktar(tar) && !initialize_msys2tar(tar, process) &&
-      !bela::ExecutableExistsInPath(L"tar.exe", tar)) {
+  if (!initialize_baulktar(tar) && !initialize_msys2tar(tar, simulator) &&
+      !bela::env::ExecutableExistsInPath(L"tar.exe", tar)) {
     ec = bela::make_error_code(ERROR_NOT_FOUND, L"tar not install");
     return false;
   }
+  bela::process::Process process(&simulator);
   process.Chdir(outdir);
   if (process.Execute(tar, L"-xvf", src) != 0) {
     ec = process.ErrorCode();

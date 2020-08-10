@@ -14,12 +14,14 @@ int stty_size() {
 
 int wmain() {
   stty_size();
-  bela::process::Process p;
+  bela::env::Simulator simulator;
+  simulator.InitializeEnv();
+  simulator.SetEnv(L"BELA_DEBUG_MODE", L"true");
+  bela::process::Process p(&simulator);
   if (p.Capture(L"vswhere", L"-format", L"json", L"-utf8") == 0) {
     bela::FPrintF(stderr, L"result: %s\n", p.Out());
   }
   bela::FPrintF(stderr, L"\x1b[33mRun cmd\x1b[0m\n");
-  p.SetEnv(L"BELA_DEBUG", L"1");
   auto exitcode = p.Execute(L"cmd");
   bela::FPrintF(stderr, L"\x1b[33mcmd exit %d\x1b[0m\n", exitcode);
   return 0;
