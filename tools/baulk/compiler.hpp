@@ -17,6 +17,7 @@ public:
     ec.message.clear();
     ec.code = 0;
     bela::process::Process process(&simulator);
+    process.Chdir(cwd); // change cwd
     if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...); exitcode != 0) {
       ec = process.ErrorCode();
       return exitcode;
