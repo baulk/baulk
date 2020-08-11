@@ -64,7 +64,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_cod
   simulator.InitializeEnv();
   std::wstring tar;
   if (!initialize_baulktar(tar) && !initialize_msys2tar(tar, simulator) &&
-      !bela::env::ExecutableExistsInPath(L"tar.exe", tar)) {
+      !simulator.LookupPath(L"tar.exe", tar)) {
     ec = bela::make_error_code(ERROR_NOT_FOUND, L"tar not install");
     return false;
   }
