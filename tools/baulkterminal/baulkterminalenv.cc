@@ -18,15 +18,17 @@ inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
   return bela::EqualsIgnoreCase(argexe, exe);
 }
 
-std::wstring Executor::MakeShell() const {
+bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
   if (shell.empty() || NameEquals(shell, L"pwsh")) {
     if (auto pwsh = baulk::pwsh::PwshExePath(); !pwsh.empty()) {
-      return pwsh;
+      ea.Append(pwsh);
+      return true;
     }
   }
   if (NameEquals(shell, L"pwsh-preview")) {
     if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
-      return pwshpreview;
+      ea.Append(pwshpreview);
+      return true;
     }
   }
   if (NameEquals(shell, L"bash")) {
@@ -34,17 +36,21 @@ std::wstring Executor::MakeShell() const {
     bela::error_code ec;
     if (auto gw = baulk::regutils::GitForWindowsInstallPath(ec); gw) {
       if (auto bash = bela::StringCat(*gw, L"\\bin\\bash.exe"); bela::PathExists(bash)) {
-        return bash;
+        ea.Append(bash).Append(L"-i").Append(L"-l");
+        return true;
       }
     }
   }
   if (NameEquals(shell, L"wsl")) {
-    return L"wsl.exe";
+    ea.Append(L"wsl.exe");
+    return true;
   }
   if (!shell.empty() && bela::PathExists(shell)) {
-    return shell;
+    ea.Append(shell);
+    return true;
   }
-  return L"cmd.exe";
+  ea.Append(L"cmd.exe");
+  return false;
 }
 
 template <size_t Len = 256> std::wstring GetCwd() {
@@ -67,31 +73,62 @@ template <size_t Len = 256> std::wstring GetCwd() {
   return s;
 }
 
-bool Executor::PrepareEnv(bela::error_code &ec) {
-  if (cleanup) {
-    simulator.InitializeCleanupEnv();
-  } else {
-    simulator.InitializeEnv();
+inline std::optional<std::wstring> FindWindowsTerminal() {
+  auto wt = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe");
+  if (!bela::PathExists(wt)) {
+    return std::nullopt;
   }
-  if (cwd.empty()) {
-    cwd = GetCwd();
+  return std::make_optional(std::move(wt));
+}
+
+std::optional<std::wstring> SearchBaulkExec(bela::error_code &ec) {
+  auto exepath = bela::ExecutableFinalPathParent(ec);
+  if (!exepath) {
+    return std::nullopt;
   }
-  baulk::env::Searcher searcher(simulator, arch);
-  if (!searcher.InitializeBaulk(ec)) {
+  auto baulkexec = bela::StringCat(*exepath, L"\\baulk-exec.exe");
+  if (bela::PathFileIsExists(baulkexec)) {
+    return std::make_optional(std::move(baulkexec));
+  }
+  std::wstring bkroot(*exepath);
+  for (size_t i = 0; i < 5; i++) {
+    auto baulkexec = bela::StringCat(bkroot, L"\\bin\\baulk-exec.exe");
+    if (bela::PathFileIsExists(baulkexec)) {
+      return std::make_optional(std::move(baulkexec));
+    }
+    bela::PathStripName(bkroot);
+  }
+  ec = bela::make_error_code(1, L"unable found baulk.exe");
+  return std::nullopt;
+}
+
+bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
+  if (!conhost) {
+    if (auto wt = FindWindowsTerminal(); wt) {
+      ea.Assign(*wt).Append(L"--");
+    }
+  }
+  auto baulkexec = SearchBaulkExec(ec);
+  if (!baulkexec) {
     return false;
   }
-  searcher.InitializeGit(cleanup, ec);
+  ea.Append(*baulkexec);
+  if (cleanup) {
+    ea.Append(L"--cleanup");
+  }
   if (usevs) {
-    if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
-      return false;
-    }
-    if (!searcher.InitializeWindowsKitEnv(ec)) {
-      return false;
+    ea.Append(L"--vs");
+    if (!arch.empty()) {
+      ea.Append(L"-A").Append(arch);
     }
   }
-  searcher.InitializeVirtualEnv(venvs, ec);
-  searcher.FlushEnv();
-  availableEnv.swap(searcher.availableEnv);
+  if (!cwd.empty()) {
+    ea.Append(L"-W").Append(cwd);
+  }
+  for (const auto &e : venvs) {
+    ea.Append(L"-E").Append(e);
+  }
+  UseShell(shell, ea);
   return true;
 }
 

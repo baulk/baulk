@@ -4,6 +4,7 @@
 #pragma once
 #include <bela/base.hpp>
 #include <bela/simulator.hpp>
+#include <bela/escapeargv.hpp>
 #include <vector>
 
 namespace baulkterminal {
@@ -18,30 +19,13 @@ public:
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
   bool ParseArgv(bela::error_code &ec);
-  bool PrepareEnv(bela::error_code &ec);
-  std::wstring MakeEnv() { return simulator.MakeEnv(); }
-  bool IsConhost() const { return conhost; } //
-  std::wstring_view Cwd() const { return cwd; }
-  std::wstring &Cwd() { return cwd; }
-  std::wstring MakeShell() const;
-  std::wstring Title() const {
-    if (availableEnv.empty()) {
-      return L"Baulk Terminal";
-    }
-    auto firstenv = availableEnv[0];
-    if (availableEnv.size() > 1) {
-      return bela::StringCat(L"Baulk Terminal [", firstenv, L"...+", availableEnv.size() - 1, L"]");
-    }
-    return bela::StringCat(L"Baulk Terminal [", firstenv, L"]");
-  }
+  bool PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec);
 
 private:
-  bela::env::Simulator simulator;
   std::wstring shell;
   std::wstring cwd;
   std::wstring arch;
   std::vector<std::wstring> venvs;
-  std::vector<std::wstring> availableEnv;
   bool usevs{false};
   bool clang{false};
   bool cleanup{false};

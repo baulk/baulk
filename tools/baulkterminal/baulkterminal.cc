@@ -1,7 +1,6 @@
 //
 #include <bela/base.hpp>
 #include <bela/path.hpp>
-#include <bela/env.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/parseargv.hpp>
 #include <bela/picker.hpp>
@@ -149,35 +148,19 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
                          bela::mbs_t::FATAL);
     return 1;
   }
-  if (!executor.PrepareEnv(ec)) {
-    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare env error", ec.data(), BAULK_APPLINKE,
+  bela::EscapeArgv ea;
+  if (!executor.PrepareArgv(ea, ec)) {
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare Argv error", ec.data(), BAULK_APPLINKE,
                          bela::mbs_t::FATAL);
     return 1;
   }
-  bela::EscapeArgv ea;
-  if (!executor.IsConhost()) {
-    if (auto wt = FindWindowsTerminal(); wt) {
-      ea.Append(*wt);
-      if (!executor.Cwd().empty()) {
-        ea.Append(L"--startingDirectory").Append(executor.Cwd());
-      }
-      ea.Append(L"--");
-    }
-  }
-  auto shell = executor.MakeShell();
-  ea.Append(shell);
-  if (bela::EndsWithIgnoreCase(shell, L"bash.exe")) {
-    ea.Append(L"-i").Append(L"-l");
-  }
-  auto env = executor.MakeEnv();
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     baulkterminal::string_nullable(env),
-                     baulkterminal::string_nullable(executor.Cwd()), &si, &pi) != TRUE) {
+                     nullptr, nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr,
                          bela::mbs_t::FATAL);

@@ -91,7 +91,7 @@ bool Searcher::FlushEnv() {
   if (!libpaths.empty()) {
     simulator.SetEnv(L"LIBPATH", bela::JoinEnv(libpaths));
   }
-  simulator.PathAppend(std::move(paths));
+  simulator.PathPushFront(std::move(paths));
   simulator.PathOrganize();
   return true;
 }

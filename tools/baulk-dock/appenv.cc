@@ -217,54 +217,35 @@ std::wstring SearchShell() {
 }
 
 LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
-  bela::env::Simulator simulator;
-  std::wstring arch;
+  auto baulkexec = bela::StringCat(baulkroot, L"\\bin\\baulk-exec.exe");
+  auto cwd = GetCwd();
+  bela::EscapeArgv ea;
+  if (auto wt = FindWindowsTerminal(); wt) {
+    ea.Assign(*wt).Append(L"--");
+  }
+  ea.Append(baulkexec).Append(L"-W").Append(GetCwd());
+  if (Button_GetCheck(hclang.hWnd) == BST_CHECKED) {
+    ea.Append(L"--clang");
+  }
+  if (Button_GetCheck(hcleanenv.hWnd) == BST_CHECKED) {
+    ea.Append(L"--cleanup");
+  }
   if (auto index = ComboBox_GetCurSel(hvsarchbox.hWnd);
       index >= 0 && static_cast<size_t>(index) < tables.Archs.size()) {
-    arch = tables.Archs[index];
-  }
-  baulk::env::Searcher searcher(simulator, arch);
-  auto useclang = Button_GetCheck(hclang.hWnd) == BST_CHECKED;
-  auto cleanenv = Button_GetCheck(hcleanenv.hWnd) == BST_CHECKED;
-  if (cleanenv) {
-    simulator.InitializeCleanupEnv();
-  } else {
-    simulator.InitializeEnv();
-  }
-
-  bela::error_code ec;
-  if (!searcher.InitializeBaulk(ec)) {
-    return false;
-  }
-  auto cwd = GetCwd();
-  searcher.InitializeGit(cleanenv, ec);
-  if (!arch.empty()) {
-    searcher.InitializeVisualStudioEnv(useclang, ec);
-    searcher.InitializeWindowsKitEnv(ec);
+    ea.Append(L"--vs").Append(L"-A").Append(tables.Archs[index]);
   }
   if (auto index = ComboBox_GetCurSel(hvenvbox.hWnd);
       index >= 0 && static_cast<size_t>(index) < tables.Envs.size()) {
-    std::vector<std::wstring> envs{tables.Envs[index].Value};
-    searcher.InitializeVirtualEnv(envs, ec);
-  }
-  searcher.FlushEnv();
-  bela::EscapeArgv ea;
-  if (auto wt = FindWindowsTerminal(); wt) {
-    ea.Append(*wt);
-    if (!cwd.empty()) {
-      ea.Append(L"--startingDirectory").Append(cwd);
-    }
-    ea.Append(L"--");
+    ea.Append(L"-E").Append(tables.Envs[index].Value);
   }
   ea.Append(SearchShell());
-  auto env = simulator.MakeEnv();
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
+                     nullptr, nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(m_hWnd, L"unable open Windows Terminal", ec.data(), nullptr,
                          bela::mbs_t::FATAL);
