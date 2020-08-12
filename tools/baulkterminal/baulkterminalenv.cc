@@ -45,7 +45,7 @@ bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
     ea.Append(L"wsl.exe");
     return true;
   }
-  if (!shell.empty() && bela::PathExists(shell)) {
+  if (!shell.empty()) {
     ea.Append(shell);
     return true;
   }

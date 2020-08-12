@@ -118,14 +118,6 @@ bool Executor::ParseArgv(bela::error_code &ec) {
 }
 } // namespace baulkterminal
 
-std::optional<std::wstring> FindWindowsTerminal() {
-  auto wt = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\Microsoft\\WindowsApps\\wt.exe");
-  if (!bela::PathExists(wt)) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(wt));
-}
-
 class dotcom_global_initializer {
 public:
   dotcom_global_initializer() {
