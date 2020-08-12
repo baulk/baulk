@@ -102,6 +102,16 @@ std::optional<std::wstring> SearchBaulkExec(bela::error_code &ec) {
   return std::nullopt;
 }
 
+void ApplyBaulkNewExec(std::wstring_view baulkexec) {
+  auto dir = bela::DirName(baulkexec);
+  auto baulkexecnew = bela::StringCat(dir, L"\\baulk-exec.new");
+  if (bela::PathFileIsExists(baulkexecnew)) {
+    if (MoveFileExW(baulkexecnew.data(), baulkexec.data(),
+                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+    }
+  }
+}
+
 bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   if (!conhost) {
     if (auto wt = FindWindowsTerminal(); wt) {
@@ -112,6 +122,7 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   if (!baulkexec) {
     return false;
   }
+  ApplyBaulkNewExec(*baulkexec);
   ea.Append(*baulkexec);
   if (cleanup) {
     ea.Append(L"--cleanup");
