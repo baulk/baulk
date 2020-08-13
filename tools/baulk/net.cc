@@ -289,8 +289,8 @@ bool resolve_response_header(HINTERNET hRequest, Response &resp, bela::error_cod
   for (size_t i = 1; i < hlines.size(); i++) {
     auto ln = hlines[i];
     if (auto pos = ln.find(':'); pos != std::wstring_view::npos) {
-      auto k = bela::StripTrailingAsciiWhitespace(ln.substr(0, pos));
-      auto v = bela::StripTrailingAsciiWhitespace(ln.substr(pos + 1));
+      auto k = bela::StripAsciiWhitespace(ln.substr(0, pos));
+      auto v = bela::StripAsciiWhitespace(ln.substr(pos + 1));
       resp.hkv.emplace(k, v);
     }
   }
