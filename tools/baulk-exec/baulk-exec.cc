@@ -35,8 +35,8 @@ example:
 }
 
 void Version() {
-  bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_RELEASE_VERSION, BAULK_RELEASE_NAME, BAULK_RELEASE_COMMIT, BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, L"baulk-exec %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
+                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
 std::wstring AvailableEnvTitle(const std::vector<std::wstring> &venvs) {

@@ -1,6 +1,6 @@
 #include <bela/subsitute.hpp>
 #include <bela/path.hpp>
-#include <baulkversion.h>
+#include <baulkrev.hpp>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"

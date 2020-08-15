@@ -6,7 +6,7 @@
 #include <bela/picker.hpp>
 #include <bela/str_replace.hpp>
 #include <shellapi.h>
-#include <baulkversion.h>
+#include <baulkrev.hpp>
 #include "baulkterminal.hpp"
 
 namespace baulkterminal {

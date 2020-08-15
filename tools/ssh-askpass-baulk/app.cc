@@ -4,7 +4,7 @@
 #include <bela/parseargv.hpp>
 #include <bela/picker.hpp>
 #include <bela/terminal.hpp>
-#include <baulkversion.h>
+#include <baulkrev.hpp>
 #include "app.hpp"
 #include "resource.h" // define id's
 

@@ -124,7 +124,7 @@ bool ResolveBaulkRev(std::wstring &releasename) {
     if (auto ec = ps.ErrorCode(); ec) {
       bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec.message);
     }
-    releasename.assign(BAULK_RELEASE_NAME);
+    releasename.assign(BAULK_REFNAME);
     return false;
   }
   auto out = bela::ToWide(ps.Out());
@@ -140,7 +140,7 @@ bool ResolveBaulkRev(std::wstring &releasename) {
     releasename.assign(relname);
     return true;
   }
-  releasename.assign(BAULK_RELEASE_NAME);
+  releasename.assign(BAULK_REFNAME);
   return false;
 }
 

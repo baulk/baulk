@@ -7,7 +7,7 @@
 #include <bela/parseargv.hpp>
 #include <bela/fmt.hpp>
 #include <bela/terminal.hpp>
-#include <baulkversion.h>
+#include <baulkrev.hpp>
 #include "resource.h"
 #include "app.hpp"
 

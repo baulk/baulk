@@ -6,6 +6,7 @@
 #include <bela/path.hpp>
 #include <bela/str_split.hpp>
 #include <bela/env.hpp>
+#include <baulkrev.hpp>
 #include <filesystem>
 #include <json.hpp>
 #include <cstdio>

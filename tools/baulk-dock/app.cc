@@ -11,7 +11,7 @@
 #include <ShellScalingAPI.h>
 #include <array>
 #include <bela/picker.hpp>
-#include <baulkversion.h>
+#include <baulkrev.hpp>
 #include <bela/match.hpp>
 #include <strsafe.h>
 #include "app.hpp"
