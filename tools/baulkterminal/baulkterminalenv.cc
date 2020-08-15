@@ -132,6 +132,9 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
     if (!arch.empty()) {
       ea.Append(L"-A").Append(arch);
     }
+    if (clang) {
+      ea.Append(L"--clang");
+    }
   }
   if (!cwd.empty()) {
     ea.Append(L"-W").Append(cwd);
