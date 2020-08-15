@@ -241,8 +241,7 @@ Usage: baulkterminal [option] ...
                Use conhost not Windows terminal
   --clang
                Add Visual Studio's built-in clang to the PATH environment variable
-  --manifest
-               Baulkterminal startup manifest file
+
 ```
 
 ## Baulk executor

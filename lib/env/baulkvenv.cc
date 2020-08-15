@@ -2,26 +2,106 @@
 #include <bela/io.hpp>
 #include <bela/process.hpp> // run vswhere
 #include <bela/path.hpp>
-#include <bela/env.hpp>
+#include <list>
 #include <filesystem>
 #include <regutils.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
 
 namespace baulk::env {
-// baulk virtual env
-bool Searcher::InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec) {
-  for (const auto &p : venvs) {
-    if (InitializeOneEnv(p, ec)) {
-      availableEnv.emplace_back(p);
+// Env Dependent Chain
+class EnvDependentChain {
+public:
+  EnvDependentChain(Searcher &searcher_) : searcher(searcher_) {}
+  EnvDependentChain(const EnvDependentChain &) = delete;
+  EnvDependentChain &operator=(const EnvDependentChain &) = delete;
+  bool InitializeEnvs(const std::vector<std::wstring> &venvs, bela::error_code &ec) {
+    for (const auto &e : venvs) {
+      if (!LoadEnv(e, ec)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  bool FlushEnv();
+
+private:
+  bool PackageExists(std::wstring_view pkgname) {
+    auto f = bela::StringCat(searcher.baulkbindir, L"\\locks\\", pkgname, L".json");
+    return bela::PathFileIsExists(f);
+  }
+  bool LoadEnv(std::wstring_view pkgname, bela::error_code &ec);
+  bool LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec);
+  bool LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec);
+  bool dependenciesExists(std::wstring_view name) {
+    for (const auto &d : nodependsenv) {
+      if (bela::EqualsIgnoreCase(d.name, name)) {
+        return true;
+      }
+    }
+    for (const auto &d : dependsenv) {
+      if (bela::EqualsIgnoreCase(d.name, name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  Searcher &searcher;
+  std::vector<baulk::env::BaulkVirtualEnv> nodependsenv;
+  std::list<baulk::env::BaulkVirtualEnv> dependsenv;
+  int depth{0};
+};
+
+void ReplaceDependencies(BaulkVirtualEnv &venv, const std::vector<std::wstring> &depends) {
+  if (venv.dependencies.empty() || depends.empty()) {
+    return;
+  }
+  auto replaceOne = [&](std::wstring &depend) {
+    auto prefix = bela::StringCat(depend, L"=>");
+    for (const auto &d : depends) {
+      if (bela::StartsWithIgnoreCase(d, prefix)) {
+        depend = d.substr(prefix.size());
+        return;
+      }
+    }
+  };
+  for (auto &vd : venv.dependencies) {
+    replaceOne(vd);
+  }
+}
+
+bool EnvDependentChain::LoadEnv(std::wstring_view pkgname, bela::error_code &ec) {
+  if (dependenciesExists(pkgname)) {
+    return true;
+  }
+  BaulkVirtualEnv venv;
+  venv.name = pkgname;
+  if (!LoadEnvImpl(pkgname, venv, ec)) {
+    return true;
+  }
+  if (venv.dependencies.empty()) {
+    nodependsenv.emplace_back(std::move(venv));
+    return true;
+  }
+  depth++;
+  auto closer = [&] { depth--; };
+  if (depth > 31) {
+    // The dependency chain is too deep
+    nodependsenv.emplace_back(std::move(venv));
+    return true;
+  }
+  for (const auto &d : venv.dependencies) {
+    if (!LoadEnv(d, ec)) {
+      return false;
     }
   }
+  dependsenv.push_back(std::move(venv));
   return true;
 }
 
-bool Searcher::InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv,
-                                  bela::error_code &ec) {
-  auto localfile = bela::StringCat(baulkbindir, L"\\etc\\", pkgname, L".local.json");
+bool EnvDependentChain::LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv,
+                                     bela::error_code &ec) {
+  auto localfile = bela::StringCat(searcher.baulkbindir, L"\\etc\\", pkgname, L".local.json");
   if (!bela::PathExists(localfile)) {
     return false;
   }
@@ -38,22 +118,25 @@ bool Searcher::InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &ve
     jea.array("env", venv.envs);
     jea.array("include", venv.includes);
     jea.array("lib", venv.libs);
+    std::vector<std::wstring> replaceDependencies;
+    jea.array("replace", replaceDependencies);
+    ReplaceDependencies(venv, replaceDependencies);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, pkgname, L".local.json: ", bela::ToWide(e.what()));
     return false;
   }
   return true;
 }
-
-bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec) {
-  auto lockfile = bela::StringCat(baulkbindir, L"\\locks\\", pkgname, L".json");
+// load env
+bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &venv,
+                                    bela::error_code &ec) {
+  auto lockfile = bela::StringCat(searcher.baulkbindir, L"\\locks\\", pkgname, L".json");
   FILE *fd = nullptr;
   if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {
     ec = bela::make_stdc_error_code(en, bela::StringCat(L"open 'locks\\", pkgname, L".json' "));
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
-  BaulkVirtualEnv venv;
   try {
     auto j = nlohmann::json::parse(fd, nullptr, true, true);
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
@@ -62,38 +145,81 @@ bool Searcher::InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec)
       jea.array("env", venv.envs);
       jea.array("include", venv.includes);
       jea.array("lib", venv.libs);
+      jea.array("dependencies", venv.dependencies);
     }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
     return false;
   }
-  InitializeLocalEnv(pkgname, venv, ec);
+  if (!LoadLocalEnv(pkgname, venv, ec)) {
+    searcher.DbgPrint(L"%s no local setting", pkgname);
+  }
+  return true;
+}
 
-  auto newSimulator =simulator;
-  auto baulkpkgroot = bela::StringCat(baulkbindir, L"\\pkgs\\", pkgname);
-  newSimulator.SetEnv(L"BAULK_ROOT", baulkroot);
-  newSimulator.SetEnv(L"BAULK_ETC", baulketc);
-  newSimulator.SetEnv(L"BAULK_VFS", baulkvfs);
-  newSimulator.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
-  newSimulator.SetEnv(L"BAULK_BINDIR", baulkbindir);
-
+bool EnvDependentChain::FlushEnv() {
+  auto envExists = [&](std::wstring_view e) {
+    for (const auto ae : searcher.availableEnv) {
+      if (bela::EqualsIgnoreCase(ae, e)) {
+        return true;
+      }
+    }
+    return false;
+  };
   std::wstring buffer;
-  auto joinExpandEnv = [&](const vector_t &load, vector_t &save) {
+  auto joinExpandEnv = [&](const std::vector<std::wstring> &load, std::vector<std::wstring> &save,
+                           bela::env::Simulator &sm) {
     for (const auto &x : load) {
       buffer.clear();
-      newSimulator.ExpandEnv(x, buffer);
-      JoinForceEnv(save, buffer);
+      sm.ExpandEnv(x, buffer);
+      searcher.JoinForceEnv(save, buffer);
     }
   };
-  joinExpandEnv(venv.paths, paths);
-  joinExpandEnv(venv.includes, includes);
-  joinExpandEnv(venv.libs, libs);
-  // set env k=v
-  for (const auto &e : venv.envs) {
-    buffer.clear();
-    newSimulator.ExpandEnv(e, buffer);
-    simulator.PutEnv(buffer, true);
+  auto flushOnceEnv = [&](const BaulkVirtualEnv &e) {
+    auto newSimulator = searcher.simulator;
+    auto baulkpkgroot = bela::StringCat(searcher.baulkbindir, L"\\pkgs\\", e.name);
+    newSimulator.SetEnv(L"BAULK_ROOT", searcher.baulkroot);
+    newSimulator.SetEnv(L"BAULK_ETC", searcher.baulketc);
+    newSimulator.SetEnv(L"BAULK_VFS", searcher.baulkvfs);
+    newSimulator.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
+    newSimulator.SetEnv(L"BAULK_BINDIR", searcher.baulkbindir);
+    joinExpandEnv(e.paths, searcher.paths, newSimulator);
+    joinExpandEnv(e.includes, searcher.includes, newSimulator);
+    joinExpandEnv(e.libs, searcher.libs, newSimulator);
+    // set env k=v
+    for (const auto &e : e.envs) {
+      buffer.clear();
+      newSimulator.ExpandEnv(e, buffer);
+      searcher.simulator.PutEnv(buffer, true);
+    }
+    searcher.availableEnv.emplace_back(e.name);
+  };
+  for (const auto e : nodependsenv) {
+    if (envExists(e.name)) {
+      searcher.DbgPrint(L"venv: %s has been loaded", e.name);
+      continue;
+    }
+    searcher.DbgPrint(L"venv: %s no dependencies", e.name);
+    flushOnceEnv(e);
   }
+  for (const auto e : dependsenv) {
+    if (envExists(e.name)) {
+      searcher.DbgPrint(L"venv: %s has been loaded", e.name);
+      continue;
+    }
+    searcher.DbgPrint(L"venv: %s depend on: %s", e.name, bela::StrJoin(e.dependencies, L", "));
+    flushOnceEnv(e);
+  }
+  return true;
+}
+
+// baulk virtual env
+bool Searcher::InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec) {
+  EnvDependentChain chain(*this);
+  if (!chain.InitializeEnvs(venvs, ec)) {
+    return false;
+  }
+  chain.FlushEnv();
   return true;
 }
 

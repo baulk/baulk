@@ -40,6 +40,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
       AddArray(venv, "include", pkg.venv.includes);
       AddArray(venv, "lib", pkg.venv.libs);
       AddArray(venv, "env", pkg.venv.envs);
+      AddArray(venv, "dependencies", pkg.venv.dependencies); // venv dependencies
       j["venv"] = std::move(venv);
     }
     auto file = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
@@ -167,6 +168,24 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   return PackageMakeLinks(pkg);
 }
 
+bool DependenciesExists(const std::vector<std::wstring_view> &dv) {
+  for (const auto d : dv) {
+    auto pkglock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", d, L".json");
+    if (bela::PathFileIsExists(pkglock)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void DisplayDependencies(const baulk::Package &pkg) {
+  if (pkg.venv.dependencies.empty()) {
+    return;
+  }
+  bela::FPrintF(stderr, L"\x1b[33mPackage '%s' depoends on: \x1b[34m%s\x1b[0m", pkg.name,
+                bela::StrJoin(pkg.venv.dependencies, L"\n    "));
+}
+
 int BaulkInstall(const baulk::Package &pkg) {
   bela::error_code ec;
   auto pkglocal = baulk::bucket::PackageLocalMeta(pkg.name, ec);
@@ -230,6 +249,10 @@ int BaulkInstall(const baulk::Package &pkg) {
       return 1;
     }
   }
-  return PackageExpand(pkg, *pkgfile);
+  if (auto ret = PackageExpand(pkg, *pkgfile); ret != 0) {
+    return ret;
+  }
+  DisplayDependencies(pkg);
+  return 0;
 }
 } // namespace baulk::package

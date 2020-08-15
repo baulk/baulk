@@ -1,0 +1,8 @@
+{
+    "venv": {
+        "category": "kotlin",
+        "replace": [
+            "zulu14=>openjdk"
+        ]
+    }
+}

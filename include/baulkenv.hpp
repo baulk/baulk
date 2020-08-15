@@ -4,6 +4,7 @@
 #include <bela/path.hpp>
 #include <bela/base.hpp>
 #include <bela/simulator.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk::env {
 
@@ -15,10 +16,12 @@ namespace baulk::env {
 #endif
 
 struct BaulkVirtualEnv {
+  std::wstring name;
   std::vector<std::wstring> paths;
   std::vector<std::wstring> envs;
   std::vector<std::wstring> includes;
   std::vector<std::wstring> libs;
+  std::vector<std::wstring> dependencies;
 };
 
 struct Searcher {
@@ -40,6 +43,57 @@ struct Searcher {
   vector_t includes;
   vector_t libpaths;
   vector_t availableEnv;
+  bool IsDebugMode{false};
+  template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    const bela::format_internal::FormatArg arg_array[] = {args...};
+    std::wstring str;
+    str.append(L"\x1b[33m* ");
+    bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
+    if (str.back() == '\n') {
+      str.pop_back();
+    }
+    str.append(L"\x1b[0m\n");
+    return bela::terminal::WriteAuto(stderr, str);
+  }
+  inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    std::wstring_view msg(fmt);
+    if (!msg.empty() && msg.back() == '\n') {
+      msg.remove_suffix(1);
+    }
+    return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
+  }
+
+  template <typename... Args>
+  bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    const bela::format_internal::FormatArg arg_array[] = {args...};
+    auto str = bela::StringCat(L"\x1b[32m* ", prefix, L" ");
+    bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
+    if (str.back() == '\n') {
+      str.pop_back();
+    }
+    str.append(L"\x1b[0m\n");
+    return bela::terminal::WriteAuto(stderr, str);
+  }
+  inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    std::wstring_view msg(fmt);
+    if (!msg.empty() && msg.back() == '\n') {
+      msg.remove_suffix(1);
+    }
+    return bela::terminal::WriteAuto(stderr,
+                                     bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+  }
   bool JoinEnvInternal(vector_t &vec, std::wstring &&p) {
     if (bela::PathExists(p)) {
       vec.emplace_back(std::move(p));
@@ -76,9 +130,6 @@ struct Searcher {
   bool InitializeBaulk(bela::error_code &ec);
   bool InitializeGit(bool cleanup, bela::error_code &ec);
   bool InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec);
-  // dot not call
-  bool InitializeOneEnv(std::wstring_view pkgname, bela::error_code &ec);
-  bool InitializeLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec);
   bool FlushEnv();
 };
 

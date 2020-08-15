@@ -258,6 +258,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
   }
 
   baulk::env::Searcher searcher(simulator, arch);
+  searcher.IsDebugMode = baulk::exec::IsDebugMode;
   if (!searcher.InitializeBaulk(ec)) {
     bela::FPrintF(stderr, L"InitializeBaulk failed %s\n", ec.message);
     return false;

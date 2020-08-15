@@ -135,6 +135,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
       jea.array("include", pkg.venv.includes);
       jea.array("lib", pkg.venv.libs);
       jea.array("env", pkg.venv.envs);
+      jea.array("dependencies", pkg.venv.dependencies);
     }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package meta json: ", bela::ToWide(e.what()));
