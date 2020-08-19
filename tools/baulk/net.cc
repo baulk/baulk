@@ -447,6 +447,24 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
     ec = make_net_error_code();
     return std::nullopt;
   }
+  DWORD statusCode = 0;
+  DWORD dwSize = sizeof(statusCode);
+  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr,
+                          &statusCode, &dwSize, nullptr) != TRUE) {
+    ec = make_net_error_code();
+    return std::nullopt;
+  }
+  if (statusCode < 200 || statusCode >= 300) {
+    ec = bela::make_error_code(1, L"Response status code ", statusCode);
+    wchar_t statusBuffer[64] = {0};
+    DWORD statusSize = sizeof(statusBuffer) * 2;
+    if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_TEXT, nullptr, &statusBuffer,
+                            &statusSize, nullptr) == TRUE &&
+        statusSize != 0) {
+      bela::StrAppend(&ec.message, L" ", statusBuffer);
+    }
+    return std::nullopt;
+  }
   baulk::ProgressBar bar;
   uint64_t blen = 0;
   if (BodyLength(hRequest, blen)) {
@@ -466,7 +484,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
     }
   }
   size_t total_downloaded_size = 0;
-  DWORD dwSize = 0;
+  dwSize = 0;
   std::vector<char> buffer;
   buffer.reserve(64 * 1024);
   auto file = FilePart::MakeFilePart(dest, ec);
