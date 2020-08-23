@@ -65,11 +65,11 @@ void Hasher::Initialize(HashBits hb_) {
 }
 
 #define XORED_A(i) A[(i)] ^ A[(i) + 5] ^ A[(i) + 10] ^ A[(i) + 15] ^ A[(i) + 20]
-#define THETA_STEP(i)                                                                              \
-  A[(i)] ^= D[(i)];                                                                                \
-  A[(i) + 5] ^= D[(i)];                                                                            \
-  A[(i) + 10] ^= D[(i)];                                                                           \
-  A[(i) + 15] ^= D[(i)];                                                                           \
+#define THETA_STEP(i)                                                                                                  \
+  A[(i)] ^= D[(i)];                                                                                                    \
+  A[(i) + 5] ^= D[(i)];                                                                                                \
+  A[(i) + 10] ^= D[(i)];                                                                                               \
+  A[(i) + 15] ^= D[(i)];                                                                                               \
   A[(i) + 20] ^= D[(i)]
 
 /* Keccak theta() transformation */
@@ -118,13 +118,13 @@ static void keccak_pi(uint64_t *A) {
   /* note: A[ 0] is left as is */
 }
 
-#define CHI_STEP(i)                                                                                \
-  A0 = A[0 + (i)];                                                                                 \
-  A1 = A[1 + (i)];                                                                                 \
-  A[0 + (i)] ^= ~A1 & A[2 + (i)];                                                                  \
-  A[1 + (i)] ^= ~A[2 + (i)] & A[3 + (i)];                                                          \
-  A[2 + (i)] ^= ~A[3 + (i)] & A[4 + (i)];                                                          \
-  A[3 + (i)] ^= ~A[4 + (i)] & A0;                                                                  \
+#define CHI_STEP(i)                                                                                                    \
+  A0 = A[0 + (i)];                                                                                                     \
+  A1 = A[1 + (i)];                                                                                                     \
+  A[0 + (i)] ^= ~A1 & A[2 + (i)];                                                                                      \
+  A[1 + (i)] ^= ~A[2 + (i)] & A[3 + (i)];                                                                              \
+  A[2 + (i)] ^= ~A[3 + (i)] & A[4 + (i)];                                                                              \
+  A[3 + (i)] ^= ~A[4 + (i)] & A0;                                                                                      \
   A[4 + (i)] ^= ~A0 & A1
 
 /* Keccak chi() transformation */

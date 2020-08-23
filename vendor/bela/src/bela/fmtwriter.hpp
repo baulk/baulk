@@ -55,8 +55,7 @@ private:
 };
 
 constexpr const size_t kFastToBufferSize = 32;
-const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base, wchar_t fill = ' ',
-                        bool u = false);
+const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base, wchar_t fill = ' ', bool u = false);
 
 template <typename C = std::wstring> class Writer {
 public:
@@ -70,8 +69,7 @@ public:
     }
   }
   // append string
-  Writer &Append(const wchar_t *data, size_t len, size_t width = 0, wchar_t kc = ' ',
-                 bool la = false) {
+  Writer &Append(const wchar_t *data, size_t len, size_t width = 0, wchar_t kc = ' ', bool la = false) {
     if (width < len) {
       c.append(data, len);
       return *this;

@@ -30,15 +30,12 @@ struct StringCaseInsensitiveHash {
 
 struct StringCaseInsensitiveEq {
   using is_transparent = void;
-  bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const {
-    return bela::EqualsIgnoreCase(wlhs, wrhs);
-  }
+  bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
 
 std::wstring ExpandEnv(std::wstring_view sv);
 
-using envmap_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
-                                     StringCaseInsensitiveEq>;
+using envmap_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
 class Simulator {
 public:
   Simulator() = default;
@@ -286,8 +283,7 @@ private:
 };
 
 bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe,
-                            const std::vector<std::wstring> &paths);
+bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::wstring> &paths);
 } // namespace bela::env
 
 #endif

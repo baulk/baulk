@@ -43,7 +43,6 @@ bool StartsWithIgnoreCase(std::wstring_view text, std::wstring_view prefix) {
   return (text.size() >= prefix.size()) && EqualsIgnoreCase(text.substr(0, prefix.size()), prefix);
 }
 bool EndsWithIgnoreCase(std::wstring_view text, std::wstring_view suffix) {
-  return (text.size() >= suffix.size()) &&
-         EqualsIgnoreCase(text.substr(text.size() - suffix.size()), suffix);
+  return (text.size() >= suffix.size()) && EqualsIgnoreCase(text.substr(text.size() - suffix.size()), suffix);
 }
 } // namespace bela

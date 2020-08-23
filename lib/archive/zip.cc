@@ -15,8 +15,8 @@
 
 namespace baulk::archive::zip {
 
-bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code &ec,
-                const zip_closure *closure, int encoding) {
+bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code &ec, const zip_closure *closure,
+                int encoding) {
   void *reader = NULL;
   int32_t err = MZ_OK;
   int32_t err_close = MZ_OK;
@@ -44,8 +44,7 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code
     ec = bela::make_error_code(1, L"unable open file, minizip result: ", err);
     return false;
   }
-  if (err = mz_zip_reader_save_all(reader, destination.data());
-      err != MZ_OK && err != MZ_END_OF_LIST) {
+  if (err = mz_zip_reader_save_all(reader, destination.data()); err != MZ_OK && err != MZ_END_OF_LIST) {
     ec = bela::make_error_code(1, L"decompress result: ", err);
     return false;
   }

@@ -18,15 +18,13 @@
 
 namespace baulk::dock {
 // style
-constexpr const auto noresizewnd =
-    (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_MINIMIZEBOX);
-constexpr const auto wexstyle =
-    WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY;
+constexpr const auto noresizewnd = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_MINIMIZEBOX);
+constexpr const auto wexstyle = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY;
 
 constexpr const auto cbstyle =
     WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS;
-constexpr const auto chboxstyle = BS_PUSHBUTTON | BS_TEXT | BS_DEFPUSHBUTTON | BS_CHECKBOX |
-                                  BS_AUTOCHECKBOX | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
+constexpr const auto chboxstyle =
+    BS_PUSHBUTTON | BS_TEXT | BS_DEFPUSHBUTTON | BS_CHECKBOX | BS_AUTOCHECKBOX | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
 constexpr const auto pbstyle = BS_PUSHBUTTON | BS_TEXT | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
 
 // Resources Safe Release
@@ -37,9 +35,8 @@ template <typename I> inline void Free(I **i) {
   *i = nullptr;
 }
 
-HRESULT LoadResourceBitmap(HINSTANCE hInst, ID2D1RenderTarget *renderTarget,
-                           IWICImagingFactory *pIWICFactory, PCWSTR resourceName,
-                           PCWSTR resourceType, UINT destinationWidth, UINT destinationHeight,
+HRESULT LoadResourceBitmap(HINSTANCE hInst, ID2D1RenderTarget *renderTarget, IWICImagingFactory *pIWICFactory,
+                           PCWSTR resourceName, PCWSTR resourceType, UINT destinationWidth, UINT destinationHeight,
                            ID2D1Bitmap **ppBitmap) {
   HRESULT hr = S_OK;
   IWICBitmapDecoder *pDecoder = nullptr;
@@ -90,8 +87,7 @@ HRESULT LoadResourceBitmap(HINSTANCE hInst, ID2D1RenderTarget *renderTarget,
     return hr;
   }
   // Create a decoder for the stream
-  hr =
-      pIWICFactory->CreateDecoderFromStream(pStream, NULL, WICDecodeMetadataCacheOnLoad, &pDecoder);
+  hr = pIWICFactory->CreateDecoderFromStream(pStream, NULL, WICDecodeMetadataCacheOnLoad, &pDecoder);
   if (FAILED(hr)) {
     return hr;
   }
@@ -129,18 +125,16 @@ HRESULT LoadResourceBitmap(HINSTANCE hInst, ID2D1RenderTarget *renderTarget,
         }
         hr = pIWICFactory->CreateBitmapScaler(&pScaler);
         if (SUCCEEDED(hr)) {
-          hr = pScaler->Initialize(pSource, destinationWidth, destinationHeight,
-                                   WICBitmapInterpolationModeCubic);
+          hr = pScaler->Initialize(pSource, destinationWidth, destinationHeight, WICBitmapInterpolationModeCubic);
           if (SUCCEEDED(hr)) {
-            hr = pConverter->Initialize(pScaler, GUID_WICPixelFormat32bppPBGRA,
-                                        WICBitmapDitherTypeNone, NULL, 0.f,
+            hr = pConverter->Initialize(pScaler, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.f,
                                         WICBitmapPaletteTypeMedianCut);
           }
         }
       }
     } else {
-      hr = pConverter->Initialize(pSource, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone,
-                                  NULL, 0.f, WICBitmapPaletteTypeMedianCut);
+      hr = pConverter->Initialize(pSource, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.f,
+                                  WICBitmapPaletteTypeMedianCut);
     }
   }
 
@@ -175,16 +169,14 @@ LRESULT MainWindow::InitializeWindow() {
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   bela::error_code ec;
   if (!InitializeBase(ec)) {
-    bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr,
-                         bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);
     return S_FALSE;
   }
   if (CreateDeviceIndependentResources() != S_OK) {
     return S_FALSE;
   }
   RECT layout = {100, 100, 800, 320};
-  Create(nullptr, layout, L"Baulk environment dock", noresizewnd,
-         WS_EX_APPWINDOW | WS_EX_WINDOWEDGE);
+  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, WS_EX_APPWINDOW | WS_EX_WINDOWEDGE);
   return S_OK;
 }
 
@@ -200,14 +192,13 @@ HRESULT MainWindow::CreateDeviceIndependentResources() {
   if (FAILED(hr)) {
     return hr;
   }
-  hr = writeFactory->CreateTextFormat(L"Segoe UI", NULL, DWRITE_FONT_WEIGHT_NORMAL,
-                                      DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
-                                      12.0f * 96.0f / 72.0f, L"zh-CN", &writeTextFormat);
+  hr = writeFactory->CreateTextFormat(L"Segoe UI", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                                      DWRITE_FONT_STRETCH_NORMAL, 12.0f * 96.0f / 72.0f, L"zh-CN", &writeTextFormat);
   if (FAILED(hr)) {
     return hr;
   }
-  hr = CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER,
-                        __uuidof(IWICImagingFactory2), reinterpret_cast<LPVOID *>(&wicFactory));
+  hr = CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory2),
+                        reinterpret_cast<LPVOID *>(&wicFactory));
   return hr;
 }
 
@@ -220,8 +211,7 @@ HRESULT MainWindow::CreateDeviceResources() {
   ::GetClientRect(m_hWnd, &rc);
   D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
   hr = m_pFactory->CreateHwndRenderTarget(D2D1::RenderTargetProperties(),
-                                          D2D1::HwndRenderTargetProperties(m_hWnd, size),
-                                          &renderTarget);
+                                          D2D1::HwndRenderTargetProperties(m_hWnd, size), &renderTarget);
   renderTarget->SetDpi(static_cast<float>(dpiX), static_cast<float>(dpiX));
   if (SUCCEEDED(hr)) {
     hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &textBrush);
@@ -230,8 +220,7 @@ HRESULT MainWindow::CreateDeviceResources() {
     hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(0xFFC300), &borderBrush);
   }
   if (SUCCEEDED(hr)) {
-    LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE), L"PNG",
-                       64, 64, &bitmap);
+    LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE), L"PNG", 64, 64, &bitmap);
   }
   return hr;
 }
@@ -253,11 +242,9 @@ HRESULT MainWindow::OnRender() {
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
   renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-  renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush,
-                              1.0);
+  renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
-  renderTarget->DrawLine(D2D1::Point2F(20, 120), D2D1::Point2F(dsz.width - 20, 120), borderBrush,
-                         1.0);
+  renderTarget->DrawLine(D2D1::Point2F(20, 120), D2D1::Point2F(dsz.width - 20, 120), borderBrush, 1.0);
   if (bitmap != nullptr) {
     auto isz = bitmap->GetSize();
     renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 160, 60 + isz.width, 160 + isz.height), 1.0,
@@ -268,8 +255,7 @@ HRESULT MainWindow::OnRender() {
       continue;
     }
     renderTarget->DrawTextW(label.data(), label.length(), writeTextFormat, label.F(), textBrush,
-                            D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT,
-                            DWRITE_MEASURING_MODE_NATURAL);
+                            D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT, DWRITE_MEASURING_MODE_NATURAL);
   }
   writeTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
   hr = renderTarget->EndDraw();
@@ -316,8 +302,8 @@ HRESULT MainWindow::InitializeControl() {
   return S_OK;
 }
 
-static int WINAPI EnumFontFamExProc(ENUMLOGFONTEX * /*lpelfe*/, NEWTEXTMETRICEX * /*lpntme*/,
-                                    int /*FontType*/, LPARAM lParam) {
+static int WINAPI EnumFontFamExProc(ENUMLOGFONTEX * /*lpelfe*/, NEWTEXTMETRICEX * /*lpntme*/, int /*FontType*/,
+                                    LPARAM lParam) {
   LPARAM *l = (LPARAM *)lParam;
   *l = TRUE;
   return TRUE;
@@ -380,24 +366,22 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   auto w = MulDiv(480, dpiX, 96);
   auto h = MulDiv(320, dpiX, 96);
   if (LoadPlacement(placement)) {
-    ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top,
-                   w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top, w, h,
+                   SWP_NOZORDER | SWP_NOACTIVATE);
   } else {
     RECT rect;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
     int cx = rect.right - rect.left;
-    ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, h,
-                   SWP_NOZORDER | SWP_NOACTIVATE);
+    ::SetWindowPos(m_hWnd, nullptr, (cx - w) / 2, MulDiv(100, dpiX, 96), w, h, SWP_NOZORDER | SWP_NOACTIVATE);
   }
   RecreateFont(hFont, dpiY, L"Segoe UI");
   RecreateFont(hMonoFont, dpiY, L"Mono");
   SetIcon(hIcon, TRUE);
   //
-  auto MakeWindow = [&](LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y,
-                        int nWidth, int nHeight, HMENU hMenu, Widget &w, bool monofont = false) {
-    auto hw = CreateWindowExW(wexstyle, lpClassName, lpWindowName, dwStyle, MulDiv(X, dpiX, 96),
-                              MulDiv(Y, dpiY, 96), MulDiv(nWidth, dpiX, 96),
-                              MulDiv(nHeight, dpiY, 96), m_hWnd, hMenu, hInst, nullptr);
+  auto MakeWindow = [&](LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight,
+                        HMENU hMenu, Widget &w, bool monofont = false) {
+    auto hw = CreateWindowExW(wexstyle, lpClassName, lpWindowName, dwStyle, MulDiv(X, dpiX, 96), MulDiv(Y, dpiY, 96),
+                              MulDiv(nWidth, dpiX, 96), MulDiv(nHeight, dpiY, 96), m_hWnd, hMenu, hInst, nullptr);
     if (hw == nullptr) {
       return false;
     }
@@ -416,16 +400,13 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   MakeWindow(WC_COMBOBOXW, L"", cbstyle, 180, 55, 240, 30, nullptr, hvenvbox);
 
   // button
-  MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 180, 130, 240, 27, nullptr,
-             hcleanenv);
-  MakeWindow(WC_BUTTONW, L"Use Built-in Clang (VS)", chboxstyle, 180, 160, 240, 27, nullptr,
-             hclang);
-  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 210, 240, 30,
-             (HMENU)IDC_BUTTON_STARTENV, hbaulkenv);
+  MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 180, 130, 240, 27, nullptr, hcleanenv);
+  MakeWindow(WC_BUTTONW, L"Use Built-in Clang (VS)", chboxstyle, 180, 160, 240, 27, nullptr, hclang);
+  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 210, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
+             hbaulkenv);
 
   HMENU hSystemMenu = ::GetSystemMenu(m_hWnd, FALSE);
-  InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_BAULK_DOCK_ABOUT,
-              L"About Baulk environment dock\tAlt+F1");
+  InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_BAULK_DOCK_ABOUT, L"About Baulk environment dock\tAlt+F1");
 
   labels.emplace_back(30, 20, 180, 60, L"Visual Studio \U0001F19A"); //💻
   labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
@@ -461,16 +442,15 @@ LRESULT MainWindow::OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &
   dpiY = static_cast<UINT32>(HIWORD(wParam));
   auto prcNewWindow = reinterpret_cast<RECT *const>(lParam);
   // resize window with new DPI
-  ::SetWindowPos(m_hWnd, nullptr, prcNewWindow->left, prcNewWindow->top,
-                 prcNewWindow->right - prcNewWindow->left, prcNewWindow->bottom - prcNewWindow->top,
-                 SWP_NOZORDER | SWP_NOACTIVATE);
+  ::SetWindowPos(m_hWnd, nullptr, prcNewWindow->left, prcNewWindow->top, prcNewWindow->right - prcNewWindow->left,
+                 prcNewWindow->bottom - prcNewWindow->top, SWP_NOZORDER | SWP_NOACTIVATE);
   RecreateFont(hFont, dpiY, L"Segoe UI");
   RecreateFont(hMonoFont, dpiY, L"Mono");
   renderTarget->SetDpi(static_cast<float>(dpiX), static_cast<float>(dpiY));
   auto UpdateWindowPos = [&](const Widget &w) {
     ::SetWindowPos(w.hWnd, NULL, MulDiv(w.layout.left, dpiX, 96), MulDiv(w.layout.top, dpiY, 96),
-                   MulDiv(w.layout.right - w.layout.left, dpiX, 96),
-                   MulDiv(w.layout.bottom - w.layout.top, dpiY, 96), SWP_NOZORDER | SWP_NOACTIVATE);
+                   MulDiv(w.layout.right - w.layout.left, dpiX, 96), MulDiv(w.layout.bottom - w.layout.top, dpiY, 96),
+                   SWP_NOZORDER | SWP_NOACTIVATE);
     ::SendMessageW(w.hWnd, WM_SETFONT, w.mono ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
   };
   UpdateWindowPos(hvsarchbox);
@@ -491,13 +471,10 @@ LRESULT MainWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
   return hr;
 }
 
-LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
-  return S_OK;
-}
+LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) { return S_OK; }
 
 LRESULT MainWindow::OnSysMemuAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
-  bela::BelaMessageBox(m_hWnd, L"About Baulk environment dock", BAULK_APPVERSION, BAULK_APPLINK,
-                       bela::mbs_t::ABOUT);
+  bela::BelaMessageBox(m_hWnd, L"About Baulk environment dock", BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
   return S_OK;
 }
 

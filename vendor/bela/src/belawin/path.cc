@@ -12,10 +12,9 @@ namespace bela {
 // https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file
 // https://googleprojectzero.blogspot.com/2016/02/the-definitive-guide-on-win32-to-nt.html
 bool IsReservedName(std::wstring_view name) {
-  constexpr std::wstring_view reservednames[] = {
-      L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4",
-      L"COM5", L"COM6", L"COM7", L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3",
-      L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
+  constexpr std::wstring_view reservednames[] = {L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4",
+                                                 L"COM5", L"COM6", L"COM7", L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3",
+                                                 L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
   for (const auto r : reservednames) {
     if (bela::EqualsIgnoreCase(r, name)) {
       return true;
@@ -149,8 +148,8 @@ size_t PathRootLen(std::wstring_view p) {
   if (p[1] == ':' && bela::ascii_isalpha(p[0])) {
     return 2;
   }
-  if (p.size() >= 4 && bela::IsPathSeparator(p[0]) && bela::IsPathSeparator(p[1]) &&
-      !bela::IsPathSeparator(p[2]) && (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
+  if (p.size() >= 4 && bela::IsPathSeparator(p[0]) && bela::IsPathSeparator(p[1]) && !bela::IsPathSeparator(p[2]) &&
+      (p[2] == '.' || p[2] == '?') && bela::IsPathSeparator(p[3])) {
     if (p.size() >= 6) {
       if (p[5] == ':' && bela::ascii_isalpha(p[4])) {
         return 6;

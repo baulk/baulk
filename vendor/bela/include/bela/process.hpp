@@ -6,9 +6,7 @@
 #include "simulator.hpp"
 
 namespace bela::process {
-constexpr const wchar_t *string_nullable(std::wstring_view str) {
-  return str.empty() ? nullptr : str.data();
-}
+constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
 enum CaptureMode {
@@ -40,8 +38,7 @@ public:
     exitcode = CaptureInternal(cmd, ea.data(), CAPTURE_OUT);
     return exitcode;
   }
-  template <typename... Args>
-  int CaptureWithMode(DWORD flags, std::wstring_view cmd, Args... args) {
+  template <typename... Args> int CaptureWithMode(DWORD flags, std::wstring_view cmd, Args... args) {
     bela::EscapeArgv ea(cmd, args...);
     exitcode = CaptureInternal(cmd, ea.data(), flags);
     return exitcode;

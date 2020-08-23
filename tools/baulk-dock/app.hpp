@@ -16,12 +16,12 @@
 #include "resource.h"
 
 #ifndef SYSCOMMAND_ID_HANDLER
-#define SYSCOMMAND_ID_HANDLER(id, func)                                                            \
-  if (uMsg == WM_SYSCOMMAND && id == LOWORD(wParam)) {                                             \
-    bHandled = TRUE;                                                                               \
-    lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                        \
-    if (bHandled)                                                                                  \
-      return TRUE;                                                                                 \
+#define SYSCOMMAND_ID_HANDLER(id, func)                                                                                \
+  if (uMsg == WM_SYSCOMMAND && id == LOWORD(wParam)) {                                                                 \
+    bHandled = TRUE;                                                                                                   \
+    lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                                            \
+    if (bHandled)                                                                                                      \
+      return TRUE;                                                                                                     \
   }
 #endif
 
@@ -39,8 +39,7 @@ struct Label {
     layout.bottom = bottom;
   }
   D2D1_RECT_F F() const {
-    return D2D1::RectF((float)layout.left, (float)layout.top, (float)layout.right,
-                       (float)layout.bottom);
+    return D2D1::RectF((float)layout.left, (float)layout.top, (float)layout.right, (float)layout.bottom);
   }
   const wchar_t *data() const { return text.data(); }
   UINT32 length() const { return static_cast<UINT32>(text.size()); }

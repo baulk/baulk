@@ -48,8 +48,7 @@ namespace bela {
 // Literal delimiter will ultimately use std::wstring_view::find(), and the
 // AnyOf delimiter will use std::wstring_view::find_first_of().
 template <typename FindPolicy>
-std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimiter, size_t pos,
-                              FindPolicy find_policy) {
+std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimiter, size_t pos, FindPolicy find_policy) {
   if (delimiter.empty() && text.length() > 0) {
     // Special case for empty std::string delimiters: always return a
     // zero-length std::wstring_view referring to the item at position 1 past
@@ -69,9 +68,7 @@ std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimite
 // Finds using std::wstring_view::find(), therefore the length of the found
 // delimiter is delimiter.length().
 struct LiteralPolicy {
-  size_t Find(std::wstring_view text, std::wstring_view delimiter, size_t pos) {
-    return text.find(delimiter, pos);
-  }
+  size_t Find(std::wstring_view text, std::wstring_view delimiter, size_t pos) { return text.find(delimiter, pos); }
   size_t Length(std::wstring_view delimiter) { return delimiter.length(); }
 };
 

@@ -45,9 +45,7 @@ namespace bela::strings_internal {
 struct AlphaNumFormatterImpl {
   // This template is needed in order to support passing in a dereferenced
   // vector<bool>::iterator
-  template <typename T> void operator()(std::wstring *out, const T &t) const {
-    StrAppend(out, AlphaNum(t));
-  }
+  template <typename T> void operator()(std::wstring *out, const T &t) const { StrAppend(out, AlphaNum(t)); }
 
   void operator()(std::wstring *out, const AlphaNum &t) const { StrAppend(out, t); }
 };
@@ -62,8 +60,7 @@ struct NoFormatter : public AlphaNumFormatterImpl {};
 // 'second' member is formatted using f2_. sep_ is the separator.
 template <typename F1, typename F2> class PairFormatterImpl {
 public:
-  PairFormatterImpl(F1 f1, std::wstring_view sep, F2 f2)
-      : f1_(std::move(f1)), sep_(sep), f2_(std::move(f2)) {}
+  PairFormatterImpl(F1 f1, std::wstring_view sep, F2 f2) : f1_(std::move(f1)), sep_(sep), f2_(std::move(f2)) {}
 
   template <typename T> void operator()(std::wstring *out, const T &p) {
     f1_(out, p.first);
@@ -152,9 +149,9 @@ std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s, Fo
 // string to avoid the need to resize while appending. To do this, the iterator
 // range will be traversed twice: once to calculate the total needed size, and
 // then again to copy the elements and delimiters to the output string.
-template <typename Iterator, typename = typename std::enable_if<std::is_convertible<
-                                 typename std::iterator_traits<Iterator>::iterator_category,
-                                 std::forward_iterator_tag>::value>::type>
+template <typename Iterator,
+          typename = typename std::enable_if<std::is_convertible<
+              typename std::iterator_traits<Iterator>::iterator_category, std::forward_iterator_tag>::value>::type>
 std::wstring JoinAlgorithm(Iterator start, Iterator end, std::wstring_view s, NoFormatter) {
   std::wstring result;
   if (start != end) {
@@ -210,8 +207,7 @@ std::wstring JoinAlgorithm(const std::tuple<T...> &tup, std::wstring_view sep, F
   return result;
 }
 
-template <typename Iterator>
-std::wstring JoinRange(Iterator first, Iterator last, std::wstring_view separator) {
+template <typename Iterator> std::wstring JoinRange(Iterator first, Iterator last, std::wstring_view separator) {
   // No formatter was explicitly given, so a default must be chosen.
   typedef typename std::iterator_traits<Iterator>::value_type ValueType;
   typedef typename DefaultFormatter<ValueType>::Type Formatter;

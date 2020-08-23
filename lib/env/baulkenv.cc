@@ -39,8 +39,7 @@ struct VisualStudioInstance {
   }
 };
 
-inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
-                                                          bela::error_code &ec) {
+inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
   auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
   return bela::io::ReadLine(file, ec);
 }
@@ -114,8 +113,7 @@ std::optional<std::wstring> FrameworkDir() {
   return std::nullopt;
 }
 
-bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
-                      std::wstring &sdkversion) {
+bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
   auto dir = bela::StringCat(sdkroot, L"\\Include");
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     auto filename = p.path().filename().wstring();
@@ -137,8 +135,7 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  constexpr std::wstring_view incs[] = {L"\\um",       L"\\ucrt",   L"km",
-                                        L"\\cppwinrt", L"\\shared", L"\\winrt"};
+  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"km", L"\\cppwinrt", L"\\shared", L"\\winrt"};
   for (auto i : incs) {
     JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, i);
   }
@@ -150,18 +147,15 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", HostArch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", HostArch);
 #ifdef _M_X64
-  JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"),
-          LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
+  JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"), LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
 #else
-  JoinEnv(paths, bela::GetEnv(L"ProgramFiles"),
-          LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\)");
+  JoinEnv(paths, bela::GetEnv(L"ProgramFiles"), LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\)");
 #endif
   if (auto frameworkdir = FrameworkDir(); frameworkdir) {
     JoinEnv(paths, *frameworkdir);
   }
   // LIBPATHS
-  auto unionmetadata =
-      bela::StringCat(winsdk->InstallationFolder, L"\\UnionMetadata\\", sdkversion);
+  auto unionmetadata = bela::StringCat(winsdk->InstallationFolder, L"\\UnionMetadata\\", sdkversion);
   JoinEnv(libpaths, unionmetadata);
   auto references = bela::StringCat(winsdk->InstallationFolder, L"\\References\\", sdkversion);
   JoinEnv(libpaths, references);
@@ -172,12 +166,11 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   simulator.SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
 
   // ExtensionSdkDir
-  if (auto ExtensionSdkDir =
-          bela::WindowsExpandEnv(LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
+  if (auto ExtensionSdkDir = bela::WindowsExpandEnv(LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
       bela::PathExists(ExtensionSdkDir)) {
     simulator.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
-  } else if (auto ExtensionSdkDir = bela::WindowsExpandEnv(
-                 LR"(%ProgramFiles(x86)%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
+  } else if (auto ExtensionSdkDir =
+                 bela::WindowsExpandEnv(LR"(%ProgramFiles(x86)%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
              bela::PathExists(ExtensionSdkDir)) {
     simulator.SetEnv(L"ExtensionSdkDir", ExtensionSdkDir);
   }
@@ -194,8 +187,7 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   if (!vcver) {
     return false;
   }
-  std::vector<std::wstring_view> vv =
-      bela::StrSplit(vsi->installationVersion, bela::ByChar('.'), bela::SkipEmpty());
+  std::vector<std::wstring_view> vv = bela::StrSplit(vsi->installationVersion, bela::ByChar('.'), bela::SkipEmpty());
   if (vv.size() > 2) {
     // VS160COMNTOOLS
     auto key = bela::StringCat(L"VS", vv[0], L"0COMNTOOLS");
@@ -208,8 +200,7 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
-  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch,
-          L"\\", arch);
+  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
   // IDE tools
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\VC\VCPackages)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE)");
@@ -221,8 +212,7 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
   JoinEnv(paths, vsi->installationPath, LR"(Team Tools\Performance Tools)");
   //
   // Extension
-  JoinEnv(paths, vsi->installationPath,
-          LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
+  JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
 #ifdef _M_X64
   JoinEnv(paths, vsi->installationPath, LR"(\MSBuild\Current\Bin\amd64)");
@@ -245,18 +235,14 @@ bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
 #endif
   }
   // add libpaths
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)",
-          HostArch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", HostArch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", HostArch);
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\lib\x86\store\references)");
-  auto ifcpath =
-      bela::StringCat(vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\x86\store\references)");
+  auto ifcpath = bela::StringCat(vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
   if (bela::PathExists(ifcpath)) {
     simulator.SetEnv(L"IFCPATH", ifcpath);
   }
-  simulator.SetEnv(L"VCIDEInstallDir",
-                   bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
+  simulator.SetEnv(L"VCIDEInstallDir", bela::StringCat(vsi->installationPath, LR"(Common7\IDE\VC)"));
   return true;
 }
 inline bool PathFileIsExists(std::wstring_view file) {

@@ -69,28 +69,24 @@ static constexpr const uint64_t k512[80] = {
 
 /* Recalculate element n-th of circular buffer W using formula
  *   W[n] = sigma1(W[n - 2]) + W[n - 7] + sigma0(W[n - 15]) + W[n - 16]; */
-#define RECALCULATE_W(W, n)                                                                        \
-  (W[n] += (sigma1(W[(n - 2) & 15]) + W[(n - 7) & 15] + sigma0(W[(n - 15) & 15])))
+#define RECALCULATE_W(W, n) (W[n] += (sigma1(W[(n - 2) & 15]) + W[(n - 7) & 15] + sigma0(W[(n - 15) & 15])))
 
-#define ROUND(a, b, c, d, e, f, g, h, k, data)                                                     \
-  {                                                                                                \
-    uint64_t T1 = h + Sigma1(e) + Ch(e, f, g) + k + (data);                                        \
-    d += T1, h = T1 + Sigma0(a) + Maj(a, b, c);                                                    \
+#define ROUND(a, b, c, d, e, f, g, h, k, data)                                                                         \
+  {                                                                                                                    \
+    uint64_t T1 = h + Sigma1(e) + Ch(e, f, g) + k + (data);                                                            \
+    d += T1, h = T1 + Sigma0(a) + Maj(a, b, c);                                                                        \
   }
-#define ROUND_1_16(a, b, c, d, e, f, g, h, n)                                                      \
-  ROUND(a, b, c, d, e, f, g, h, k512[n], W[n] = bela::swapbe(block[n]))
-#define ROUND_17_80(a, b, c, d, e, f, g, h, n)                                                     \
-  ROUND(a, b, c, d, e, f, g, h, k[n], RECALCULATE_W(W, n))
+#define ROUND_1_16(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k512[n], W[n] = bela::swapbe(block[n]))
+#define ROUND_17_80(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k[n], RECALCULATE_W(W, n))
 
 void Hasher::Initialize(HashBits hb_) {
   hb = hb_;
   /* Initial values. These words were obtained by taking the first 32
    * bits of the fractional parts of the square roots of the first
    * eight prime numbers. */
-  static constexpr const uint64_t SHA512_H0[8] = {I64(0x6a09e667f3bcc908), I64(0xbb67ae8584caa73b),
-                                                  I64(0x3c6ef372fe94f82b), I64(0xa54ff53a5f1d36f1),
-                                                  I64(0x510e527fade682d1), I64(0x9b05688c2b3e6c1f),
-                                                  I64(0x1f83d9abfb41bd6b), I64(0x5be0cd19137e2179)};
+  static constexpr const uint64_t SHA512_H0[8] = {
+      I64(0x6a09e667f3bcc908), I64(0xbb67ae8584caa73b), I64(0x3c6ef372fe94f82b), I64(0xa54ff53a5f1d36f1),
+      I64(0x510e527fade682d1), I64(0x9b05688c2b3e6c1f), I64(0x1f83d9abfb41bd6b), I64(0x5be0cd19137e2179)};
   if (hb == HashBits::SHA512) {
     length = 0;
     digest_length = sha512_hash_size;
@@ -101,10 +97,9 @@ void Hasher::Initialize(HashBits hb_) {
   /* Initial values from FIPS 180-3. These words were obtained by taking
    * the first sixty-four bits of the fractional parts of the square
    * roots of ninth through sixteenth prime numbers. */
-  static constexpr const uint64_t SHA384_H0[8] = {I64(0xcbbb9d5dc1059ed8), I64(0x629a292a367cd507),
-                                                  I64(0x9159015a3070dd17), I64(0x152fecd8f70e5939),
-                                                  I64(0x67332667ffc00b31), I64(0x8eb44a8768581511),
-                                                  I64(0xdb0c2e0d64f98fa7), I64(0x47b5481dbefa4fa4)};
+  static constexpr const uint64_t SHA384_H0[8] = {
+      I64(0xcbbb9d5dc1059ed8), I64(0x629a292a367cd507), I64(0x9159015a3070dd17), I64(0x152fecd8f70e5939),
+      I64(0x67332667ffc00b31), I64(0x8eb44a8768581511), I64(0xdb0c2e0d64f98fa7), I64(0x47b5481dbefa4fa4)};
 
   length = 0;
   digest_length = sha384_hash_size;

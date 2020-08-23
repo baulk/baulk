@@ -15,8 +15,7 @@ enum HasArgs {
 
 struct option {
   option() = default;
-  option(std::wstring_view n, HasArgs ha, int va)
-      : name(n), has_args(ha), val(va) {} /// emplace_back
+  option(std::wstring_view n, HasArgs ha, int va) : name(n), has_args(ha), val(va) {} /// emplace_back
   std::wstring_view name;
   HasArgs has_args;
   int val;
@@ -78,8 +77,7 @@ inline bool ParseArgv::Execute(const invoke_t &v, bela::error_code &ec) {
   return true;
 }
 
-inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t &v,
-                                            bela::error_code &ec) {
+inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t &v, bela::error_code &ec) {
   int ch = -1;
   HasArgs ha = optional_argument;
   const wchar_t *oa = nullptr;
@@ -109,8 +107,7 @@ inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t 
     oa = (a[1] == L'=') ? (a.data() + 2) : (a.data() + 1);
   }
   if (oa != nullptr && ha == no_argument) {
-    ec = bela::make_error_code(ParseBroken, L"option '-", a.substr(0, 1),
-                               L"' unexpected parameter: ", oa);
+    ec = bela::make_error_code(ParseBroken, L"option '-", a.substr(0, 1), L"' unexpected parameter: ", oa);
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
@@ -129,8 +126,7 @@ inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t 
 }
 
 // Parse long option
-inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &v,
-                                           bela::error_code &ec) {
+inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &v, bela::error_code &ec) {
   // --xxx=XXX
   // --xxx XXX
   // --xxx; bool
@@ -176,8 +172,7 @@ inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &
   return true;
 }
 
-inline bool ParseArgv::parse_internal(std::wstring_view a, const invoke_t &v,
-                                      bela::error_code &ec) {
+inline bool ParseArgv::parse_internal(std::wstring_view a, const invoke_t &v, bela::error_code &ec) {
   if (a.size() == 1) {
     ec = bela::make_error_code(ParseBroken, L"unexpected argument '-'");
     return false;

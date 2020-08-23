@@ -60,12 +60,11 @@ public:
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s [installed "
                       L"\x1b[33m%s\x1b[0m]%s\n  %s\n",
-                      pkg->name, pkg->bucket, pkg->version, lopkg->version, StringCategory(*pkg),
-                      pkg->description);
+                      pkg->name, pkg->bucket, pkg->version, lopkg->version, StringCategory(*pkg), pkg->description);
         continue;
       }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n  %s\n", pkg->name,
-                    pkg->bucket, pkg->version, StringCategory(*pkg), pkg->description);
+      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n  %s\n", pkg->name, pkg->bucket, pkg->version,
+                    StringCategory(*pkg), pkg->description);
     } while (finder.Next());
 
     return true;

@@ -106,8 +106,7 @@ inline std::wstring ClrMessage(MemView mv, LPVOID nh, ULONG clrva) {
     return L"";
   }
   auto clrh = reinterpret_cast<PIMAGE_COR20_HEADER>(va);
-  auto va2 = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(),
-                              clrh->MetaData.VirtualAddress, nullptr);
+  auto va2 = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (LPVOID)mv.data(), clrh->MetaData.VirtualAddress, nullptr);
   if (va2 == nullptr || reinterpret_cast<uint8_t *>(va2) + sizeof(STORAGESIGNATURE) > end) {
     return L"";
   }
@@ -125,8 +124,7 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh, bela::er
   pm.machine = static_cast<Machine>(bela::swaple(nh->FileHeader.Machine));
   pm.characteristics = bela::swaple(nh->FileHeader.Characteristics);
   pm.dllcharacteristics = bela::swaple(nh->OptionalHeader.DllCharacteristics);
-  pm.osver.Update(nh->OptionalHeader.MajorOperatingSystemVersion,
-                  nh->OptionalHeader.MinorOperatingSystemVersion);
+  pm.osver.Update(nh->OptionalHeader.MajorOperatingSystemVersion, nh->OptionalHeader.MinorOperatingSystemVersion);
   pm.subsystem = static_cast<Subsystem>(bela::swaple(nh->OptionalHeader.Subsystem));
   pm.linkver.Update(nh->OptionalHeader.MajorLinkerVersion, nh->OptionalHeader.MinorLinkerVersion);
   pm.imagever.Update(nh->OptionalHeader.MajorImageVersion, nh->OptionalHeader.MinorImageVersion);
@@ -140,8 +138,7 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh, bela::er
   // Import
   auto import_ = &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]);
   if (bela::swaple(import_->Size) != 0) {
-    auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(),
-                               bela::swaple(import_->VirtualAddress), nullptr);
+    auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(), bela::swaple(import_->VirtualAddress), nullptr);
     if (va == nullptr || reinterpret_cast<uint8_t *>(va) + bela::swaple(import_->Size) >= end) {
       ec = bela::make_error_code(INVALID_FILE_SIZE, L"PE file size invaild.");
       return std::make_optional<>(pm);
@@ -161,8 +158,7 @@ std::optional<Attributes> ExposeInternal(bela::MemView mv, const H *nh, bela::er
   /// Delay import
   auto delay_ = &(nh->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT]);
   if (bela::swaple(delay_->Size) != 0) {
-    auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(),
-                               bela::swaple(delay_->VirtualAddress), nullptr);
+    auto va = BelaImageRvaToVa((PIMAGE_NT_HEADERS)nh, (PVOID)mv.data(), bela::swaple(delay_->VirtualAddress), nullptr);
     if (va == nullptr || reinterpret_cast<uint8_t *>(va) + bela::swaple(delay_->Size) >= end) {
       return std::make_optional<>(pm);
     }
@@ -192,14 +188,12 @@ std::optional<Attributes> Expose(std::wstring_view file, bela::error_code &ec) {
   auto mv = mapview.subview();
   auto h = mv.cast<IMAGE_DOS_HEADER>(0);
   if (h == nullptr) {
-    ec = bela::make_error_code(bela::FileSizeTooSmall,
-                               L"PE file size tool small, less IMAGE_DOS_HEADER");
+    ec = bela::make_error_code(bela::FileSizeTooSmall, L"PE file size tool small, less IMAGE_DOS_HEADER");
     return std::nullopt;
   }
   auto nh = mv.cast<IMAGE_NT_HEADERS32>(bela::swaple(h->e_lfanew));
   if (nh == nullptr) {
-    ec = bela::make_error_code(bela::FileSizeTooSmall,
-                               L"PE file size tool small, less IMAGE_NT_HEADERS32");
+    ec = bela::make_error_code(bela::FileSizeTooSmall, L"PE file size tool small, less IMAGE_NT_HEADERS32");
     return std::nullopt;
   }
   switch (bela::swaple(nh->OptionalHeader.Magic)) {

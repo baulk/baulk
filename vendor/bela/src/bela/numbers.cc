@@ -50,33 +50,30 @@ namespace bela {
 
 inline void PutTwoDigits(size_t i, wchar_t *buf) {
   static const wchar_t two_ASCII_digits[100][2] = {
-      {'0', '0'}, {'0', '1'}, {'0', '2'}, {'0', '3'}, {'0', '4'}, {'0', '5'}, {'0', '6'},
-      {'0', '7'}, {'0', '8'}, {'0', '9'}, {'1', '0'}, {'1', '1'}, {'1', '2'}, {'1', '3'},
-      {'1', '4'}, {'1', '5'}, {'1', '6'}, {'1', '7'}, {'1', '8'}, {'1', '9'}, {'2', '0'},
-      {'2', '1'}, {'2', '2'}, {'2', '3'}, {'2', '4'}, {'2', '5'}, {'2', '6'}, {'2', '7'},
-      {'2', '8'}, {'2', '9'}, {'3', '0'}, {'3', '1'}, {'3', '2'}, {'3', '3'}, {'3', '4'},
-      {'3', '5'}, {'3', '6'}, {'3', '7'}, {'3', '8'}, {'3', '9'}, {'4', '0'}, {'4', '1'},
-      {'4', '2'}, {'4', '3'}, {'4', '4'}, {'4', '5'}, {'4', '6'}, {'4', '7'}, {'4', '8'},
-      {'4', '9'}, {'5', '0'}, {'5', '1'}, {'5', '2'}, {'5', '3'}, {'5', '4'}, {'5', '5'},
-      {'5', '6'}, {'5', '7'}, {'5', '8'}, {'5', '9'}, {'6', '0'}, {'6', '1'}, {'6', '2'},
-      {'6', '3'}, {'6', '4'}, {'6', '5'}, {'6', '6'}, {'6', '7'}, {'6', '8'}, {'6', '9'},
-      {'7', '0'}, {'7', '1'}, {'7', '2'}, {'7', '3'}, {'7', '4'}, {'7', '5'}, {'7', '6'},
-      {'7', '7'}, {'7', '8'}, {'7', '9'}, {'8', '0'}, {'8', '1'}, {'8', '2'}, {'8', '3'},
-      {'8', '4'}, {'8', '5'}, {'8', '6'}, {'8', '7'}, {'8', '8'}, {'8', '9'}, {'9', '0'},
-      {'9', '1'}, {'9', '2'}, {'9', '3'}, {'9', '4'}, {'9', '5'}, {'9', '6'}, {'9', '7'},
-      {'9', '8'}, {'9', '9'}};
+      {'0', '0'}, {'0', '1'}, {'0', '2'}, {'0', '3'}, {'0', '4'}, {'0', '5'}, {'0', '6'}, {'0', '7'}, {'0', '8'},
+      {'0', '9'}, {'1', '0'}, {'1', '1'}, {'1', '2'}, {'1', '3'}, {'1', '4'}, {'1', '5'}, {'1', '6'}, {'1', '7'},
+      {'1', '8'}, {'1', '9'}, {'2', '0'}, {'2', '1'}, {'2', '2'}, {'2', '3'}, {'2', '4'}, {'2', '5'}, {'2', '6'},
+      {'2', '7'}, {'2', '8'}, {'2', '9'}, {'3', '0'}, {'3', '1'}, {'3', '2'}, {'3', '3'}, {'3', '4'}, {'3', '5'},
+      {'3', '6'}, {'3', '7'}, {'3', '8'}, {'3', '9'}, {'4', '0'}, {'4', '1'}, {'4', '2'}, {'4', '3'}, {'4', '4'},
+      {'4', '5'}, {'4', '6'}, {'4', '7'}, {'4', '8'}, {'4', '9'}, {'5', '0'}, {'5', '1'}, {'5', '2'}, {'5', '3'},
+      {'5', '4'}, {'5', '5'}, {'5', '6'}, {'5', '7'}, {'5', '8'}, {'5', '9'}, {'6', '0'}, {'6', '1'}, {'6', '2'},
+      {'6', '3'}, {'6', '4'}, {'6', '5'}, {'6', '6'}, {'6', '7'}, {'6', '8'}, {'6', '9'}, {'7', '0'}, {'7', '1'},
+      {'7', '2'}, {'7', '3'}, {'7', '4'}, {'7', '5'}, {'7', '6'}, {'7', '7'}, {'7', '8'}, {'7', '9'}, {'8', '0'},
+      {'8', '1'}, {'8', '2'}, {'8', '3'}, {'8', '4'}, {'8', '5'}, {'8', '6'}, {'8', '7'}, {'8', '8'}, {'8', '9'},
+      {'9', '0'}, {'9', '1'}, {'9', '2'}, {'9', '3'}, {'9', '4'}, {'9', '5'}, {'9', '6'}, {'9', '7'}, {'9', '8'},
+      {'9', '9'}};
 
   strings_internal::memcopy(buf, two_ASCII_digits[i], 2);
 }
 
 bool SimpleAtob(std::wstring_view str, bool *out) {
-  if (EqualsIgnoreCase(str, L"true") || EqualsIgnoreCase(str, L"t") ||
-      EqualsIgnoreCase(str, L"yes") || EqualsIgnoreCase(str, L"y") || EqualsIgnoreCase(str, L"1")) {
+  if (EqualsIgnoreCase(str, L"true") || EqualsIgnoreCase(str, L"t") || EqualsIgnoreCase(str, L"yes") ||
+      EqualsIgnoreCase(str, L"y") || EqualsIgnoreCase(str, L"1")) {
     *out = true;
     return true;
   }
-  if (EqualsIgnoreCase(str, L"false") || EqualsIgnoreCase(str, L"f") ||
-      EqualsIgnoreCase(str, L"no") || EqualsIgnoreCase(str, L"n") || EqualsIgnoreCase(str, L"0")) {
+  if (EqualsIgnoreCase(str, L"false") || EqualsIgnoreCase(str, L"f") || EqualsIgnoreCase(str, L"no") ||
+      EqualsIgnoreCase(str, L"n") || EqualsIgnoreCase(str, L"0")) {
     *out = false;
     return true;
   }
@@ -84,8 +81,7 @@ bool SimpleAtob(std::wstring_view str, bool *out) {
 }
 
 const wchar_t one_ASCII_final_digits[10][2]{
-    {'0', 0}, {'1', 0}, {'2', 0}, {'3', 0}, {'4', 0},
-    {'5', 0}, {'6', 0}, {'7', 0}, {'8', 0}, {'9', 0},
+    {'0', 0}, {'1', 0}, {'2', 0}, {'3', 0}, {'4', 0}, {'5', 0}, {'6', 0}, {'7', 0}, {'8', 0}, {'9', 0},
 };
 
 namespace numbers_internal {
@@ -621,15 +617,14 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
 // bases up to 36.
 static const int8_t kAsciiToInt[256] = {
     36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, // 16 36s.
-    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
-    36, 36, 36, 36, 36, 36, 36, 36, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  36, 36, 36, 36, 36, 36,
-    36, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-    33, 34, 35, 36, 36, 36, 36, 36, 36, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
-    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
-    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
-    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
-    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+    36, 36, 36, 36, 36, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  36, 36, 36, 36, 36, 36, 36, 10, 11, 12, 13, 14,
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 36, 36, 36, 36, 36,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
     36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36};
 
 // Parse the sign and optional hex or oct prefix in text.
@@ -736,26 +731,22 @@ template <typename IntType> struct LookupTables {
 // An array initializer macro for X/base where base in [0, 36].
 // However, note that lookups for base in [0, 1] should never happen because
 // base has been validated to be in [2, 36] by safe_parse_sign_and_base().
-#define X_OVER_BASE_INITIALIZER(X)                                                                 \
-  {                                                                                                \
-    0, 0, X / 2, X / 3, X / 4, X / 5, X / 6, X / 7, X / 8, X / 9, X / 10, X / 11, X / 12, X / 13,  \
-        X / 14, X / 15, X / 16, X / 17, X / 18, X / 19, X / 20, X / 21, X / 22, X / 23, X / 24,    \
-        X / 25, X / 26, X / 27, X / 28, X / 29, X / 30, X / 31, X / 32, X / 33, X / 34, X / 35,    \
-        X / 36,                                                                                    \
+#define X_OVER_BASE_INITIALIZER(X)                                                                                     \
+  {                                                                                                                    \
+    0, 0, X / 2, X / 3, X / 4, X / 5, X / 6, X / 7, X / 8, X / 9, X / 10, X / 11, X / 12, X / 13, X / 14, X / 15,      \
+        X / 16, X / 17, X / 18, X / 19, X / 20, X / 21, X / 22, X / 23, X / 24, X / 25, X / 26, X / 27, X / 28,        \
+        X / 29, X / 30, X / 31, X / 32, X / 33, X / 34, X / 35, X / 36,                                                \
   }
 
 template <typename IntType>
-const IntType LookupTables<IntType>::kVmaxOverBase[] =
-    X_OVER_BASE_INITIALIZER(std::numeric_limits<IntType>::max());
+const IntType LookupTables<IntType>::kVmaxOverBase[] = X_OVER_BASE_INITIALIZER(std::numeric_limits<IntType>::max());
 
 template <typename IntType>
-const IntType LookupTables<IntType>::kVminOverBase[] =
-    X_OVER_BASE_INITIALIZER(std::numeric_limits<IntType>::min());
+const IntType LookupTables<IntType>::kVminOverBase[] = X_OVER_BASE_INITIALIZER(std::numeric_limits<IntType>::min());
 
 #undef X_OVER_BASE_INITIALIZER
 
-template <typename IntType>
-inline bool safe_parse_positive_int(std::wstring_view text, int base, IntType *value_p) {
+template <typename IntType> inline bool safe_parse_positive_int(std::wstring_view text, int base, IntType *value_p) {
   IntType value = 0;
   const IntType vmax = std::numeric_limits<IntType>::max();
   assert(vmax > 0);
@@ -787,8 +778,7 @@ inline bool safe_parse_positive_int(std::wstring_view text, int base, IntType *v
   return true;
 }
 
-template <typename IntType>
-inline bool safe_parse_negative_int(std::wstring_view text, int base, IntType *value_p) {
+template <typename IntType> inline bool safe_parse_negative_int(std::wstring_view text, int base, IntType *value_p) {
   IntType value = 0;
   const IntType vmin = std::numeric_limits<IntType>::min();
   assert(vmin < 0);
@@ -829,8 +819,7 @@ inline bool safe_parse_negative_int(std::wstring_view text, int base, IntType *v
 
 // Input format based on POSIX.1-2008 strtol
 // http://pubs.opengroup.org/onlinepubs/9699919799/functions/strtol.html
-template <typename IntType>
-inline bool safe_int_internal(std::wstring_view text, IntType *value_p, int base) {
+template <typename IntType> inline bool safe_int_internal(std::wstring_view text, IntType *value_p, int base) {
   *value_p = 0;
   bool negative;
   if (!safe_parse_sign_and_base(&text, &base, &negative)) {
@@ -843,8 +832,7 @@ inline bool safe_int_internal(std::wstring_view text, IntType *value_p, int base
   }
 }
 
-template <typename IntType>
-inline bool safe_uint_internal(std::wstring_view text, IntType *value_p, int base) {
+template <typename IntType> inline bool safe_uint_internal(std::wstring_view text, IntType *value_p, int base) {
   *value_p = 0;
   bool negative;
   if (!safe_parse_sign_and_base(&text, &base, &negative) || negative) {

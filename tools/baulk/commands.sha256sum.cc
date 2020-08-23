@@ -14,8 +14,7 @@ int cmd_sha256sum(const argv_t &argv) {
   for (const auto a : argv) {
     auto hv = baulk::hash::FileHash(a, baulk::hash::hash_t::SHA256, ec);
     if (!hv) {
-      bela::FPrintF(stderr, L"File: '%s' cannot calculate sha256 checksum: \x1b[31m%s\x1b[0m\n", a,
-                    ec.message);
+      bela::FPrintF(stderr, L"File: '%s' cannot calculate sha256 checksum: \x1b[31m%s\x1b[0m\n", a, ec.message);
       continue;
     }
     bela::FPrintF(stdout, L"%s %s\n", *hv, baulk::fs::FileName(a));

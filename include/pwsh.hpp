@@ -121,8 +121,7 @@ inline std::wstring PwshExePath() {
   if (auto pwsh = PwshCore(); !pwsh.empty()) {
     return pwsh;
   }
-  if (auto pwsh = bela::WindowsExpandEnv(
-          L"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
+  if (auto pwsh = bela::WindowsExpandEnv(L"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
       bela::PathExists(pwsh)) {
     return pwsh;
   }

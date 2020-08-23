@@ -166,8 +166,7 @@ static int PatternNext(const char16_t *pat, size_t m, size_t *step, int flags) {
       }
     }
     for (; k < m && pat[k] && pat[k] != ']'; k++) {
-      if (k + 1 < m && pat[k + 1] && pat[k] == '[' &&
-          (pat[k + 1] == ':' || pat[k + 1] == '.' || pat[k + 1] == '=')) {
+      if (k + 1 < m && pat[k + 1] && pat[k] == '[' && (pat[k + 1] == ':' || pat[k + 1] == '.' || pat[k + 1] == '=')) {
         int z = pat[k + 1];
         k += 2;
         if (k < m && pat[k]) {
@@ -282,8 +281,7 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
   return inv;
 }
 
-static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, size_t n,
-                           int flags) {
+static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, size_t n, int flags) {
   const char16_t *p, *ptail, *endpat;
   const char16_t *s, *stail, *endstr;
   size_t pinc, sinc, tailcnt = 0;

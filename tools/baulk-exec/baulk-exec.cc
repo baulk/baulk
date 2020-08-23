@@ -35,8 +35,8 @@ example:
 }
 
 void Version() {
-  bela::FPrintF(stdout, L"baulk-exec %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, L"baulk-exec %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION,
+                BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
 std::wstring AvailableEnvTitle(const std::vector<std::wstring> &venvs) {
@@ -148,9 +148,8 @@ int Executor::Exec() {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(string_nullable(target), ea.data(), nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT, string_nullable(env), string_nullable(cwd), &si,
-                     &pi) != TRUE) {
+  if (CreateProcessW(string_nullable(target), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+                     string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec.message);
     return -1;

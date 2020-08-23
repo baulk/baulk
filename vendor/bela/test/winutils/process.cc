@@ -3,8 +3,7 @@
 
 int stty_size() {
   bela::process::Process p;
-  if (p.CaptureWithMode(bela::process::CAPTURE_USEIN | bela::process::CAPTURE_USEERR, L"stty",
-                        L"size") != 0) {
+  if (p.CaptureWithMode(bela::process::CAPTURE_USEIN | bela::process::CAPTURE_USEERR, L"stty", L"size") != 0) {
     bela::FPrintF(stderr, L"%s\n", p.ErrorCode().message);
     return 1;
   }

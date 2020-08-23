@@ -74,16 +74,12 @@ extern const char kToLower[256];
 // ascii_isalpha()
 //
 // Determines whether the given character is an alphabetic character.
-inline bool ascii_isalpha(wchar_t c) {
-  return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x01) != 0;
-}
+inline bool ascii_isalpha(wchar_t c) { return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x01) != 0; }
 
 // ascii_isalnum()
 //
 // Determines whether the given character is an alphanumeric character.
-inline bool ascii_isalnum(wchar_t c) {
-  return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x04) != 0;
-}
+inline bool ascii_isalnum(wchar_t c) { return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x04) != 0; }
 
 // ascii_isspace()
 //
@@ -93,40 +89,31 @@ inline bool ascii_isspace(wchar_t c) {
   // if (c > 0xFF) {
   // }
   // return (ascii_internal::kPropertyBits[c] & 0x08) != 0;
-  wchar_t wspace[] = {' ',    '\t',   '\n',   '\r',   11,     12,     0x0085,
-                      0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006,
-                      0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000};
+  wchar_t wspace[] = {' ',    '\t',   '\n',   '\r',   11,     12,     0x0085, 0x2000, 0x2001, 0x2002, 0x2003,
+                      0x2004, 0x2005, 0x2006, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000};
   return ascii_internal::ArrayChr(wspace, c);
 }
 
 // ascii_ispunct()
 //
 // Determines whether the given character is a punctuation character.
-inline bool ascii_ispunct(wchar_t c) {
-  return (c < 0xFF && (ascii_internal::kPropertyBits[c] & 0x10) != 0);
-}
+inline bool ascii_ispunct(wchar_t c) { return (c < 0xFF && (ascii_internal::kPropertyBits[c] & 0x10) != 0); }
 
 // ascii_isblank()
 //
 // Determines whether the given character is a blank character (tab or space).
-inline bool ascii_isblank(wchar_t c) {
-  return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x20) != 0;
-}
+inline bool ascii_isblank(wchar_t c) { return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x20) != 0; }
 
 // ascii_iscntrl()
 // wchar_t on Windows is 2Byte
 // Determines whether the given character is a control character.
-inline bool ascii_iscntrl(wchar_t c) {
-  return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x40) != 0;
-}
+inline bool ascii_iscntrl(wchar_t c) { return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x40) != 0; }
 
 // ascii_isxdigit()
 //
 // Determines whether the given character can be represented as a hexadecimal
 // digit character (i.e. {0-9} or {A-F}).
-inline bool ascii_isxdigit(wchar_t c) {
-  return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x80) != 0;
-}
+inline bool ascii_isxdigit(wchar_t c) { return (c < 0xFF && ascii_internal::kPropertyBits[c] & 0x80) != 0; }
 
 // ascii_isdigit()
 //
@@ -163,9 +150,7 @@ inline bool ascii_isascii(wchar_t c) { return c < 128; }
 //
 // Returns an ASCII character, converting to lowercase if uppercase is
 // passed. Note that character values > 127 are simply returned.
-inline char ascii_tolower(wchar_t c) {
-  return (c > 0xFF ? static_cast<char>(c) : ascii_internal::kToLower[c]);
-}
+inline char ascii_tolower(wchar_t c) { return (c > 0xFF ? static_cast<char>(c) : ascii_internal::kToLower[c]); }
 
 void AsciiStrToLower(std::wstring *s);
 inline std::wstring AsciiStrToLower(std::wstring_view s) {

@@ -65,9 +65,8 @@ std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code
 }
 
 std::optional<std::wstring> RealPath(std::wstring_view src, bela::error_code &ec) {
-  auto FileHandle =
-      CreateFileW(src.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-                  OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  auto FileHandle = CreateFileW(src.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   // FILE_FLAG_BACKUP_SEMANTICS open directory require
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();

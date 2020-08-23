@@ -320,8 +320,7 @@ void WinAnsiWriter::InterpretEscSeq() {
         if (grm.underline)
           attribut |= FOREGROUND_INTENSITY;
       } else
-        attribut = foregroundcolor[grm.foreground] | grm.bold | backgroundcolor[grm.background] |
-                   grm.underline;
+        attribut = foregroundcolor[grm.foreground] | grm.bold | backgroundcolor[grm.background] | grm.underline;
       if (grm.reverse)
         attribut = ((attribut >> 4) & 15) | ((attribut & 15) << 4);
       SetConsoleTextAttribute(hConOut, attribut);
@@ -334,12 +333,10 @@ void WinAnsiWriter::InterpretEscSeq() {
         return;
       switch (es_argv[0]) {
       case 0: // ESC[0J erase from cursor to end of display
-        len = (Info.dwSize.Y - Info.dwCursorPosition.Y - 1) * Info.dwSize.X + Info.dwSize.X -
-              Info.dwCursorPosition.X - 1;
-        FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition,
-                                   &NumberOfCharsWritten);
+        len =
+            (Info.dwSize.Y - Info.dwCursorPosition.Y - 1) * Info.dwSize.X + Info.dwSize.X - Info.dwCursorPosition.X - 1;
+        FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition, &NumberOfCharsWritten);
         return;
 
       case 1: // ESC[1J erase from start to cursor.
@@ -371,27 +368,22 @@ void WinAnsiWriter::InterpretEscSeq() {
       switch (es_argv[0]) {
       case 0: // ESC[0K Clear to end of line
         len = Info.dwSize.X - Info.dwCursorPosition.X + 1;
-        FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition,
-                                   &NumberOfCharsWritten);
+        FillConsoleOutputCharacterW(hConOut, ' ', len, Info.dwCursorPosition, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, len, Info.dwCursorPosition, &NumberOfCharsWritten);
         return;
 
       case 1: // ESC[1K Clear from start of line to cursor
         Pos.X = 0;
         Pos.Y = Info.dwCursorPosition.Y;
-        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwCursorPosition.X + 1, Pos,
-                                    &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwCursorPosition.X + 1, Pos,
-                                   &NumberOfCharsWritten);
+        FillConsoleOutputCharacterW(hConOut, ' ', Info.dwCursorPosition.X + 1, Pos, &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwCursorPosition.X + 1, Pos, &NumberOfCharsWritten);
         return;
 
       case 2: // ESC[2K Clear whole line.
         Pos.X = 0;
         Pos.Y = Info.dwCursorPosition.Y;
         FillConsoleOutputCharacterW(hConOut, ' ', Info.dwSize.X, Pos, &NumberOfCharsWritten);
-        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwSize.X, Pos,
-                                   &NumberOfCharsWritten);
+        FillConsoleOutputAttribute(hConOut, Info.wAttributes, Info.dwSize.X, Pos, &NumberOfCharsWritten);
         return;
 
       default:
@@ -403,10 +395,8 @@ void WinAnsiWriter::InterpretEscSeq() {
         es_argv[es_argc++] = 1; // ESC[X == ESC[1X
       if (es_argc != 1)
         return;
-      FillConsoleOutputCharacterW(hConOut, ' ', es_argv[0], Info.dwCursorPosition,
-                                  &NumberOfCharsWritten);
-      FillConsoleOutputAttribute(hConOut, Info.wAttributes, es_argv[0], Info.dwCursorPosition,
-                                 &NumberOfCharsWritten);
+      FillConsoleOutputCharacterW(hConOut, ' ', es_argv[0], Info.dwCursorPosition, &NumberOfCharsWritten);
+      FillConsoleOutputAttribute(hConOut, Info.wAttributes, es_argv[0], Info.dwCursorPosition, &NumberOfCharsWritten);
       return;
 
     case 'L': // ESC[#L Insert # blank lines.
@@ -669,8 +659,7 @@ void WinAnsiWriter::InterpretEscSeq() {
 
       case 6: {
         // ESC[6n Report cursor position
-        auto buf = bela::StringCat(L"\33[", Info.dwCursorPosition.Y + 1, L";",
-                                   Info.dwCursorPosition.X + 1, L"R");
+        auto buf = bela::StringCat(L"\33[", Info.dwCursorPosition.Y + 1, L";", Info.dwCursorPosition.X + 1, L"R");
         SendSequence(buf);
       }
         return;
@@ -830,8 +819,6 @@ ssize_t WinAnsiWriter::WriteAnsi(HANDLE hDev, std::wstring_view msg) {
   return static_cast<ssize_t>(msg.size()) - i;
 }
 
-ssize_t BelaWriteAnsi(HANDLE hDev, std::wstring_view msg) {
-  return WinAnsiWriter::Inst().WriteAnsi(hDev, msg);
-}
+ssize_t BelaWriteAnsi(HANDLE hDev, std::wstring_view msg) { return WinAnsiWriter::Inst().WriteAnsi(hDev, msg); }
 
 } // namespace bela

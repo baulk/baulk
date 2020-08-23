@@ -40,8 +40,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
-template <typename... Args>
-bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -62,8 +61,7 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(stderr,
-                                   bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
 /// defines
@@ -123,8 +121,7 @@ struct BaulkVirtualEnv {
   std::vector<std::wstring> dependencies;
 
   bool empty() const {
-    return paths.empty() && includes.empty() && libs.empty() && envs.empty() &&
-           dependencies.empty();
+    return paths.empty() && includes.empty() && libs.empty() && envs.empty() && dependencies.empty();
   }
 };
 

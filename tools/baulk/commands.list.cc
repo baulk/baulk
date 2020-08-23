@@ -40,12 +40,11 @@ int cmd_list_all() {
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
                       opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
-                      StringCategory(*opkg));
+                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(*opkg));
         continue;
       }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket,
-                    opkg->version, StringCategory(*opkg));
+      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket, opkg->version,
+                    StringCategory(*opkg));
     } while (finder.Next());
   }
   bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n", upgradable);
@@ -71,12 +70,11 @@ int cmd_list(const argv_t &argv) {
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
                     opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
-                    StringCategory(*opkg));
+                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(*opkg));
       continue;
     }
-    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket,
-                  opkg->version, StringCategory(*opkg));
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket, opkg->version,
+                  StringCategory(*opkg));
   }
   return 0;
 }

@@ -168,9 +168,8 @@ std::wstring CatPieces(std::initializer_list<std::wstring_view> pieces) {
 // random. Therefore, check for this in debug mode.  Use unsigned math so we
 // only have to do one comparison. Note, there's an exception case: appending an
 // empty string is always allowed.
-#define ASSERT_NO_OVERLAP(dest, src)                                                               \
-  assert(((src).size() == 0) ||                                                                    \
-         (uintptr_t((src).data() - (dest).data()) > uintptr_t((dest).size())))
+#define ASSERT_NO_OVERLAP(dest, src)                                                                                   \
+  assert(((src).size() == 0) || (uintptr_t((src).data() - (dest).data()) > uintptr_t((dest).size())))
 
 void AppendPieces(std::wstring *dest, std::initializer_list<std::wstring_view> pieces) {
   size_t old_size = dest->size();
@@ -223,8 +222,7 @@ void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const A
   assert(out == begin + dest->size());
 }
 
-void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-               const AlphaNum &d) {
+void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d) {
   ASSERT_NO_OVERLAP(*dest, a);
   ASSERT_NO_OVERLAP(*dest, b);
   ASSERT_NO_OVERLAP(*dest, c);

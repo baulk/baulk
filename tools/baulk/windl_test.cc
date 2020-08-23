@@ -17,8 +17,8 @@ std::wstring_view BaulkLocale() { return locale; }
 } // namespace baulk
 
 namespace baulk::net {
-std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir,
-                                   bool forceoverwrite, bela::error_code &ec);
+std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir, bool forceoverwrite,
+                                   bela::error_code &ec);
 bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::error_code &ec);
 } // namespace baulk::net
 int download_atom() {
@@ -79,8 +79,7 @@ inline std::wstring UrlPathName(std::wstring_view urlpath) {
 }
 
 int wmain(int argc, wchar_t **argv) {
-  bela::FPrintF(stderr, L"filename [%s] [%s]\n", UrlPathName(L"jackson/dl.zip"),
-                UrlPathName(L"../../jack"));
+  bela::FPrintF(stderr, L"filename [%s] [%s]\n", UrlPathName(L"jackson/dl.zip"), UrlPathName(L"../../jack"));
   auto s = bela::resolve_module_error_message(L"winhttp.dll", ERROR_FILE_NOT_FOUND, L"dump ");
   bela::FPrintF(stderr, L"%s\n", s);
   s = bela::resolve_system_error_message(ERROR_FILE_NOT_FOUND, L"dump ");

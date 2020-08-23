@@ -8,8 +8,7 @@ int LinkToApp(wchar_t *env) {
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   wchar_t cmd[256] = L"pwsh";
-  if (!CreateProcessW(nullptr, cmd, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, env,
-                      nullptr, &si, &pi)) {
+  if (!CreateProcessW(nullptr, cmd, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, env, nullptr, &si, &pi)) {
     return -1;
   }
   CloseHandle(pi.hThread);

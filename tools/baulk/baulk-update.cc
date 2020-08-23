@@ -66,8 +66,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
-template <typename... Args>
-bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -88,8 +87,7 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
   if (!msg.empty() && msg.back() == '\n') {
     msg.remove_suffix(1);
   }
-  return bela::terminal::WriteAuto(stderr,
-                                   bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
 constexpr const std::wstring_view archfilesuffix() {
@@ -144,8 +142,7 @@ bool ResolveBaulkRev(std::wstring &releasename) {
   return false;
 }
 
-bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version,
-                                 std::wstring_view oldver) {
+bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version, std::wstring_view oldver) {
   // https://github.com/baulk/baulk/releases/latest
   constexpr std::wstring_view latest = L"https://github.com/baulk/baulk/releases/latest";
   bela::error_code ec;
@@ -170,8 +167,7 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version,
     std::wstring filename = bela::ToWide(resp->body.data() + pos, pos2 - pos);
 
     index = pos2 + 1;
-    std::vector<std::wstring_view> svv =
-        bela::StrSplit(filename, bela::ByChar('/'), bela::SkipEmpty());
+    std::vector<std::wstring_view> svv = bela::StrSplit(filename, bela::ByChar('/'), bela::SkipEmpty());
     if (svv.size() <= 2) {
       continue;
     }
@@ -195,8 +191,7 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version,
 bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   std::wstring releasename;
   if (!ResolveBaulkRev(releasename)) {
-    bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n",
-                  releasename);
+    bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n", releasename);
   }
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
   if (!bela::StartsWith(releasename, releaseprefix)) {
@@ -253,8 +248,7 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
     baulk::DbgPrint(L"failed MakeParentDir %s", ec.message);
     return false;
   }
-  if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
-      TRUE) {
+  if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
     if (!baulk::IsDebugMode) {
       bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mupdate %s done\x1b[0m", target);
       return true;
@@ -274,9 +268,8 @@ int ExecuteInternal(wchar_t *cmdline) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE,
-                     CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr, cwd.data(), &si,
-                     &pi) != TRUE) {
+  if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE, CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr,
+                     cwd.data(), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"run post script failed %s\n", ec.message);
     return -1;
@@ -312,10 +305,9 @@ bool BaulkExecUpdate(std::wstring_view baulkexecNew, std::wstring_view baulkroot
   auto baulkexecdel = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.del");
   auto baulkexecTemp = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.new");
   if (bela::PathFileIsExists(baulkexec)) {
-    if (MoveFileExW(baulkexec.data(), baulkexecdel.data(),
-                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
-      if (MoveFileExW(baulkexecNew.data(), baulkexec.data(),
-                      MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+    if (MoveFileExW(baulkexec.data(), baulkexecdel.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
+      if (MoveFileExW(baulkexecNew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
+          TRUE) {
 
         ec = bela::make_system_error_code();
         bela::FPrintF(stderr, L"baulk-update: update apply new baulk-exec: %s\n", ec.message);
@@ -325,12 +317,11 @@ bool BaulkExecUpdate(std::wstring_view baulkexecNew, std::wstring_view baulkroot
       return true;
     }
   }
-  if (MoveFileExW(baulkexecNew.data(), baulkexec.data(),
-                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
+  if (MoveFileExW(baulkexecNew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
     return true;
   }
-  if (MoveFileExW(baulkexecNew.data(), baulkexecTemp.data(),
-                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+  if (MoveFileExW(baulkexecNew.data(), baulkexecTemp.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
+      TRUE) {
     ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"baulk-update: update apply baulk-exec.new: %s\n", ec.message);
     return true;
@@ -404,11 +395,11 @@ int BaulkUpdate() {
   if (bela::PathExists(baulkupdate)) {
     auto baulkupdatenew = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update.exe");
     auto baulkupdateold = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update.del");
-    if (MoveFileExW(baulkupdatenew.data(), baulkupdateold.data(),
-                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
+    if (MoveFileExW(baulkupdatenew.data(), baulkupdateold.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
+        TRUE) {
     }
-    if (MoveFileExW(baulkupdate.data(), baulkupdatenew.data(),
-                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
+    if (MoveFileExW(baulkupdate.data(), baulkupdatenew.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
+        TRUE) {
       return PostUpdate();
     }
   }
@@ -433,8 +424,8 @@ Usage: baulk-update [option]
 }
 
 void Version() {
-  bela::FPrintF(stdout, L"baulk-update %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, L"baulk-update %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION,
+                BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
 bool ParseArgv(int argc, wchar_t **argv) {

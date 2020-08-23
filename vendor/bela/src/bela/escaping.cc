@@ -72,8 +72,8 @@ inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   return 2;
 }
 
-bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar_t *dest,
-                       ptrdiff_t *dest_len, std::wstring *error) {
+bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar_t *dest, ptrdiff_t *dest_len,
+                       std::wstring *error) {
   wchar_t *d = dest;
   const wchar_t *p = source.data();
   const wchar_t *end = p + source.size();
@@ -145,8 +145,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         if (ch > 0xff) {
           if (error) {
             *error =
-                bela::StringCat(L"Value of \\", std::wstring_view(octal_start, p + 1 - octal_start),
-                                L" exceeds 0xff");
+                bela::StringCat(L"Value of \\", std::wstring_view(octal_start, p + 1 - octal_start), L" exceeds 0xff");
           }
           return false;
         }
@@ -180,8 +179,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           ch = (ch << 4) + hex_digit_to_int(*++p);
         if (ch > 0xFF) {
           if (error) {
-            *error = bela::StringCat(
-                L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start), L" exceeds 0xff");
+            *error = bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start), L" exceeds 0xff");
           }
           return false;
         }
@@ -248,9 +246,8 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
             uint32_t newrune = (rune << 4) + hex_digit_to_int(*++p);
             if (newrune > 0x10FFFF) {
               if (error) {
-                *error =
-                    bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start),
-                                    L" exceeds Unicode limit (0x10FFFF)");
+                *error = bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start),
+                                         L" exceeds Unicode limit (0x10FFFF)");
               }
               return false;
             } else {

@@ -44,16 +44,15 @@ inline bela::error_code make_error_code(long code, const AlphaNum &a, const Alph
   ec.message.assign(a.Piece()).append(b.Piece());
   return ec;
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b,
-                                        const AlphaNum &c) {
+inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   bela::error_code ec;
   ec.code = code;
   ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size());
   ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece());
   return ec;
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b,
-                                        const AlphaNum &c, const AlphaNum &d) {
+inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                        const AlphaNum &d) {
   bela::error_code ec;
   ec.code = code;
   ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size() + d.Piece().size());
@@ -61,8 +60,8 @@ inline bela::error_code make_error_code(long code, const AlphaNum &a, const Alph
   return ec;
 }
 template <typename... AV>
-bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                                 const AlphaNum &d, AV... av) {
+bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
+                                 AV... av) {
   bela::error_code ec;
   ec.code = code;
   ec.message = strings_internal::CatPieces({a, b, c, d, av...});
@@ -78,8 +77,7 @@ inline error_code make_system_error_code(std::wstring_view prefix = L"") {
   return ec;
 }
 
-std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
-                                          std::wstring_view prefix);
+std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec, std::wstring_view prefix);
 // bela::fromascii
 inline std::wstring fromascii(std::string_view sv) {
   auto sz = MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
@@ -113,8 +111,7 @@ template <typename T> struct secure_allocator : public std::allocator<T> {
 //! `bela::secure_vector` will be securely zeroed before deallocation.
 template <typename Type> using secure_vector = std::vector<Type, bela::secure_allocator<Type>>;
 //! `bela::secure_wstring` will be securely zeroed before deallocation.
-using secure_wstring =
-    std::basic_string<wchar_t, std::char_traits<wchar_t>, bela::secure_allocator<wchar_t>>;
+using secure_wstring = std::basic_string<wchar_t, std::char_traits<wchar_t>, bela::secure_allocator<wchar_t>>;
 //! `bela::secure_string` will be securely zeroed before deallocation.
 using secure_string = std::basic_string<char, std::char_traits<char>, bela::secure_allocator<char>>;
 
@@ -126,8 +123,7 @@ template <class F> class final_act {
 public:
   explicit final_act(F f) noexcept : f_(std::move(f)), invoke_(true) {}
 
-  final_act(final_act &&other) noexcept
-      : f_(std::move(other.f_)), invoke_(std::exchange(other.invoke_, false)) {}
+  final_act(final_act &&other) noexcept : f_(std::move(other.f_)), invoke_(std::exchange(other.invoke_, false)) {}
 
   final_act(const final_act &) = delete;
   final_act &operator=(const final_act &) = delete;
@@ -145,9 +141,7 @@ private:
 // finally() - convenience function to generate a final_act
 template <class F> inline final_act<F> finally(const F &f) noexcept { return final_act<F>(f); }
 
-template <class F> inline final_act<F> finally(F &&f) noexcept {
-  return final_act<F>(std::forward<F>(f));
-}
+template <class F> inline final_act<F> finally(F &&f) noexcept { return final_act<F>(std::forward<F>(f)); }
 
 } // namespace bela
 

@@ -315,8 +315,7 @@ static constexpr std::array<UnicodeRange, 285> s_wideAndAmbiguousTable{
     UnicodeRange{0x100000, 0x10fffd, CodepointWidth::Ambiguous}};
 
 size_t CalculateWidthInternal(char32_t rune) {
-  const auto it =
-      std::lower_bound(s_wideAndAmbiguousTable.begin(), s_wideAndAmbiguousTable.end(), rune);
+  const auto it = std::lower_bound(s_wideAndAmbiguousTable.begin(), s_wideAndAmbiguousTable.end(), rune);
 
   // For characters that are not _in_ the table, lower_bound will return the
   // nearest item that is. We must check its bounds to make sure that our hit

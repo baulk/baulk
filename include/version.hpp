@@ -118,8 +118,7 @@ constexpr std::uint8_t length(prerelease t) noexcept {
 }
 
 template <typename CharT>
-constexpr bool equals(const CharT *first, const CharT *last,
-                      std::basic_string_view<CharT> str) noexcept {
+constexpr bool equals(const CharT *first, const CharT *last, std::basic_string_view<CharT> str) noexcept {
   for (std::size_t i = 0; first != last && i < str.size(); ++i, ++first) {
     if (to_lower(*first) != to_lower(str[i])) {
       return false;
@@ -128,8 +127,7 @@ constexpr bool equals(const CharT *first, const CharT *last,
   return true;
 }
 
-template <typename CharT>
-constexpr CharT *to_chars(CharT *str, std::uint32_t x, bool dot = true) noexcept {
+template <typename CharT> constexpr CharT *to_chars(CharT *str, std::uint32_t x, bool dot = true) noexcept {
   do {
     *(--str) = static_cast<CharT>('0' + (x % 10));
     x /= 10;
@@ -142,12 +140,10 @@ constexpr CharT *to_chars(CharT *str, std::uint32_t x, bool dot = true) noexcept
 }
 
 template <typename CharT> constexpr CharT *to_chars(CharT *str, prerelease t) noexcept {
-  const auto p =
-      t == prerelease::alpha
-          ? Literal<CharT>::Alpha
-          : t == prerelease::beta
-                ? Literal<CharT>::Beta
-                : t == prerelease::rc ? Literal<CharT>::RC : std::basic_string_view<CharT>{};
+  const auto p = t == prerelease::alpha ? Literal<CharT>::Alpha
+                                        : t == prerelease::beta ? Literal<CharT>::Beta
+                                                                : t == prerelease::rc ? Literal<CharT>::RC
+                                                                                      : std::basic_string_view<CharT>{};
   for (auto it = p.rbegin(); it != p.rend(); ++it) {
     *(--str) = *it;
   }
@@ -155,8 +151,7 @@ template <typename CharT> constexpr CharT *to_chars(CharT *str, prerelease t) no
 }
 
 template <typename CharT>
-constexpr const CharT *from_chars(const CharT *first, const CharT *last,
-                                  std::uint32_t &d) noexcept {
+constexpr const CharT *from_chars(const CharT *first, const CharT *last, std::uint32_t &d) noexcept {
   if (first != last && is_digit(*first)) {
     std::int64_t t = 0;
     for (; first != last && is_digit(*first); ++first) {
@@ -187,8 +182,7 @@ constexpr const CharT *from_chars(const CharT *first, const CharT *last, prerele
   return nullptr;
 }
 
-template <typename CharT>
-constexpr bool check_delimiter(const CharT *first, const CharT *last, CharT d) noexcept {
+template <typename CharT> constexpr bool check_delimiter(const CharT *first, const CharT *last, CharT d) noexcept {
   return first != last && first != nullptr && *first == d;
 }
 } // namespace detail
@@ -201,20 +195,14 @@ struct version {
   prerelease prerelease_type = prerelease::none;
   std::uint32_t prerelease_number = 0;
 
-  constexpr version(std::uint32_t major, std::uint32_t minor, std::uint32_t patch,
-                    std::uint32_t build, prerelease prerelease_type = prerelease::none,
-                    std::uint8_t prerelease_number = 0) noexcept
+  constexpr version(std::uint32_t major, std::uint32_t minor, std::uint32_t patch, std::uint32_t build,
+                    prerelease prerelease_type = prerelease::none, std::uint8_t prerelease_number = 0) noexcept
       : major{major}, minor{minor}, patch{patch}, build{build}, prerelease_type{prerelease_type},
-        prerelease_number{prerelease_type == prerelease::none ? static_cast<std::uint8_t>(0)
-                                                              : prerelease_number} {}
+        prerelease_number{prerelease_type == prerelease::none ? static_cast<std::uint8_t>(0) : prerelease_number} {}
 
-  constexpr version(std::string_view str) : version(0, 0, 0, 0, prerelease::none, 0) {
-    from_string_noexcept(str);
-  }
+  constexpr version(std::string_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
 
-  constexpr version(std::wstring_view str) : version(0, 0, 0, 0, prerelease::none, 0) {
-    from_string_noexcept(str);
-  }
+  constexpr version(std::wstring_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
 
   constexpr version() = default;
   // https://semver.org/#how-should-i-deal-with-revisions-in-the-0yz-initial-development-phase
@@ -226,8 +214,7 @@ struct version {
 
   template <typename CharT>
   [[nodiscard]] constexpr detail::to_chars_result<CharT> to_chars(CharT *first, CharT *last,
-                                                                  std::uint16_t length) const
-      noexcept {
+                                                                  std::uint16_t length) const noexcept {
     if (first == nullptr || last == nullptr || (last - first) < length) {
       return {last, std::errc::value_too_large};
     }
@@ -266,14 +253,12 @@ struct version {
   }
 
   template <typename CharT>
-  [[nodiscard]] constexpr detail::from_chars_result<CharT> from_chars(const CharT *first,
-                                                                      const CharT *last) noexcept {
+  [[nodiscard]] constexpr detail::from_chars_result<CharT> from_chars(const CharT *first, const CharT *last) noexcept {
     if (first == nullptr || last == nullptr || (last - first) < detail::min_version_string_length) {
       return {first, std::errc::invalid_argument};
     }
     auto next = first;
-    if (next = detail::from_chars(next, last, major);
-        detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
+    if (next = detail::from_chars(next, last, major); detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
       if (next = detail::from_chars(++next, last, minor);
           detail::check_delimiter(next, last, static_cast<CharT>('.'))) {
         if (next = detail::from_chars(++next, last, patch); next == last) {
@@ -302,8 +287,7 @@ struct version {
     return {first, std::errc::invalid_argument};
   }
   constexpr bool version_prefix(int ch) noexcept { return ch == 'v' || ch == 'V'; }
-  template <typename T>
-  constexpr bool from_string_noexcept_t(std::basic_string_view<T> str) noexcept {
+  template <typename T> constexpr bool from_string_noexcept_t(std::basic_string_view<T> str) noexcept {
     if (!str.empty() && version_prefix(str.front())) {
       str.remove_prefix(1);
     }
@@ -313,13 +297,9 @@ struct version {
     return from_chars(str.data(), str.data() + str.size());
   }
 
-  constexpr bool from_string_noexcept(std::string_view str) noexcept {
-    return from_string_noexcept_t(str);
-  }
+  constexpr bool from_string_noexcept(std::string_view str) noexcept { return from_string_noexcept_t(str); }
 
-  constexpr bool from_string_noexcept(std::wstring_view str) noexcept {
-    return from_string_noexcept_t(str);
-  }
+  constexpr bool from_string_noexcept(std::wstring_view str) noexcept { return from_string_noexcept_t(str); }
 
   [[nodiscard]] constexpr int compare(const version &other) const noexcept {
     if (major != other.major) {
@@ -335,8 +315,7 @@ struct version {
       return build - other.build;
     }
     if (prerelease_type != other.prerelease_type) {
-      return static_cast<std::uint8_t>(prerelease_type) -
-             static_cast<std::uint8_t>(other.prerelease_type);
+      return static_cast<std::uint8_t>(prerelease_type) - static_cast<std::uint8_t>(other.prerelease_type);
     }
     if (prerelease_number != other.prerelease_number) {
       return prerelease_number - other.prerelease_number;
@@ -347,8 +326,7 @@ struct version {
 private:
   constexpr std::uint16_t chars_length() const noexcept {
     // (<major>) + 1(.) + (<minor>) + 1(.) + (<patch>)+ 1(.) + (<build>)
-    std::uint16_t length =
-        detail::length(major) + detail::length(minor) + detail::length(patch) + 2;
+    std::uint16_t length = detail::length(major) + detail::length(minor) + detail::length(patch) + 2;
     if (build != 0) {
       length += detail::length(build) + 1;
     }
@@ -364,33 +342,19 @@ private:
   }
 };
 
-constexpr bool operator==(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) == 0;
-}
+constexpr bool operator==(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) == 0; }
 
-constexpr bool operator!=(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) != 0;
-}
+constexpr bool operator!=(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) != 0; }
 
-constexpr bool operator>(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) > 0;
-}
+constexpr bool operator>(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) > 0; }
 
-constexpr bool operator>=(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) >= 0;
-}
+constexpr bool operator>=(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) >= 0; }
 
-constexpr bool operator<(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) < 0;
-}
+constexpr bool operator<(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) < 0; }
 
-constexpr bool operator<=(const version &lhs, const version &rhs) noexcept {
-  return lhs.compare(rhs) <= 0;
-}
+constexpr bool operator<=(const version &lhs, const version &rhs) noexcept { return lhs.compare(rhs) <= 0; }
 
-constexpr version operator""_version(const char *str, std::size_t size) {
-  return version{std::string_view{str, size}};
-}
+constexpr version operator""_version(const char *str, std::size_t size) { return version{std::string_view{str, size}}; }
 
 inline std::string to_string(const version &v) { return v.to_string(); }
 inline std::wstring to_wstring(const version &v) { return v.to_wstring(); }

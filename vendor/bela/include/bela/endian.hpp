@@ -80,15 +80,9 @@ inline uint64_t swap64(uint64_t value) {
 inline unsigned char bswap(unsigned char v) { return v; }
 inline signed char bswap(signed char v) { return v; }
 inline unsigned short bswap(unsigned short v) { return swap16(v); }
-inline signed short bswap(signed short v) {
-  return static_cast<signed short>(swap16(static_cast<uint16_t>(v)));
-}
-inline unsigned int bswap(unsigned int v) {
-  return static_cast<unsigned int>(swap32(static_cast<uint32_t>(v)));
-}
-inline signed int bswap(signed int v) {
-  return static_cast<signed int>(swap32(static_cast<uint32_t>(v)));
-}
+inline signed short bswap(signed short v) { return static_cast<signed short>(swap16(static_cast<uint16_t>(v))); }
+inline unsigned int bswap(unsigned int v) { return static_cast<unsigned int>(swap32(static_cast<uint32_t>(v))); }
+inline signed int bswap(signed int v) { return static_cast<signed int>(swap32(static_cast<uint32_t>(v))); }
 
 inline unsigned long bswap(unsigned long v) {
   if constexpr (sizeof(unsigned long) == 8) {

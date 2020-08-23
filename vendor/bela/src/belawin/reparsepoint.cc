@@ -30,21 +30,20 @@ struct FileReparser {
 };
 
 bool FileReparser::FileDeviceLookup(std::wstring_view file, bela::error_code &ec) {
-  if (buffer = reinterpret_cast<REPARSE_DATA_BUFFER *>(
-          HeapAlloc(GetProcessHeap(), 0, MAXIMUM_REPARSE_DATA_BUFFER_SIZE));
+  if (buffer =
+          reinterpret_cast<REPARSE_DATA_BUFFER *>(HeapAlloc(GetProcessHeap(), 0, MAXIMUM_REPARSE_DATA_BUFFER_SIZE));
       buffer == nullptr) {
     ec = bela::make_system_error_code();
     return false;
   }
-  if (FileHandle = CreateFileW(
-          file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-          OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if (FileHandle = CreateFileW(file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                               OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
       FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
   }
-  if (DeviceIoControl(FileHandle, FSCTL_GET_REPARSE_POINT, nullptr, 0, buffer,
-                      MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &len, nullptr) != TRUE) {
+  if (DeviceIoControl(FileHandle, FSCTL_GET_REPARSE_POINT, nullptr, 0, buffer, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &len,
+                      nullptr) != TRUE) {
     if (ec.code = GetLastError(); ec.code != ERROR_NOT_A_REPARSE_POINT) {
       ec.message = bela::resolve_system_error_message(ec.code);
     }
@@ -84,16 +83,14 @@ inline bool DecodeSymbolicLink(const REPARSE_DATA_BUFFER *buffer, std::wstring &
   }
   if (wlen >= 4 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\') {
     /* Starts with \??\ */
-    if (wlen >= 6 &&
-        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) &&
+    if (wlen >= 6 && ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) &&
         wstr[5] == L':' && (wlen == 6 || wstr[6] == L'\\')) {
       /* \??\<drive>:\ */
       wstr += 4;
       wlen -= 4;
 
-    } else if (wlen >= 8 && (wstr[4] == L'U' || wstr[4] == L'u') &&
-               (wstr[5] == L'N' || wstr[5] == L'n') && (wstr[6] == L'C' || wstr[6] == L'c') &&
-               wstr[7] == L'\\') {
+    } else if (wlen >= 8 && (wstr[4] == L'U' || wstr[4] == L'u') && (wstr[5] == L'N' || wstr[5] == L'n') &&
+               (wstr[6] == L'C' || wstr[6] == L'c') && wstr[7] == L'\\') {
       /* \??\UNC\<server>\<share>\ - make sure the final path looks like */
       /* \\<server>\<share>\ */
       wstr += 7;
@@ -118,8 +115,8 @@ inline bool DecodeMountPoint(const REPARSE_DATA_BUFFER *buffer, std::wstring &ta
   /* actually understand such a path when returned by uv_readlink(). */
   /* UNC paths are never valid for junctions so we don't care about them. */
   if (!(wlen >= 6 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\' &&
-        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) &&
-        wstr[5] == L':' && (wlen == 6 || wstr[6] == L'\\'))) {
+        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) && wstr[5] == L':' &&
+        (wlen == 6 || wstr[6] == L'\\'))) {
     return false;
   }
 
@@ -173,8 +170,8 @@ static bool app_exec_link(const ReparseBuffer *buf, facv_t &av, bela::error_code
 }
 
 static bool mount_point(const ReparseBuffer *buf, facv_t &av, bela::error_code &ec) {
-  auto wstr = buf->MountPointReparseBuffer.PathBuffer +
-              (buf->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR));
+  auto wstr =
+      buf->MountPointReparseBuffer.PathBuffer + (buf->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR));
   auto wlen = buf->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
   /* Only treat junctions that look like \??\<drive>:\ as symlink. */
   /* Junctions can also be used as mount points, like \??\Volume{<guid>}, */
@@ -182,8 +179,8 @@ static bool mount_point(const ReparseBuffer *buf, facv_t &av, bela::error_code &
   /* actually understand such a path when returned by uv_readlink(). */
   /* UNC paths are never valid for junctions so we don't care about them. */
   if (!(wlen >= 6 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\' &&
-        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) &&
-        wstr[5] == L':' && (wlen == 6 || wstr[6] == L'\\'))) {
+        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) && wstr[5] == L':' &&
+        (wlen == 6 || wstr[6] == L'\\'))) {
     ec = bela::make_error_code(1, L"Unresolved reparse point MountPoint'");
     return false;
   }
@@ -215,10 +212,8 @@ static bool wsl_symbolic_link(const ReparseBuffer *buf, facv_t &av, bela::error_
 bool ReparsePoint::Analyze(std::wstring_view file, bela::error_code &ec) {
   static const constexpr file_reparser_handle av[] = {
       {IO_REPARSE_TAG_APPEXECLINK, app_exec_link}, // AppExecLink
-      {IO_REPARSE_TAG_SYMLINK, nt_symbolic_link},
-      {IO_REPARSE_TAG_GLOBAL_REPARSE, global_symbolic_link},
-      {IO_REPARSE_TAG_MOUNT_POINT, mount_point},
-      {IO_REPARSE_TAG_AF_UNIX, af_unix},
+      {IO_REPARSE_TAG_SYMLINK, nt_symbolic_link},    {IO_REPARSE_TAG_GLOBAL_REPARSE, global_symbolic_link},
+      {IO_REPARSE_TAG_MOUNT_POINT, mount_point},     {IO_REPARSE_TAG_AF_UNIX, af_unix},
       {IO_REPARSE_TAG_LX_SYMLINK, wsl_symbolic_link}
       ///  WSL1 symlink is a file. WSL2???
       // end value

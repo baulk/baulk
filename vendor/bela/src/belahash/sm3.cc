@@ -5,30 +5,30 @@
 #include "hashinternal.hpp"
 
 #if IS_BIG_ENDIAN
-#define GET32(n, b, i)                                                                             \
-  {                                                                                                \
-    (n) = ((uint32_t)(b)[(i) + 3] << 24) | ((uint32_t)(b)[(i) + 2] << 16) |                        \
-          ((uint32_t)(b)[(i)] << 8) | ((uint32_t)(b)[(i)]);                                        \
+#define GET32(n, b, i)                                                                                                 \
+  {                                                                                                                    \
+    (n) = ((uint32_t)(b)[(i) + 3] << 24) | ((uint32_t)(b)[(i) + 2] << 16) | ((uint32_t)(b)[(i)] << 8) |                \
+          ((uint32_t)(b)[(i)]);                                                                                        \
   }
-#define PUT32(n, b, i)                                                                             \
-  {                                                                                                \
-    (b)[(i) + 3] = (uint8_t)((n) >> 24);                                                           \
-    (b)[(i) + 2] = (uint8_t)((n) >> 16);                                                           \
-    (b)[(i) + 1] = (uint8_t)((n) >> 8);                                                            \
-    (b)[(i)] = (uint8_t)((n));                                                                     \
+#define PUT32(n, b, i)                                                                                                 \
+  {                                                                                                                    \
+    (b)[(i) + 3] = (uint8_t)((n) >> 24);                                                                               \
+    (b)[(i) + 2] = (uint8_t)((n) >> 16);                                                                               \
+    (b)[(i) + 1] = (uint8_t)((n) >> 8);                                                                                \
+    (b)[(i)] = (uint8_t)((n));                                                                                         \
   }
 #else
-#define GET32(n, b, i)                                                                             \
-  {                                                                                                \
-    (n) = ((uint32_t)(b)[(i)] << 24) | ((uint32_t)(b)[(i) + 1] << 16) |                            \
-          ((uint32_t)(b)[(i) + 2] << 8) | ((uint32_t)(b)[(i) + 3]);                                \
+#define GET32(n, b, i)                                                                                                 \
+  {                                                                                                                    \
+    (n) = ((uint32_t)(b)[(i)] << 24) | ((uint32_t)(b)[(i) + 1] << 16) | ((uint32_t)(b)[(i) + 2] << 8) |                \
+          ((uint32_t)(b)[(i) + 3]);                                                                                    \
   }
-#define PUT32(n, b, i)                                                                             \
-  {                                                                                                \
-    (b)[(i)] = (uint8_t)((n) >> 24);                                                               \
-    (b)[(i) + 1] = (uint8_t)((n) >> 16);                                                           \
-    (b)[(i) + 2] = (uint8_t)((n) >> 8);                                                            \
-    (b)[(i) + 3] = (uint8_t)((n));                                                                 \
+#define PUT32(n, b, i)                                                                                                 \
+  {                                                                                                                    \
+    (b)[(i)] = (uint8_t)((n) >> 24);                                                                                   \
+    (b)[(i) + 1] = (uint8_t)((n) >> 16);                                                                               \
+    (b)[(i) + 2] = (uint8_t)((n) >> 8);                                                                                \
+    (b)[(i) + 3] = (uint8_t)((n));                                                                                     \
   }
 #endif
 
@@ -188,10 +188,9 @@ void Hasher::Update(const void *input, size_t input_len) {
   }
 }
 
-static constexpr const uint8_t sm3_padding[64] = {
-    0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static constexpr const uint8_t sm3_padding[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                  0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                  0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void Hasher::Finalize(uint8_t *out, size_t out_len) {
   auto high = (Nl >> 29) | (Nh << 3);

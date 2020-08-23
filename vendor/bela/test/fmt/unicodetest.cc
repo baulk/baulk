@@ -22,7 +22,6 @@ int wmain(int argc, wchar_t **argv) {
   char32_t se = 0x1F92A;     //🤪
   char32_t em2 = U'中';
   auto s = bela::StringCat(L"Look emoji -->", em, L" U+", bela::AlphaNum(bela::Hex(em)));
-  bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s,
-                &em);
+  bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s, &em);
   return 0;
 }

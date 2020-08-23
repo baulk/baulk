@@ -34,8 +34,7 @@ const wchar_t *Decimal(uint64_t value, wchar_t *digits, bool sign) {
   return writer;
 }
 
-const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base, wchar_t fill,
-                        bool u) {
+const wchar_t *AlphaNum(uint64_t value, wchar_t *digits, size_t width, int base, wchar_t fill, bool u) {
   wchar_t *const end = digits + kFastToBufferSize;
   wchar_t *writer = end;
   constexpr const wchar_t hex[] = L"0123456789abcdef";
@@ -82,8 +81,7 @@ using StringWriter = Writer<std::wstring>;
 using BufferWriter = Writer<buffer>;
 
 /// because format string is Null-terminated_string
-template <typename T>
-bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, const FormatArg *args, size_t max_args) {
+template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, const FormatArg *args, size_t max_args) {
   if (args == nullptr || max_args == 0) {
     return false;
   }
@@ -290,8 +288,7 @@ bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, const FormatArg *args, 
   return !w.overflow();
 }
 
-size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt, const FormatArg *args,
-                               size_t max_args) {
+size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt, const FormatArg *args, size_t max_args) {
   StringWriter sw(*buf);
   if (!StrFormatInternal(sw, fmt, args, max_args)) {
     return 0;
@@ -308,8 +305,7 @@ std::wstring StrFormatInternal(const wchar_t *fmt, const FormatArg *args, size_t
   return s;
 }
 
-ssize_t StrFormatInternal(wchar_t *buf, size_t N, const wchar_t *fmt, const FormatArg *args,
-                          size_t max_args) {
+ssize_t StrFormatInternal(wchar_t *buf, size_t N, const wchar_t *fmt, const FormatArg *args, size_t max_args) {
   buffer buffer_(buf, N);
   BufferWriter bw(buffer_);
   if (!StrFormatInternal(bw, fmt, args, max_args)) {

@@ -51,7 +51,7 @@
 #if defined(NDEBUG)
 #define BELA_ASSERT(expr) (false ? static_cast<void>(expr) : static_cast<void>(0))
 #else
-#define BELA_ASSERT(expr)                                                                          \
+#define BELA_ASSERT(expr)                                                                                              \
   (BELA_PREDICT_TRUE((expr)) ? static_cast<void>(0) : [] { assert(false && #expr); }()) // NOLINT
 #endif
 

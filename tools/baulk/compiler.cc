@@ -46,8 +46,7 @@ struct VisualStudioInstance {
   }
 };
 
-inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir,
-                                                          bela::error_code &ec) {
+inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
   auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
   return bela::io::ReadLine(file, ec);
 }
@@ -112,14 +111,13 @@ struct Searcher {
     auto p = bela::StringCat(a, b, c);
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
-               std::wstring_view d) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c, std::wstring_view d) {
     auto p = bela::StringCat(a, b, c, d);
     return JoinEnvInternal(vec, std::wstring(p));
   }
   template <typename... Args>
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
-               std::wstring_view d, Args... args) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c, std::wstring_view d,
+               Args... args) {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }
@@ -127,8 +125,7 @@ struct Searcher {
   bool InitializeVisualStudioEnv(bela::error_code &ec);
 };
 
-bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
-                      std::wstring &sdkversion) {
+bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
   auto dir = bela::StringCat(sdkroot, L"\\Include");
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     auto filename = p.path().filename().wstring();
@@ -150,8 +147,7 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s", winsdk->ProductVersion,
-                  winsdk->InstallationFolder);
+  baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s", winsdk->ProductVersion, winsdk->InstallationFolder);
   constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\cppwinrt", L"\\shared", L"\\winrt"};
   for (auto i : incs) {
     JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, i);
@@ -174,8 +170,7 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
     // Visual Studio not install
     return false;
   }
-  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s", vsi->installationVersion,
-                  vsi->installationPath);
+  baulk::DbgPrint(L"Visual Studio %s InstallationPath: %s", vsi->installationVersion, vsi->installationPath);
   auto vcver = LookupVisualCppVersion(vsi->installationPath, ec);
   if (!vcver) {
     return false;
@@ -188,8 +183,7 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
   JoinEnv(libs, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
-  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", arch, L"\\",
-          arch);
+  JoinEnv(paths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", arch, L"\\", arch);
   // if constexpr (arch == L"x64") {
   // } else {
   // }
@@ -197,14 +191,12 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\Tools)");
   // Extension
-  JoinEnv(paths, vsi->installationPath,
-          LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
+  JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
   JoinEnv(paths, vsi->installationPath, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
   // add libpaths
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
   JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
-  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver,
-          LR"(\lib\x86\store\references)");
+  JoinEnv(libpaths, vsi->installationPath, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\x86\store\references)");
   return true;
 }
 

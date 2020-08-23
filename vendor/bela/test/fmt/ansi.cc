@@ -22,11 +22,9 @@ int wmain() {
     return 1;
   }
   auto vtenabled = IsVTEnable(hDev);
-  bela::BelaWriteAnsi(hDev, vtenabled ? L"\x1b[01;32mOK VT Enabled\x1b[0m\n"
-                                      : L"\x1b[01;31mBAD VT Disabled\x1b[0m\n");
+  bela::BelaWriteAnsi(hDev, vtenabled ? L"\x1b[01;32mOK VT Enabled\x1b[0m\n" : L"\x1b[01;31mBAD VT Disabled\x1b[0m\n");
   bela::FPrintF(stderr, L"\x1b[33m----------------- OK-----\x1b[0m\n");
   vtenabled = IsVTEnable(hDev);
-  bela::BelaWriteAnsi(hDev, vtenabled ? L"\x1b[01;32mOK VT Enabled\x1b[0m\n"
-                                      : L"\x1b[01;31mBAD VT Disabled\x1b[0m\n");
+  bela::BelaWriteAnsi(hDev, vtenabled ? L"\x1b[01;32mOK VT Enabled\x1b[0m\n" : L"\x1b[01;31mBAD VT Disabled\x1b[0m\n");
   return 0;
 }

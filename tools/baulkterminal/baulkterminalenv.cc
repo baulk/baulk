@@ -106,8 +106,7 @@ void ApplyBaulkNewExec(std::wstring_view baulkexec) {
   auto dir = bela::DirName(baulkexec);
   auto baulkexecnew = bela::StringCat(dir, L"\\baulk-exec.new");
   if (bela::PathFileIsExists(baulkexecnew)) {
-    if (MoveFileExW(baulkexecnew.data(), baulkexec.data(),
-                    MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+    if (MoveFileExW(baulkexecnew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
     }
   }
 }

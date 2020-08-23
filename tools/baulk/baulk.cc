@@ -75,8 +75,8 @@ Alias:
 }
 
 void Version() {
-  bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n",
-                BAULK_VERSION, BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION, BAULK_REFNAME,
+                BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {

@@ -880,6 +880,25 @@ public:
             return tmp;
         }
 
+#if PHMAP_BIDIRECTIONAL
+        // PRECONDITION: not a begin() iterator.
+        iterator& operator--() {
+            assert(ctrl_);
+            do {
+                --ctrl_;
+                --slot_;
+            } while (IsEmptyOrDeleted(*ctrl_));
+            return *this;
+        }
+
+        // PRECONDITION: not a begin() iterator.
+        iterator operator--(int) {
+            auto tmp = *this;
+            --*this;
+            return tmp;
+        }
+#endif
+
         friend bool operator==(const iterator& a, const iterator& b) {
             return a.ctrl_ == b.ctrl_;
         }
@@ -904,7 +923,7 @@ public:
         }
 
         ctrl_t* ctrl_ = nullptr;
-        // To avoid uninitialized member warnigs, put slot_ in an anonymous union.
+        // To avoid uninitialized member warnings, put slot_ in an anonymous union.
         // The member is not initialized on singleton and end iterators.
         union {
             slot_type* slot_;
@@ -1143,7 +1162,14 @@ public:
         it.skip_empty_or_deleted();
         return it;
     }
-    iterator end() { return {ctrl_ + capacity_}; }
+    iterator end() 
+    {
+#if PHMAP_BIDIRECTIONAL
+        return iterator_at(capacity_); 
+#else
+        return {ctrl_ + capacity_};
+#endif
+    }
 
     const_iterator begin() const {
         return const_cast<raw_hash_set*>(this)->begin();
@@ -3222,11 +3248,11 @@ private:
     }
 
 protected:
-    template <class K = key_type>
-    iterator find(const key_arg<K>& key, size_t hashval, typename Lockable::SharedLock &mutexlock) {
+    template <class K = key_type, class L = typename Lockable::SharedLock>
+    iterator find(const key_arg<K>& key, size_t hashval, L &mutexlock) {
         Inner& inner = sets_[subidx(hashval)];
         auto&  set = inner.set_;
-        mutexlock = std::move(typename Lockable::SharedLock(inner));
+        mutexlock = std::move(L(inner));
         auto  it = set.find(key, hashval);
         return make_iterator(&inner, it);
     }
@@ -3424,33 +3450,47 @@ public:
         return Policy::value(&*it);
     }
 
+    // ----------- phmap extensions --------------------------
+
+    // if map contains key, lambda is called with the mapped value (under read lock protection),
+    // and if_contains returns true. This is a const API and lambda should not modify the value
+    // -----------------------------------------------------------------------------------------
     template <class K = key_type, class F>
     bool if_contains(const key_arg<K>& key, F&& f) const {
-#if __cplusplus >= 201703L
-        static_assert(std::is_invocable<F, mapped_type&>::value);
-#endif
-        typename Lockable::SharedLock m;
-        auto it = const_cast<parallel_hash_map*>(this)->find(key, this->hash(key), m);
-        if (it == this->end())
-            return false;
-        std::forward<F>(f)((const mapped_type&)Policy::value(&*it));
-        return true;
+        return const_cast<parallel_hash_map*>(this)->template 
+            modify_if_impl<K, F, typename Lockable::SharedLock>(key, std::forward<F>(f));
     }
 
+    // if map contains key, lambda is called with the mapped value  (under write lock protection),
+    // and modify_if returns true. This is a non-const API and lambda is allowed to modify the mapped value
+    // ----------------------------------------------------------------------------------------------------
     template <class K = key_type, class F>
     bool modify_if(const key_arg<K>& key, F&& f) {
-#if __cplusplus >= 201703L
-        static_assert(std::is_invocable<F, mapped_type&>::value);
-#endif
-        typename Lockable::UniqueLock m;
-        auto it = this->find(key, this->hash(key), m);
-        if (it == this->end())
-            return false;
-        std::forward<F>(f)(Policy::value(&*it));
-        return true;
+        return modify_if_impl<K, F, typename Lockable::UniqueLock>(key, std::forward<F>(f));
     }
 
-    
+    // if map does not contains key, it is inserted and the mapped value is value-constructed 
+    // with the provided arguments (if any), as with try_emplace. 
+    // Then the lambda is called with the mapped value (under write lock protection) and can 
+    // update the mapped value.
+    // ---------------------------------------------------------------------------------------
+    template <class K = key_type, class F, class... Args>
+    bool try_emplace_l(K&& k, F&& f, Args&&... args) {
+        typename Lockable::UniqueLock m;
+        auto res = this->find_or_prepare_insert(k, m);
+        typename Base::Inner *inner = std::get<0>(res);
+        if (std::get<2>(res))
+            inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct,
+                                   std::forward_as_tuple(std::forward<K>(k)),
+                                   std::forward_as_tuple(std::forward<Args>(args)...));
+        else {
+            auto it = this->iterator_at(inner, inner->set_.iterator_at(std::get<1>(res)));
+            std::forward<F>(f)(Policy::value(&*it));
+        }
+        return std::get<2>(res);
+    }
+
+    // ----------- end of phmap extensions --------------------------
 
     template <class K = key_type, class P = Policy, K* = nullptr>
     MappedReference<P> operator[](key_arg<K>&& key) {
@@ -3463,6 +3503,19 @@ public:
     }
 
 private:
+    template <class K = key_type, class F, class L>
+    bool modify_if_impl(const key_arg<K>& key, F&& f) {
+#if __cplusplus >= 201703L
+        static_assert(std::is_invocable<F, mapped_type&>::value);
+#endif
+        L m;
+        auto it = this->template find<K, L>(key, this->hash(key), m);
+        if (it == this->end())
+            return false;
+        std::forward<F>(f)(Policy::value(&*it));
+        return true;
+    }
+
     template <class K, class V>
     std::pair<iterator, bool> insert_or_assign_impl(K&& k, V&& v) {
         typename Lockable::UniqueLock m;

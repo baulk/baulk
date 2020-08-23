@@ -31,8 +31,7 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::erro
   return std::nullopt;
 }
 
-bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstring_view id,
-                  bela::error_code &ec) {
+bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstring_view id, bela::error_code &ec) {
   // https://github.com/baulk/bucket/archive/master.zip
   auto master = bela::StringCat(bucketurl, L"/archive/", id, L".zip");
   auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\temp");
@@ -160,8 +159,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::
     pkg.version = bela::ToWide(j["version"].get<std::string_view>());
     pkg.bucket = bela::ToWide(j["bucket"].get<std::string_view>());
     if (auto it = j.find("venv"); it != j.end()) {
-      if (auto it_ = it.value().find("category");
-          it_ != it.value().end() && it_.value().is_string()) {
+      if (auto it_ = it.value().find("category"); it_ != it.value().end() && it_.value().is_string()) {
         pkg.venv.category = bela::ToWide(it_.value().get<std::string_view>());
       }
     }

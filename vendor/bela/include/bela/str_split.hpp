@@ -460,16 +460,14 @@ template <typename Delimiter>
 strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>::type, AllowEmpty>
 StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
-  return strings_internal::Splitter<DelimiterType, AllowEmpty>(std::move(text), DelimiterType(d),
-                                                               AllowEmpty());
+  return strings_internal::Splitter<DelimiterType, AllowEmpty>(std::move(text), DelimiterType(d), AllowEmpty());
 }
 
 template <typename Delimiter, typename Predicate>
 strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>::type, Predicate>
 StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d, Predicate p) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
-  return strings_internal::Splitter<DelimiterType, Predicate>(std::move(text), DelimiterType(d),
-                                                              std::move(p));
+  return strings_internal::Splitter<DelimiterType, Predicate>(std::move(text), DelimiterType(d), std::move(p));
 }
 
 } // namespace bela

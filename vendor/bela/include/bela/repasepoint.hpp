@@ -64,8 +64,7 @@ enum ReparsePointTagIndex : unsigned long {
 // value
 struct FileAttributePair {
   FileAttributePair() = default;
-  FileAttributePair(std::wstring_view n, std::wstring_view v)
-      : name(n), value(v) {}
+  FileAttributePair(std::wstring_view n, std::wstring_view v) : name(n), value(v) {}
   std::wstring name;
   std::wstring value;
 };

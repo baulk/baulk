@@ -68,8 +68,7 @@ constexpr auto GetData(C &c) noexcept // NOLINT(runtime/references)
 }
 
 // Detection idioms for size() and data().
-template <typename C>
-using HasSize = std::is_integral<std::decay_t<decltype(std::declval<C &>().size())>>;
+template <typename C> using HasSize = std::is_integral<std::decay_t<decltype(std::declval<C &>().size())>>;
 
 // We want to enable conversion from vector<T*> to Span<const T* const> but
 // disable conversion from vector<Derived> to Span<Base>. Here we use
@@ -78,20 +77,16 @@ using HasSize = std::is_integral<std::decay_t<decltype(std::declval<C &>().size(
 // data() to avoid problems with classes which have a member function data()
 // which returns a reference.
 template <typename T, typename C>
-using HasData =
-    std::is_convertible<std::decay_t<decltype(GetData(std::declval<C &>()))> *, T *const *>;
+using HasData = std::is_convertible<std::decay_t<decltype(GetData(std::declval<C &>()))> *, T *const *>;
 
 // Extracts value type from a Container
-template <typename C> struct ElementType {
-  using type = typename std::remove_reference_t<C>::value_type;
-};
+template <typename C> struct ElementType { using type = typename std::remove_reference_t<C>::value_type; };
 
 template <typename T, size_t N> struct ElementType<T (&)[N]> { using type = T; };
 
 template <typename C> using ElementT = typename ElementType<C>::type;
 
-template <typename T>
-using EnableIfMutable = typename std::enable_if<!std::is_const<T>::value, int>::type;
+template <typename T> using EnableIfMutable = typename std::enable_if<!std::is_const<T>::value, int>::type;
 
 template <template <typename> class SpanT, typename T> bool EqualImpl(SpanT<T> a, SpanT<T> b) {
   static_assert(std::is_const<T>::value, "");
@@ -131,16 +126,14 @@ private:
   // Used to determine whether a Span can be constructed from a container of
   // type C.
   template <typename C>
-  using EnableIfConvertibleFrom = typename std::enable_if<span_internal::HasData<T, C>::value &&
-                                                          span_internal::HasSize<C>::value>::type;
+  using EnableIfConvertibleFrom =
+      typename std::enable_if<span_internal::HasData<T, C>::value && span_internal::HasSize<C>::value>::type;
 
   // Used to SFINAE-enable a function when the slice elements are const.
-  template <typename U>
-  using EnableIfConstView = typename std::enable_if<std::is_const<T>::value, U>::type;
+  template <typename U> using EnableIfConstView = typename std::enable_if<std::is_const<T>::value, U>::type;
 
   // Used to SFINAE-enable a function when the slice elements are mutable.
-  template <typename U>
-  using EnableIfMutableView = typename std::enable_if<!std::is_const<T>::value, U>::type;
+  template <typename U> using EnableIfMutableView = typename std::enable_if<!std::is_const<T>::value, U>::type;
 
 public:
   using value_type = std::remove_cv_t<T>;
@@ -262,9 +255,7 @@ public:
   // Span::back()
   //
   // Returns a reference to the last element of this span.
-  constexpr reference back() const noexcept {
-    return BELA_ASSERT(size() > 0), *(data() + size() - 1);
-  }
+  constexpr reference back() const noexcept { return BELA_ASSERT(size() > 0), *(data() + size() - 1); }
 
   // Span::begin()
   //
@@ -356,9 +347,7 @@ public:
   //   absl::MakeSpan(vec).first(1);  // {10}
   //   absl::MakeSpan(vec).first(3);  // {10, 11, 12}
   //   absl::MakeSpan(vec).first(5);  // throws std::out_of_range
-  constexpr Span first(size_type len) const {
-    return (len <= size()) ? Span(data(), len) : (Span());
-  }
+  constexpr Span first(size_type len) const { return (len <= size()) ? Span(data(), len) : (Span()); }
 
   // Span::last()
   //
@@ -371,9 +360,7 @@ public:
   //   absl::MakeSpan(vec).last(1);  // {13}
   //   absl::MakeSpan(vec).last(3);  // {11, 12, 13}
   //   absl::MakeSpan(vec).last(5);  // throws std::out_of_range
-  constexpr Span last(size_type len) const {
-    return (len <= size()) ? Span(size() - len + data(), len) : (Span());
-  }
+  constexpr Span last(size_type len) const { return (len <= size()) ? Span(size() - len + data(), len) : (Span()); }
 
 private:
   pointer ptr_;
@@ -397,22 +384,18 @@ template <typename T> const typename Span<T>::size_type Span<T>::npos;
 // - (non_deduced<Span<const T>>, Span<T>)
 
 // operator==
-template <typename T> bool operator==(Span<T> a, Span<T> b) {
-  return span_internal::EqualImpl<Span, const T>(a, b);
-}
+template <typename T> bool operator==(Span<T> a, Span<T> b) { return span_internal::EqualImpl<Span, const T>(a, b); }
 template <typename T> bool operator==(Span<const T> a, Span<T> b) {
   return span_internal::EqualImpl<Span, const T>(a, b);
 }
 template <typename T> bool operator==(Span<T> a, Span<const T> b) {
   return span_internal::EqualImpl<Span, const T>(a, b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator==(const U &a, Span<T> b) {
   return span_internal::EqualImpl<Span, const T>(a, b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator==(Span<T> a, const U &b) {
   return span_internal::EqualImpl<Span, const T>(a, b);
 }
@@ -421,34 +404,28 @@ bool operator==(Span<T> a, const U &b) {
 template <typename T> bool operator!=(Span<T> a, Span<T> b) { return !(a == b); }
 template <typename T> bool operator!=(Span<const T> a, Span<T> b) { return !(a == b); }
 template <typename T> bool operator!=(Span<T> a, Span<const T> b) { return !(a == b); }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator!=(const U &a, Span<T> b) {
   return !(a == b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator!=(Span<T> a, const U &b) {
   return !(a == b);
 }
 
 // operator<
-template <typename T> bool operator<(Span<T> a, Span<T> b) {
-  return span_internal::LessThanImpl<Span, const T>(a, b);
-}
+template <typename T> bool operator<(Span<T> a, Span<T> b) { return span_internal::LessThanImpl<Span, const T>(a, b); }
 template <typename T> bool operator<(Span<const T> a, Span<T> b) {
   return span_internal::LessThanImpl<Span, const T>(a, b);
 }
 template <typename T> bool operator<(Span<T> a, Span<const T> b) {
   return span_internal::LessThanImpl<Span, const T>(a, b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator<(const U &a, Span<T> b) {
   return span_internal::LessThanImpl<Span, const T>(a, b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator<(Span<T> a, const U &b) {
   return span_internal::LessThanImpl<Span, const T>(a, b);
 }
@@ -457,13 +434,11 @@ bool operator<(Span<T> a, const U &b) {
 template <typename T> bool operator>(Span<T> a, Span<T> b) { return b < a; }
 template <typename T> bool operator>(Span<const T> a, Span<T> b) { return b < a; }
 template <typename T> bool operator>(Span<T> a, Span<const T> b) { return b < a; }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator>(const U &a, Span<T> b) {
   return b < a;
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator>(Span<T> a, const U &b) {
   return b < a;
 }
@@ -472,13 +447,11 @@ bool operator>(Span<T> a, const U &b) {
 template <typename T> bool operator<=(Span<T> a, Span<T> b) { return !(b < a); }
 template <typename T> bool operator<=(Span<const T> a, Span<T> b) { return !(b < a); }
 template <typename T> bool operator<=(Span<T> a, Span<const T> b) { return !(b < a); }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator<=(const U &a, Span<T> b) {
   return !(b < a);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator<=(Span<T> a, const U &b) {
   return !(b < a);
 }
@@ -487,13 +460,11 @@ bool operator<=(Span<T> a, const U &b) {
 template <typename T> bool operator>=(Span<T> a, Span<T> b) { return !(a < b); }
 template <typename T> bool operator>=(Span<const T> a, Span<T> b) { return !(a < b); }
 template <typename T> bool operator>=(Span<T> a, Span<const T> b) { return !(a < b); }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator>=(const U &a, Span<T> b) {
   return !(a < b);
 }
-template <typename T, typename U,
-          typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
+template <typename T, typename U, typename = span_internal::EnableIfConvertibleTo<U, bela::Span<const T>>>
 bool operator>=(Span<T> a, const U &b) {
   return !(a < b);
 }
@@ -534,13 +505,11 @@ bool operator>=(Span<T> a, const U &b) {
 //     return absl::MakeSpan(&array[0], num_elements_);
 //   }
 //
-template <int &... ExplicitArgumentBarrier, typename T>
-constexpr Span<T> MakeSpan(T *ptr, size_t size) noexcept {
+template <int &... ExplicitArgumentBarrier, typename T> constexpr Span<T> MakeSpan(T *ptr, size_t size) noexcept {
   return Span<T>(ptr, size);
 }
 
-template <int &... ExplicitArgumentBarrier, typename T>
-Span<T> MakeSpan(T *begin, T *end) noexcept {
+template <int &... ExplicitArgumentBarrier, typename T> Span<T> MakeSpan(T *begin, T *end) noexcept {
   return BELA_ASSERT(begin <= end), Span<T>(begin, end - begin);
 }
 
@@ -550,8 +519,7 @@ constexpr auto MakeSpan(C &c) noexcept // NOLINT(runtime/references)
   return MakeSpan(span_internal::GetData(c), c.size());
 }
 
-template <int &... ExplicitArgumentBarrier, typename T, size_t N>
-constexpr Span<T> MakeSpan(T (&array)[N]) noexcept {
+template <int &... ExplicitArgumentBarrier, typename T, size_t N> constexpr Span<T> MakeSpan(T (&array)[N]) noexcept {
   return Span<T>(array, N);
 }
 
@@ -584,8 +552,7 @@ constexpr Span<const T> MakeConstSpan(T *ptr, size_t size) noexcept {
   return Span<const T>(ptr, size);
 }
 
-template <int &... ExplicitArgumentBarrier, typename T>
-Span<const T> MakeConstSpan(T *begin, T *end) noexcept {
+template <int &... ExplicitArgumentBarrier, typename T> Span<const T> MakeConstSpan(T *begin, T *end) noexcept {
   return BELA_ASSERT(begin <= end), Span<const T>(begin, end - begin);
 }
 

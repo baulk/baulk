@@ -89,8 +89,7 @@ inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela
   if (bela::PathExists(target)) {
     baulk::fs::PathRemove(target, ec);
   }
-  if (MoveFileExW(source.data(), target.data(),
-                  MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+  if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
     ec = bela::make_system_error_code();
     return false;
   }
@@ -152,8 +151,8 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
       auto target = bela::StringCat(pkgdir, L"/", rfn);
       if (MoveFileEx(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
         ec = bela::make_system_error_code();
-        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n",
-                      expnadfile, target, ec.message);
+        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target,
+                      ec.message);
       }
     }
   }

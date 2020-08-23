@@ -47,8 +47,7 @@ typedef struct _QueryContext {
   HANDLE CompleteEvent{nullptr};
 } QUERY_CONTEXT, *PQUERY_CONTEXT;
 
-void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes,
-                                  _In_ LPOVERLAPPED Overlapped) {
+void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes, _In_ LPOVERLAPPED Overlapped) {
   PQUERY_CONTEXT QueryContext = nullptr;
   PADDRINFOEX QueryResults = nullptr;
 
@@ -72,16 +71,14 @@ bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::e
   QUERY_CONTEXT QueryContext;
   HANDLE CancelHandle = NULL;
   ZeroMemory(&QueryContext, sizeof(QueryContext));
-  if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-      QueryContext.CompleteEvent == nullptr) {
+  if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); QueryContext.CompleteEvent == nullptr) {
     ec = bela::make_system_error_code(L"ResolveName.CreateEvent() ");
     return false;
   }
   auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
-  if (auto error =
-          GetAddrInfoExW(host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
-                         reinterpret_cast<const ADDRINFOEXW *>(&hints), &QueryContext.QueryResults,
-                         NULL, &QueryContext.QueryOverlapped, QueryCompleteCallback, &CancelHandle);
+  if (auto error = GetAddrInfoExW(host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
+                                  reinterpret_cast<const ADDRINFOEXW *>(&hints), &QueryContext.QueryResults, NULL,
+                                  &QueryContext.QueryOverlapped, QueryCompleteCallback, &CancelHandle);
       error != WSA_IO_PENDING) {
     ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
     QueryCompleteCallback(error, 0, &QueryContext.QueryOverlapped);
@@ -189,8 +186,7 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout, bel
   return true;
 }
 
-std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port, int timeout,
-                                            bela::error_code &ec) {
+std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port, int timeout, bela::error_code &ec) {
   static Winsock winsock_;
   PADDRINFOEX4 rhints = nullptr;
   if (!ResolveName(address, port, &rhints, ec)) {

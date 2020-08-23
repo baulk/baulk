@@ -94,8 +94,7 @@ template <typename int_type> wchar_t *FastIntToBuffer(int_type i, wchar_t *buffe
 // Implementation of SimpleAtoi, generalized to support arbitrary base (used
 // with base different from 10 elsewhere in Abseil implementation).
 template <typename int_type> bool safe_strtoi_base(std::wstring_view s, int_type *out, int base) {
-  static_assert(sizeof(*out) == 4 || sizeof(*out) == 8,
-                "SimpleAtoi works only with 32-bit or 64-bit integers.");
+  static_assert(sizeof(*out) == 4 || sizeof(*out) == 8, "SimpleAtoi works only with 32-bit or 64-bit integers.");
   static_assert(!std::is_floating_point<int_type>::value, "Use SimpleAtof or SimpleAtod instead.");
   bool parsed;
   // TODO(jorg): This signed-ness check is used because it works correctly

@@ -22,18 +22,15 @@ int wmain(int argc, wchar_t **argv) {
   char32_t em2 = U'中';
   char32_t hammerandwrench = 0x1F6E0;
   auto s = bela::StringCat(L"Look emoji -->", em, L" U+", bela::AlphaNum(bela::Hex(em)));
-  bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s,
-                &em);
-  bela::FPrintF(stderr, L"Unicode %c Width: %d \u2600 %d 中 %d ©: %d [%c] %d [%c] %d \n", em,
-                bela::CalculateWidth(em), bela::CalculateWidth(0x2600), bela::CalculateWidth(L'中'),
-                bela::CalculateWidth(0xA9), 161, bela::CalculateWidth(161), hammerandwrench,
-                bela::CalculateWidth(hammerandwrench));
-  bela::FPrintF(
-      stderr, L"Unicode2 %c Width: %d \u2600 %d 中 %d  ©: %d [%c] %d [%c] %d\n", em,
-      bela::unicode::CalculateWidthInternal(em), bela::unicode::CalculateWidthInternal(0x2600),
-      bela::unicode::CalculateWidthInternal(L'中'), bela::unicode::CalculateWidthInternal(0xA9),
-      161, bela::unicode::CalculateWidthInternal(161), hammerandwrench,
-      bela::unicode::CalculateWidthInternal(hammerandwrench));
+  bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s, &em);
+  bela::FPrintF(stderr, L"Unicode %c Width: %d \u2600 %d 中 %d ©: %d [%c] %d [%c] %d \n", em, bela::CalculateWidth(em),
+                bela::CalculateWidth(0x2600), bela::CalculateWidth(L'中'), bela::CalculateWidth(0xA9), 161,
+                bela::CalculateWidth(161), hammerandwrench, bela::CalculateWidth(hammerandwrench));
+  bela::FPrintF(stderr, L"Unicode2 %c Width: %d \u2600 %d 中 %d  ©: %d [%c] %d [%c] %d\n", em,
+                bela::unicode::CalculateWidthInternal(em), bela::unicode::CalculateWidthInternal(0x2600),
+                bela::unicode::CalculateWidthInternal(L'中'), bela::unicode::CalculateWidthInternal(0xA9), 161,
+                bela::unicode::CalculateWidthInternal(161), hammerandwrench,
+                bela::unicode::CalculateWidthInternal(hammerandwrench));
   auto es = bela::EscapeNonBMP(wx);
   bela::FPrintF(stderr, L"EscapeNonBMP: %s\n", es);
   bela::FPrintF(stderr, L"[%-10d]\n", argc);

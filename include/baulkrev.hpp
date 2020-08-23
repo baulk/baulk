@@ -45,17 +45,17 @@
 #endif
 
 #ifndef BAULK_APPLINK
-#define BAULK_APPLINK                                                                              \
-  L"For more information about this tool. \nVisit: <a "                                            \
-  L"href=\"https://github.com/baulk/baulk\">Baulk</"                                               \
-  L"a>\nVisit: <a "                                                                                \
+#define BAULK_APPLINK                                                                                                  \
+  L"For more information about this tool. \nVisit: <a "                                                                \
+  L"href=\"https://github.com/baulk/baulk\">Baulk</"                                                                   \
+  L"a>\nVisit: <a "                                                                                                    \
   L"href=\"https://forcemz.net/\">forcemz.net</a>"
 #endif
 
 #ifndef BAULK_APPLINKE
-#define BAULK_APPLINKE                                                                             \
-  L"Ask for help with this issue. \nVisit: <a "                                                    \
-  L"href=\"https://github.com/baulk/baulk/issues\">Baulk "                                         \
+#define BAULK_APPLINKE                                                                                                 \
+  L"Ask for help with this issue. \nVisit: <a "                                                                        \
+  L"href=\"https://github.com/baulk/baulk/issues\">Baulk "                                                             \
   L"Issues</a>"
 #endif
 

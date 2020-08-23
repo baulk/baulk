@@ -17,9 +17,8 @@ int Process::ExecuteInternal(std::wstring_view file, wchar_t *cmdline) {
       simulator->LookupPath(file, path);
     }
   }
-  if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT, reinterpret_cast<LPVOID>(string_nullable(env)),
-                     string_nullable(cwd), &si, &pi) != TRUE) {
+  if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
+                     reinterpret_cast<LPVOID>(string_nullable(env)), string_nullable(cwd), &si, &pi) != TRUE) {
     ec = bela::make_system_error_code();
     return -1;
   }
@@ -47,8 +46,8 @@ struct process_capture_helper {
   process_capture_helper() : pi{} {}
   PROCESS_INFORMATION pi;
   HANDLE fdout{nullptr};
-  bool create_process_redirect(std::wstring &path, wchar_t *cmdline, std::wstring &env,
-                               std::wstring &cwd, DWORD flags, bela::error_code &ec) noexcept {
+  bool create_process_redirect(std::wstring &path, wchar_t *cmdline, std::wstring &env, std::wstring &cwd, DWORD flags,
+                               bela::error_code &ec) noexcept {
     STARTUPINFOW si;
     memset(&si, 0, sizeof(STARTUPINFOW));
     si.cb = sizeof(STARTUPINFOW);
@@ -81,8 +80,8 @@ struct process_capture_helper {
     }
     si.hStdError = si.hStdOutput;
     if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, TRUE,
-                       IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW,
-                       string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
+                       IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, string_nullable(env),
+                       string_nullable(cwd), &si, &pi) != TRUE) {
       ec = bela::make_system_error_code();
       Free(fdout);
       Free(si.hStdOutput);
@@ -108,8 +107,7 @@ struct process_capture_helper {
     unsigned long bytes_read = 0;
     static constexpr int buffer_size = 1024 * 32;
     auto buf = std::make_unique<char[]>(buffer_size);
-    while (ReadFile(fdout, (void *)buf.get(), buffer_size, &bytes_read, nullptr) == TRUE &&
-           bytes_read > 0) {
+    while (ReadFile(fdout, (void *)buf.get(), buffer_size, &bytes_read, nullptr) == TRUE && bytes_read > 0) {
       out.append(buf.get(), static_cast<size_t>(bytes_read));
     }
     CloseHandle(fdout);

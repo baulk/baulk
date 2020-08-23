@@ -16,8 +16,8 @@ App::~App() {
 }
 int App::run(HINSTANCE hInstance) {
   hInst = hInstance;
-  return (int)DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_ASKPASS_WINDOW), NULL,
-                              App::WindowProc, reinterpret_cast<LPARAM>(this));
+  return (int)DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_ASKPASS_WINDOW), NULL, App::WindowProc,
+                              reinterpret_cast<LPARAM>(this));
 }
 // Typically, the dialog box procedure should return TRUE if it processed the
 // message, and FALSE if it did not. If the dialog box procedure returns FALSE,
@@ -66,8 +66,7 @@ bool App::Initialize(HWND window) {
   int pheight = 0;
   std::wstring prompttext;
   auto hSystemMenu = ::GetSystemMenu(hWnd, FALSE);
-  InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_ASKPASS_ABOUT,
-              L"About Askpass Utility for Baulk");
+  InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_ASKPASS_ABOUT, L"About Askpass Utility for Baulk");
   hPrompt = GetDlgItem(hWnd, IDS_PROMPT_CONTENT);
   hInput = GetDlgItem(hWnd, IDE_ASKPASS_INPUT);
   constexpr auto es = WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
@@ -86,11 +85,9 @@ bool App::Initialize(HWND window) {
   maxlen = (std::max)(maxlen, 300);
   auto height = 40 + 10 + pheight + 35 + 35 + 35; // line count
   auto width = (std::max)(maxlen + 40, 300);
-  SetWindowPos(hWnd, nullptr, 0, 0, width, height,
-               SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_FRAMECHANGED);
+  SetWindowPos(hWnd, nullptr, 0, 0, width, height, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE | SWP_FRAMECHANGED);
   HDWP hdwp = BeginDeferWindowPos(4); //
-  DeferWindowPos(hdwp, hPrompt, nullptr, 20, 10, maxlen, pheight,
-                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  DeferWindowPos(hdwp, hPrompt, nullptr, 20, 10, maxlen, pheight, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   // changel hInput layout
   DeferWindowPos(hdwp, hInput, nullptr, 20, 10 + pheight + 10, width - 40 - 20, 30,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
@@ -150,8 +147,7 @@ INT_PTR App::MessageHandler(UINT message, WPARAM wParam, LPARAM lParam) {
   } break;
   case WM_SYSCOMMAND:
     if (LOWORD(wParam) == IDM_ASKPASS_ABOUT) {
-      bela::BelaMessageBox(hWnd, L"Askpass Utility for Baulk", BAULK_APPVERSION, BAULK_APPLINK,
-                           bela::mbs_t::ABOUT);
+      bela::BelaMessageBox(hWnd, L"Askpass Utility for Baulk", BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
       return TRUE;
     }
     break;

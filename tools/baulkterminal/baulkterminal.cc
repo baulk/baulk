@@ -38,8 +38,7 @@ Usage: baulkterminal [option] ...
                Add Visual Studio's built-in clang to the PATH environment variable
 
 )";
-  bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage, BAULK_APPLINK,
-                       bela::mbs_t::ABOUT);
+  bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", usage, BAULK_APPLINK, bela::mbs_t::ABOUT);
 }
 
 bool Executor::ParseArgv(bela::error_code &ec) {
@@ -90,8 +89,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
             break;
           }
           auto msg = bela::StringCat(L"Invalid arch: ", oa);
-          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE,
-                               bela::mbs_t::FATAL);
+          bela::BelaMessageBox(nullptr, L"Baulk Terminal Launcher", msg.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
         } break;
         case 'E':
           venvs.push_back(oa);
@@ -137,14 +135,12 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   baulkterminal::Executor executor;
   bela::error_code ec;
   if (!executor.ParseArgv(ec)) {
-    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(), BAULK_APPLINKE,
-                         bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
     return 1;
   }
   bela::EscapeArgv ea;
   if (!executor.PrepareArgv(ea, ec)) {
-    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare Argv error", ec.data(), BAULK_APPLINKE,
-                         bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"BaulkTerminal: Prepare Argv error", ec.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
     return 1;
   }
   STARTUPINFOW si;
@@ -152,11 +148,10 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     nullptr, nullptr, &si, &pi) != TRUE) {
+  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
+                     &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr,
-                         bela::mbs_t::FATAL);
+    bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr, bela::mbs_t::FATAL);
     return -1;
   }
   CloseHandle(pi.hThread);

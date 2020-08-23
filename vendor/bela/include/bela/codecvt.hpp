@@ -62,8 +62,7 @@ size_t StringWidth(std::string_view str);
 size_t StringWidth(std::u16string_view str);
 // Calculate UTF-16 string display width (Windows)
 inline size_t StringWidth(std::wstring_view str) {
-  return StringWidth(
-      std::u16string_view{reinterpret_cast<const char16_t *>(str.data()), str.size()});
+  return StringWidth(std::u16string_view{reinterpret_cast<const char16_t *>(str.data()), str.size()});
 }
 } // namespace bela
 

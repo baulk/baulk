@@ -99,8 +99,7 @@ bool EnvDependentChain::LoadEnv(std::wstring_view pkgname, bela::error_code &ec)
   return true;
 }
 
-bool EnvDependentChain::LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv,
-                                     bela::error_code &ec) {
+bool EnvDependentChain::LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec) {
   auto localfile = bela::StringCat(searcher.baulkbindir, L"\\etc\\", pkgname, L".local.json");
   if (!bela::PathExists(localfile)) {
     return false;
@@ -128,8 +127,7 @@ bool EnvDependentChain::LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv 
   return true;
 }
 // load env
-bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &venv,
-                                    bela::error_code &ec) {
+bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &venv, bela::error_code &ec) {
   auto lockfile = bela::StringCat(searcher.baulkbindir, L"\\locks\\", pkgname, L".json");
   FILE *fd = nullptr;
   if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {

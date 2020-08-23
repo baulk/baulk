@@ -25,8 +25,7 @@ struct BaulkVirtualEnv {
 };
 
 struct Searcher {
-  Searcher(bela::env::Simulator &simulator_, std::wstring_view arch_ = HostArch)
-      : simulator{simulator_}, arch(arch_) {
+  Searcher(bela::env::Simulator &simulator_, std::wstring_view arch_ = HostArch) : simulator{simulator_}, arch(arch_) {
     if (arch.empty()) {
       arch = HostArch;
     }
@@ -69,8 +68,7 @@ struct Searcher {
     return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
   }
 
-  template <typename... Args>
-  bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
+  template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, Args... args) {
     if (!IsDebugMode) {
       return 0;
     }
@@ -91,8 +89,7 @@ struct Searcher {
     if (!msg.empty() && msg.back() == '\n') {
       msg.remove_suffix(1);
     }
-    return bela::terminal::WriteAuto(stderr,
-                                     bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
+    return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
   }
   bool JoinEnvInternal(vector_t &vec, std::wstring &&p) {
     if (bela::PathExists(p)) {
@@ -114,14 +111,13 @@ struct Searcher {
     auto p = bela::StringCat(a, b, c);
     return JoinEnvInternal(vec, std::wstring(p));
   }
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
-               std::wstring_view d) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c, std::wstring_view d) {
     auto p = bela::StringCat(a, b, c, d);
     return JoinEnvInternal(vec, std::wstring(p));
   }
   template <typename... Args>
-  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c,
-               std::wstring_view d, Args... args) {
+  bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c, std::wstring_view d,
+               Args... args) {
     auto p = bela::strings_internal::CatPieces({a, b, c, d, args...});
     return JoinEnvInternal(vec, std::wstring(p));
   }

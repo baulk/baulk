@@ -65,9 +65,7 @@ public:
   ConvertibleToStringView(const ConvertibleToStringView &other)
       : copy_(other.copy_), value_(other.IsSelfReferential() ? copy_ : other.value_) {}
 
-  ConvertibleToStringView(ConvertibleToStringView &&other) noexcept {
-    StealMembers(std::move(other));
-  }
+  ConvertibleToStringView(ConvertibleToStringView &&other) noexcept { StealMembers(std::move(other)); }
 
   ConvertibleToStringView &operator=(ConvertibleToStringView other) {
     StealMembers(std::move(other));
@@ -180,25 +178,21 @@ private:
 
 // HasMappedType<T>::value is true iff there exists a type T::mapped_type.
 template <typename T, typename = void> struct HasMappedType : std::false_type {};
-template <typename T>
-struct HasMappedType<T, std::void_t<typename T::mapped_type>> : std::true_type {};
+template <typename T> struct HasMappedType<T, std::void_t<typename T::mapped_type>> : std::true_type {};
 
 // HasValueType<T>::value is true iff there exists a type T::value_type.
 template <typename T, typename = void> struct HasValueType : std::false_type {};
-template <typename T>
-struct HasValueType<T, std::void_t<typename T::value_type>> : std::true_type {};
+template <typename T> struct HasValueType<T, std::void_t<typename T::value_type>> : std::true_type {};
 
 // HasConstIterator<T>::value is true iff there exists a type T::const_iterator.
 template <typename T, typename = void> struct HasConstIterator : std::false_type {};
-template <typename T>
-struct HasConstIterator<T, std::void_t<typename T::const_iterator>> : std::true_type {};
+template <typename T> struct HasConstIterator<T, std::void_t<typename T::const_iterator>> : std::true_type {};
 
 // IsInitializerList<T>::value is true iff T is an std::initializer_list. More
 // details below in Splitter<> where this is used.
 std::false_type IsInitializerListDispatch(...); // default: No
 template <typename T> std::true_type IsInitializerListDispatch(std::initializer_list<T> *);
-template <typename T>
-struct IsInitializerList : decltype(IsInitializerListDispatch(static_cast<T *>(nullptr))) {};
+template <typename T> struct IsInitializerList : decltype(IsInitializerListDispatch(static_cast<T *>(nullptr))) {};
 
 // A SplitterIsConvertibleTo<C>::type alias exists iff the specified condition
 // is true for type 'C'.
@@ -214,8 +208,8 @@ template <typename C, bool has_value_type, bool has_mapped_type>
 struct SplitterIsConvertibleToImpl : std::false_type {};
 
 template <typename C>
-struct SplitterIsConvertibleToImpl<C, true, false>
-    : std::is_constructible<typename C::value_type, std::wstring_view> {};
+struct SplitterIsConvertibleToImpl<C, true, false> : std::is_constructible<typename C::value_type, std::wstring_view> {
+};
 
 template <typename C>
 struct SplitterIsConvertibleToImpl<C, true, true>
@@ -224,14 +218,13 @@ struct SplitterIsConvertibleToImpl<C, true, true>
 
 template <typename C>
 struct SplitterIsConvertibleTo
-    : SplitterIsConvertibleToImpl<
-          C,
+    : SplitterIsConvertibleToImpl<C,
 #ifdef _GLIBCXX_DEBUG
-          !IsStrictlyBaseOfAndConvertibleToSTLContainer<C>::value &&
+                                  !IsStrictlyBaseOfAndConvertibleToSTLContainer<C>::value &&
 #endif // _GLIBCXX_DEBUG
-              !IsInitializerList<typename std::remove_reference<C>::type>::value &&
-              HasValueType<C>::value && HasConstIterator<C>::value,
-          HasMappedType<C>::value> {
+                                      !IsInitializerList<typename std::remove_reference<C>::type>::value &&
+                                      HasValueType<C>::value && HasConstIterator<C>::value,
+                                  HasMappedType<C>::value> {
 };
 
 // This class implements the range that is returned by absl::StrSplit(). This
@@ -276,16 +269,14 @@ public:
   template <typename Container,
             typename = typename std::enable_if<SplitterIsConvertibleTo<Container>::value>::type>
   operator Container() const { // NOLINT(runtime/explicit)
-    return ConvertToContainer<Container, typename Container::value_type,
-                              HasMappedType<Container>::value>()(*this);
+    return ConvertToContainer<Container, typename Container::value_type, HasMappedType<Container>::value>()(*this);
   }
 
   // Returns a pair with its .first and .second members set to the first two
   // strings returned by the begin() iterator. Either/both of .first and .second
   // will be constructed with empty strings if the iterator doesn't have a
   // corresponding value.
-  template <typename First, typename Second>
-  operator std::pair<First, Second>() const { // NOLINT(runtime/explicit)
+  template <typename First, typename Second> operator std::pair<First, Second>() const { // NOLINT(runtime/explicit)
     std::wstring_view first, second;
     auto it = begin();
     if (it != end()) {
@@ -321,8 +312,7 @@ private:
   // Optimized for the common case of splitting to a
   // std::vector<std::wstring_view>. In this case we first split the results to
   // a small array of std::wstring_view on the stack, to reduce reallocations.
-  template <typename A>
-  struct ConvertToContainer<std::vector<std::wstring_view, A>, std::wstring_view, false> {
+  template <typename A> struct ConvertToContainer<std::vector<std::wstring_view, A>, std::wstring_view, false> {
     std::vector<std::wstring_view, A> operator()(const Splitter &splitter) const {
       struct raw_view {
         const wchar_t *data;
@@ -352,8 +342,7 @@ private:
   // In this case we first split the results to a std::vector<std::wstring_view>
   // so the returned std::vector<std::wstring> can have space reserved to avoid
   // std::wstring moves.
-  template <typename A>
-  struct ConvertToContainer<std::vector<std::wstring, A>, std::wstring, false> {
+  template <typename A> struct ConvertToContainer<std::vector<std::wstring, A>, std::wstring, false> {
     std::vector<std::wstring, A> operator()(const Splitter &splitter) const {
       const std::vector<std::wstring_view> v = splitter;
       return std::vector<std::wstring, A>(v.begin(), v.end());

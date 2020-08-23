@@ -74,11 +74,9 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
     auto j0 = nlohmann::json::parse(fd, nullptr, true, true);
     auto links = j0.at("links");
     auto metadata = bela::ToWide(links.at(bela::ToNarrow(launcher)).get<std::string>());
-    std::vector<std::wstring_view> tv =
-        bela::StrSplit(metadata, bela::ByChar('@'), bela::SkipEmpty());
+    std::vector<std::wstring_view> tv = bela::StrSplit(metadata, bela::ByChar('@'), bela::SkipEmpty());
     if (tv.size() < 2) {
-      ec = bela::make_error_code(1, L"baulk launcher: '", launcher, L"' invaild metadata: ",
-                                 metadata);
+      ec = bela::make_error_code(1, L"baulk launcher: '", launcher, L"' invaild metadata: ", metadata);
       return std::nullopt;
     }
     auto baulkroot = bela::DirName(parent);
@@ -110,8 +108,8 @@ int wmain(int argc, wchar_t **argv) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE,
-                     CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si, &pi) != TRUE) {
+  if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr,
+                     nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
     return -1;

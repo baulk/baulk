@@ -36,9 +36,8 @@ namespace unicode {
 #ifndef _BELA_HAS_CHAR8_T // TRANSITION, LLVM#41063
 // Clang can't mangle char8_t on Windows, but the feature-test macro is defined.
 // This issue has been fixed for the 8.0.1 release.
-#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L &&                                          \
-    !(defined(__clang__) && __clang_major__ == 8 && __clang_minor__ == 0 &&                        \
-      __clang_patchlevel__ == 0)
+#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L &&                                                              \
+    !(defined(__clang__) && __clang_major__ == 8 && __clang_minor__ == 0 && __clang_patchlevel__ == 0)
 #define _BELA_HAS_CHAR8_T 1
 // char8_t exists
 #else // ^^^ Compiler supports char8_t / doesn't support char8_t vvv
@@ -155,8 +154,7 @@ inline std::uint32_t char32tochar8(char32_t rune, char8_t *dest) noexcept {
 }
 
 template <typename T, typename Allocator>
-inline size_t char32tochar8(char32_t rune,
-                            std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
+inline size_t char32tochar8(char32_t rune, std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
   static_assert(sizeof(T) == 1, "Only supports one-byte character basic types");
   if (rune <= 0x7F) {
     dest += static_cast<T>(rune);
@@ -200,8 +198,7 @@ inline size_t char32tochar16(char32_t rune, char16_t *dest) {
 }
 
 template <typename T = char16_t, typename Allocator>
-inline size_t char32tochar16(char32_t rune,
-                             std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
+inline size_t char32tochar16(char32_t rune, std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
   static_assert(sizeof(T) == 2, "Only supports one-byte character basic types");
   if (rune <= 0xFFFF) {
     dest.push_back(issurrogate(rune) ? 0xFFFD : static_cast<T>(rune));

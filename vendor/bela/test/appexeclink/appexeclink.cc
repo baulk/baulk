@@ -26,7 +26,7 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"unable lookup %s AppExecTarget\n", argv[1]);
     return 1;
   }
-  bela::FPrintF(stdout, L"AppExecLink details:\nPackageID:  %s\nAppUserID:  %s\nTarget:     %s\n",
-                ae.pkid, ae.appuserid, ae.target);
+  bela::FPrintF(stdout, L"AppExecLink details:\nPackageID:  %s\nAppUserID:  %s\nTarget:     %s\n", ae.pkid,
+                ae.appuserid, ae.target);
   return 0;
 }

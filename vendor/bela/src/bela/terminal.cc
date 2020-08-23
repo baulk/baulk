@@ -45,19 +45,17 @@ bool IsCygwinTerminal(HANDLE fd) {
   }
   auto pb = reinterpret_cast<FILE_NAME_INFO *>(buffer);
   std::wstring_view pipename{pb->FileName, pb->FileNameLength / 2};
-  std::vector<std::wstring_view> pvv =
-      bela::StrSplit(pipename, bela::ByChar(L'-'), bela::SkipEmpty());
+  std::vector<std::wstring_view> pvv = bela::StrSplit(pipename, bela::ByChar(L'-'), bela::SkipEmpty());
   if (pvv.size() < 5) {
     return false;
   }
-  constexpr std::wstring_view cyglikeprefix[] = {
-      L"\\msys", L"\\cygwin", L"\\Device\\NamedPipe\\msys", L"\\Device\\NamedPipe\\cygwin"};
+  constexpr std::wstring_view cyglikeprefix[] = {L"\\msys", L"\\cygwin", L"\\Device\\NamedPipe\\msys",
+                                                 L"\\Device\\NamedPipe\\cygwin"};
   constexpr std::wstring_view ptyprefix = L"pty";
   constexpr std::wstring_view pipeto = L"to";
   constexpr std::wstring_view pipefrom = L"from";
   constexpr std::wstring_view master = L"master";
-  if (std::find(std::begin(cyglikeprefix), std::end(cyglikeprefix), pvv[0]) ==
-      std::end(cyglikeprefix)) {
+  if (std::find(std::begin(cyglikeprefix), std::end(cyglikeprefix), pvv[0]) == std::end(cyglikeprefix)) {
     return false;
   }
   if (pvv[1].empty()) {
@@ -176,9 +174,7 @@ private:
   TerminalMode errmode{TerminalMode::File};
 };
 
-bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data) {
-  return Filter::Instance().WriteAuto(fd, data);
-}
+bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data) { return Filter::Instance().WriteAuto(fd, data); }
 
 bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));

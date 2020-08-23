@@ -10,9 +10,7 @@
 
 namespace bela {
 namespace cmdline_internal {
-constexpr inline bool isWhitespace(wchar_t ch) {
-  return ch == L' ' || ch == L'\t' || ch == L'\r' || ch == L'\n';
-}
+constexpr inline bool isWhitespace(wchar_t ch) { return ch == L' ' || ch == L'\t' || ch == L'\r' || ch == L'\n'; }
 
 inline std::wstring_view StripTrailingWhitespace(std::wstring_view str) {
   auto it = std::find_if_not(str.rbegin(), str.rend(), isWhitespace);

@@ -169,8 +169,7 @@ inline char32_t AnnexU8(const uint8_t *it, int nb) {
 }
 
 template <typename T, typename Allocator>
-bool mbrtoc16(const unsigned char *s, size_t len,
-              std::basic_string<T, std::char_traits<T>, Allocator> &container) {
+bool mbrtoc16(const unsigned char *s, size_t len, std::basic_string<T, std::char_traits<T>, Allocator> &container) {
   if (s == nullptr || len == 0) {
     return false;
   }
@@ -220,8 +219,7 @@ std::u16string mbrtoc16(const unsigned char *str, size_t len) {
   return s;
 }
 
-template <size_t N, typename T>
-inline std::basic_string_view<T> EncodeUnicode(T (&buf)[N], char32_t ch) {
+template <size_t N, typename T> inline std::basic_string_view<T> EncodeUnicode(T (&buf)[N], char32_t ch) {
   T *end = buf + N;
   T *writer = end;
   uint64_t value = ch;

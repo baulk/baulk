@@ -239,10 +239,10 @@
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
 
 #define SYMLINK_FLAG_RELATIVE 0x00000001 // If set then this is a relative symlink.
-#define SYMLINK_DIRECTORY                                                                          \
+#define SYMLINK_DIRECTORY                                                                                              \
   0x80000000 // If set then this is a directory symlink. This is not persisted
              // on disk and is programmatically set by file system.
-#define SYMLINK_FILE                                                                               \
+#define SYMLINK_FILE                                                                                                   \
   0x40000000 // If set then this is a file symlink. This is not persisted on
              // disk and is programmatically set by file system.
 
@@ -257,9 +257,8 @@
 #endif
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_WIN10_RS1)
-#define FSCTL_SET_REPARSE_POINT_EX                                                                 \
-  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 259, METHOD_BUFFERED,                                          \
-           FILE_SPECIAL_ACCESS) // REPARSE_DATA_BUFFER_EX
+#define FSCTL_SET_REPARSE_POINT_EX                                                                                     \
+  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 259, METHOD_BUFFERED, FILE_SPECIAL_ACCESS) // REPARSE_DATA_BUFFER_EX
 // #define FSCTL_GET_REPARSE_POINT_EX                                             \
 //   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 260, METHOD_BUFFERED,                      \
 //            FILE_SPECIAL_ACCESS) // REPARSE_DATA_BUFFER_EX

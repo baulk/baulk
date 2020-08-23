@@ -81,16 +81,16 @@ void ProgressBar::Draw() {
     // '<=>'
     auto s0 = MakeSpace(pos);
     auto s1 = MakeSpace(barwidth - pos - 3);
-    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s [%s%s%s] %s %s/s\x1b[0m", (uint32_t)state,
-                  MakeFileName(), s0, bounce, s1, strtotal, speed);
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s [%s%s%s] %s %s/s\x1b[0m", (uint32_t)state, MakeFileName(), s0,
+                  bounce, s1, strtotal, speed);
     return;
   }
   auto scale = total_ * 100 / maximum;
   auto progress = scale * barwidth / 100;
   auto ps = MakeRate(static_cast<size_t>(progress));
   auto sps = MakeSpace(static_cast<size_t>(barwidth - progress));
-  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s %d%% [%s%s] %s %s/s\x1b[0m", (uint32_t)state,
-                MakeFileName(), scale, ps, sps, strtotal, speed);
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[01;%dm%s %d%% [%s%s] %s %s/s\x1b[0m", (uint32_t)state, MakeFileName(), scale,
+                ps, sps, strtotal, speed);
 }
 
 bool ProgressBar::Execute() {

@@ -19,9 +19,8 @@ struct bucket_metadata {
 
 class BucketUpdater {
 public:
-  using bucket_status_t =
-      bela::flat_hash_map<std::wstring, bucket_metadata, baulk::net::StringCaseInsensitiveHash,
-                          baulk::net::StringCaseInsensitiveEq>;
+  using bucket_status_t = bela::flat_hash_map<std::wstring, bucket_metadata, baulk::net::StringCaseInsensitiveHash,
+                                              baulk::net::StringCaseInsensitiveEq>;
   BucketUpdater() = default;
   BucketUpdater(const BucketUpdater &) = delete;
   BucketUpdater &operator=(const BucketUpdater &) = delete;
@@ -97,8 +96,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   bela::error_code ec;
   auto latest = baulk::bucket::BucketNewest(bucket.url, ec);
   if (!latest) {
-    bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name,
-                  ec.message);
+    bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
     return false;
   }
   auto it = status.find(bucket.name);
@@ -108,8 +106,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
   if (!baulk::bucket::BucketUpdate(bucket.url, bucket.name, *latest, ec)) {
-    bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n",
-                  bucket.name, ec.message);
+    bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
     return false;
   }
   bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name, *latest);
@@ -151,8 +148,7 @@ bool PackageScanUpdatable() {
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
                       opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
-                      StringCategory(pkg));
+                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(pkg));
         continue;
       }
     } while (finder.Next());

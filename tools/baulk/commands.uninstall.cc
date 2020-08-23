@@ -10,8 +10,7 @@ namespace baulk::commands {
 int uninstallone(std::wstring_view pkgname) {
   auto lock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
   if (!bela::PathExists(lock) && !baulk::IsForceMode) {
-    bela::FPrintF(stderr, L"No local metadata found, \x1b[34m%s\x1b[0m may not be installed.\n",
-                  pkgname);
+    bela::FPrintF(stderr, L"No local metadata found, \x1b[34m%s\x1b[0m may not be installed.\n", pkgname);
     return 1;
   }
   bela::error_code ec;

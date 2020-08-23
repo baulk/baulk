@@ -112,35 +112,29 @@ struct Hex {
   wchar_t fill;
 
   template <typename Int>
-  explicit Hex(
-      Int v, PadSpec spec = bela::kNoPad,
-      typename std::enable_if<sizeof(Int) == 1 && !std::is_pointer<Int>::value>::type * = nullptr)
+  explicit Hex(Int v, PadSpec spec = bela::kNoPad,
+               typename std::enable_if<sizeof(Int) == 1 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint8_t>(v)) {}
   template <typename Int>
-  explicit Hex(
-      Int v, PadSpec spec = bela::kNoPad,
-      typename std::enable_if<sizeof(Int) == 2 && !std::is_pointer<Int>::value>::type * = nullptr)
+  explicit Hex(Int v, PadSpec spec = bela::kNoPad,
+               typename std::enable_if<sizeof(Int) == 2 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint16_t>(v)) {}
   template <typename Int>
-  explicit Hex(
-      Int v, PadSpec spec = bela::kNoPad,
-      typename std::enable_if<sizeof(Int) == 4 && !std::is_pointer<Int>::value>::type * = nullptr)
+  explicit Hex(Int v, PadSpec spec = bela::kNoPad,
+               typename std::enable_if<sizeof(Int) == 4 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint32_t>(v)) {}
   template <typename Int>
-  explicit Hex(
-      Int v, PadSpec spec = bela::kNoPad,
-      typename std::enable_if<sizeof(Int) == 8 && !std::is_pointer<Int>::value>::type * = nullptr)
+  explicit Hex(Int v, PadSpec spec = bela::kNoPad,
+               typename std::enable_if<sizeof(Int) == 8 && !std::is_pointer<Int>::value>::type * = nullptr)
       : Hex(spec, static_cast<uint64_t>(v)) {}
   template <typename Pointee>
-  explicit Hex(Pointee *v, PadSpec spec = bela::kNoPad)
-      : Hex(spec, reinterpret_cast<uintptr_t>(v)) {}
+  explicit Hex(Pointee *v, PadSpec spec = bela::kNoPad) : Hex(spec, reinterpret_cast<uintptr_t>(v)) {}
 
 private:
   Hex(PadSpec spec, uint64_t v)
-      : value(v),
-        width(spec == bela::kNoPad ? 1
-                                   : spec >= bela::kSpacePad2 ? spec - bela::kSpacePad2 + 2
-                                                              : spec - bela::kZeroPad2 + 2),
+      : value(v), width(spec == bela::kNoPad
+                            ? 1
+                            : spec >= bela::kSpacePad2 ? spec - bela::kSpacePad2 + 2 : spec - bela::kZeroPad2 + 2),
         fill(spec >= bela::kSpacePad2 ? L' ' : L'0') {}
 };
 
@@ -158,12 +152,11 @@ struct Dec {
   bool neg;
 
   template <typename Int>
-  explicit Dec(Int v, PadSpec spec = bela::kNoPad,
-               typename std::enable_if<(sizeof(Int) <= 8)>::type * = nullptr)
+  explicit Dec(Int v, PadSpec spec = bela::kNoPad, typename std::enable_if<(sizeof(Int) <= 8)>::type * = nullptr)
       : value(v >= 0 ? static_cast<uint64_t>(v) : uint64_t{0} - static_cast<uint64_t>(v)),
-        width(spec == bela::kNoPad ? 1
-                                   : spec >= bela::kSpacePad2 ? spec - bela::kSpacePad2 + 2
-                                                              : spec - bela::kZeroPad2 + 2),
+        width(spec == bela::kNoPad
+                  ? 1
+                  : spec >= bela::kSpacePad2 ? spec - bela::kSpacePad2 + 2 : spec - bela::kZeroPad2 + 2),
         fill(spec >= bela::kSpacePad2 ? L' ' : L'0'), neg(v < 0) {}
 };
 
@@ -205,9 +198,8 @@ public:
       const strings_internal::AlphaNumBuffer<size> &buf)
       : piece_(&buf.data[0], buf.size) {}
 
-  AlphaNum(const wchar_t *c_str)
-      : piece_(c_str == nullptr ? L"" : c_str) {} // NOLINT(runtime/explicit)
-  AlphaNum(std::wstring_view pc) : piece_(pc) {}  // NOLINT(runtime/explicit)
+  AlphaNum(const wchar_t *c_str) : piece_(c_str == nullptr ? L"" : c_str) {} // NOLINT(runtime/explicit)
+  AlphaNum(std::wstring_view pc) : piece_(pc) {}                             // NOLINT(runtime/explicit)
 
   template <typename Allocator>
   AlphaNum( // NOLINT(runtime/explicit)
@@ -217,8 +209,8 @@ public:
   AlphaNum(wchar_t c) : piece_(digits_, 1) { digits_[0] = c; }
   AlphaNum(char16_t ch) : piece_(digits_, 1) { digits_[0] = static_cast<wchar_t>(ch); }
   AlphaNum(char32_t ch)
-      : piece_(digits_, bela::char32tochar16(ch, reinterpret_cast<char16_t *>(digits_),
-                                             numbers_internal::kFastToBufferSize)) {}
+      : piece_(digits_,
+               bela::char32tochar16(ch, reinterpret_cast<char16_t *>(digits_), numbers_internal::kFastToBufferSize)) {}
 
   AlphaNum(const AlphaNum &) = delete;
   AlphaNum &operator=(const AlphaNum &) = delete;
@@ -229,18 +221,16 @@ public:
 
   // Normal enums are already handled by the integer formatters.
   // This overload matches only scoped enums.
-  template <typename T, typename = typename std::enable_if<std::is_enum<T>{} &&
-                                                           !std::is_convertible<T, int>{}>::type>
+  template <typename T, typename = typename std::enable_if<std::is_enum<T>{} && !std::is_convertible<T, int>{}>::type>
   AlphaNum(T e) // NOLINT(runtime/explicit)
       : AlphaNum(static_cast<typename std::underlying_type<T>::type>(e)) {}
 
   // vector<bool>::reference and const_reference require special help to
   // convert to `AlphaNum` because it requires two user defined conversions.
   template <typename T,
-            typename std::enable_if<
-                std::is_class<T>::value &&
-                (std::is_same<T, std::vector<bool>::reference>::value ||
-                 std::is_same<T, std::vector<bool>::const_reference>::value)>::type * = nullptr>
+            typename std::enable_if<std::is_class<T>::value &&
+                                    (std::is_same<T, std::vector<bool>::reference>::value ||
+                                     std::is_same<T, std::vector<bool>::const_reference>::value)>::type * = nullptr>
   AlphaNum(T e) : AlphaNum(static_cast<bool>(e)) {} // NOLINT(runtime/explicit)
 
 private:
@@ -285,22 +275,18 @@ void AppendPieces(std::wstring *dest, std::initializer_list<std::wstring_view> p
 
 [[nodiscard]] inline std::wstring StringCat() { return std::wstring(); }
 
-[[nodiscard]] inline std::wstring StringCat(const AlphaNum &a) {
-  return std::wstring(a.data(), a.size());
-}
+[[nodiscard]] inline std::wstring StringCat(const AlphaNum &a) { return std::wstring(a.data(), a.size()); }
 
 [[nodiscard]] std::wstring StringCat(const AlphaNum &a, const AlphaNum &b);
 [[nodiscard]] std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c);
-[[nodiscard]] std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                                     const AlphaNum &d);
+[[nodiscard]] std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d);
 
 // Support 5 or more arguments
 template <typename... AV>
-[[nodiscard]] inline std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                                            const AlphaNum &d, const AlphaNum &e,
-                                            const AV &... args) {
-  return strings_internal::CatPieces({a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-                                      static_cast<const AlphaNum &>(args).Piece()...});
+[[nodiscard]] inline std::wstring StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
+                                            const AlphaNum &e, const AV &... args) {
+  return strings_internal::CatPieces(
+      {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(), static_cast<const AlphaNum &>(args).Piece()...});
 }
 
 // -----------------------------------------------------------------------------
@@ -334,21 +320,19 @@ inline void StrAppend(std::wstring *) {}
 void StrAppend(std::wstring *dest, const AlphaNum &a);
 void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b);
 void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c);
-void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-               const AlphaNum &d);
+void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d);
 
 // Support 5 or more arguments
 template <typename... AV>
-inline void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                      const AlphaNum &d, const AlphaNum &e, const AV &... args) {
-  strings_internal::AppendPieces(dest, {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(),
-                                        static_cast<const AlphaNum &>(args).Piece()...});
+inline void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
+                      const AlphaNum &e, const AV &... args) {
+  strings_internal::AppendPieces(
+      dest, {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(), static_cast<const AlphaNum &>(args).Piece()...});
 }
 
 // Helper function for the future StringCat default floating-point format, %.6g
 // This is fast.
-inline strings_internal::AlphaNumBuffer<numbers_internal::kSixDigitsToBufferSize>
-SixDigits(double d) {
+inline strings_internal::AlphaNumBuffer<numbers_internal::kSixDigitsToBufferSize> SixDigits(double d) {
   strings_internal::AlphaNumBuffer<numbers_internal::kSixDigitsToBufferSize> result;
   result.size = numbers_internal::SixDigitsToBuffer(d, &result.data[0]);
   return result;

@@ -190,13 +190,9 @@ std::wstring_view BaulkLocale() {
 
 baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }
 
-int BaulkBucketWeights(std::wstring_view bucket) {
-  return BaulkEnv::Instance().BaulkBucketWeights(bucket);
-}
+int BaulkBucketWeights(std::wstring_view bucket) { return BaulkEnv::Instance().BaulkBucketWeights(bucket); }
 
-bool BaulkInitializeExecutor(bela::error_code &ec) {
-  return BaulkEnv::Instance().InitializeExecutor(ec);
-}
+bool BaulkInitializeExecutor(bela::error_code &ec) { return BaulkEnv::Instance().InitializeExecutor(ec); }
 
 inline bool BaulkIsRunning(DWORD pid) {
   if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid); hProcess != nullptr) {
@@ -228,8 +224,8 @@ std::optional<BaulkCloser> BaulkCloser::BaulkMakeLocker(bela::error_code &ec) {
     }
   }
   auto FileHandle = ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE,
-                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-                                  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return std::nullopt;

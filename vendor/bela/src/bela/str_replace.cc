@@ -41,8 +41,7 @@ using FixedMapping = std::initializer_list<std::pair<std::wstring_view, std::wst
 // Applies the ViableSubstitutions in subs_ptr to the std::wstring_view s, and
 // stores the result in *result_ptr. Returns the number of substitutions that
 // occurred.
-int ApplySubstitutions(std::wstring_view s,
-                       std::vector<strings_internal::ViableSubstitution> *subs_ptr,
+int ApplySubstitutions(std::wstring_view s, std::vector<strings_internal::ViableSubstitution> *subs_ptr,
                        std::wstring *result_ptr) {
   auto &subs = *subs_ptr;
   int substitutions = 0;

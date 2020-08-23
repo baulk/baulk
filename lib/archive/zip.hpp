@@ -40,10 +40,8 @@ extern "C" {
 int32_t mz_zip_reader_get_raw(void *handle, uint8_t *raw);
 }
 
-typedef int32_t (*mz_zip_reader_progress_cb)(void *handle, void *userdata, mz_zip_file *file_info,
-                                             int64_t position);
-typedef int32_t (*mz_zip_reader_entry_cb)(void *handle, void *userdata, mz_zip_file *file_info,
-                                          const char *path);
+typedef int32_t (*mz_zip_reader_progress_cb)(void *handle, void *userdata, mz_zip_file *file_info, int64_t position);
+typedef int32_t (*mz_zip_reader_entry_cb)(void *handle, void *userdata, mz_zip_file *file_info, const char *path);
 
 namespace baulk::archive::zip {
 struct zip_closure {

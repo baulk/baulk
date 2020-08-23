@@ -51,8 +51,7 @@ inline bool ConsumeSuffix(std::wstring_view *str, std::wstring_view expected) {
   return true;
 }
 
-[[nodiscard]] inline std::wstring_view StripPrefix(std::wstring_view str,
-                                                   std::wstring_view prefix) {
+[[nodiscard]] inline std::wstring_view StripPrefix(std::wstring_view str, std::wstring_view prefix) {
   if (bela::StartsWith(str, prefix)) {
     str.remove_prefix(prefix.size());
   }

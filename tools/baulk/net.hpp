@@ -61,12 +61,9 @@ struct StringCaseInsensitiveHash {
 
 struct StringCaseInsensitiveEq {
   using is_transparent = void;
-  bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const {
-    return bela::EqualsIgnoreCase(wlhs, wrhs);
-  }
+  bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
-using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash,
-                                      StringCaseInsensitiveEq>;
+using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
 // HTTP Response
 enum class Protocol { HTTP11, HTTP20, HTTP30 };
 struct Response {
@@ -90,9 +87,8 @@ public:
     cookies.emplace_back(cookie);
     return *this;
   }
-  std::optional<Response> WinRest(std::wstring_view method, std::wstring_view url,
-                                  std::wstring_view contenttype, std::wstring_view body,
-                                  bela::error_code &ec);
+  std::optional<Response> WinRest(std::wstring_view method, std::wstring_view url, std::wstring_view contenttype,
+                                  std::wstring_view body, bela::error_code &ec);
   std::optional<Response> Get(std::wstring_view url, bela::error_code &ec) {
     return WinRest(L"GET", url, L"", L"", ec);
   }
@@ -112,8 +108,8 @@ inline std::optional<Response> RestGet(std::wstring_view url, bela::error_code &
 }
 // Parse http
 // download some file to spec workdir
-std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir,
-                                   bool forceoverwrite, bela::error_code &ec);
+std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir, bool forceoverwrite,
+                                   bela::error_code &ec);
 std::uint64_t UrlResponseTime(std::wstring_view url);
 std::wstring_view BestUrl(const std::vector<std::wstring> &urls);
 std::wstring_view UrlFileName(std::wstring_view url);

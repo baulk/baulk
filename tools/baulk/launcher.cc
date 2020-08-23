@@ -16,8 +16,7 @@
 
 namespace baulk {
 
-bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg,
-                        bela::error_code &ec) {
+bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela::error_code &ec) {
   if (metas.empty()) {
     return true;
   }
@@ -89,8 +88,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     for (auto it = linksobj.begin(); it != linksobj.end(); ++it) {
       auto raw = it.value().get<std::string>();
       auto value = bela::ToWide(raw);
-      std::vector<std::wstring_view> mv =
-          bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
+      std::vector<std::wstring_view> mv = bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
       if (mv.size() < 2) {
         continue;
       }
@@ -185,12 +183,10 @@ inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
   }
 }
 
-bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
-                           std::wstring_view linkdir, const baulk::LinkMeta &lm,
-                           bela::error_code &ec) {
+bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view linkdir,
+                           const baulk::LinkMeta &lm, bela::error_code &ec) {
   constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain", L"-ENTRY:wWinMain"};
-  constexpr const std::wstring_view subsystemnane[] = {L"-SUBSYSTEM:CONSOLE",
-                                                       L"-SUBSYSTEM:WINDOWS"};
+  constexpr const std::wstring_view subsystemnane[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
   auto realexe = bela::RealPathEx(source, ec);
   if (!realexe) {
     return false;
@@ -240,24 +236,21 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source,
     }
   }
   DbgPrint(L"compile %s", cxxsrcname);
-  if (baulk::BaulkExecutor().Execute(baulktemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os",
-                                     cxxsrcname) != 0) {
+  if (baulk::BaulkExecutor().Execute(baulktemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os", cxxsrcname) != 0) {
     ec = baulk::BaulkExecutor().LastErrorCode();
     return false;
   }
   int exitcode = 0;
   DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
   if (rcwrited) {
-    exitcode = baulk::BaulkExecutor().Execute(baulktemp, L"link", L"-nologo", L"-OPT:REF",
-                                              L"-OPT:ICF", L"-NODEFAULTLIB", subsystemnane[index],
-                                              entry[index], bela::StringCat(name, L".obj"),
-                                              bela::StringCat(name, L".res"), L"kernel32.lib",
-                                              L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
+    exitcode = baulk::BaulkExecutor().Execute(baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
+                                              L"-NODEFAULTLIB", subsystemnane[index], entry[index],
+                                              bela::StringCat(name, L".obj"), bela::StringCat(name, L".res"),
+                                              L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
   } else {
     exitcode = baulk::BaulkExecutor().Execute(
-        baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
-        subsystemnane[index], entry[index], bela::StringCat(name, L".obj"), L"kernel32.lib",
-        L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
+        baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB", subsystemnane[index], entry[index],
+        bela::StringCat(name, L".obj"), L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
   }
   if (exitcode != 0) {
     ec = baulk::BaulkExecutor().LastErrorCode();
@@ -292,8 +285,7 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
     auto source = bela::PathCat(pkgroot, L"\\", lm.path);
     DbgPrint(L"make launcher %s", source);
     if (!executor.Compile(pkg, source, linkdir, lm, ec)) {
-      bela::FPrintF(stderr, L"'%s' unable create launcher: \x1b[31m%s\x1b[0m\n", source,
-                    ec.message);
+      bela::FPrintF(stderr, L"'%s' unable create launcher: \x1b[31m%s\x1b[0m\n", source, ec.message);
     }
   }
   if (!BaulkLinkMetaStore(executor.LinkMetas(), pkg, ec)) {

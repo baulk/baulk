@@ -9,8 +9,7 @@ public:
   static constexpr size_t npos = static_cast<size_t>(-1);
   MemView() = default;
   template <typename T>
-  MemView(const T *d, size_t l)
-      : data_(reinterpret_cast<const uint8_t *>(d)), size_(l * sizeof(T)) {}
+  MemView(const T *d, size_t l) : data_(reinterpret_cast<const uint8_t *>(d)), size_(l * sizeof(T)) {}
   MemView(const MemView &other) {
     data_ = other.data_;
     size_ = other.size_;
@@ -42,14 +41,10 @@ public:
     return n + pos <= size_ && (memcmp(data_ + pos, p, n) == 0);
   }
 
-  MemView submv(std::size_t pos, std::size_t n = npos) {
-    return MemView(data_ + pos, (std::min)(n, size_ - pos));
-  }
+  MemView submv(std::size_t pos, std::size_t n = npos) { return MemView(data_ + pos, (std::min)(n, size_ - pos)); }
   std::size_t size() const { return size_; }
   const uint8_t *data() const { return data_; }
-  std::string_view sv() const {
-    return std::string_view(reinterpret_cast<const char *>(data_), size_);
-  }
+  std::string_view sv() const { return std::string_view(reinterpret_cast<const char *>(data_), size_); }
   unsigned char operator[](const std::size_t off) const {
     if (off >= size_) {
       return UCHAR_MAX;
@@ -107,9 +102,8 @@ private:
 
 inline bool MapView::MappingView(std::wstring_view file, bela::error_code &ec, std::size_t minsize,
                                  std::size_t maxsize) {
-  if ((FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr)) ==
-      INVALID_HANDLE_VALUE) {
+  if ((FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                                FILE_ATTRIBUTE_NORMAL, nullptr)) == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
   }
@@ -118,8 +112,7 @@ inline bool MapView::MappingView(std::wstring_view file, bela::error_code &ec, s
     ec = bela::make_error_code(bela::FileSizeTooSmall, L"File size too smal, size: ", li.QuadPart);
     return false;
   }
-  if ((FileMap = CreateFileMappingW(FileHandle, nullptr, PAGE_READONLY, 0, 0, nullptr)) ==
-      INVALID_HANDLE_VALUE) {
+  if ((FileMap = CreateFileMappingW(FileHandle, nullptr, PAGE_READONLY, 0, 0, nullptr)) == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
   }

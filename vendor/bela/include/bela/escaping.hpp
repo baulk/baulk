@@ -38,13 +38,10 @@
 #include <string_view>
 
 namespace bela {
-bool CUnescape(std::wstring_view source, std::wstring *dest,
-               std::wstring *error);
+bool CUnescape(std::wstring_view source, std::wstring *dest, std::wstring *error);
 
 // Overload of `CUnescape()` with no error reporting.
-inline bool CUnescape(std::wstring_view source, std::wstring *dest) {
-  return CUnescape(source, dest, nullptr);
-}
+inline bool CUnescape(std::wstring_view source, std::wstring *dest) { return CUnescape(source, dest, nullptr); }
 std::wstring CEscape(std::wstring_view src);
 } // namespace bela
 

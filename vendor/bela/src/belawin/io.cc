@@ -65,11 +65,9 @@ bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
   return true;
 }
 
-bool WriteTextInternal(std::string_view bom, std::string_view text, std::wstring_view file,
-                       bela::error_code &ec) {
-  auto FileHandle =
-      ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+bool WriteTextInternal(std::string_view bom, std::string_view text, std::wstring_view file, bela::error_code &ec) {
+  auto FileHandle = ::CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                                  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return false;
@@ -77,8 +75,7 @@ bool WriteTextInternal(std::string_view bom, std::string_view text, std::wstring
   auto closer = bela::finally([&] { CloseHandle(FileHandle); });
   DWORD written = 0;
   if (!bom.empty()) {
-    if (WriteFile(FileHandle, bom.data(), static_cast<DWORD>(bom.size()), &written, nullptr) !=
-        TRUE) {
+    if (WriteFile(FileHandle, bom.data(), static_cast<DWORD>(bom.size()), &written, nullptr) != TRUE) {
       ec = bela::make_system_error_code();
       return false;
     }
@@ -111,8 +108,7 @@ bool WriteTextU16LE(std::wstring_view text, std::wstring_view file, bela::error_
   }
   constexpr uint8_t u16lebom[] = {0xFF, 0xFE};
   std::string_view bom{reinterpret_cast<const char *>(u16lebom), 2};
-  std::string_view text_{reinterpret_cast<const char *>(text.data()),
-                         text.size() * sizeof(wchar_t)};
+  std::string_view text_{reinterpret_cast<const char *>(text.data()), text.size() * sizeof(wchar_t)};
   return WriteTextInternal(bom, text_, file, ec);
 }
 

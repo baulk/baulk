@@ -194,13 +194,11 @@ bool Decompress(std::wstring_view msi, std::wstring_view outdir, bela::error_cod
   MsiSetInternalUI(INSTALLUILEVEL(INSTALLUILEVEL_NONE | INSTALLUILEVEL_SOURCERESONLY), nullptr);
   // https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluiw
   MsiSetExternalUIW(msi_ui_callback,
-                    INSTALLLOGMODE_PROGRESS | INSTALLLOGMODE_FATALEXIT | INSTALLLOGMODE_ERROR |
-                        INSTALLLOGMODE_WARNING | INSTALLLOGMODE_USER | INSTALLLOGMODE_INFO |
-                        INSTALLLOGMODE_RESOLVESOURCE | INSTALLLOGMODE_OUTOFDISKSPACE |
-                        INSTALLLOGMODE_ACTIONSTART | INSTALLLOGMODE_ACTIONDATA |
-                        INSTALLLOGMODE_COMMONDATA | INSTALLLOGMODE_PROGRESS |
-                        INSTALLLOGMODE_INITIALIZE | INSTALLLOGMODE_TERMINATE |
-                        INSTALLLOGMODE_SHOWDIALOG,
+                    INSTALLLOGMODE_PROGRESS | INSTALLLOGMODE_FATALEXIT | INSTALLLOGMODE_ERROR | INSTALLLOGMODE_WARNING |
+                        INSTALLLOGMODE_USER | INSTALLLOGMODE_INFO | INSTALLLOGMODE_RESOLVESOURCE |
+                        INSTALLLOGMODE_OUTOFDISKSPACE | INSTALLLOGMODE_ACTIONSTART | INSTALLLOGMODE_ACTIONDATA |
+                        INSTALLLOGMODE_COMMONDATA | INSTALLLOGMODE_PROGRESS | INSTALLLOGMODE_INITIALIZE |
+                        INSTALLLOGMODE_TERMINATE | INSTALLLOGMODE_SHOWDIALOG,
                     &pg);
   if (MsiInstallProductW(msi.data(), cmd.data()) != ERROR_SUCCESS) {
     ec = bela::make_system_error_code();
@@ -222,8 +220,7 @@ bool Regularize(std::wstring_view path) {
   DecompressClear(path);
   bela::error_code ec;
   baulk::fs::PathRemoveEx(bela::StringCat(path, L"\\Windows"), ec); //
-  constexpr std::wstring_view destdirs[] = {L"\\Program Files", L"\\ProgramFiles64", L"\\PFiles",
-                                            L"\\Files"};
+  constexpr std::wstring_view destdirs[] = {L"\\Program Files", L"\\ProgramFiles64", L"\\PFiles", L"\\Files"};
   for (auto d : destdirs) {
     auto sd = bela::StringCat(path, d);
     if (!bela::PathExists(sd)) {

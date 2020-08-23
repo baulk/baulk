@@ -209,12 +209,10 @@ std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix) {
   return msg;
 }
 
-std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
-                                          std::wstring_view prefix) {
+std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec, std::wstring_view prefix) {
   LPWSTR buf = nullptr;
-  auto rl = FormatMessageW(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                           GetModuleHandleW(module), ec, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                           (LPWSTR)&buf, 0, nullptr);
+  auto rl = FormatMessageW(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER, GetModuleHandleW(module), ec,
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&buf, 0, nullptr);
   if (rl == 0) {
     return bela::StringCat(prefix, L"GetLastError(): ", ec);
   }
@@ -231,8 +229,7 @@ std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec,
 
 bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
   constexpr auto n = std::size(errno_internal::errorlist);
-  auto msg = (static_cast<std::size_t>(eno) >= n) ? errno_internal::errorlist[n - 1]
-                                                  : errno_internal::errorlist[eno];
+  auto msg = (static_cast<std::size_t>(eno) >= n) ? errno_internal::errorlist[n - 1] : errno_internal::errorlist[eno];
   return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 
