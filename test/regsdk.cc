@@ -6,8 +6,7 @@
 #include <regutils.hpp>
 #include <jsonex.hpp>
 
-bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver,
-                      std::wstring &sdkversion) {
+bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
   auto dir = bela::StringCat(sdkroot, L"\\Include");
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     bela::FPrintF(stderr, L"Lookup: %s\n", p.path().wstring());
@@ -48,8 +47,7 @@ int wmain(int argc, wchar_t **argv) {
                 L"'%s'\n",
                 winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion);
 
-  auto vcversion = LookupVisualCppVersion(
-      LR"(C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\)", ec);
+  auto vcversion = LookupVisualCppVersion(LR"(C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\)", ec);
   if (!vcversion) {
     bela::FPrintF(stderr, L"unable parse: %s\n", ec.message);
     return 1;

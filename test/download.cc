@@ -1,20 +1,18 @@
 /// baulk download utils
 //
 #include <bela/process.hpp>
-#include <bela/path.hpp>
+#include <bela/simulator.hpp>
 
 namespace baulk::net {
 
-bool CURLGet(std::wstring_view url, std::wstring_view dest,
-             bela::error_code &ec) {
+bool CURLGet(std::wstring_view url, std::wstring_view dest, bela::error_code &ec) {
   std::wstring curlexe;
-  if (!bela::ExecutableExistsInPath(L"curl.exe", curlexe)) {
+  if (!bela::env::ExecutableExistsInPath(L"curl.exe", curlexe)) {
     return false;
   }
   bela::process::Process p;
-  auto exitcode = p.Execute(curlexe, L"-A=Wget/5.0 (Baulk)", L"--progress-bar",
-                            L"-fS", L"--connect-timeout", L"15", L"--retry",
-                            L"3", L"-o", dest, L"-L", url);
+  auto exitcode = p.Execute(curlexe, L"-A=Wget/5.0 (Baulk)", L"--progress-bar", L"-fS", L"--connect-timeout", L"15",
+                            L"--retry", L"3", L"-o", dest, L"-L", url);
   if (exitcode != 0) {
     ec = bela::make_error_code(-1, L"curl exit code: ", exitcode);
     return false;
@@ -22,10 +20,9 @@ bool CURLGet(std::wstring_view url, std::wstring_view dest,
   return true;
 }
 
-bool WebGet(std::wstring_view url, std::wstring_view dest,
-            bela::error_code &ec) {
+bool WebGet(std::wstring_view url, std::wstring_view dest, bela::error_code &ec) {
   std::wstring wgetexe;
-  if (!bela::ExecutableExistsInPath(L"wget.exe", wgetexe)) {
+  if (!bela::env::ExecutableExistsInPath(L"wget.exe", wgetexe)) {
     return false;
   }
   bela::process::Process p;

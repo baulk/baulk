@@ -17,10 +17,9 @@ inline std::wstring UnarchivePath(std::wstring_view path) {
 }
 
 int wmain() {
-  constexpr std::wstring_view files[] = {
-      L"out", //
-      L"out.exe", L"C:\\Windows\\Notepad.exe", L"some.tar.gz",
-      L".tgz",    L"C:\\Jacksome\\note\\",     L"C:\\Jacksome\\note\\zzzz.tar.gz"};
+  constexpr std::wstring_view files[] = {L"out", //
+                                         L"out.exe", L"C:\\Windows\\Notepad.exe", L"some.tar.gz",
+                                         L".tgz",    L"C:\\Jacksome\\note\\",     L"C:\\Jacksome\\note\\zzzz.tar.gz"};
   for (auto f : files) {
     bela::FPrintF(stderr, L"[%s] --> [%s]\n", f, UnarchivePath(f));
   }

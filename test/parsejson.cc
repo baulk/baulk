@@ -105,7 +105,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr,
                 L"installationPath: %s\ninstallationVersion: %s\ninstanceId: "
                 L"%s\nproductId: %s\nisLaunchable: %b\nisPrerelease： %b\n",
-                vci.installationPath, vci.installationVersion, vci.instanceId, vci.productId,
-                vci.isLaunchable, vci.isPrerelease);
+                vci.installationPath, vci.installationVersion, vci.instanceId, vci.productId, vci.isLaunchable,
+                vci.isPrerelease);
   return 0;
 }

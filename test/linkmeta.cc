@@ -3,8 +3,7 @@
 
 struct LinkMeta {
   LinkMeta() = default;
-  LinkMeta(std::wstring_view path_, std::wstring_view alias_)
-      : path(path_), alias(alias_) {}
+  LinkMeta(std::wstring_view path_, std::wstring_view alias_) : path(path_), alias(alias_) {}
   LinkMeta(std::wstring_view sv) {
     if (auto pos = sv.find('@'); pos != std::wstring_view::npos) {
       path.assign(sv.data(), pos);
@@ -20,12 +19,8 @@ struct LinkMeta {
 
 int wmain() {
   std::vector<LinkMeta> lm;
-  constexpr std::wstring_view launchers[] = {L"wget.exe",
-                                             L"bin\\python.exe@python3.exe",
-                                             L"cmd\\git.exe",
-                                             L"cmdxx",
-                                             L".",
-                                             L"cmdxx\\@zzz.exe"};
+  constexpr std::wstring_view launchers[] = {
+      L"wget.exe", L"bin\\python.exe@python3.exe", L"cmd\\git.exe", L"cmdxx", L".", L"cmdxx\\@zzz.exe"};
 
   for (const auto l : launchers) {
     lm.emplace_back(l);

@@ -20,8 +20,8 @@ int main() {
   for (auto v : vs) {
     baulk::version::version sv(v);
     auto str = sv.to_string();
-    fprintf(stderr, "resolve version(%u.%u.%u.%u): %s to %s\n", sv.major, sv.minor, sv.patch,
-            sv.build, v.data(), str.data());
+    fprintf(stderr, "resolve version(%u.%u.%u.%u): %s to %s\n", sv.major, sv.minor, sv.patch, sv.build, v.data(),
+            str.data());
   }
   return 0;
 }

@@ -13,10 +13,9 @@ int wmain(int argc, wchar_t **argv) {
   ZeroMemory(passwd, sizeof(passwd));
   // wchar_t username2[CREDUI_MAX_USERNAME_LENGTH + 1];
   BOOL fSave = FALSE;
-  auto ec = CredUICmdLinePromptForCredentialsW(
-      L"BaulkApp", nullptr, 0, username, CREDUI_MAX_USERNAME_LENGTH, passwd,
-      CREDUI_MAX_PASSWORD_LENGTH, &fSave,
-      CREDUI_FLAGS_EXCLUDE_CERTIFICATES | CREDUI_FLAGS_DO_NOT_PERSIST);
+  auto ec = CredUICmdLinePromptForCredentialsW(L"BaulkApp", nullptr, 0, username, CREDUI_MAX_USERNAME_LENGTH, passwd,
+                                               CREDUI_MAX_PASSWORD_LENGTH, &fSave,
+                                               CREDUI_FLAGS_EXCLUDE_CERTIFICATES | CREDUI_FLAGS_DO_NOT_PERSIST);
   if (ec != NO_ERROR) {
     fwprintf(stderr, L"CredUICmdLinePromptForCredentialsW: %d\n", ec);
     return 1;

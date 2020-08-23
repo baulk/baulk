@@ -3,9 +3,7 @@
 #include <bela/strip.hpp>
 #include <version.hpp>
 
-inline std::wstring_view cleanup_version(std::wstring_view ver) {
-  return bela::StripPrefix(ver, L"v");
-}
+inline std::wstring_view cleanup_version(std::wstring_view ver) { return bela::StripPrefix(ver, L"v"); }
 
 int wmain() {
   const std::wstring_view vs[] = {L"19.00",

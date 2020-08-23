@@ -19,16 +19,16 @@ int32_t on_progress(void *handle, void *userdata, mz_zip_file *file_info, int64_
   if (!raw && file_info->uncompressed_size > 0) {
     progress = ((double)position / file_info->uncompressed_size) * 100;
     /* Print the progress of the current extraction */
-    bela::FPrintF(stderr, L"\x1b[2K\r%s - %d/%d (%.02f%%)", file_info->filename, position,
-                  file_info->uncompressed_size, progress);
+    bela::FPrintF(stderr, L"\x1b[2K\r%s - %d/%d (%.02f%%)", file_info->filename, position, file_info->uncompressed_size,
+                  progress);
   }
 
   return 0;
 }
 
 int do_unzip(std::wstring_view file) {
-  auto FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                FILE_ATTRIBUTE_NORMAL, nullptr);
+  auto FileHandle =
+      CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
