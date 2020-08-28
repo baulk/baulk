@@ -132,6 +132,7 @@ bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &
   FILE *fd = nullptr;
   if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {
     ec = bela::make_stdc_error_code(en, bela::StringCat(L"open 'locks\\", pkgname, L".json' "));
+    searcher.DbgPrint(L"load '%s': %s", pkgname, ec.message);
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -147,6 +148,7 @@ bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &
     }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(1, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
+    searcher.DbgPrint(L"decode '%s.json': %s", pkgname, ec.message);
     return false;
   }
   if (!LoadLocalEnv(pkgname, venv, ec)) {

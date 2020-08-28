@@ -274,8 +274,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       return false;
     }
   }
-  searcher.InitializeVirtualEnv(venvs, ec);
-  if (ec) {
+  if (!searcher.InitializeVirtualEnv(venvs, ec)) {
     bela::FPrintF(stderr, L"parse venv: \x1b[31m%s\x1b[0m\n", ec.message);
   }
   if (IsDebugMode && !searcher.availableEnv.empty()) {
