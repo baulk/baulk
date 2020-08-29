@@ -113,13 +113,17 @@ void ApplyBaulkNewExec(std::wstring_view baulkexec) {
   auto dir = bela::DirName(baulkexec);
   auto baulkexecnew = bela::StringCat(dir, L"\\baulk-exec.new");
   if (bela::PathFileIsExists(baulkexecnew)) {
+    DbgPrint(L"Found baulk-exec.new: %s trace apply it", baulkexecnew);
     if (MoveFileExW(baulkexecnew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
+      auto ec = bela::make_system_error_code();
+      DbgPrint(L"Apply new baulk-exec error: %s", ec.message);
     }
   }
 }
 
 bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   if (!conhost) {
+    DbgPrint(L"Turn off conhost, Try to find Windows Terminal");
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Assign(*wt).Append(L"--");
       DbgPrint(L"Found Windows Terminal: %s", *wt);

@@ -23,8 +23,8 @@ public:
     if (fd == INVALID_HANDLE_VALUE) {
       return -1;
     }
-    auto um =
-        bela::narrow::StringCat(baulk::time::TimeNow(), " [", GetCurrentProcessId(), "] ", bela::ToNarrow(msg), "\n");
+    auto um = bela::narrow::StringCat("[DEBUG] ", baulk::time::TimeNow(), " [", GetCurrentProcessId(), "] ",
+                                      bela::ToNarrow(msg), "\n");
     DWORD written = 0;
     if (WriteFile(fd, um.data(), static_cast<DWORD>(um.size()), &written, nullptr) != TRUE) {
       return -1;
@@ -46,6 +46,8 @@ private:
         fd == INVALID_HANDLE_VALUE) {
       return false;
     }
+    LARGE_INTEGER li{0};
+    ::SetFilePointerEx(fd, li, nullptr, FILE_END);
     return true;
   }
   HANDLE fd{INVALID_HANDLE_VALUE};
