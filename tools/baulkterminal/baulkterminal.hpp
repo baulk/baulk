@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace baulkterminal {
+extern bool IsDebugMode;
 constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 

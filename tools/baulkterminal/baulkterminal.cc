@@ -11,6 +11,8 @@
 
 namespace baulkterminal {
 
+bool IsDebugMode = false;
+
 void BaulkMessage() {
   constexpr wchar_t usage[] = LR"(baulkterminal - Baulk Terminal Launcher
 Usage: baulkterminal [option] ...
@@ -18,10 +20,10 @@ Usage: baulkterminal [option] ...
                Show usage text and quit
   -v|--version
                Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
   -C|--cleanup
                Create clean environment variables to avoid interference
-  -V|--vs
-               Load Visual Studio related environment variables
   -S|--shell
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
@@ -32,6 +34,8 @@ Usage: baulkterminal [option] ...
                Select a specific arch, use native architecture by default
   -E|--venv
                Choose to load one/more specific package virtual environment
+  --vs
+               Load Visual Studio related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -53,11 +57,12 @@ bool Executor::ParseArgv(bela::error_code &ec) {
   pa.Add(L"help", bela::no_argument, L'h')
       .Add(L"version", bela::no_argument, L'v')
       .Add(L"cleanup", bela::no_argument, L'C') // cleanup environment
-      .Add(L"vs", bela::no_argument, L'V')      // load visual studio environment
+      .Add(L"verbose", bela::no_argument, L'V')
       .Add(L"shell", bela::required_argument, L'S')
       .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"arch", bela::required_argument, L'A')
       .Add(L"venv", bela::required_argument, L'E') // virtual env support
+      .Add(L"vs", bela::no_argument, 1000)         // load visual studio environment
       .Add(L"conhost", bela::no_argument, 1001)    // disable windows termainl
       .Add(L"clang", bela::no_argument, 1002);
   auto ret = pa.Execute(
@@ -74,7 +79,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           cleanup = true;
           break;
         case 'V':
-          usevs = true;
+          IsDebugMode = true;
           break;
         case 'S':
           shell = oa;
@@ -93,6 +98,9 @@ bool Executor::ParseArgv(bela::error_code &ec) {
         } break;
         case 'E':
           venvs.push_back(oa);
+          break;
+        case 1000:
+          usevs = true;
           break;
         case 1001:
           conhost = true;

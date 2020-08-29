@@ -17,15 +17,16 @@ bool IsDebugMode = false;
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
 Usage: baulk-exec [option] command args ...
-  -h|--help        Show usage text and quit
-  -v|--version     Show version number and quit
-  -V|--verbose     Make the operation more talkative
-  -C|--cleanup     Create clean environment variables to avoid interference
-  -W|--cwd         Set the command startup directory
-  -A|--arch        Select a specific arch, use native architecture by default
-  -E|--venv        Choose to load a specific package virtual environment
-  --vs             Load Visual Studio related environment variables
-  --clang          Add Visual Studio's built-in clang to the PATH environment variable
+  -h|--help            Show usage text and quit
+  -v|--version         Show version number and quit
+  -V|--verbose         Make the operation more talkative
+  -C|--cleanup         Create clean environment variables to avoid interference
+  -W|--cwd             Set the command startup directory
+  -A|--arch            Select a specific arch, use native architecture by default
+  -E|--venv            Choose to load a specific package virtual environment
+  --vs                 Load Visual Studio related environment variables
+  --clang              Add Visual Studio's built-in clang to the PATH environment variable
+  --unchanged-title    Keep the terminal title unchanged
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
@@ -180,9 +181,11 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"venv", bela::required_argument, L'E')
       .Add(L"vs", bela::no_argument, 1001) // load visual studio environment
-      .Add(L"clang", bela::no_argument, 1002);
+      .Add(L"clang", bela::no_argument, 1002)
+      .Add(L"unchanged-title", bela::no_argument, 1003);
   bool usevs = false;
   bool clang = false;
+  bool unchangedTitle = false;
   std::wstring arch;
   std::vector<std::wstring> venvs;
   bela::error_code ec;
@@ -220,6 +223,9 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
           break;
         case 1002:
           clang = true;
+          break;
+        case 1003:
+          unchangedTitle = true;
           break;
         default:
           break;
@@ -282,7 +288,11 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
     DbgPrint(L"Turn on venv: %s", as);
   }
   searcher.FlushEnv();
+  if (unchangedTitle) {
+    return true;
+  }
   auto newtitle = AvailableEnvTitle(searcher.availableEnv);
+  DbgPrint(L"Change terminal title: %s", newtitle);
   tm.UpdateTitle(newtitle);
   return true;
 }
