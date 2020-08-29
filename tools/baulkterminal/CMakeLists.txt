@@ -1,5 +1,5 @@
 #
-add_executable(baulkterminal WIN32 baulkterminal.cc baulkterminalenv.cc baulkterminal.rc baulkterminal.manifest)
+add_executable(baulkterminal WIN32 baulkterminal.cc baulkterminalenv.cc baulktrace.cc baulkterminal.rc baulkterminal.manifest)
 
 target_link_libraries(baulkterminal baulkenv belashl Shell32)
 

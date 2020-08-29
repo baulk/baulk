@@ -5,10 +5,35 @@
 #include <bela/base.hpp>
 #include <bela/simulator.hpp>
 #include <bela/escapeargv.hpp>
+#include <bela/fmt.hpp>
 #include <vector>
 
 namespace baulkterminal {
 extern bool IsDebugMode;
+int WriteTrace(std::wstring_view msg);
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+  if (!IsDebugMode) {
+    return 0;
+  }
+  const bela::format_internal::FormatArg arg_array[] = {args...};
+  auto msg = bela::format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
+  std::wstring_view msgview(msg);
+  if (!msgview.empty() && msgview.back() == '\n') {
+    msgview.remove_suffix(1);
+  }
+  return WriteTrace(msgview);
+}
+inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
+  if (!IsDebugMode) {
+    return 0;
+  }
+  std::wstring_view msg(fmt);
+  if (!msg.empty() && msg.back() == '\n') {
+    msg.remove_suffix(1);
+  }
+  return WriteTrace(msg);
+}
+
 constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 

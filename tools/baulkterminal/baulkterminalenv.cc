@@ -20,14 +20,17 @@ inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
 
 bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
   if (shell.empty() || NameEquals(shell, L"pwsh")) {
+    // PowerShell 7 or PowerShell 5
     if (auto pwsh = baulk::pwsh::PwshExePath(); !pwsh.empty()) {
       ea.Append(pwsh);
+      DbgPrint(L"Use pwsh: %s", pwsh);
       return true;
     }
   }
   if (NameEquals(shell, L"pwsh-preview")) {
     if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
       ea.Append(pwshpreview);
+      DbgPrint(L"Use pwsh-preview: %s", pwshpreview);
       return true;
     }
   }
@@ -37,19 +40,23 @@ bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
     if (auto gw = baulk::regutils::GitForWindowsInstallPath(ec); gw) {
       if (auto bash = bela::StringCat(*gw, L"\\bin\\bash.exe"); bela::PathExists(bash)) {
         ea.Append(bash).Append(L"-i").Append(L"-l");
+        DbgPrint(L"Use bash: %s", bash);
         return true;
       }
     }
   }
   if (NameEquals(shell, L"wsl")) {
     ea.Append(L"wsl.exe");
+    DbgPrint(L"Use wsl.exe");
     return true;
   }
   if (!shell.empty()) {
     ea.Append(shell);
+    DbgPrint(L"Use custom shell: %s", shell);
     return true;
   }
   ea.Append(L"cmd.exe");
+  DbgPrint(L"Use fallback shell: cmd");
   return false;
 }
 
@@ -115,31 +122,39 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   if (!conhost) {
     if (auto wt = FindWindowsTerminal(); wt) {
       ea.Assign(*wt).Append(L"--");
+      DbgPrint(L"Found Windows Terminal: %s", *wt);
     }
   }
   auto baulkexec = SearchBaulkExec(ec);
   if (!baulkexec) {
     return false;
   }
+  DbgPrint(L"Found baulk-exec: %s", *baulkexec);
   ApplyBaulkNewExec(*baulkexec);
   ea.Append(*baulkexec);
   if (cleanup) {
     ea.Append(L"--cleanup");
+    DbgPrint(L"Turn on cleanup env");
   }
   if (usevs) {
     ea.Append(L"--vs");
+    DbgPrint(L"Turn on vs env");
     if (!arch.empty()) {
       ea.Append(L"-A").Append(arch);
+      DbgPrint(L"Select arch: %s", arch);
     }
     if (clang) {
       ea.Append(L"--clang");
+      DbgPrint(L"Turn on clang env");
     }
   }
   if (!cwd.empty()) {
     ea.Append(L"-W").Append(cwd);
+    DbgPrint(L"CWD: %s", cwd);
   }
   for (const auto &e : venvs) {
     ea.Append(L"-E").Append(e);
+    DbgPrint(L"Enable virtual env: %s", e);
   }
   UseShell(shell, ea);
   return true;

@@ -156,17 +156,12 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
+  baulkterminal::DbgPrint(L"commandline: %s", ea.sv());
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
                      &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::BelaMessageBox(nullptr, L"unable open Windows Terminal", ec.data(), nullptr, bela::mbs_t::FATAL);
     return -1;
   }
-  CloseHandle(pi.hThread);
-  SetConsoleCtrlHandler(nullptr, TRUE);
-  auto closer = bela::finally([&] {
-    SetConsoleCtrlHandler(nullptr, FALSE);
-    CloseHandle(pi.hProcess);
-  });
   return 0;
 }
