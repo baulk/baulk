@@ -269,16 +269,27 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
     return false;
   }
   searcher.InitializeGit(cleanup, ec);
-  if (usevs) {
-    DbgPrint(L"visual studio env enabled");
+  // initialize vs env
+  // We maintain a tolerant attitude towards initializing the Visual Studio environment. If the initialization fails,
+  // the baulk-exec operation will not be suspended.
+  auto vsInitialize = [&]() {
+    if (!usevs) {
+      DbgPrint(L"Turn off visual studio env");
+      return false;
+    }
+    DbgPrint(L"Turn on visual studio env");
     if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
-      bela::FPrintF(stderr, L"InitializeVisualStudioEnv failed %s\n", ec.message);
+      bela::FPrintF(stderr, L"Initialize visual studio env failed %s\n", ec.message);
       return false;
     }
     if (!searcher.InitializeWindowsKitEnv(ec)) {
-      bela::FPrintF(stderr, L"InitializeWindowsKitEnv failed %s\n", ec.message);
+      bela::FPrintF(stderr, L"Initialize Windows Kit (SDK) env failed %s\n", ec.message);
       return false;
     }
+    return true;
+  };
+  if (vsInitialize()) {
+    DbgPrint(L"Initialize visual studio env done");
   }
   if (!searcher.InitializeVirtualEnv(venvs, ec)) {
     bela::FPrintF(stderr, L"parse venv: \x1b[31m%s\x1b[0m\n", ec.message);

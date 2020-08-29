@@ -31,6 +31,8 @@ baulk uninstall wget
 
 你可以右键以管理员权限运行 `script/installmenu.bat` 将 baulkterminal 添加到右键菜单，这样你就能在任意目录打开初始化 Baulk 环境的 Windows Terminal 了。
 
+请注意 `script/installmenu.bat` 默认开启了 `--vs` 即初始化 Visual Studio 环境，版本 > 1.5.2 如果没有安装便不会初始化。
+
 ![](./docs/images/menu.png)
 
 **上面就是 Baulk 的基本使用了，非常简单，如果你需要对 Baulk 有个更深入的了解，可以继续阅读下面的内容。**
@@ -217,14 +219,20 @@ Usage: baulkterminal [option] ...
                Show usage text and quit
   -v|--version
                Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
   -C|--cleanup
                Create clean environment variables to avoid interference
-  -V|--vs
-               Load Visual Studio related environment variables
   -S|--shell
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
+  -A|--arch
+               Select a specific arch, use native architecture by default
+  -E|--venv
+               Choose to load one/more specific package virtual environment
+  --vs
+               Load Visual Studio related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -238,19 +246,23 @@ baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环�
 
 baulk-exec usage:
 
-```
-baulkexec - Baulk extend executor
+```txt
+baulk-exec - Baulk extend executor
 Usage: baulk-exec [option] command args ...
-  -h|--help        Show usage text and quit
-  -v|--version     Show version number and quit
-  -V|--verbose     Make the operation more talkative
-  -C|--cleanup     Create clean environment variables to avoid interference
-  -W|--cwd         Set the command startup directory
-  --vs             Load Visual Studio related environment variables
-  --clang          Add Visual Studio's built-in clang to the PATH environment variable
+  -h|--help            Show usage text and quit
+  -v|--version         Show version number and quit
+  -V|--verbose         Make the operation more talkative
+  -C|--cleanup         Create clean environment variables to avoid interference
+  -W|--cwd             Set the command startup directory
+  -A|--arch            Select a specific arch, use native architecture by default
+  -E|--venv            Choose to load a specific package virtual environment
+  --vs                 Load Visual Studio related environment variables
+  --clang              Add Visual Studio's built-in clang to the PATH environment variable
+  --unchanged-title    Keep the terminal title unchanged
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
 ```
 
 ## Baulk Dock

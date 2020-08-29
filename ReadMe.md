@@ -222,21 +222,27 @@ Baulk also provides the `baulkterminal.exe` program, which is highly integrated 
 
 baulkterminal usage:
 
-```
+```txt
 baulkterminal - Baulk Terminal Launcher
 Usage: baulkterminal [option] ...
   -h|--help
                Show usage text and quit
   -v|--version
                Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
   -C|--cleanup
                Create clean environment variables to avoid interference
-  -V|--vs
-               Load Visual Studio related environment variables
   -S|--shell
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
+  -A|--arch
+               Select a specific arch, use native architecture by default
+  -E|--venv
+               Choose to load one/more specific package virtual environment
+  --vs
+               Load Visual Studio related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -250,16 +256,19 @@ baulk provides the `baulk-exec` command, through which we can execute some comma
 
 baulk-exec usage:
 
-```
-baulkexec - Baulk extend executor
+```txt
+baulk-exec - Baulk extend executor
 Usage: baulk-exec [option] command args ...
-  -h|--help        Show usage text and quit
-  -v|--version     Show version number and quit
-  -V|--verbose     Make the operation more talkative
-  -C|--cleanup     Create clean environment variables to avoid interference
-  -W|--cwd         Set the command startup directory
-  --vs             Load Visual Studio related environment variables
-  --clang          Add Visual Studio's built-in clang to the PATH environment variable
+  -h|--help            Show usage text and quit
+  -v|--version         Show version number and quit
+  -V|--verbose         Make the operation more talkative
+  -C|--cleanup         Create clean environment variables to avoid interference
+  -W|--cwd             Set the command startup directory
+  -A|--arch            Select a specific arch, use native architecture by default
+  -E|--venv            Choose to load a specific package virtual environment
+  --vs                 Load Visual Studio related environment variables
+  --clang              Add Visual Studio's built-in clang to the PATH environment variable
+  --unchanged-title    Keep the terminal title unchanged
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh

@@ -136,6 +136,9 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   DbgPrint(L"Found baulk-exec: %s", *baulkexec);
   ApplyBaulkNewExec(*baulkexec);
   ea.Append(*baulkexec);
+  if (IsDebugMode) {
+    ea.Append(L"-V");
+  }
   if (cleanup) {
     ea.Append(L"--cleanup");
     DbgPrint(L"Turn on cleanup env");

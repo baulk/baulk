@@ -28,8 +28,6 @@ Usage: baulkterminal [option] ...
                The shell you want to start. allowed: pwsh, bash, cmd, wsl
   -W|--cwd
                Set the shell startup directory
-  -T|--title
-               Set the Windows terminal title
   -A|--arch
                Select a specific arch, use native architecture by default
   -E|--venv
