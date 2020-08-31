@@ -64,6 +64,7 @@ Command:
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+  cleancache       Cleanup download cache
 
 Alias:
   i  install
@@ -84,6 +85,7 @@ Alias:
 |unfreeze|解除包的冻结|N/A|
 |b3sum|计算文件的 BLAKE3 哈希|N/A|
 |sha256sum|计算文件的 SHA256 哈希|N/A|
+|cleancache|删除下载缓存，过期时间为 30 天，--force 模式将删除所有下载缓存|
 
 ### Baulk 配置文件
 

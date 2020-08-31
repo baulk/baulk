@@ -55,6 +55,7 @@ Command:
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+  cleancache       Cleanup download cache
 
 Alias:
   i  install

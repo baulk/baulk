@@ -63,6 +63,7 @@ Command:
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
+  cleancache       Cleanup download cache
 
 Alias:
   i  install
@@ -83,6 +84,7 @@ Alias:
 |unfreeze|Unfreeze the package|N/A|
 |b3sum|Calculate the BLAKE3 hash of the file|N/A|
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
+|cleancache|cleanup download cache, 30 days expired, all cached download file will remove when add `--force` flag|
 
 Example:
 
