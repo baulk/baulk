@@ -84,7 +84,7 @@ Alias:
 |unfreeze|Unfreeze the package|N/A|
 |b3sum|Calculate the BLAKE3 hash of the file|N/A|
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
-|cleancache|cleanup download cache, 30 days expired, all cached download file will remove when add `--force` flag|
+|cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag|
 
 Example:
 
