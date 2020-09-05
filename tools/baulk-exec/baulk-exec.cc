@@ -234,7 +234,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"ParseArgv: %s\n", ec.message);
+    bela::FPrintF(stderr, L"ParseArgv: \x1b[31m%s\x1b[0m\n", ec.message);
     return false;
   }
   const auto &Argv = pa.UnresolvedArgs();

@@ -136,7 +136,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       },
       ec);
   if (!result) {
-    bela::FPrintF(stderr, L"baulk ParseArgv error: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk ParseArgv error: \x1b[31m%s\x1b[0m\n", ec.message);
     return false;
   }
   if (baulk::IsDebugMode && baulk::IsQuietMode) {
@@ -174,7 +174,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       return true;
     }
   }
-  bela::FPrintF(stderr, L"baulk unsupport command: %s\n", subcmd);
+  bela::FPrintF(stderr, L"baulk unsupport command: \x1b[31m%s\x1b[0m\n", subcmd);
   return false;
 }
 
