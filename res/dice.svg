@@ -1,0 +1,22 @@
+<svg height="512" viewBox="0 0 58 58" width="512"
+    xmlns="http://www.w3.org/2000/svg">
+    <g id="Page-1" fill="none" fill-rule="evenodd">
+        <g id="025---Roll-Dice" fill-rule="nonzero">
+            <path id="Shape" d="m42 0-16 9.5v20.03l16 9.47 16-9.5v-20z" fill="#fb7b76"/>
+            <path id="Shape" d="m58 9.5-16 9.5-16-9.5 16-9.5z" fill="#ff5364"/>
+            <path id="Shape" d="m58 9.5v20l-16 9.5v-20z" fill="#df4d60"/>
+            <ellipse id="Oval" cx="42" cy="9" fill="#fff" rx="3" ry="2"/>
+            <ellipse id="Oval" cx="53" cy="19" fill="#fff" rx="2" ry="3"/>
+            <ellipse id="Oval" cx="47" cy="29" fill="#fff" rx="2" ry="3"/>
+            <path id="Shape" d="m38 27c-.5522847 0-1-.4477153-1-1v-3.42l-1.865-1.066c-.3192653-.1725461-.5199915-.5045188-.5244702-.8673996s.187993-.6997064.5029026-.8800796c.3149095-.1803732.7028239-.1759798 1.0135676.0114792l2.373 1.354c.3100129.1789851.5007064.5100292.5.868v4c0 .5522847-.4477153 1-1 1z" fill="#fff"/>
+            <rect id="Rectangle-path" fill="#ff5364" height="34" rx="3" width="34" y="24"/>
+            <g fill="#fff">
+                <circle id="Oval" cx="9" cy="33" r="3"/>
+                <circle id="Oval" cx="9" cy="49" r="3"/>
+                <circle id="Oval" cx="17" cy="41" r="3"/>
+                <circle id="Oval" cx="25" cy="33" r="3"/>
+                <circle id="Oval" cx="25" cy="49" r="3"/>
+            </g>
+        </g>
+    </g>
+</svg>
