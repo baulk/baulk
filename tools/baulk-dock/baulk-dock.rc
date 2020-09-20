@@ -3,8 +3,12 @@
 #include "baulkversion.h"
 #include "resource.h"
 
-ICON_BAULK_BASE ICON "baulk-dock.ico"
-IMAGE_BAULK_BASE PNG "baulk-dock.png"
+ICON_BAULK_BASE ICON "res/baulk-dock.ico"
+// ui
+IMAGE_BAULK_BASE64 PNG "res/baulk-dock-64x64.png"
+IMAGE_BAULK_BASE96 PNG "res/baulk-dock-96x96.png"
+IMAGE_BAULK_BASE128 PNG "res/baulk-dock-128x128.png"
+IMAGE_BAULK_BASE256 PNG "res/baulk-dock-256x256.png"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD

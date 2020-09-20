@@ -220,7 +220,7 @@ HRESULT MainWindow::CreateDeviceResources() {
     hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(0xFFC300), &borderBrush);
   }
   if (SUCCEEDED(hr)) {
-    LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE), L"PNG", 64, 64, &bitmap);
+    LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE64), L"PNG", 64, 64, &bitmap);
   }
   return hr;
 }
