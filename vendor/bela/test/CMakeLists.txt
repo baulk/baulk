@@ -2,6 +2,7 @@
 
 add_subdirectory(appexeclink)
 add_subdirectory(base)
+add_subdirectory(color)
 add_subdirectory(escape)
 add_subdirectory(escapeargv)
 add_subdirectory(filehash)
