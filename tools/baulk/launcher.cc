@@ -310,7 +310,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
     return false;
   }
   std::vector<LinkMeta> linkmetas;
-  for (const auto &lm : pkg.links) {
+  for (const auto &lm : pkg.launchers) {
     auto src = bela::PathCat(pkgroot, L"\\", lm.path);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
