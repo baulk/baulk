@@ -312,6 +312,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.launchers) {
     auto src = bela::PathCat(pkgroot, L"\\", lm.path);
+    DbgPrint(L"make simulated launcher %s", src);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
@@ -348,6 +349,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.links) {
     auto src = bela::PathCat(pkgroot, L"\\", lm.path);
+    DbgPrint(L"make symlink %s", src);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
