@@ -7,3 +7,4 @@
 *.obj
 *.res
 *.out
+/debug.log

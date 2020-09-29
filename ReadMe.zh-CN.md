@@ -207,6 +207,9 @@ Tips: 在 Windows 中，启动进程后，我们可以使用 `GetModuleFileNameW
 
 Baulk 提供了 sha256sum b3sum 两个命令帮助用户计算文件哈希值。
 
+## Baulk 虚拟环境机制
+
+为了支持同时安装同一软件的不同版本，baulk 实现了虚拟环境机制，通过在 baulkterminal 或者 baulk-exec 中指定 `-Exxx` 加载特定包的环境，比如 `-Eopenjdk15` 加载 openjdk15，`-Eopenjdk14` 则可以加载 openjdk14，这些包需要在 bucket 仓库中配置好。另外 baulk-dock 可以图形切换，与 baulk-exec 不同，baulk-exec 可以同时加载多个 VENV，而 baulk-dock 仅支持一种。
 
 ## Baulk Windows Terminal 集成
 
@@ -275,6 +278,9 @@ example:
 
 目前我们使用 Github Release Latest 机制实现 Baulk 自身的升级，在执行 Github Actions 时，当推送的新的 tag，Github Actions 会自动创建发行版并将二进制压缩包上传。在此过程中，tag 的信息会编译到 baulk 程序中，本地运行 `baulk-update` （请注意 baulk update 是更新 bucket 与 baulk-update 不是同一个命令）时，会检查本地的 baulk 是否处于 tag ，如果不是基于 Github Actions 构建，除非设置 `--force` 参数否则不会进行下一步检查，如果是基于 Github Actions 构建的 tag，则检查是否与 Github Release Latest 是否一致，不一致下载相应平台的二进制，然后更新 Baulk。
 
+## 文章
+
+[《Baulk - 开发一个简单的包管理工具历程》](https://forcemz.net/toolset/2020/07/18/Baulk/)
 
 ## 其他
 
