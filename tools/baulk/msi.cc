@@ -17,17 +17,17 @@ public:
   }
   Progressor(const Progressor &) = delete;
   Progressor &operator=(const Progressor) = delete;
-  void Update(UINT total, UINT rate);
+  void Update(int64_t total, int64_t rate);
   int Invoke(UINT iMessageType, LPCWSTR szMessage);
 
 private:
-  bool DoProgress(std::wstring_view msg);
-  bool Decode(std::wstring_view msg);
+  bool DoProgress(LPWSTR szMessage);
+  bool Decode(LPWSTR szMessage);
   std::wstring name;
-  int field[4];
-  int mProgressTotal{0};
-  int mProgress{0};
-  int iCurPos;
+  int64_t field[4];
+  int64_t mProgressTotal{0};
+  int64_t mProgress{0};
+  int64_t iCurPos;
   bool initialized{false};
   bool canceled{false};
   bool mEnableActionData{false};
@@ -35,65 +35,66 @@ private:
   bool mScriptInProgress{false};
 };
 
-void Progressor::Update(UINT total, UINT rate) {
-  bela::FPrintF(stderr, L"\rDecompress %s: %d/%d\n", name, rate, total);
+void Progressor::Update(int64_t total, int64_t rate) {
+  if (!baulk::IsQuietMode && total != 0) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mmsi decompress %s: %d/%d\x1b[0m", name, rate, total);
+  }
 }
 
-int FGetInteger(const wchar_t *&it, const wchar_t *end) {
-  auto pchPrev = it;
-  while (it < end && *it != ' ') {
-    it++;
+int64_t FGetInteger(wchar_t *&rpch) {
+  wchar_t *pchPrev = rpch;
+  while (*rpch && *rpch != ' ') {
+    rpch++;
   }
-  std::wstring_view sv{pchPrev, static_cast<size_t>(it - pchPrev)};
-  int i = 0;
-  bela::SimpleAtoi(sv, &i);
+  *rpch = '\0';
+  int64_t i = 0;
+  bela::SimpleAtoi(pchPrev, &i);
   return i;
 }
 
-bool Progressor::Decode(std::wstring_view msg) {
-  if (msg.empty()) {
-    return false;
+bool Progressor::Decode(LPWSTR szMessage) {
+  wchar_t *pch = szMessage;
+  if (0 == *pch) {
+    return false; // no msg
   }
-  auto it = msg.data();
-  auto end = it + msg.size();
-  while (it < end) {
-    auto ch = *it;
-    it += 2;
-    if (it >= end) {
-      return false;
-    }
-    switch (ch) {
-    case '1':
-      if (isdigit(ch) == 0) {
-        return false;
+  while (*pch != 0) {
+    wchar_t chField = *pch++;
+    pch++; // for ':'
+    pch++; // for sp
+    switch (chField) {
+    case '1': // field 1
+      // progress message type
+      if (0 == isdigit(*pch)) {
+        return false; // blank record
       }
-      field[0] = *it++ - '0';
+      field[0] = *pch++ - '0';
       break;
-    case '2':
-      field[1] = FGetInteger(it, end);
+    case '2': // field 2
+      field[1] = FGetInteger(pch);
       if (field[0] == 2 || field[0] == 3) {
-        return true;
+        return true; // done processing
       }
       break;
-    case 3:
-      field[2] = FGetInteger(it, end);
+    case '3': // field 3
+      field[2] = FGetInteger(pch);
       if (field[0] == 1) {
-        return true;
+        return true; // done processing
       }
-    case '4':
-      field[3] = FGetInteger(it, end);
-      return true;
-    default:
+      break;
+    case '4': // field 4
+      field[3] = FGetInteger(pch);
+      return true; // done processing
+    default:       // unknown field
       return false;
     }
-    it++;
+    pch++; // for space (' ') between fields
   }
   return true;
 }
 
 // https://docs.microsoft.com/zh-cn/windows/win32/api/msiquery/nf-msiquery-msiprocessmessage
-bool Progressor::DoProgress(std::wstring_view msg) {
-  if (!Decode(msg)) {
+bool Progressor::DoProgress(LPWSTR szMessage) {
+  if (!Decode(szMessage)) {
     return false;
   }
   switch (field[0]) {
@@ -115,6 +116,7 @@ bool Progressor::DoProgress(std::wstring_view msg) {
     if (mProgressTotal != 0) {
       iCurPos += field[1];
       Update(mProgressTotal, mForwardProgress ? iCurPos : -1 * iCurPos);
+      break;
     }
     break;
   }
@@ -134,12 +136,16 @@ int Progressor::Invoke(UINT iMessageType, LPCWSTR szMessage) {
   }
   auto mt = static_cast<INSTALLMESSAGE>(0xFF000000 & iMessageType);
   auto uiflags = 0x00FFFFFF & iMessageType;
+
   switch (mt) {
   case INSTALLMESSAGE_FATALEXIT:
+    bela::FPrintF(stderr, L"baulk decompress msi \x1b[31mFATALEXIT: %s\x1b[0m\n", szMessage);
     return IDABORT;
   case INSTALLMESSAGE_ERROR:
+    bela::FPrintF(stderr, L"baulk decompress msi error: \x1b[31m%s\x1b[0m\n", szMessage);
     return IDABORT;
   case INSTALLMESSAGE_WARNING:
+    bela::FPrintF(stderr, L"baulk decompress msi warning: \x1b[33m%s\x1b[0m\n", szMessage);
     // IDIGNORE
     break;
   case INSTALLMESSAGE_USER:
@@ -165,7 +171,7 @@ int Progressor::Invoke(UINT iMessageType, LPCWSTR szMessage) {
     return IDOK;
   case INSTALLMESSAGE_PROGRESS:
     if (szMessage != nullptr) {
-      DoProgress(szMessage);
+      DoProgress(const_cast<LPWSTR>(szMessage));
     }
     return IDOK;
   case INSTALLMESSAGE_INITIALIZE:
@@ -204,13 +210,19 @@ bool Decompress(std::wstring_view msi, std::wstring_view outdir, bela::error_cod
     ec = bela::make_system_error_code();
     return false;
   }
+  if (!baulk::IsQuietMode) {
+    bela::FPrintF(stderr, L"\n");
+  }
   return true;
 }
 
 inline void DecompressClear(std::wstring_view dir) {
+  constexpr std::wstring_view msiext = L".msi";
   std::error_code ec;
   for (auto &p : std::filesystem::directory_iterator(dir)) {
-    if (p.path().extension() == L".msi") {
+    auto extension = p.path().extension().wstring();
+    if (bela::EqualsIgnoreCase(extension, msiext)) {
+      baulk::DbgPrint(L"remove msi %s\n", p.path().c_str());
       std::filesystem::remove_all(p.path(), ec);
     }
   }
@@ -232,7 +244,7 @@ bool Regularize(std::wstring_view path) {
       return !ec;
     }
   }
-  return true;
+  return baulk::fs::FlatPackageInitialize(path, path, ec);
 }
 
 } // namespace baulk::msi
