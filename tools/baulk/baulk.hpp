@@ -120,7 +120,7 @@ struct BaulkVirtualEnv {
   std::vector<std::wstring> libs;
   std::vector<std::wstring> envs;
   std::vector<std::wstring> dependencies;
-
+  std::vector<std::wstring> mkdirs;
   bool empty() const {
     return paths.empty() && includes.empty() && libs.empty() && envs.empty() && dependencies.empty();
   }

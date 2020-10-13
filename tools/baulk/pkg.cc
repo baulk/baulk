@@ -71,7 +71,7 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
   sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
   for (const auto &p : pkglocal->forceDeletes) {
     auto realdir = sim.ExpandEnv(p);
-    baulk::DbgPrint(L"%s force delete: %s", pkgname, realdir);
+    baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
     bela::error_code ec2;
     if (baulk::fs::PathRemoveEx(realdir, ec2)) {
       bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
@@ -95,6 +95,23 @@ std::optional<std::wstring> PackageCached(std::wstring_view filename, std::wstri
 }
 
 int PackageMakeLinks(const baulk::Package &pkg) {
+  if (!pkg.venv.mkdirs.empty()) {
+    bela::env::Simulator sim;
+    sim.InitializeEnv();
+    sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
+    sim.SetEnv(L"BAULK_ETC", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\etc"));
+    sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
+    sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkg.name));
+    sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
+    for (const auto &p : pkg.venv.mkdirs) {
+      auto realdir = sim.ExpandEnv(p);
+      baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
+      std::error_code e;
+      if (!std::filesystem::create_directories(realdir, e)) {
+        bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, bela::fromascii(e.message()));
+      }
+    }
+  }
   bela::error_code ec;
   baulk::BaulkRemovePkgLinks(pkg.name, ec);
   // check package is good installed
