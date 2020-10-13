@@ -75,6 +75,7 @@ bool IsExecutablePath(std::wstring_view p) {
 // delete the files in a directory, use the SHFileOperation function. To remove
 // an empty directory, use the RemoveDirectory function. To close an open file,
 // use the CloseHandle function.
+constexpr auto noflags = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY;
 
 bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
   Finder finder;
@@ -87,20 +88,19 @@ bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
     }
     auto child = bela::StringCat(path, L"\\", finder.Name());
     if (finder.IsDir()) {
-
       if (!PathRemoveInternal(child, ec)) {
         return false;
       }
       continue;
     }
-    SetFileAttributesW(child.data(), GetFileAttributesW(child.data()) & ~FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesW(child.data(), GetFileAttributesW(child.data()) & ~noflags);
     if (DeleteFileW(child.data()) != TRUE) {
       ec = bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
       return false;
     }
 
   } while (finder.Next());
-  SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~FILE_ATTRIBUTE_READONLY);
+  SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~noflags);
   if (RemoveDirectoryW(path.data()) != TRUE) {
     ec = bela::make_system_error_code(bela::StringCat(L"rmdir '", path, L"': "));
     return false;
@@ -108,9 +108,9 @@ bool PathRemoveInternal(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
-bool PathRemoveEx(std::wstring_view path, bela::error_code &ec) {
+bool PathRemoveEx2(std::wstring_view path, bela::error_code &ec) {
   if ((GetFileAttributesW(path.data()) & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~noflags);
     if (DeleteFileW(path.data()) != TRUE) {
       ec = bela::make_system_error_code(bela::StringCat(L"del '", path, L"': "));
       return false;
@@ -118,6 +118,15 @@ bool PathRemoveEx(std::wstring_view path, bela::error_code &ec) {
     return true;
   }
   return PathRemoveInternal(path, ec);
+}
+
+bool PathRemoveEx(std::wstring_view path, bela::error_code &ec) {
+  std::error_code e;
+  if (std::filesystem::remove_all(path, e) != static_cast<uintmax_t>(-1)) {
+    return true;
+  }
+  // retry to remove readonly and hide file
+  return PathRemoveEx2(path, ec);
 }
 
 std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {

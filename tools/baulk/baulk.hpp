@@ -9,6 +9,7 @@
 namespace baulk {
 extern bool IsDebugMode;
 extern bool IsForceMode;
+extern bool IsForceDelete;
 extern bool IsQuietMode;
 extern bool IsTraceMode;
 extern bool IsInsecureMode;
@@ -133,6 +134,7 @@ struct Package {
   std::wstring checksum;
   std::wstring extension;
   std::vector<std::wstring> urls;
+  std::vector<std::wstring> forceDeletes; // uninstall delete dirs
   std::vector<LinkMeta> links;
   std::vector<LinkMeta> launchers;
   BaulkVirtualEnv venv;

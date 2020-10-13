@@ -8,6 +8,7 @@
 namespace baulk {
 bool IsDebugMode = false;
 bool IsForceMode = false;
+bool IsForceDelete = false;
 bool IsQuietMode = false;
 bool IsTraceMode = false;
 bool IsInsecureMode = false;
@@ -42,6 +43,7 @@ Usage: baulk [option] command pkg ...
   -k|--insecure    Allow insecure server connections when using SSL
   -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+  --force-delete   When uninstalling the package, forcefully delete the related directories
 
 
 Command:
@@ -91,6 +93,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
+      .Add(L"force-delete", baulk::cli::no_argument, 1002)
       .Add(L"trace", baulk::cli::no_argument, 'T')
       .Add(L"exec"); // subcommand
   bela::error_code ec;
@@ -128,6 +131,9 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           break;
         case 1001:
           SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
+          break;
+        case 1002:
+          baulk::IsForceDelete = true;
           break;
         default:
           return false;

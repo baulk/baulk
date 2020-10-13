@@ -2,6 +2,7 @@
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/io.hpp>
+#include <bela/simulator.hpp>
 #include <version.hpp>
 #include <jsonex.hpp>
 #include <time.hpp>
@@ -31,6 +32,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     j["version"] = bela::ToNarrow(pkg.version);
     j["bucket"] = bela::ToNarrow(pkg.bucket);
     j["date"] = baulk::time::TimeNow();
+    AddArray(j, "force_delete", pkg.forceDeletes);
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
       if (!pkg.venv.category.empty()) {
@@ -53,6 +55,29 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     ec = bela::make_error_code(1, bela::ToWide(e.what()));
   }
   return false;
+}
+
+bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
+  auto pkglocal = baulk::bucket::PackageLocalMeta(pkgname, ec);
+  if (!pkglocal) {
+    return false;
+  }
+  bela::env::Simulator sim;
+  sim.InitializeEnv();
+  sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
+  sim.SetEnv(L"BAULK_ETC", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\etc"));
+  sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
+  sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkgname));
+  sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
+  for (const auto &p : pkglocal->forceDeletes) {
+    auto realdir = sim.ExpandEnv(p);
+    baulk::DbgPrint(L"%s force delete: %s", pkgname, realdir);
+    bela::error_code ec2;
+    if (baulk::fs::PathRemoveEx(realdir, ec2)) {
+      bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
+    }
+  }
+  return true;
 }
 
 // Package cached

@@ -5,6 +5,7 @@
 
 namespace baulk::package {
 int BaulkInstall(const baulk::Package &pkg);
+bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec);
 }; // namespace baulk::package
 
 #endif
