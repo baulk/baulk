@@ -107,8 +107,8 @@ int PackageMakeLinks(const baulk::Package &pkg) {
       auto realdir = sim.ExpandEnv(p);
       baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
       std::error_code e;
-      if (!std::filesystem::create_directories(realdir, e)) {
-        bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, bela::fromascii(e.message()));
+      if (std::filesystem::create_directories(realdir, e); e) {
+        bela::FPrintF(stderr, L"mkdir %s \x1b[31m%s\x1b[0m\n", realdir, bela::fromascii(e.message()));
       }
     }
   }
