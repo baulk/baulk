@@ -70,6 +70,14 @@ bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b
 
 error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix = L"");
 std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix = L"");
+
+inline error_code from_system_error_code(DWORD e, std::wstring_view prefix = L"") {
+  error_code ec;
+  ec.code = e;
+  ec.message = resolve_system_error_message(ec.code, prefix);
+  return ec;
+}
+
 inline error_code make_system_error_code(std::wstring_view prefix = L"") {
   error_code ec;
   ec.code = GetLastError();

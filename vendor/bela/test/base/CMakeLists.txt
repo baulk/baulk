@@ -15,3 +15,13 @@ add_executable(fnmatch_test
 target_link_libraries(fnmatch_test
   bela
 )
+
+# delfile
+add_executable(delfile_test
+  delfile.cc
+)
+
+target_link_libraries(delfile_test
+  bela
+  belawin
+)

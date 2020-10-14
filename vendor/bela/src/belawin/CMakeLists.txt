@@ -3,6 +3,7 @@
 add_library(belawin STATIC
   env.cc
   io.cc
+  fs.cc
   path.cc
   peimage.cc
   process.cc
