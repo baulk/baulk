@@ -320,7 +320,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
     auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
-        baulk::fs::PathRemove(lnk, ec);
+        bela::fs::Remove(lnk, ec);
       }
     }
     // use baulk-cli as source
@@ -357,7 +357,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
     auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
-        baulk::fs::PathRemove(lnk, ec);
+        bela::fs::RemoveAll(lnk, ec);
       }
     }
     if (!baulk::fs::SymLink(src, lnk, ec)) {

@@ -35,7 +35,7 @@ public:
     return false;
   };
   bool SearchMatched(std::wstring_view bucketdir, std::wstring_view bucket) {
-    baulk::fs::Finder finder;
+    bela::fs::Finder finder;
     bela::error_code ec;
     if (!finder.First(bucketdir, L"*.json", ec)) {
       return false;

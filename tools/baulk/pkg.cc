@@ -73,7 +73,7 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
     auto realdir = sim.ExpandEnv(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
     bela::error_code ec2;
-    if (baulk::fs::PathRemoveEx(realdir, ec2)) {
+    if (bela::fs::RemoveAll(realdir, ec2)) {
       bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
     }
   }
@@ -129,7 +129,7 @@ int PackageMakeLinks(const baulk::Package &pkg) {
 
 inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela::error_code &ec) {
   if (bela::PathExists(target)) {
-    baulk::fs::PathRemove(target, ec);
+    bela::fs::RemoveAll(target, ec);
   }
   if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
     ec = bela::make_system_error_code();
@@ -161,7 +161,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   baulk::DbgPrint(L"Decompress %s to %s\n", pkg.name, outdir);
   bela::error_code ec;
   if (bela::PathExists(outdir)) {
-    baulk::fs::PathRemove(outdir, ec);
+    bela::fs::RemoveAll(outdir, ec);
   }
   if (!h->decompress(pkgfile, outdir, ec)) {
     bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec.message);
@@ -199,7 +199,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     }
   }
   if (!pkgold.empty()) {
-    baulk::fs::PathRemove(pkgold, ec);
+    bela::fs::RemoveAll(pkgold, ec);
   }
   // create a links
   if (!PackageLocalMetaWrite(pkg, ec)) {

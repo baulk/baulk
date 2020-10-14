@@ -15,7 +15,7 @@ inline std::wstring StringCategory(baulk::Package &pkg) {
 
 // check upgradable
 int cmd_list_all() {
-  baulk::fs::Finder finder;
+  bela::fs::Finder finder;
   bela::error_code ec;
   auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
   size_t upgradable = 0;

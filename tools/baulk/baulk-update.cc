@@ -313,7 +313,7 @@ bool BaulkExecUpdate(std::wstring_view baulkexecNew, std::wstring_view baulkroot
         bela::FPrintF(stderr, L"baulk-update: update apply new baulk-exec: %s\n", ec.message);
         return false;
       }
-      baulk::fs::PathRemoveEx(baulkexecTemp, ec);
+      bela::fs::RemoveAll(baulkexecTemp, ec);
       return true;
     }
   }
@@ -352,7 +352,7 @@ int BaulkUpdate() {
   }
   auto outdir = UnarchivePath(*baulkfile);
   if (bela::PathExists(outdir)) {
-    baulk::fs::PathRemoveEx(outdir, ec);
+    bela::fs::RemoveAll(outdir, ec);
   }
   baulk::DbgPrint(L"Decompress %s to %s\n", filename, outdir);
   if (!baulk::Decompress(*baulkfile, outdir, ec)) {

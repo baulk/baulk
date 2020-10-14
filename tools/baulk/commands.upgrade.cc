@@ -22,7 +22,7 @@ int cmd_upgrade(const argv_t &argv) {
     baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
   }
 
-  baulk::fs::Finder finder;
+  bela::fs::Finder finder;
   auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
   if (finder.First(locksdir, L"*.json", ec)) {
     do {

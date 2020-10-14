@@ -48,12 +48,12 @@ int cmd_cleancache(const argv_t &argv) {
   for (auto &p : std::filesystem::directory_iterator(pkgtemp)) {
     auto path_ = p.path().wstring();
     if (baulk::IsForceMode || p.is_directory()) {
-      baulk::fs::PathRemoveEx(path_, ec);
+      bela::fs::RemoveAll(path_, ec);
       continue;
     }
     if (FileIsExpired(path_, ul.QuadPart)) {
       DbgPrint(L"%s expired", path_);
-      baulk::fs::PathRemoveEx(path_, ec);
+      bela::fs::RemoveAll(path_, ec);
       continue;
     }
   }

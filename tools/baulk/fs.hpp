@@ -1,44 +1,12 @@
 #ifndef BAULK_FS_HPP
 #define BAULK_FS_HPP
 #include <bela/base.hpp>
+#include <bela/fs.hpp>
 #include <optional>
 #include <string_view>
 #include <filesystem>
 
 namespace baulk::fs {
-inline constexpr bool DirSkipFaster(const wchar_t *dir) {
-  return (dir[0] == L'.' && (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
-}
-
-class Finder {
-public:
-  Finder() noexcept = default;
-  Finder(const Finder &) = delete;
-  Finder &operator=(const Finder &) = delete;
-  ~Finder() noexcept {
-    if (hFind != INVALID_HANDLE_VALUE) {
-      FindClose(hFind);
-    }
-  }
-  const WIN32_FIND_DATAW &FD() const { return wfd; }
-  bool Ignore() const { return DirSkipFaster(wfd.cFileName); }
-  bool IsDir() const { return (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; }
-  std::wstring_view Name() const { return std::wstring_view(wfd.cFileName); }
-  bool Next() { return FindNextFileW(hFind, &wfd) == TRUE; }
-  bool First(std::wstring_view dir, std::wstring_view suffix, bela::error_code &ec) {
-    auto d = bela::StringCat(dir, L"\\", suffix);
-    hFind = FindFirstFileW(d.data(), &wfd);
-    if (hFind == INVALID_HANDLE_VALUE) {
-      ec = bela::make_system_error_code();
-      return false;
-    }
-    return true;
-  }
-
-private:
-  HANDLE hFind{INVALID_HANDLE_VALUE};
-  WIN32_FIND_DATAW wfd;
-};
 
 bool IsExecutablePath(std::wstring_view p);
 std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
@@ -46,18 +14,6 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
 inline std::wstring FileName(std::wstring_view p) {
   return std::filesystem::path(p).filename().wstring();
 }
-
-inline bool PathRemove(std::wstring_view path, bela::error_code &ec) {
-  std::error_code e;
-  // https://en.cppreference.com/w/cpp/filesystem/remove
-  if (std::filesystem::remove_all(path, e) == static_cast<std::uintmax_t>(-1)) {
-    ec = bela::from_std_error_code(e);
-    return false;
-  }
-  return true;
-}
-
-bool PathRemoveEx(std::wstring_view path, bela::error_code &ec);
 
 inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
