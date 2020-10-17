@@ -5,6 +5,7 @@
 #include <bela/path.hpp>
 #include <bela/terminal.hpp>
 #include <Msi.h>
+#include <baulkmisc.hpp>
 
 namespace baulk::msi {
 // https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluiw
@@ -37,7 +38,11 @@ private:
 
 void Progressor::Update(int64_t total, int64_t rate) {
   if (!baulk::IsQuietMode && total != 0) {
-    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mmsi decompress %s: %d/%d\x1b[0m", name, rate, total);
+    wchar_t strrate[32];
+    wchar_t strtotal[32];
+    baulk::misc::EncodeRate(strrate, static_cast<uint64_t>(rate));
+    baulk::misc::EncodeRate(strtotal, static_cast<uint64_t>(total));
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mmsi decompress %s: %s/%s\x1b[0m", name, strrate, strtotal);
   }
 }
 

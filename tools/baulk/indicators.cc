@@ -61,14 +61,15 @@ void ProgressBar::Draw() {
   auto total_ = static_cast<uint64_t>(total);
   //' 1024.00K 1024.00K/s' 20
 
-  EncodeRate(strtotal, total_);
+  baulk::misc::EncodeRate(strtotal, total_);
   if (tick % 10 == 0) {
     auto delta = (total_ - previous); // cycle 50/1000 s
     previous = total_;
-    EncodeRate(speed, delta);
+    baulk::misc::EncodeRate(speed, delta);
   }
   tick++;
-  if (maximum == 0) {
+  auto maximum_ = static_cast<std::uint64_t>(maximum);
+  if (maximum_ == 0) {
     barwidth += 5;
     // file.tar.gz  [ <=> ] 1024.00K 1024.00K/s
     constexpr std::wstring_view bounce = L"<=>";
@@ -85,7 +86,7 @@ void ProgressBar::Draw() {
                   bounce, s1, strtotal, speed);
     return;
   }
-  auto scale = total_ * 100 / maximum;
+  auto scale = total_ * 100 / maximum_;
   auto progress = scale * barwidth / 100;
   auto ps = MakeRate(static_cast<size_t>(progress));
   auto sps = MakeSpace(static_cast<size_t>(barwidth - progress));

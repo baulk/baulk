@@ -13,41 +13,18 @@
 #include <utility>
 #include <vector>
 #include <bela/terminal.hpp>
+#include <baulkmisc.hpp>
 
 namespace baulk {
-[[maybe_unused]] constexpr uint64_t KB = 1024ULL;
-[[maybe_unused]] constexpr uint64_t MB = KB * 1024;
-[[maybe_unused]] constexpr uint64_t GB = MB * 1024;
-[[maybe_unused]] constexpr uint64_t TB = GB * 1024;
 [[maybe_unused]] constexpr uint32_t MAX_BARLENGTH = 256;
-template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
-  if (x >= TB) {
-    _snwprintf_s(buf, N, L"%.2fT", (double)x / TB);
-    return;
-  }
-  if (x >= GB) {
-    _snwprintf_s(buf, N, L"%.2fG", (double)x / GB);
-    return;
-  }
-  if (x >= MB) {
-    _snwprintf_s(buf, N, L"%.2fM", (double)x / MB);
-    return;
-  }
-  if (x > 10 * KB) {
-    _snwprintf_s(buf, N, L"%.2fK", (double)x / KB);
-    return;
-  }
-  _snwprintf_s(buf, N, L"%lldB", x);
-}
-
 enum ProgressState : uint32_t { Uninitialized = 0, Running = 33, Completed = 32, Fault = 31 };
-
 class ProgressBar {
 public:
   ProgressBar() = default;
   ProgressBar(const ProgressBar &) = delete;
   ProgressBar &operator=(const ProgressBar &) = delete;
   void Maximum(uint64_t mx) { maximum = mx; }
+  void Update(uint64_t value) { total = value; }
   void FileName(std::wstring_view fn) {
     filename = fn;
     if (filename.size() >= 20) {
@@ -55,7 +32,7 @@ public:
       filename.append(flen, L' ');
     }
   }
-  void Update(uint64_t value) { total = value; }
+
   bool Execute();
   void Finish();
   void MarkFault() { state = ProgressState::Fault; }
@@ -64,7 +41,7 @@ public:
   uint32_t Rows() const { return termsz.rows; }
 
 private:
-  uint64_t maximum{0};
+  std::atomic_uint64_t maximum{0};
   uint64_t previous{0};
   mutable std::condition_variable cv;
   mutable std::mutex mtx;
