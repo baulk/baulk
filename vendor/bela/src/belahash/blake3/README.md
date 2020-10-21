@@ -35,8 +35,9 @@ int main() {
 }
 ```
 
-If you save the example code above as `example.c`, and you're on x86\_64
-with a Unix-like OS, you can compile a working binary like this:
+The code above is included in this directory as `example.c`. If you're
+on x86\_64 with a Unix-like OS, you can compile a working binary like
+this:
 
 ```bash
 gcc -O3 -o example example.c blake3.c blake3_dispatch.c blake3_portable.c \
@@ -181,12 +182,12 @@ expects to be linked with code for five different instruction sets:
 portable C, SSE2, SSE4.1, AVX2, and AVX-512.
 
 For each of the x86 SIMD instruction sets, two versions are available,
-one in assembly (with three flavors: Unix, Windows MSVC, and Windows
-GNU) and one using C intrinsics. The assembly versions are generally
-preferred: they perform better, they perform more consistently across
-different compilers, and they build more quickly. On the other hand, the
-assembly versions are x86\_64-only, and you need to select the right
-flavor for your target platform.
+one in assembly (which is further divided into three flavors: Unix,
+Windows MSVC, and Windows GNU) and one using C intrinsics. The assembly
+versions are generally preferred: they perform better, they perform more
+consistently across different compilers, and they build more quickly. On
+the other hand, the assembly versions are x86\_64-only, and you need to
+select the right flavor for your target platform.
 
 Here's an example of building a shared library on x86\_64 Linux using
 the assembly implementations:
@@ -212,12 +213,12 @@ gcc -shared -O3 -o libblake3.so blake3.c blake3_dispatch.c blake3_portable.c \
 ```
 
 Note above that building `blake3_avx512.c` requires both `-mavx512f` and
-`-mavx512vl` under GCC and Clang, as shown above. Under MSVC, the single
-`/arch:AVX512` flag is sufficient. The MSVC equivalent of `-mavx2` is
-`/arch:AVX2`. MSVC enables SSE4.1 by defaut, and it doesn't have a
+`-mavx512vl` under GCC and Clang. Under MSVC, the single `/arch:AVX512`
+flag is sufficient. The MSVC equivalent of `-mavx2` is `/arch:AVX2`.
+MSVC enables SSE2 and SSE4.1 by defaut, and it doesn't have a
 corresponding flag.
 
-If you want to omit SIMD code on x86, you need to explicitly disable
+If you want to omit SIMD code entirely, you need to explicitly disable
 each instruction set. Here's an example of building a shared library on
 x86 with only portable code:
 
