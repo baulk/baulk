@@ -34,6 +34,7 @@ struct StringCaseInsensitiveEq {
 };
 
 std::wstring ExpandEnv(std::wstring_view sv);
+std::wstring PathExpand(std::wstring_view raw);
 
 using envmap_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
 class Simulator {
@@ -227,7 +228,7 @@ public:
   }
 
   // GetEnv get
-  [[nodiscard]] std::wstring_view GetEnv(std::wstring_view key) const {
+  [[nodiscard]] std::wstring GetEnv(std::wstring_view key) const {
     std::wstring val;
     if (!LookupEnv(key, val)) {
       return L"";
@@ -240,7 +241,23 @@ public:
     ExpandEnv(raw, s);
     return s;
   }
-
+  [[nodiscard]] std::wstring PathExpand(std::wstring_view raw) const {
+    if (raw == L"~") {
+      return GetEnv(L"USERPROFILE");
+    }
+    std::wstring s;
+    if (bela::StartsWith(raw, L"~\\") || bela::StartsWith(raw, L"~/")) {
+      raw.remove_prefix(2);
+      s.assign(GetEnv(L"USERPROFILE")).push_back(L'\\');
+    }
+    ExpandEnv(raw, s);
+    for (auto &c : s) {
+      if (c == '/') {
+        c = '\\';
+      }
+    }
+    return s;
+  }
   const std::vector<std::wstring> &Paths() const { return paths; }
 
   // MakeEnv make environment string

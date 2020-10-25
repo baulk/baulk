@@ -32,5 +32,6 @@ int wmain(int argc, wchar_t **argv) {
   }
   auto path = bela::AppendEnv(L"Path", L"C:\\Program Files\\7-Zip", L"C:\\MSYS2");
   bela::FPrintF(stderr, L"Path: %s\n", path);
+  bela::FPrintF(stderr, L"SSH Public Key: %s\n", bela::env::PathExpand(L"~/.ssh/id_ed25519.pub"));
   return 0;
 }
