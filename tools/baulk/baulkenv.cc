@@ -81,6 +81,10 @@ bool InitializeGitPath(std::wstring &git) {
 
 std::wstring ProfileResolve(std::wstring_view profile, std::wstring_view root) {
   if (!profile.empty()) {
+    // UNIX style env
+    if (profile.find(L'$') != std::wstring_view::npos) {
+      return bela::env::PathExpand(profile);
+    }
     return bela::WindowsExpandEnv(profile);
   }
   auto p = bela::StringCat(root, L"\\config\\baulk.json");

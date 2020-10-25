@@ -166,13 +166,12 @@ bool EnvDependentChain::FlushEnv() {
     }
     return false;
   };
-  std::wstring buffer;
-  auto joinExpandEnv = [&](const std::vector<std::wstring> &load, std::vector<std::wstring> &save,
-                           bela::env::Simulator &sm) {
+
+  // support '~/'
+  auto joinPathExpand = [&](const std::vector<std::wstring> &load, std::vector<std::wstring> &save,
+                            bela::env::Simulator &sm) {
     for (const auto &x : load) {
-      buffer.clear();
-      sm.ExpandEnv(x, buffer);
-      searcher.JoinForceEnv(save, buffer);
+      searcher.JoinForceEnv(save, sm.PathExpand(x));
     }
   };
   auto flushOnceEnv = [&](const BaulkVirtualEnv &e) {
@@ -183,10 +182,12 @@ bool EnvDependentChain::FlushEnv() {
     newSimulator.SetEnv(L"BAULK_VFS", searcher.baulkvfs);
     newSimulator.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
     newSimulator.SetEnv(L"BAULK_BINDIR", searcher.baulkbindir);
-    joinExpandEnv(e.paths, searcher.paths, newSimulator);
-    joinExpandEnv(e.includes, searcher.includes, newSimulator);
-    joinExpandEnv(e.libs, searcher.libs, newSimulator);
+    joinPathExpand(e.paths, searcher.paths, newSimulator);
+    joinPathExpand(e.includes, searcher.includes, newSimulator);
+    joinPathExpand(e.libs, searcher.libs, newSimulator);
     // set env k=v
+    std::wstring buffer;
+    // ENV not support ~/
     for (const auto &e : e.envs) {
       buffer.clear();
       newSimulator.ExpandEnv(e, buffer);

@@ -70,7 +70,7 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
   sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkgname));
   sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
   for (const auto &p : pkglocal->forceDeletes) {
-    auto realdir = sim.ExpandEnv(p);
+    auto realdir = sim.PathExpand(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
     bela::error_code ec2;
     if (bela::fs::RemoveAll(realdir, ec2)) {
@@ -104,7 +104,7 @@ int PackageMakeLinks(const baulk::Package &pkg) {
     sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkg.name));
     sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
     for (const auto &p : pkg.venv.mkdirs) {
-      auto realdir = sim.ExpandEnv(p);
+      auto realdir = sim.PathExpand(p);
       baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
       std::error_code e;
       if (std::filesystem::create_directories(realdir, e); e) {
