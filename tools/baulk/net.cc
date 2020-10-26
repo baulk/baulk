@@ -11,6 +11,14 @@
 #include "indicators.hpp"
 #include "net.hpp"
 
+#ifndef WINHTTP_OPTION_SECURITY_INFO
+#define WINHTTP_OPTION_SECURITY_INFO 151
+#endif
+
+#ifndef WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3
+#define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3 0x00002000
+#endif
+
 namespace baulk::net {
 
 inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
@@ -127,6 +135,8 @@ inline bool CrackUrl(std::wstring_view url, UrlComponets &uc) {
   return true;
 }
 
+// https://devblogs.microsoft.com/premier-developer/microsoft-tls-1-3-support-reference/
+// https://stackoverflow.com/questions/56072561/how-to-enable-tls-1-3-in-windows-10/59210166#59210166
 inline void EnableTlsProxy(HINTERNET hSession) {
   auto https_proxy_env = bela::GetEnv(L"HTTPS_PROXY");
   if (!https_proxy_env.empty()) {
@@ -137,7 +147,11 @@ inline void EnableTlsProxy(HINTERNET hSession) {
     WinHttpSetOption(hSession, WINHTTP_OPTION_PROXY, &proxy, sizeof(proxy));
   }
   DWORD secure_protocols(WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 | WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3);
-  WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols, sizeof(secure_protocols));
+  if (WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols, sizeof(secure_protocols)) !=
+      TRUE) {
+    secure_protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
+    WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secure_protocols, sizeof(secure_protocols));
+  }
   // Enable HTTP2
   DWORD dwFlags = WINHTTP_PROTOCOL_FLAG_HTTP2;
   DWORD dwSize = sizeof(dwFlags);
