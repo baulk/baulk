@@ -658,8 +658,9 @@ static int32_t mz_zip_entry_write_header(void *stream, uint8_t local, mz_zip_fil
             if ((file_info->flag & MZ_ZIP_FLAG_ENCRYPTED) && (file_info->aes_version))
                 version_needed = 51;
 #endif
-#ifdef HAVE_LZMA
-            if (file_info->compression_method == MZ_COMPRESS_METHOD_LZMA)
+#if defined(HAVE_LZMA) || defined(HAVE_LIBCOMP)
+            if ((file_info->compression_method == MZ_COMPRESS_METHOD_LZMA) ||
+                (file_info->compression_method == MZ_COMPRESS_METHOD_XZ))
                 version_needed = 63;
 #endif
         }
@@ -1621,6 +1622,9 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 #ifdef HAVE_LZMA
     case MZ_COMPRESS_METHOD_LZMA:
 #endif
+#if defined(HAVE_LZMA) || defined(HAVE_LIBCOMP)
+    case MZ_COMPRESS_METHOD_XZ:
+#endif
 #ifdef HAVE_ZSTD
     case MZ_COMPRESS_METHOD_ZSTD:
 #endif
@@ -1704,9 +1708,20 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
         else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_BZIP2)
             mz_stream_bzip_create(&zip->compress_stream);
 #endif
+#ifdef HAVE_LIBCOMP
+        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_XZ) {
+            mz_stream_libcomp_create(&zip->compress_stream);
+            mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_COMPRESS_METHOD,
+                zip->file_info.compression_method);
+        }
+#endif
 #ifdef HAVE_LZMA
-        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA)
+        else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA ||
+                 zip->file_info.compression_method == MZ_COMPRESS_METHOD_XZ) {
             mz_stream_lzma_create(&zip->compress_stream);
+            mz_stream_set_prop_int64(zip->compress_stream, MZ_STREAM_PROP_COMPRESS_METHOD,
+                zip->file_info.compression_method);
+        }
 #endif
 #ifdef HAVE_ZSTD
         else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_ZSTD)
@@ -1723,7 +1738,9 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
             int32_t set_end_of_stream = 0;
 
 #ifndef HAVE_LIBCOMP
-            if (zip->entry_raw || zip->file_info.compression_method == MZ_COMPRESS_METHOD_STORE || zip->file_info.flag & MZ_ZIP_FLAG_ENCRYPTED)
+            if (zip->entry_raw ||
+                zip->file_info.compression_method == MZ_COMPRESS_METHOD_STORE ||
+                zip->file_info.flag & MZ_ZIP_FLAG_ENCRYPTED)
 #endif
             {
                 max_total_in = zip->file_info.compressed_size;
@@ -1739,6 +1756,7 @@ static int32_t mz_zip_entry_open_int(void *handle, uint8_t raw, int16_t compress
 
             switch (zip->file_info.compression_method) {
             case MZ_COMPRESS_METHOD_LZMA:
+            case MZ_COMPRESS_METHOD_XZ:
                 set_end_of_stream = (zip->file_info.flag & MZ_ZIP_FLAG_LZMA_EOS_MARKER);
                 break;
             case MZ_COMPRESS_METHOD_ZSTD:
@@ -1908,8 +1926,9 @@ int32_t mz_zip_entry_write_open(void *handle, const mz_zip_file *file_info, int1
         if (compress_level == 1)
             zip->file_info.flag |= MZ_ZIP_FLAG_DEFLATE_SUPER_FAST;
     }
-#ifdef HAVE_LZMA
-    else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA)
+#if defined(HAVE_LZMA) || defined(HAVE_LIBCOMP)
+    else if (zip->file_info.compression_method == MZ_COMPRESS_METHOD_LZMA ||
+             zip->file_info.compression_method == MZ_COMPRESS_METHOD_XZ)
         zip->file_info.flag |= MZ_ZIP_FLAG_LZMA_EOS_MARKER;
 #endif
 
@@ -2652,6 +2671,34 @@ int32_t mz_zip_path_compare(const char *path1, const char *path2, uint8_t ignore
         return (int32_t)(tolower(*path1) - tolower(*path2));
 
     return (int32_t)(*path1 - *path2);
+}
+
+/***************************************************************************/
+
+const char* mz_zip_get_compression_method_string(int32_t compression_method)
+{
+    const char *method = "?";
+    switch (compression_method) {
+    case MZ_COMPRESS_METHOD_STORE:
+        method = "stored";
+        break;
+    case MZ_COMPRESS_METHOD_DEFLATE:
+        method = "deflate";
+        break;
+    case MZ_COMPRESS_METHOD_BZIP2:
+        method = "bzip2";
+        break;
+    case MZ_COMPRESS_METHOD_LZMA:
+        method = "lzma";
+        break;
+    case MZ_COMPRESS_METHOD_XZ:
+        method = "xz";
+        break;
+    case MZ_COMPRESS_METHOD_ZSTD:
+        method = "zstd";
+        break;
+    }
+    return method;
 }
 
 /***************************************************************************/

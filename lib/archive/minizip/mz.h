@@ -14,7 +14,7 @@
 /***************************************************************************/
 
 /* MZ_VERSION */
-#define MZ_VERSION                      ("2.10.0")
+#define MZ_VERSION                      ("2.10.1")
 
 /* MZ_ERROR */
 #define MZ_OK                           (0)  /* zlib */
@@ -64,6 +64,7 @@
 #define MZ_COMPRESS_METHOD_BZIP2        (12)
 #define MZ_COMPRESS_METHOD_LZMA         (14)
 #define MZ_COMPRESS_METHOD_ZSTD         (93)
+#define MZ_COMPRESS_METHOD_XZ           (95)
 #define MZ_COMPRESS_METHOD_AES          (99)
 
 #define MZ_COMPRESS_LEVEL_DEFAULT       (-1)
