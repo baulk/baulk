@@ -115,6 +115,15 @@ bela::ssize_t WriteSameFile(HANDLE fd, std::wstring_view data) {
   return static_cast<ssize_t>(dwWrite);
 }
 
+// Write data to same file not windows terminal
+bela::ssize_t WriteSameFile(HANDLE fd, std::string_view data) {
+  DWORD dwWrite = 0;
+  if (!::WriteFile(fd, data.data(), (DWORD)data.size(), &dwWrite, nullptr)) {
+    return -1;
+  }
+  return static_cast<ssize_t>(dwWrite);
+}
+
 enum class TerminalMode {
   File, //
   ConPTY,
@@ -130,6 +139,16 @@ public:
     return filter;
   }
   bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data) {
+    if (fd == stderr) {
+      return WriteAutoInternal(fderr, errmode, data);
+    }
+    if (fd == stdout) {
+      return WriteAutoInternal(fdout, outmode, data);
+    }
+    auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
+    return WriteSameFile(FileHandle, data);
+  }
+  bela::ssize_t WriteAuto(FILE *fd, std::string_view data) {
     if (fd == stderr) {
       return WriteAutoInternal(fderr, errmode, data);
     }
@@ -168,6 +187,15 @@ private:
     }
     return WriteSameFile(fd, data);
   }
+  bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::string_view data) {
+    if (fd == nullptr) {
+      return -1;
+    }
+    if (mode == TerminalMode::ConPTY) {
+      return WriteTerminal(fd, bela::ToWide(data));
+    }
+    return WriteSameFile(fd, data);
+  }
   HANDLE fdout{nullptr};
   HANDLE fderr{nullptr};
   TerminalMode outmode{TerminalMode::File};
@@ -175,6 +203,7 @@ private:
 };
 
 bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data) { return Filter::Instance().WriteAuto(fd, data); }
+bela::ssize_t WriteAuto(FILE *fd, std::string_view data) { return Filter::Instance().WriteAuto(fd, data); }
 
 bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
@@ -183,4 +212,13 @@ bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
   }
   return WriteSameFile(FileHandle, data);
 }
+
+bela::ssize_t WriteAutoFallback(FILE *fd, std::string_view data) {
+  auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
+  if (IsTerminal(FileHandle)) {
+    return WriteTerminal(FileHandle, bela::ToWide(data));
+  }
+  return WriteSameFile(FileHandle, data);
+}
+
 } // namespace bela::terminal
