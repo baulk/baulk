@@ -17,6 +17,19 @@ inline std::string_view cstring_view(const uint8_t *data, size_t len) {
   return cstring_view(reinterpret_cast<const char *>(data), len);
 }
 
+// getString extracts a string from symbol string table.
+inline std::string getString(std::vector<char> &section, int start) {
+  if (start < 0 || start >= section.size()) {
+    return "";
+  }
+  for (auto end = start; end < section.size(); end++) {
+    if (section[end] == 0) {
+      return std::string(section.data() + start, end - start);
+    }
+  }
+  return "";
+}
+
 struct ImportDirectory {
   uint32_t OriginalFirstThunk;
   uint32_t TimeDateStamp;

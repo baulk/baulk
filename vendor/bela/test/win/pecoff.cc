@@ -57,12 +57,14 @@ int wmain(int argc, wchar_t **argv) {
                   d.Address);
   }
   std::vector<bela::pe::Symbol> syms;
-  if(file->LookupSymbols(syms,ec)){
-    for(const auto &sm:syms){
-      bela::FPrintF(stderr,L"Symbols: %08x %s\n",sm.Value,sm.Name);
+  if (file->LookupSymbols(syms, ec)) {
+    for (const auto &sm : syms) {
+      bela::FPrintF(stderr, L"Symbols: %08x %s\n", sm.Value, sm.Name);
     }
-
   }
-
+  std::string ver;
+  if (file->LookupClrVersion(ver, ec) && !ver.empty()) {
+    bela::FPrintF(stderr, L"CRL: %s\n", ver);
+  }
   return 0;
 }

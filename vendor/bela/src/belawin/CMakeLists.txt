@@ -9,6 +9,7 @@ add_library(belawin STATIC
   pe/llvm/ItaniumDemangle.cpp
   pe/llvm/MicrosoftDemangle.cpp
   pe/llvm/MicrosoftDemangleNodes.cpp
+  pe/clr.cc
   pe/file.cc
   pe/resource.cc
   pe/rva.cc

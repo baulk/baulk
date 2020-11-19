@@ -217,18 +217,6 @@ std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
   return std::make_optional(std::move(file));
 }
 
-// getString extracts a string from symbol string table.
-std::string getString(std::vector<char> &section, int start) {
-  if (start < 0 || start >= section.size()) {
-    return "";
-  }
-  for (auto end = start; end < section.size(); end++) {
-    if (section[end] == 0) {
-      return std::string(section.data() + start, end - start);
-    }
-  }
-  return "";
-}
 
 uint16_t getFunctionHit(std::vector<char> &section, int start) {
   if (start < 0 || start - 2 > section.size()) {

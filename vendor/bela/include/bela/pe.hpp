@@ -199,6 +199,15 @@ struct COFFSymbol {
   uint8_t NumberOfAuxSymbols;
 };
 
+#define STORAGE_MAGIC_SIG 0x424A5342 // BSJB
+struct STORAGESIGNATURE {
+  uint32_t lSignature;     // "Magic" signature.
+  uint16_t iMajorVer;      // Major file version.
+  uint16_t iMinorVer;      // Minor file version.
+  uint32_t iExtraData;     // Offset to next structure of information
+  uint32_t iVersionString; // Length of version string
+};
+
 #pragma pack()
 
 struct SectionHeader {
@@ -308,9 +317,9 @@ public:
       sv.remove_prefix(p + 1);
     }
   }
-
   bool LookupFunctionTable(FunctionTable &ft, bela::error_code &ec) const;
   bool LookupSymbols(std::vector<Symbol> &syms, bela::error_code &ec) const;
+  bool LookupClrVersion(std::string &ver, bela::error_code &ec) const;
   const FileHeader &Fh() const { return fh; }
   const OptionalHeader64 *Oh64() const { return &oh; }
   const OptionalHeader32 *Oh32() const { return reinterpret_cast<const OptionalHeader32 *>(&oh); }
