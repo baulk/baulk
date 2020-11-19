@@ -311,7 +311,7 @@ public:
 
   bool LookupFunctionTable(FunctionTable &ft, bela::error_code &ec) const;
   bool LookupSymbols(std::vector<Symbol> &syms, bela::error_code &ec) const;
-  const FileHeader &Fh() { return fh; }
+  const FileHeader &Fh() const { return fh; }
   const OptionalHeader64 *Oh64() const { return &oh; }
   const OptionalHeader32 *Oh32() const { return reinterpret_cast<const OptionalHeader32 *>(&oh); }
   const auto &Sections() const { return sections; }
