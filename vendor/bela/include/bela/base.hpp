@@ -69,7 +69,8 @@ bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b
                                  AV... av) {
   bela::error_code ec;
   ec.code = code;
-  ec.message = strings_internal::CatPieces({a, b, c, d, av...});
+  ec.message = strings_internal::CatPieces(
+      {a.Piece(), b.Piece(), c.Piece(), d.Piece(), static_cast<const AlphaNum &>(av).Piece()...});
   return ec;
 }
 

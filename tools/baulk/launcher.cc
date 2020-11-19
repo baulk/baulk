@@ -191,22 +191,23 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, 
   if (!realexe) {
     return false;
   }
-  auto pe = bela::pe::Expose(*realexe, ec);
+  auto pe = bela::pe::NewFile(*realexe, ec);
   if (!pe) {
     // not pe subname
     return false;
   }
-  auto index = SubsystemIndex(pe->subsystem);
+  auto subsystem = pe->Subsystem();
+  auto index = SubsystemIndex(subsystem);
   auto name = StripExtension(lm.alias);
   auto cxxsrcname = bela::StringCat(name, L".cc");
   auto cxxsrc = bela::StringCat(baulktemp, L"\\", cxxsrcname);
   auto rcsrcname = bela::StringCat(name, L".rc");
   auto rcsrc = bela::StringCat(baulktemp, L"\\", rcsrcname);
-  if (!bela::io::WriteText(GenerateLinkSource(source, pe->subsystem), cxxsrc, ec)) {
+  if (!bela::io::WriteText(GenerateLinkSource(source, subsystem), cxxsrc, ec)) {
     return false;
   }
   bool rcwrited = false;
-  if (auto vi = bela::pe::ExposeVersion(source, ec); vi) {
+  if (auto vi = bela::pe::LookupVersion(source, ec); vi) {
     baulk::rc::Writer w;
     if (vi->CompanyName.empty()) {
       vi->CompanyName = bela::StringCat(pkg.name, L" contributors");
@@ -219,7 +220,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, 
     StringNonEmpty(vi->InternalName, lm.alias);
     rcwrited = w.WriteVersion(*vi, rcsrc, ec);
   } else {
-    bela::pe::VersionInfo nvi;
+    bela::pe::Version nvi;
     nvi.CompanyName = bela::StringCat(pkg.name, L" contributors");
     nvi.FileDescription = pkg.description;
     nvi.FileVersion = pkg.version;

@@ -103,8 +103,8 @@ bool Executor::LookupPath(std::wstring_view cmd, std::wstring &file) {
     return true;
   }
   DbgPrint(L"resolve realpath %s\n", *realexe);
-  if (auto pe = bela::pe::Expose(*realexe, ec); pe) {
-    console = (pe->subsystem == bela::pe::Subsystem::CUI);
+  if (auto pe = bela::pe::NewFile(*realexe, ec); pe) {
+    console = (pe->Subsystem() == bela::pe::Subsystem::CUI);
   }
   return true;
 }

@@ -5,12 +5,21 @@ add_library(belawin STATIC
   io.cc
   fs.cc
   path.cc
-  peimage.cc
+  pe/llvm/Demangle.cpp
+  pe/llvm/ItaniumDemangle.cpp
+  pe/llvm/MicrosoftDemangle.cpp
+  pe/llvm/MicrosoftDemangleNodes.cpp
+  pe/file.cc
+  pe/resource.cc
+  pe/rva.cc
+  pe/section.cc
+  pe/string.cc
+  pe/symbol.cc
+  pe/version.cc
   process.cc
   realpath.cc
   reparsepoint.cc
   simulator.cc
-  version.cc
 )
 
 target_link_libraries(belawin

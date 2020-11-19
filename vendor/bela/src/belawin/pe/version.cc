@@ -54,7 +54,7 @@ public:
 
     return false;
   }
-  void VerQuery(VersionInfo &vi) {
+  void VerQuery(Version &vi) {
     LPVOID info{nullptr};
     UINT ilen{0};
     VerQueryValueW(buffer, L"\\VarFileInfo\\Translation", &info, &ilen);
@@ -99,12 +99,12 @@ private:
   uint8_t *buffer{nullptr};
 };
 
-std::optional<VersionInfo> ExposeVersion(std::wstring_view file, bela::error_code &ec) {
+std::optional<Version> LookupVersion(std::wstring_view file, bela::error_code &ec) {
   Exposer exposer;
   if (!exposer.Initialize(file, ec)) {
     return std::nullopt;
   }
-  VersionInfo vi;
+  Version vi;
   exposer.VerQuery(vi);
   return std::make_optional(std::move(vi));
 }

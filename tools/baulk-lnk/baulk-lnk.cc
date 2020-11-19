@@ -46,11 +46,11 @@ bool IsSubsytemConsole(std::wstring_view exe) {
   if (!realexe) {
     return false;
   }
-  auto pe = bela::pe::Expose(*realexe, ec);
+  auto pe = bela::pe::NewFile(*realexe, ec);
   if (!pe) {
     return true;
   }
-  return pe->subsystem == bela::pe::Subsystem::CUI;
+  return pe->Subsystem() == bela::pe::Subsystem::CUI;
 }
 
 std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_code &ec) {
