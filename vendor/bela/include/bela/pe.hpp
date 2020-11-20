@@ -46,6 +46,10 @@ enum class Machine : uint16_t {
   AMD64 = 0x8664, // AMD64 (K8)
   M32R = 0x9041,  // M32R little-endian
   ARM64 = 0xAA64, // ARM64 Little-Endian
+  RISCV32 = 0x5032,
+  RISCV64 = 0x5064,
+  RISCV128 = 0x5128,
+  CHPEX86 = 0x3A64,
   CEE = 0xC0EE
 };
 enum class Subsystem : uint16_t {
@@ -288,7 +292,6 @@ class File {
 private:
   void Free();
   void FileMove(File &&other);
-  bool LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code &ec) const;
   bool LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec) const;
   bool LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec) const;
 
@@ -317,6 +320,7 @@ public:
       sv.remove_prefix(p + 1);
     }
   }
+  bool LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code &ec) const;
   bool LookupFunctionTable(FunctionTable &ft, bela::error_code &ec) const;
   bool LookupSymbols(std::vector<Symbol> &syms, bela::error_code &ec) const;
   bool LookupClrVersion(std::string &ver, bela::error_code &ec) const;
@@ -344,6 +348,21 @@ private:
 };
 
 inline std::optional<File> NewFile(std::wstring_view p, bela::error_code &ec) { return File::NewFile(p, ec); }
+
+class SymbolSearcher {
+private:
+  using SymbolTable = bela::flat_hash_map<std::string, std::vector<bela::pe::ExportedSymbol>>;
+  SymbolTable table;
+  std::vector<std::wstring> Paths;
+  std::optional<std::string> LoadOrdinalFunctionName(std::string_view dllname, int ordinal, bela::error_code &ec);
+
+public:
+  SymbolSearcher(std::wstring_view exe, Machine machine);
+  SymbolSearcher(std::vector<std::wstring> &&paths) : Paths(std::move(paths)) {}
+  SymbolSearcher(const SymbolSearcher &) = delete;
+  SymbolSearcher &operator=(const SymbolSearcher &) = delete;
+  std::optional<std::string> LookupOrdinalFunctionName(std::string_view dllname, int ordinal, bela::error_code &ec);
+};
 
 // https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfoexw
 // https://docs.microsoft.com/zh-cn/windows/win32/api/winver/nf-winver-getfileversioninfosizeexw

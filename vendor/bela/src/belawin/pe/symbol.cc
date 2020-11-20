@@ -58,7 +58,7 @@ bool removeAuxSymbols(const std::vector<COFFSymbol> &csyms, const StringTable &s
   }
   return true;
 }
-
+// https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-symbol-records
 bool File::LookupSymbols(std::vector<Symbol> &syms, bela::error_code &ec) const {
   std::vector<COFFSymbol> csyms;
   if (!readCOFFSymbols(fh, fd, csyms, ec)) {

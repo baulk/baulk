@@ -28,33 +28,43 @@ int wmain(int argc, wchar_t **argv) {
   for (const auto &sec : file->Sections()) {
     bela::FPrintF(stderr, L"Section: %s VirtualAddress: %d\n", sec.Header.Name, sec.Header.VirtualAddress);
   }
+  bela::pe::SymbolSearcher sse(argv[1], file->Machine());
   bela::pe::FunctionTable ft;
   file->LookupFunctionTable(ft, ec);
   for (const auto &d : ft.imports) {
     bela::FPrintF(stderr, L"\x1b[33mDllName: %s\x1b[0m\n", d.first);
     for (const auto &n : d.second) {
-      if (n.Ordinal != 0) {
-        bela::FPrintF(stderr, L"%s (Ordinal %d)\n", n.Name, n.Ordinal);
+      if (n.Ordinal == 0) {
+        bela::FPrintF(stderr, L"%s %d\n", llvm::demangle(n.Name), n.Index);
+
         continue;
       }
-      bela::FPrintF(stderr, L"%s %d\n", llvm::demangle(n.Name), n.Index);
+      if (auto fn = sse.LookupOrdinalFunctionName(d.first, n.Ordinal, ec); fn) {
+        bela::FPrintF(stderr, L"%s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
+        continue;
+      }
+      bela::FPrintF(stderr, L"Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
     }
   }
 
   for (const auto &d : ft.delayimprots) {
     bela::FPrintF(stderr, L"\x1b[34mDllName: %s\x1b[0m\n", d.first);
     for (const auto &n : d.second) {
-      if (n.Ordinal != 0) {
-        bela::FPrintF(stderr, L"%s (Ordinal %d)\n", n.Name, n.Ordinal);
+      if (n.Ordinal == 0) {
+        bela::FPrintF(stderr, L"(Delay) %s %d\n", n.Name, n.Index);
         continue;
       }
-      bela::FPrintF(stderr, L"(Delay) %s %d\n", n.Name, n.Index);
+      if (auto fn = sse.LookupOrdinalFunctionName(d.first, n.Ordinal, ec); fn) {
+        bela::FPrintF(stderr, L"%s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
+        continue;
+      }
+      bela::FPrintF(stderr, L"Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
     }
   }
 
   for (const auto &d : ft.exports) {
-    bela::FPrintF(stderr, L"\x1b[35mExport: %s Ordinal: %d Address: %08X\x1b[0m\n", llvm::demangle(d.Name), d.Ordinal,
-                  d.Address);
+    bela::FPrintF(stderr, L"\x1b[35mExport: %s Ordinal: %d Address: %08X  Hint: %d\x1b[0m\n", llvm::demangle(d.Name),
+                  d.Ordinal, d.Address, d.Hint);
   }
   std::vector<bela::pe::Symbol> syms;
   if (file->LookupSymbols(syms, ec)) {

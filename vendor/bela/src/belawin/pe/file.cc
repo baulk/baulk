@@ -217,7 +217,6 @@ std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
   return std::make_optional(std::move(file));
 }
 
-
 uint16_t getFunctionHit(std::vector<char> &section, int start) {
   if (start < 0 || start - 2 > section.size()) {
     return 0;
@@ -276,6 +275,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     ied.AddressOfNames = bela::swaple(cied->AddressOfNames);               // RVA from base of image
     ied.AddressOfNameOrdinals = bela::swaple(cied->AddressOfNameOrdinals); // RVA from base of image
   }
+  auto ordinalBase = static_cast<uint16_t>(ied.Base);
   exports.resize(ied.NumberOfNames);
   if (ied.AddressOfNameOrdinals > ds->Header.VirtualAddress &&
       ied.AddressOfNameOrdinals < ds->Header.VirtualAddress + ds->Header.VirtualSize) {
@@ -283,7 +283,8 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
     if (sv.size() > exports.size() * 2) {
       for (size_t i = 0; i < exports.size(); i++) {
-        exports[i].Ordinal = bela::readle<uint16_t>(sv.data() + i * 2);
+        exports[i].Ordinal = bela::readle<uint16_t>(sv.data() + i * 2) + ordinalBase;
+        exports[i].Hint = i;
       }
     }
   }
@@ -304,14 +305,16 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     for (size_t i = 0; i < exports.size(); i++) {
       auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
       if (sv.size() > exports[i].Ordinal * 4 + 4) {
-        exports[i].Address = bela::readle<uint32_t>(sv.data() + exports[i].Ordinal * 4);
+        exports[i].Address = bela::readle<uint32_t>(sv.data() + (exports[i].Ordinal - ordinalBase) * 4);
       }
     }
   }
+
   return true;
 }
 
 // Delay imports
+// https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#delay-load-import-tables-image-only
 bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec) const {
   uint32_t ddlen = 0;
   const DataDirectory *delay = nullptr;
@@ -378,8 +381,6 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
         }
         // IMAGE_ORDINAL_FLAG64
         if ((va & 0x8000000000000000) > 0) {
-          auto fn = getString(sdata, static_cast<int>(static_cast<uint64_t>(va & 0x8000000000000000)) -
-                                         ds->Header.VirtualAddress + 2);
           auto ordinal = IMAGE_ORDINAL64(va);
           functions.emplace_back("", 0, static_cast<int>(ordinal));
           // TODO add dynimport ordinal support.
@@ -462,7 +463,11 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
   auto ptrsize = is64bit ? sizeof(uint64_t) : sizeof(uint32_t);
   for (auto &dt : ida) {
     dt.DllName = getString(sdata, int(dt.Name - ds->Header.VirtualAddress));
-    auto N = dt.OriginalFirstThunk - ds->Header.VirtualAddress;
+    auto T = dt.OriginalFirstThunk == 0 ? dt.FirstThunk : dt.OriginalFirstThunk;
+    if (T < ds->Header.VirtualAddress) {
+      break;
+    }
+    auto N = T - ds->Header.VirtualAddress;
     std::string_view d{sdata.data() + N, sdata.size() - N};
     std::vector<Function> functions;
     while (d.size() >= ptrsize) {
@@ -474,8 +479,6 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
         }
         // IMAGE_ORDINAL_FLAG64
         if ((va & 0x8000000000000000) > 0) {
-          auto fn = getString(sdata, static_cast<int>(static_cast<uint64_t>(va & 0x8000000000000000)) -
-                                         ds->Header.VirtualAddress + 2);
           auto ordinal = IMAGE_ORDINAL64(va);
           functions.emplace_back("", 0, static_cast<int>(ordinal));
           // TODO add dynimport ordinal support.

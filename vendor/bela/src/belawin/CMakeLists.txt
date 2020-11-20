@@ -13,6 +13,7 @@ add_library(belawin STATIC
   pe/file.cc
   pe/resource.cc
   pe/rva.cc
+  pe/searcher.cc
   pe/section.cc
   pe/string.cc
   pe/symbol.cc
