@@ -55,16 +55,16 @@ int wmain(int argc, wchar_t **argv) {
         continue;
       }
       if (auto fn = sse.LookupOrdinalFunctionName(d.first, n.Ordinal, ec); fn) {
-        bela::FPrintF(stderr, L"%s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
+        bela::FPrintF(stderr, L"(Delay) %s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
         continue;
       }
-      bela::FPrintF(stderr, L"Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
+      bela::FPrintF(stderr, L"(Delay) Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
     }
   }
-
+  // amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.488_none_ca04af081b815d21
   for (const auto &d : ft.exports) {
-    bela::FPrintF(stderr, L"\x1b[35mExport: %s Ordinal: %d Address: %08X  Hint: %d\x1b[0m\n", llvm::demangle(d.Name),
-                  d.Ordinal, d.Address, d.Hint);
+    bela::FPrintF(stderr, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address,
+                  llvm::demangle(d.Name), d.Hint);
   }
   std::vector<bela::pe::Symbol> syms;
   if (file->LookupSymbols(syms, ec)) {

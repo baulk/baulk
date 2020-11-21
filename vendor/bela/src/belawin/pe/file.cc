@@ -1,5 +1,6 @@
 //
 #include "internal.hpp"
+#include <algorithm>
 
 // https://en.wikipedia.org/wiki/Portable_Executable
 
@@ -275,6 +276,9 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     ied.AddressOfNames = bela::swaple(cied->AddressOfNames);               // RVA from base of image
     ied.AddressOfNameOrdinals = bela::swaple(cied->AddressOfNameOrdinals); // RVA from base of image
   }
+  if (ied.NumberOfNames == 0) {
+    return true;
+  }
   auto ordinalBase = static_cast<uint16_t>(ied.Base);
   exports.resize(ied.NumberOfNames);
   if (ied.AddressOfNameOrdinals > ds->Header.VirtualAddress &&
@@ -284,7 +288,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     if (sv.size() > exports.size() * 2) {
       for (size_t i = 0; i < exports.size(); i++) {
         exports[i].Ordinal = bela::readle<uint16_t>(sv.data() + i * 2) + ordinalBase;
-        exports[i].Hint = i;
+        exports[i].Hint = static_cast<int>(i);
       }
     }
   }
@@ -305,11 +309,14 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     for (size_t i = 0; i < exports.size(); i++) {
       auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
       if (sv.size() > exports[i].Ordinal * 4 + 4) {
-        exports[i].Address = bela::readle<uint32_t>(sv.data() + (exports[i].Ordinal - ordinalBase) * 4);
+        exports[i].Address = bela::readle<uint32_t>(sv.data() + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
       }
     }
   }
-
+  std::sort(exports.begin(), exports.end(), [](const ExportedSymbol &a, const ExportedSymbol &b) -> bool {
+    //
+    return a.Ordinal < b.Ordinal;
+  });
   return true;
 }
 
@@ -369,7 +376,11 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
   auto ptrsize = is64bit ? sizeof(uint64_t) : sizeof(uint32_t);
   for (auto &dt : ida) {
     dt.DllName = getString(sdata, int(dt.DllNameRVA - ds->Header.VirtualAddress));
+    if (dt.ImportNameTableRVA > ds->Header.VirtualAddress) {
+      break;
+    }
     uint32_t N = dt.ImportNameTableRVA - ds->Header.VirtualAddress;
+
     std::string_view d{sdata.data() + N, sdata.size() - N};
     std::vector<Function> functions;
     while (d.size() >= ptrsize) {
