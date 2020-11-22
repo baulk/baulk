@@ -219,7 +219,7 @@ std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
 }
 
 uint16_t getFunctionHit(std::vector<char> &section, int start) {
-  if (start < 0 || start - 2 > section.size()) {
+  if (start < 0 || static_cast<size_t>(start - 2) > section.size()) {
     return 0;
   }
   return bela::readle<uint16_t>(section.data() + start);
@@ -308,7 +308,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     auto N = ied.AddressOfFunctions - ds->Header.VirtualAddress;
     for (size_t i = 0; i < exports.size(); i++) {
       auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
-      if (sv.size() > exports[i].Ordinal * 4 + 4) {
+      if (sv.size() > static_cast<size_t>(exports[i].Ordinal * 4 + 4)) {
         exports[i].Address = bela::readle<uint32_t>(sv.data() + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
       }
     }

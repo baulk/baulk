@@ -5,7 +5,26 @@
 
 namespace bela::pe {
 
+#ifdef _WIN64
+constexpr bool IsWow64 = false;
+#else
+// 919, api-ms-win-core-wow64-l1-1-1.IsWow64Process2, IsWow64Process2, 919, 918
+typedef BOOL(WINAPI *IsWow64Process2)(HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine);
+bool BelaIsWow64Process() {
+  auto hmod = GetModuleHandleW(L"kernel32.dll");
+  auto isWow64Process2 = reinterpret_cast<IsWow64Process2>(GetProcAddress(hmod, "IsWow64Process2"));
+  uint16_t pm = 0;
+  uint16_t nm = 0;
+  if (isWow64Process2 && isWow64Process2(GetCurrentProcess(), &pm, &nm)) {
+    return nm == IMAGE_FILE_MACHINE_ARM64 || nm == IMAGE_FILE_MACHINE_AMD64;
+  }
+  return false;
+}
+static bool IsWow64 = BelaIsWow64Process();
+#endif
+
 SymbolSearcher::SymbolSearcher(std::wstring_view exe, Machine machine) {
+
 #ifdef _WIN64
   if (machine == Machine::I386 || machine == Machine::ARMNT) {
     Paths.emplace_back(bela::WindowsExpandEnv(L"%SystemRoot%\\SysWOW64"));

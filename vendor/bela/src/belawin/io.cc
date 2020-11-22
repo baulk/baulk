@@ -8,7 +8,7 @@
 namespace bela::io {
 bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxsize) {
   bela::MapView mv;
-  if (!mv.MappingView(file, ec, 1, maxsize)) {
+  if (!mv.MappingView(file, ec, 1, static_cast<size_t>(maxsize))) {
     return false;
   }
   auto mmv = mv.subview();

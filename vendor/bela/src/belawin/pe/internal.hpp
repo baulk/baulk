@@ -19,10 +19,10 @@ inline std::string_view cstring_view(const uint8_t *data, size_t len) {
 
 // getString extracts a string from symbol string table.
 inline std::string getString(std::vector<char> &section, int start) {
-  if (start < 0 || start >= section.size()) {
+  if (start < 0 || static_cast<size_t>(start) >= section.size()) {
     return "";
   }
-  for (auto end = start; end < section.size(); end++) {
+  for (auto end = static_cast<size_t>(start); end < section.size(); end++) {
     if (section[end] == 0) {
       return std::string(section.data() + start, end - start);
     }

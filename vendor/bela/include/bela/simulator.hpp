@@ -73,7 +73,6 @@ public:
   bool LookupPath(std::wstring_view cmd, std::wstring &exe) const;
   bool ExpandEnv(std::wstring_view raw, std::wstring &w) const;
   // Inline support function
-
   // AddBashCompatible bash compatible val
   bool AddBashCompatible(int argc, wchar_t *const *argv) {
     for (int i = 0; i < argc; i++) {
@@ -81,6 +80,7 @@ public:
     }
     envmap.emplace(L"$", bela::AlphaNum(GetCurrentProcessId()).Piece()); // $$
     envmap.emplace(L"@", GetCommandLineW());                             // $@ -->cmdline
+    envmap.emplace(L"DOLLAR", L"$");
     if (auto userprofile = bela::GetEnv(L"USERPROFILE"); !userprofile.empty()) {
       envmap.emplace(L"HOME", userprofile);
     }

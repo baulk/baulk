@@ -305,7 +305,8 @@ public:
     FileMove(std::move(other));
     return *this;
   }
-
+  // export FD() to support
+  FILE *FD() const { return fd; }
   template <typename AStringT> void SplitStringTable(std::vector<AStringT> &sa) const {
     auto sv = std::string_view{reinterpret_cast<const char *>(stringTable.data), stringTable.length};
     for (;;) {
