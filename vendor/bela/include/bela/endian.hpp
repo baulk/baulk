@@ -5,6 +5,13 @@
 #include <cstring>
 #include <type_traits>
 
+// 19.28.29334.0
+#if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 192829334
+#define BELA_ENDIAN_CONSTEXPR constexpr
+#else
+#define BELA_ENDIAN_CONSTEXPR
+#endif
+
 #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__)
 #include <endian.h>
 #elif defined(_AIX)
@@ -39,7 +46,7 @@ constexpr bool IsLittleEndianHost = true;
 constexpr inline bool IsBigEndian() { return IsBigEndianHost; }
 constexpr inline bool IsLittleEndian() { return IsLittleEndianHost; }
 
-inline constexpr uint16_t swap16(uint16_t value) {
+inline BELA_ENDIAN_CONSTEXPR uint16_t swap16(uint16_t value) {
 #if defined(_MSC_VER) && !defined(_DEBUG)
   // The DLL version of the runtime lacks these functions (bug!?), but in a
   // release build they're replaced with BSWAP instructions anyway.
@@ -51,7 +58,7 @@ inline constexpr uint16_t swap16(uint16_t value) {
 #endif
 }
 // We use C++17. so GCC version must > 8.0. __builtin_bswap32 awayls exists
-inline constexpr uint32_t swap32(uint32_t value) {
+inline BELA_ENDIAN_CONSTEXPR uint32_t swap32(uint32_t value) {
 #if defined(__llvm__) || (defined(__GNUC__) && !defined(__ICC))
   return __builtin_bswap32(value);
 #elif defined(_MSC_VER) && !defined(_DEBUG)
@@ -65,7 +72,7 @@ inline constexpr uint32_t swap32(uint32_t value) {
 #endif
 }
 
-inline constexpr uint64_t swap64(uint64_t value) {
+inline BELA_ENDIAN_CONSTEXPR uint64_t swap64(uint64_t value) {
 #if defined(__llvm__) || (defined(__GNUC__) && !defined(__ICC))
   return __builtin_bswap64(value);
 #elif defined(_MSC_VER) && !defined(_DEBUG)
@@ -77,18 +84,18 @@ inline constexpr uint64_t swap64(uint64_t value) {
 #endif
 }
 
-inline constexpr unsigned char bswap(unsigned char v) { return v; }
-inline constexpr signed char bswap(signed char v) { return v; }
-inline constexpr unsigned short bswap(unsigned short v) { return swap16(v); }
-inline constexpr signed short bswap(signed short v) {
+inline BELA_ENDIAN_CONSTEXPR unsigned char bswap(unsigned char v) { return v; }
+inline BELA_ENDIAN_CONSTEXPR signed char bswap(signed char v) { return v; }
+inline BELA_ENDIAN_CONSTEXPR unsigned short bswap(unsigned short v) { return swap16(v); }
+inline BELA_ENDIAN_CONSTEXPR signed short bswap(signed short v) {
   return static_cast<signed short>(swap16(static_cast<uint16_t>(v)));
 }
-inline constexpr unsigned int bswap(unsigned int v) {
+inline BELA_ENDIAN_CONSTEXPR unsigned int bswap(unsigned int v) {
   return static_cast<unsigned int>(swap32(static_cast<uint32_t>(v)));
 }
-inline constexpr signed int bswap(signed int v) { return static_cast<signed int>(swap32(static_cast<uint32_t>(v))); }
+inline BELA_ENDIAN_CONSTEXPR signed int bswap(signed int v) { return static_cast<signed int>(swap32(static_cast<uint32_t>(v))); }
 
-inline constexpr unsigned long bswap(unsigned long v) {
+inline BELA_ENDIAN_CONSTEXPR unsigned long bswap(unsigned long v) {
   if constexpr (sizeof(unsigned long) == 8) {
     return static_cast<unsigned long>(swap64(static_cast<uint64_t>(v)));
   } else if constexpr (sizeof(unsigned long) != 4) {
@@ -97,7 +104,7 @@ inline constexpr unsigned long bswap(unsigned long v) {
   }
   return static_cast<unsigned long>(swap32(static_cast<uint32_t>(v)));
 }
-inline constexpr signed long bswap(signed long v) {
+inline BELA_ENDIAN_CONSTEXPR signed long bswap(signed long v) {
   if constexpr (sizeof(signed long) == 8) {
     return static_cast<signed long>(swap64(static_cast<uint64_t>(v)));
   } else if constexpr (sizeof(signed long) != 4) {
@@ -107,23 +114,23 @@ inline constexpr signed long bswap(signed long v) {
   return static_cast<signed long>(swap32(static_cast<uint32_t>(v)));
 }
 
-inline constexpr unsigned long long bswap(unsigned long long v) {
+inline BELA_ENDIAN_CONSTEXPR unsigned long long bswap(unsigned long long v) {
   return static_cast<unsigned long long>(swap64(static_cast<uint64_t>(v)));
 }
 
-inline constexpr signed long long bswap(signed long long v) {
+inline BELA_ENDIAN_CONSTEXPR signed long long bswap(signed long long v) {
   return static_cast<signed long long>(swap64(static_cast<uint64_t>(v)));
 }
 
 // SO Network order is BigEndian
-template <typename T> inline constexpr T htons(T v) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T htons(T v) {
   static_assert(std::is_integral_v<T>, "must integer");
   if constexpr (IsBigEndianHost) {
     return v;
   }
   return bswap(v);
 }
-template <typename T> inline constexpr T ntohs(T v) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T ntohs(T v) {
   static_assert(std::is_integral_v<T>, "must integer");
   if constexpr (IsBigEndianHost) {
     return v;
@@ -131,7 +138,7 @@ template <typename T> inline constexpr T ntohs(T v) {
   return bswap(v);
 }
 
-template <typename T> inline constexpr T swaple(T i) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T swaple(T i) {
   static_assert(std::is_integral<T>::value, "Integral required.");
   if constexpr (IsBigEndianHost) {
     return bswap(i);
@@ -139,7 +146,7 @@ template <typename T> inline constexpr T swaple(T i) {
   return i;
 }
 
-template <typename T> inline constexpr T swapbe(T i) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T swapbe(T i) {
   static_assert(std::is_integral<T>::value, "Integral required.");
   if constexpr (IsBigEndianHost) {
     return i;
@@ -147,14 +154,14 @@ template <typename T> inline constexpr T swapbe(T i) {
   return bswap(i);
 }
 
-template <typename T> inline constexpr T unalignedloadT(const void *p) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T unalignedloadT(const void *p) {
   static_assert(std::is_integral_v<T>, "must integer");
   T t;
   memcpy(&t, p, sizeof(T));
   return t;
 }
 
-template <typename T> inline constexpr T readle(const void *p) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T readle(const void *p) {
   auto v = unalignedloadT<T>(p);
   if constexpr (IsLittleEndianHost) {
     return v;
@@ -162,7 +169,7 @@ template <typename T> inline constexpr T readle(const void *p) {
   return bswap(v);
 }
 
-template <typename T> inline constexpr T readbe(const void *p) {
+template <typename T> inline BELA_ENDIAN_CONSTEXPR T readbe(const void *p) {
   auto v = unalignedloadT<T>(p);
   if constexpr (IsBigEndianHost) {
     return v;
