@@ -135,7 +135,7 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
     ec = bela::make_error_code(1, L"invalid sdk version");
     return false;
   }
-  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"km", L"\\cppwinrt", L"\\shared", L"\\winrt"};
+  constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\km", L"\\cppwinrt", L"\\shared", L"\\winrt"};
   for (auto i : incs) {
     JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, i);
   }
