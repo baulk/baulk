@@ -61,9 +61,12 @@ jobs:
           # cleanup zip files
           Remove-Item -Force *.zip
           cpack -G ZIP
-          $obj=Get-FileHash -Algorithm SHA256 Baulk*.zip
-          Split-Path -Leaf $obj.Path
-          $obj.Algorithm +":"+$obj.Hash.ToLower()
+          $item=Get-Item Baulk*.zip
+          $obj=Get-FileHash -Algorithm SHA256 $item.FullName
+          $env:BAULK_ASSET_NAME="$($item.BaseName)"
+          $hashtext=$obj.Algorithm+":"+$obj.Hash.ToLower()
+          $hashtext|Out-File -Encoding utf8 -FilePath "$env:BAULK_ASSET_NAME.sum"
+          Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')
