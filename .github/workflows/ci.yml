@@ -63,9 +63,10 @@ jobs:
           cpack -G ZIP
           $item=Get-Item Baulk*.zip
           $obj=Get-FileHash -Algorithm SHA256 $item.FullName
-          $env:BAULK_ASSET_NAME="$($item.BaseName)"
+          $baseName=Split-Path -Leaf $item.FullName
+          $env:BAULK_ASSET_NAME="$baseName"
           $hashtext=$obj.Algorithm+":"+$obj.Hash.ToLower()
-          $hashtext|Out-File -Encoding utf8 -FilePath "$env:BAULK_ASSET_NAME.sum"
+          $hashtext|Out-File -Encoding utf8 -FilePath "$baseName.sum"
           Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
