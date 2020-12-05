@@ -11,8 +11,8 @@ namespace baulk::hash {
 template <typename Hasher> struct Sumizer {
   Hasher hasher;
   bool filechecksum(std::wstring_view file, std::wstring &hv, bela::error_code &ec) {
-    HANDLE FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                    nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    HANDLE FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (FileHandle == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
       return false;
@@ -102,26 +102,27 @@ struct HashPrefix {
   const std::wstring_view prefix;
   hash_t method;
 };
+constexpr HashPrefix hnmaps[] = {
+    {L"BLAKE3", hash_t::BLAKE3},     // BLAKE3
+    {L"SHA224", hash_t::SHA224},     // SHA224
+    {L"SHA256", hash_t::SHA256},     // SHA256
+    {L"SHA384", hash_t::SHA384},     // SHA384
+    {L"SHA512", hash_t::SHA512},     // SHA512
+    {L"SHA3-224", hash_t::SHA3_224}, // SHA3-224
+    {L"SHA3-256", hash_t::SHA3_256}, // SHA3-256
+    {L"SHA3-384", hash_t::SHA3_384}, // SHA3-384
+    {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
+    {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
+};
 bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_code &ec) {
-  constexpr HashPrefix hnmaps[] = {
-      {L"BLAKE3", hash_t::BLAKE3},     // BLAKE3
-      {L"SHA224", hash_t::SHA224},     // SHA224
-      {L"SHA256", hash_t::SHA256},     // SHA256
-      {L"SHA384", hash_t::SHA384},     // SHA384
-      {L"SHA512", hash_t::SHA512},     // SHA512
-      {L"SHA3-224", hash_t::SHA3_224}, // SHA3-224
-      {L"SHA3-256", hash_t::SHA3_256}, // SHA3-256
-      {L"SHA3-384", hash_t::SHA3_384}, // SHA3-384
-      {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
-      {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
-  };
+
   std::wstring_view value = hashvalue;
   auto m = hash_t::SHA256;
   if (auto pos = hashvalue.find(':'); pos != std::wstring_view::npos) {
     value = hashvalue.substr(pos + 1);
     auto prefix = bela::AsciiStrToUpper(hashvalue.substr(0, pos));
     auto fn = [&]() {
-      for (auto &h : hnmaps) {
+      for (const auto &h : hnmaps) {
         if (h.prefix == prefix) {
           m = h.method;
           return true;

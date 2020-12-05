@@ -1,5 +1,5 @@
 # Author: Force Charlie Copyright (C) 2020. Force Charlie. All Rights Reserved.
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 project(Baulk)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
@@ -101,7 +101,7 @@ include(CPack)
 # Generate version code
 configure_file(${CMAKE_SOURCE_DIR}/include/baulkversion.h.cmake ${CMAKE_BINARY_DIR}/include/baulkversion.h)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(BAULK_ENABLE_LTO OFF)
