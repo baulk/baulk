@@ -17,27 +17,33 @@ struct VisualStudioInstance {
   std::wstring productId;
   bool isLaunchable{true};
   bool isPrerelease{false};
-  bool Encode(const std::string_view result, bela::error_code &ec) {
-    try {
-      auto j0 = nlohmann::json::parse(result, nullptr, true, true);
-      if (!j0.is_array() || j0.empty()) {
-        ec = bela::make_error_code(1, L"empty visual studio instance");
-        return false;
-      }
-      baulk::json::JsonAssignor ja(j0[0]);
-      installationPath = ja.get("installationPath");
-      installationVersion = ja.get("installationVersion");
-      instanceId = ja.get("instanceId");
-      productId = ja.get("productId");
-      isLaunchable = ja.boolean("isLaunchable");
-      isPrerelease = ja.boolean("isPrerelease");
-    } catch (const std::exception &e) {
-      ec = bela::make_error_code(1, bela::ToWide(e.what()));
+};
+
+bool VisualStudioResultEncode(const std::string_view result, std::vector<VisualStudioInstance> &vsis,
+                              bela::error_code &ec) {
+  try {
+    auto j0 = nlohmann::json::parse(result, nullptr, true, true);
+    if (!j0.is_array() || j0.empty()) {
+      ec = bela::make_error_code(1, L"empty visual studio instance");
       return false;
     }
-    return true;
+    for (auto &i : j0) {
+      baulk::json::JsonAssignor ja(i);
+      VisualStudioInstance vsi;
+      vsi.installationPath = ja.get("installationPath");
+      vsi.installationVersion = ja.get("installationVersion");
+      vsi.instanceId = ja.get("instanceId");
+      vsi.productId = ja.get("productId");
+      vsi.isLaunchable = ja.boolean("isLaunchable");
+      vsi.isPrerelease = ja.boolean("isPrerelease");
+      vsis.emplace_back(std::move(vsi));
+    }
+  } catch (const std::exception &e) {
+    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    return false;
   }
-};
+  return true;
+}
 
 inline std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir, bela::error_code &ec) {
   auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
@@ -59,7 +65,7 @@ std::optional<std::wstring> LookupVsWhere() {
   return std::nullopt;
 }
 
-std::optional<VisualStudioInstance> LookupVisualStudioInstance(bela::error_code &ec) {
+std::optional<VisualStudioInstance> LookupVisualStudioInstance(bool preview, bela::error_code &ec) {
   auto vswhere_exe = LookupVsWhere();
   if (!vswhere_exe) {
     ec = bela::make_error_code(-1, L"vswhere not installed");
@@ -67,17 +73,25 @@ std::optional<VisualStudioInstance> LookupVisualStudioInstance(bela::error_code 
   }
   bela::process::Process process;
   // Force -utf8 convert to UTF8
-  if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8") != 0) {
+  if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8", L"-prerelease") != 0) {
     if (ec = process.ErrorCode(); !ec) {
       ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ", process.ExitCode());
     }
     return std::nullopt;
   }
-  VisualStudioInstance vsi;
-  if (!vsi.Encode(process.Out(), ec)) {
+  std::vector<VisualStudioInstance> vsis;
+  if (!VisualStudioResultEncode(process.Out(), vsis, ec)) {
     return std::nullopt;
   }
-  return std::make_optional(std::move(vsi));
+  if (!preview) {
+    return std::make_optional(std::move(vsis[0]));
+  }
+  for (auto &vsi : vsis) {
+    if (vsi.isPrerelease) {
+      return std::make_optional(std::move(vsi));
+    }
+  }
+  return std::make_optional(std::move(vsis[0]));
 }
 
 bool Searcher::FlushEnv() {
@@ -177,8 +191,8 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   return true;
 }
 
-bool Searcher::InitializeVisualStudioEnv(bool clang, bela::error_code &ec) {
-  auto vsi = LookupVisualStudioInstance(ec);
+bool Searcher::InitializeVisualStudioEnv(bool preview, bool clang, bela::error_code &ec) {
+  auto vsi = LookupVisualStudioInstance(preview, ec);
   if (!vsi) {
     // Visual Studio not install
     return false;

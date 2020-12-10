@@ -34,6 +34,8 @@ Usage: baulkterminal [option] ...
                Choose to load one/more specific package virtual environment
   --vs
                Load Visual Studio related environment variables
+  --vs-preview
+               Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -61,8 +63,9 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"arch", bela::required_argument, L'A')
       .Add(L"venv", bela::required_argument, L'E') // virtual env support
       .Add(L"vs", bela::no_argument, 1000)         // load visual studio environment
-      .Add(L"conhost", bela::no_argument, 1001)    // disable windows termainl
-      .Add(L"clang", bela::no_argument, 1002);
+      .Add(L"vs-preview", bela::no_argument, 1001) // load visual studio (Preview) environment
+      .Add(L"conhost", bela::no_argument, 1002)    // disable windows termainl
+      .Add(L"clang", bela::no_argument, 1003);
   auto ret = pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
@@ -98,12 +101,19 @@ bool Executor::ParseArgv(bela::error_code &ec) {
           venvs.push_back(oa);
           break;
         case 1000:
-          usevs = true;
+          if (!usevspreview) {
+            usevs = true;
+          }
           break;
         case 1001:
-          conhost = true;
+          if (!usevs) {
+            usevspreview = true;
+          }
           break;
         case 1002:
+          conhost = true;
+          break;
+        case 1003:
           clang = true;
           break;
         default:

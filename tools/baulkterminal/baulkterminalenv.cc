@@ -143,7 +143,18 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
     ea.Append(L"--cleanup");
     DbgPrint(L"Turn on cleanup env");
   }
-  if (usevs) {
+  if (usevspreview) {
+    ea.Append(L"--vs");
+    DbgPrint(L"Turn on vs preview env");
+    if (!arch.empty()) {
+      ea.Append(L"-A").Append(arch);
+      DbgPrint(L"Select arch: %s", arch);
+    }
+    if (clang) {
+      ea.Append(L"--clang");
+      DbgPrint(L"Turn on clang env");
+    }
+  } else if (usevs) {
     ea.Append(L"--vs");
     DbgPrint(L"Turn on vs env");
     if (!arch.empty()) {

@@ -51,6 +51,7 @@ private:
   std::wstring arch;
   std::vector<std::wstring> venvs;
   bool usevs{false};
+  bool usevspreview{false};
   bool clang{false};
   bool cleanup{false};
   bool conhost{false};

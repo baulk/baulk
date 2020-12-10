@@ -122,7 +122,7 @@ struct Searcher {
     return JoinEnvInternal(vec, std::wstring(p));
   }
   bool InitializeWindowsKitEnv(bela::error_code &ec);
-  bool InitializeVisualStudioEnv(bool clang, bela::error_code &ec);
+  bool InitializeVisualStudioEnv(bool preview, bool clang, bela::error_code &ec);
   bool InitializeBaulk(bela::error_code &ec);
   bool InitializeGit(bool cleanup, bela::error_code &ec);
   bool InitializeVirtualEnv(const std::vector<std::wstring> &venvs, bela::error_code &ec);

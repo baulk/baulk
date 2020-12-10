@@ -25,6 +25,7 @@ Usage: baulk-exec [option] command args ...
   -A|--arch            Select a specific arch, use native architecture by default
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
+  --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --unchanged-title    Keep the terminal title unchanged
 
@@ -180,10 +181,12 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       .Add(L"arch", bela::required_argument, L'A')
       .Add(L"cwd", bela::required_argument, L'W')
       .Add(L"venv", bela::required_argument, L'E')
-      .Add(L"vs", bela::no_argument, 1001) // load visual studio environment
+      .Add(L"vs", bela::no_argument, 1000) // load visual studio environment
+      .Add(L"vs-preview", bela::no_argument, 1001)
       .Add(L"clang", bela::no_argument, 1002)
       .Add(L"unchanged-title", bela::no_argument, 1003);
   bool usevs = false;
+  bool usevspreview = false;
   bool clang = false;
   bool unchangedTitle = false;
   std::wstring arch;
@@ -218,8 +221,15 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
         case 'E':
           venvs.push_back(oa);
           break;
+        case 1000:
+          if (!usevspreview) {
+            usevs = true;
+          }
+          break;
         case 1001:
-          usevs = true;
+          if (!usevs) {
+            usevspreview = true;
+          }
           break;
         case 1002:
           clang = true;
@@ -278,7 +288,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       return false;
     }
     DbgPrint(L"Turn on visual studio env");
-    if (!searcher.InitializeVisualStudioEnv(clang, ec)) {
+    if (!searcher.InitializeVisualStudioEnv(false, clang, ec)) {
       bela::FPrintF(stderr, L"Initialize visual studio env failed %s\n", ec.message);
       return false;
     }
@@ -288,8 +298,28 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
     }
     return true;
   };
+  auto vsPreviewInitialize = [&]() {
+    if (!usevspreview) {
+      DbgPrint(L"Turn off visual studio (Preview) env");
+      return false;
+    }
+    DbgPrint(L"Turn on visual studio (Preview) env");
+    if (!searcher.InitializeVisualStudioEnv(true, clang, ec)) {
+      bela::FPrintF(stderr, L"Initialize visual studio (Preview) env failed %s\n", ec.message);
+      return false;
+    }
+    if (!searcher.InitializeWindowsKitEnv(ec)) {
+      bela::FPrintF(stderr, L"Initialize Windows Kit (SDK) env failed %s\n", ec.message);
+      return false;
+    }
+    return true;
+  };
+
   if (vsInitialize()) {
     DbgPrint(L"Initialize visual studio env done");
+  }
+  if (vsPreviewInitialize()) {
+    DbgPrint(L"Initialize visual studio (Preview) env done");
   }
   if (!searcher.InitializeVirtualEnv(venvs, ec)) {
     bela::FPrintF(stderr, L"parse venv: \x1b[31m%s\x1b[0m\n", ec.message);
