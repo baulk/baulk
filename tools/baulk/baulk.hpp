@@ -133,6 +133,7 @@ struct Package {
   std::wstring bucket;
   std::wstring checksum;
   std::wstring extension;
+  std::wstring rename; // only exe extension support rename feature
   std::vector<std::wstring> urls;
   std::vector<std::wstring> forceDeletes; // uninstall delete dirs
   std::vector<LinkMeta> links;

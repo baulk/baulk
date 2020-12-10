@@ -131,6 +131,7 @@ inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela
   if (bela::PathExists(target)) {
     bela::fs::RemoveAll(target, ec);
   }
+  DbgPrint(L"lpExistingFileName %s lpNewFileName %s",source,target);
   if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
     ec = bela::make_system_error_code();
     return false;
@@ -174,20 +175,26 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   if (bela::PathExists(pkgdir)) {
     pkgold = bela::StringCat(pkgdir, L".old");
     if (!BaulkRename(pkgdir, pkgold, ec)) {
-      bela::FPrintF(stderr, L"baulk rename %s error: \x1b[31m%s\x1b[0m\n", pkgdir, ec.message);
+      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgdir, ec.message);
       return 1;
     }
   }
   if (!BaulkRename(outdir, pkgdir, ec)) {
-    bela::FPrintF(stderr, L"baulk rename %s error: \x1b[31m%s\x1b[0m\n", pkgdir, ec.message);
+    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgdir, ec.message);
     if (!pkgold.empty()) {
       BaulkRename(pkgdir, pkgold, ec);
     }
     return 1;
   }
+  // rename exe name
   if (bela::EqualsIgnoreCase(pkg.extension, L"exe")) {
     auto fn = baulk::fs::FileName(pkgfile);
-    auto rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().wstring());
+    std::wstring rfn;
+    if (!pkg.rename.empty()) {
+      rfn = pkg.rename;
+    } else {
+      rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().wstring());
+    }
     if (!bela::EqualsIgnoreCase(fn, rfn)) {
       auto expnadfile = bela::StringCat(pkgdir, L"/", fn);
       auto target = bela::StringCat(pkgdir, L"/", rfn);

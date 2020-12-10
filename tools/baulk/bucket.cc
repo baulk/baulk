@@ -11,7 +11,8 @@
 
 namespace baulk::bucket {
 std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::error_code &ec) {
-  auto rss = bela::StringCat(bucketurl, L"/commits/master.atom");
+  // default branch atom
+  auto rss = bela::StringCat(bucketurl, L"/commits.atom");
   baulk::DbgPrint(L"Fetch RSS %s", rss);
   auto resp = baulk::net::RestGet(rss, ec);
   if (!resp) {
@@ -21,6 +22,8 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::erro
   if (!doc) {
     return std::nullopt;
   }
+   std::string_view title{doc->child("feed").child("title").text().as_string()};
+   baulk::DbgPrint(L"bucket commits: %s",title);
   // first entry child
   auto entry = doc->child("feed").child("entry");
   std::string_view id{entry.child("id").text().as_string()};
@@ -84,6 +87,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     ja.patharray("force_delete", pkg.forceDeletes);
     // to lower
     pkg.extension = bela::AsciiStrToLower(ja.get("extension"));
+    pkg.rename = ja.get("rename");
     // load version
 #if defined(_M_X64)
     // AMD64 support
