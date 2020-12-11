@@ -341,8 +341,9 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
   /* Past this point we need not check for UNMATCHABLE in pat,
    * because all of pat has already been parsed once. */
   endstr = str + n;
-  if (n < tailcnt)
+  if (n < tailcnt) {
     return 1;
+  }
 
   /* Find the final tailcnt chars of str, accounting for UTF-8.
    * On illegal sequences we may get it wrong, but in that case
@@ -440,6 +441,26 @@ bool FnMatch(std::u16string_view pattern, std::u16string_view text, int flags) {
     return false;
   }
   if ((flags & fnmatch::PathName) != 0) {
+    // auto pos = text.find_first_of(u"\\/");
+    // auto pat = pattern;
+    // size_t inc = 0;
+    // int c = 0;
+    // for (;;) {
+    //   if (c = PatternNext(pat.data(), pat.size(), &inc, flags); (c == END || c == '/')) {
+    //     break;
+    //   }
+    //   pat.remove_prefix(inc);
+    // }
+    // auto p = pos == std::u16string_view::npos ? 0 : text[pos];
+    // if (c != p && (pos == std::u16string_view::npos || (flags & fnmatch::LeadingDir) == 0)) {
+    //   return false;
+    // }
+    // auto pattern_ = pat.substr(inc);
+    // auto text_ = text.substr(pos + 1);
+    // if (FnMatchInternal(pattern_, text_, flags) == 0) {
+    //   return true;
+    // }
+    //return false;
   }
   if ((flags & fnmatch::LeadingDir) != 0) {
     auto pos = text.find_first_of(u"\\/");

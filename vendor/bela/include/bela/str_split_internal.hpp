@@ -45,9 +45,9 @@
 namespace bela {
 namespace strings_internal {
 // This class is implicitly constructible from everything that std::wstring_view
-// is implicitly constructible from. If it's constructed from a temporary
-// string, the data is moved into a data member so its lifetime matches that of
-// the ConvertibleToStringView instance.
+// is implicitly constructible from, except for rvalue strings.  This means it
+// can be used as a function parameter in places where passing a temporary
+// string might cause memory lifetime issues.
 class ConvertibleToStringView {
 public:
   ConvertibleToStringView(const wchar_t *s) // NOLINT(runtime/explicit)
@@ -57,40 +57,12 @@ public:
       : value_(s) {}
   ConvertibleToStringView(const std::wstring &s) // NOLINT(runtime/explicit)
       : value_(s) {}
-
-  // Matches rvalue strings and moves their data to a member.
-  ConvertibleToStringView(std::wstring &&s) // NOLINT(runtime/explicit)
-      : copy_(std::move(s)), value_(copy_) {}
-
-  ConvertibleToStringView(const ConvertibleToStringView &other)
-      : copy_(other.copy_), value_(other.IsSelfReferential() ? copy_ : other.value_) {}
-
-  ConvertibleToStringView(ConvertibleToStringView &&other) noexcept { StealMembers(std::move(other)); }
-
-  ConvertibleToStringView &operator=(ConvertibleToStringView other) {
-    StealMembers(std::move(other));
-    return *this;
-  }
+  ConvertibleToStringView(std::wstring &&s) = delete;
+  ConvertibleToStringView(const std::wstring &&s) = delete;
 
   std::wstring_view value() const { return value_; }
 
 private:
-  // Returns true if ctsp's value refers to its internal copy_ member.
-  bool IsSelfReferential() const { return value_.data() == copy_.data(); }
-
-  void StealMembers(ConvertibleToStringView &&other) {
-    if (other.IsSelfReferential()) {
-      copy_ = std::move(other.copy_);
-      value_ = copy_;
-      other.value_ = other.copy_;
-    } else {
-      value_ = other.value_;
-    }
-  }
-
-  // Holds the data moved from temporary std::wstring arguments. Declared first
-  // so that 'value' can refer to 'copy_'.
-  std::wstring copy_;
   std::wstring_view value_;
 };
 
@@ -147,8 +119,9 @@ public:
       }
       const std::wstring_view text = splitter_->text();
       const std::wstring_view d = delimiter_.Find(text, pos_);
-      if (d.data() == text.data() + text.size())
+      if (d.data() == text.data() + text.size()) {
         state_ = kLastState;
+      }
       curr_ = text.substr(pos_, d.data() - (text.data() + pos_));
       pos_ += curr_.size() + d.size();
     } while (!predicate_(curr_));
@@ -244,17 +217,17 @@ struct SplitterIsConvertibleTo
 // the split strings: only strings for which the predicate returns true will be
 // kept. A Predicate object is any unary functor that takes an std::wstring_view
 // and returns bool.
-template <typename Delimiter, typename Predicate> class Splitter {
+template <typename Delimiter, typename Predicate, typename StringType> class Splitter {
 public:
   using DelimiterType = Delimiter;
   using PredicateType = Predicate;
   using const_iterator = strings_internal::SplitIterator<Splitter>;
   using value_type = typename std::iterator_traits<const_iterator>::value_type;
 
-  Splitter(ConvertibleToStringView input_text, Delimiter d, Predicate p)
+  Splitter(StringType input_text, Delimiter d, Predicate p)
       : text_(std::move(input_text)), delimiter_(std::move(d)), predicate_(std::move(p)) {}
 
-  std::wstring_view text() const { return text_.value(); }
+  std::wstring_view text() const { return text_; }
   const Delimiter &delimiter() const { return delimiter_; }
   const Predicate &predicate() const { return predicate_; }
 
@@ -361,7 +334,7 @@ private:
       Container m;
       typename Container::iterator it;
       bool insert = true;
-      for (const auto sp : splitter) {
+      for (const auto &sp : splitter) {
         if (insert) {
           it = Inserter<Container>::Insert(&m, First(sp), Second());
         } else {
@@ -397,7 +370,7 @@ private:
     };
   };
 
-  ConvertibleToStringView text_;
+  StringType text_;
   Delimiter delimiter_;
   Predicate predicate_;
 };

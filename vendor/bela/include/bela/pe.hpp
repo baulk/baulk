@@ -8,6 +8,9 @@
 #include "base.hpp"
 #include "endian.hpp"
 #include "phmap.hpp"
+#include "types.hpp"
+#include "ascii.hpp"
+#include "match.hpp"
 
 namespace llvm {
 std::string demangle(const std::string &MangledName);
@@ -290,23 +293,68 @@ using symbols_map_t = bela::flat_hash_map<std::string, std::vector<Function>>;
 
 class File {
 private:
-  void Free();
-  void FileMove(File &&other);
+  bool ParseFile(bela::error_code &ec);
+  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+    LARGE_INTEGER oli{0};
+    if (SetFilePointerEx(fd, *reinterpret_cast<LARGE_INTEGER *>(&pos), &oli, SEEK_SET) != TRUE) {
+      ec = bela::make_system_error_code(L"SetFilePointerEx: ");
+      return false;
+    }
+    return true;
+  }
+  bool Read(void *buffer, size_t len, size_t &outlen, bela::error_code &ec) const {
+    DWORD dwSize = {0};
+    if (ReadFile(fd, buffer, static_cast<DWORD>(len), &dwSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"ReadFile: ");
+      return false;
+    }
+    outlen = static_cast<size_t>(len);
+    return true;
+  }
+  bool ReadFull(void *buffer, size_t len, bela::error_code &ec) const {
+    auto p = reinterpret_cast<uint8_t *>(buffer);
+    size_t total = 0;
+    while (total < len) {
+      DWORD dwSize = 0;
+      if (ReadFile(fd, p + total, static_cast<DWORD>(len - total), &dwSize, nullptr) != TRUE) {
+        ec = bela::make_system_error_code(L"ReadFile: ");
+        return false;
+      }
+      if (dwSize == 0) {
+        ec = bela::make_error_code(ERROR_HANDLE_EOF, L"Reached the end of the file");
+        return false;
+      }
+      total += dwSize;
+    }
+    return true;
+  }
+  // ReadAt ReadFull
+  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
+    if (!PositionAt(pos, ec)) {
+      return false;
+    }
+    return ReadFull(buffer, len, ec);
+  }
+  std::string sectionFullName(SectionHeader32 &sh) const;
+  bool readCOFFSymbols(std::vector<COFFSymbol> &symbols, bela::error_code &ec) const;
+  bool readRelocs(Section &sec) const;
+  bool readSectionData(const Section &sec, std::vector<char> &data) const;
+  bool readStringTable(bela::error_code &ec);
   bool LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec) const;
   bool LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec) const;
 
 public:
   File() = default;
-  ~File() { Free(); }
-  File(const File &) = delete;
-  File(File &&other) { FileMove(std::move(other)); }
-  File &operator=(const File &&) = delete;
-  File &operator=(File &&other) {
-    FileMove(std::move(other));
-    return *this;
+  ~File() {
+    if (fd != INVALID_HANDLE_VALUE && needClosed) {
+      CloseHandle(fd);
+      fd = INVALID_HANDLE_VALUE;
+    }
   }
+  File(const File &) = delete;
+  File &operator=(const File &&) = delete;
   // export FD() to support
-  FILE *FD() const { return fd; }
+  HANDLE FD() const { return fd; }
   template <typename AStringT> void SplitStringTable(std::vector<AStringT> &sa) const {
     auto sv = std::string_view{reinterpret_cast<const char *>(stringTable.data), stringTable.length};
     for (;;) {
@@ -335,20 +383,30 @@ public:
     return static_cast<bela::pe::Subsystem>(is64bit ? oh.Subsystem : Oh32()->Subsystem);
   }
   // NewFile resolve pe file
-  static std::optional<File> NewFile(std::wstring_view p, bela::error_code &ec);
+  bool NewFile(std::wstring_view p, bela::error_code &ec);
+  bool NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
+    if (fd != INVALID_HANDLE_VALUE) {
+      ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
+      return false;
+    }
+    fd = fd_;
+    size = sz;
+    return ParseFile(ec);
+  }
+  int64_t Size() const { return size; }
 
 private:
-  FILE *fd{nullptr};
+  HANDLE fd{INVALID_HANDLE_VALUE};
   FileHeader fh;
+  int64_t size{SizeUnInitialized};
   // The OptionalHeader64 structure is larger than OptionalHeader32. Therefore, we can store OptionalHeader32 in oh64.
   // Conversion by pointer.
   OptionalHeader64 oh;
   std::vector<Section> sections;
   StringTable stringTable;
   bool is64bit{false};
+  bool needClosed{false};
 };
-
-inline std::optional<File> NewFile(std::wstring_view p, bela::error_code &ec) { return File::NewFile(p, ec); }
 
 class SymbolSearcher {
 private:
@@ -363,6 +421,22 @@ public:
   SymbolSearcher(const SymbolSearcher &) = delete;
   SymbolSearcher &operator=(const SymbolSearcher &) = delete;
   std::optional<std::string> LookupOrdinalFunctionName(std::string_view dllname, int ordinal, bela::error_code &ec);
+};
+
+struct FileInfo {
+  DWORD dwSignature;        /* e.g. 0xfeef04bd */
+  DWORD dwStrucVersion;     /* e.g. 0x00000042 = "0.42" */
+  DWORD dwFileVersionMS;    /* e.g. 0x00030075 = "3.75" */
+  DWORD dwFileVersionLS;    /* e.g. 0x00000031 = "0.31" */
+  DWORD dwProductVersionMS; /* e.g. 0x00030010 = "3.10" */
+  DWORD dwProductVersionLS; /* e.g. 0x00000031 = "0.31" */
+  DWORD dwFileFlagsMask;    /* = 0x3F for version "0.42" */
+  DWORD dwFileFlags;        /* e.g. VFF_DEBUG | VFF_PRERELEASE */
+  DWORD dwFileOS;           /* e.g. VOS_DOS_WINDOWS16 */
+  DWORD dwFileType;         /* e.g. VFT_DRIVER */
+  DWORD dwFileSubtype;      /* e.g. VFT2_DRV_KEYBOARD */
+  DWORD dwFileDateMS;       /* e.g. 0 */
+  DWORD dwFileDateLS;       /* e.g. 0 */
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfoexw
@@ -384,7 +458,23 @@ struct Version {
   std::wstring SpecialBuild;
 };
 
-std::optional<Version> LookupVersion(std::wstring_view file, bela::error_code &ec);
+std::optional<Version> Lookup(std::wstring_view file, bela::error_code &ec);
+
+inline bool IsSubsystemConsole(std::wstring_view p) {
+  constexpr const wchar_t *suffix[] = {L".bat", L".cmd", L".vbs", L".vbe", L".js", L".jse", L".wsf", L".wsh", L".msc"};
+  File file;
+  bela::error_code ec;
+  if (!file.NewFile(p, ec)) {
+    auto lp = bela::AsciiStrToLower(p);
+    for (const auto s : suffix) {
+      if (bela::EndsWith(lp, s)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return file.Subsystem() == Subsystem::CUI;
+}
 
 } // namespace bela::pe
 

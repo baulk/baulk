@@ -1,7 +1,8 @@
 //////////
 #include <bela/base.hpp>
 #include <bela/match.hpp>
-#include <string_view>
+#include <bela/repasepoint.hpp>
+#include <bela/path.hpp>
 
 namespace bela {
 // Thanks MSVC STL filesystem
@@ -99,6 +100,132 @@ std::optional<std::wstring> ExecutableFinalPath(bela::error_code &ec) {
     return RealPath(*exe, ec);
   }
   return std::nullopt;
+}
+
+inline bool DecodeAppLink(const REPARSE_DATA_BUFFER *buffer, AppExecTarget &target) {
+  LPWSTR szString = (LPWSTR)buffer->AppExecLinkReparseBuffer.StringList;
+  std::vector<std::wstring_view> strv;
+  for (ULONG i = 0; i < buffer->AppExecLinkReparseBuffer.StringCount; i++) {
+    auto len = wcslen(szString);
+    strv.emplace_back(szString, len);
+    szString += len + 1;
+  }
+  if (strv.empty()) {
+    return false;
+  }
+  target.pkid = strv[0];
+  if (strv.size() > 1) {
+    target.appuserid = strv[1];
+  }
+  if (strv.size() > 2) {
+    target.target = strv[2];
+  }
+  return true;
+}
+
+inline bool DecodeSymbolicLink(const REPARSE_DATA_BUFFER *buffer, std::wstring &target) {
+
+  auto wstr = buffer->SymbolicLinkReparseBuffer.PathBuffer +
+              (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR));
+  auto wlen = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+  if (wlen >= MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
+    return false;
+  }
+  if (wlen >= 4 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\') {
+    /* Starts with \??\ */
+    if (wlen >= 6 && ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) &&
+        wstr[5] == L':' && (wlen == 6 || wstr[6] == L'\\')) {
+      /* \??\<drive>:\ */
+      wstr += 4;
+      wlen -= 4;
+
+    } else if (wlen >= 8 && (wstr[4] == L'U' || wstr[4] == L'u') && (wstr[5] == L'N' || wstr[5] == L'n') &&
+               (wstr[6] == L'C' || wstr[6] == L'c') && wstr[7] == L'\\') {
+      /* \??\UNC\<server>\<share>\ - make sure the final path looks like */
+      /* \\<server>\<share>\ */
+      wstr += 7;
+      target.push_back(L'\\');
+      wlen -= 7;
+    }
+  }
+  target.append(wstr, wlen);
+  return true;
+}
+
+inline bool DecodeMountPoint(const REPARSE_DATA_BUFFER *buffer, std::wstring &target) {
+  auto wstr = buffer->MountPointReparseBuffer.PathBuffer +
+              (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR));
+  auto wlen = buffer->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+  if (wlen >= MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
+    return false;
+  }
+  /* Only treat junctions that look like \??\<drive>:\ as symlink. */
+  /* Junctions can also be used as mount points, like \??\Volume{<guid>}, */
+  /* but that's confusing for programs since they wouldn't be able to */
+  /* actually understand such a path when returned by uv_readlink(). */
+  /* UNC paths are never valid for junctions so we don't care about them. */
+  if (!(wlen >= 6 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\' &&
+        ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) && wstr[5] == L':' &&
+        (wlen == 6 || wstr[6] == L'\\'))) {
+    return false;
+  }
+
+  /* Remove leading \??\ */
+  wstr += 4;
+  wlen -= 4;
+  target.assign(wstr, wlen);
+  return true;
+}
+
+bool LookupAppExecLinkTarget(std::wstring_view src, AppExecTarget &target) {
+  bela::error_code ec;
+  bela::Buffer b(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+  if (!LookupReparsePoint(src, b, ec)) {
+    return false;
+  }
+  if (b.size() == 0) {
+    return false;
+  }
+  auto p = b.cast<REPARSE_DATA_BUFFER>();
+  if (p->ReparseTag != IO_REPARSE_TAG_APPEXECLINK) {
+    return false;
+  }
+  return DecodeAppLink(p, target);
+}
+
+std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &ec) {
+  bela::Buffer b(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+  if (!LookupReparsePoint(src, b, ec)) {
+    return std::nullopt;
+  }
+
+  if (b.size() == 0) {
+    return std::make_optional(bela::PathAbsolute(src));
+  }
+  auto p = b.cast<REPARSE_DATA_BUFFER>();
+
+  switch (p->ReparseTag) {
+  case IO_REPARSE_TAG_APPEXECLINK:
+    if (AppExecTarget target; DecodeAppLink(p, target)) {
+      return std::make_optional(std::move(target.target));
+    }
+    ec = bela::make_error_code(1, L"BAD: unable decode AppLinkExec");
+    return std::nullopt;
+  case IO_REPARSE_TAG_SYMLINK:
+    if (auto target = bela::RealPath(src, ec); target) {
+      return std::make_optional(std::move(*target));
+    }
+    return std::nullopt;
+  case IO_REPARSE_TAG_GLOBAL_REPARSE:
+    if (std::wstring target; DecodeSymbolicLink(p, target)) {
+      return std::make_optional(std::move(target));
+    }
+    ec = bela::make_error_code(1, L"BAD: unable decode Global SymbolicLink");
+    return std::nullopt;
+  default:
+    break;
+  }
+  return std::make_optional<std::wstring>(src);
 }
 
 } // namespace bela

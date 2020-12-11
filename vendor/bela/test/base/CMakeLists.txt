@@ -25,3 +25,23 @@ target_link_libraries(delfile_test
   bela
   belawin
 )
+
+# base
+add_executable(strsplit_test
+  strsplit.cc
+)
+
+target_link_libraries(strsplit_test
+  bela
+)
+
+
+
+# base
+add_executable(startswith_test
+  startswith.cc
+)
+
+target_link_libraries(startswith_test
+  bela
+)

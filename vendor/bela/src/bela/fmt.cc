@@ -265,6 +265,43 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
       }
       ca++;
       break;
+    case 'v':
+      if (ca >= max_args) {
+        return false;
+      }
+      switch (args[ca].at) {
+      case ArgType::BOOLEAN:
+        w.AddBoolean(args[ca].character.c != 0);
+        break;
+      case ArgType::CHARACTER:
+        w.AddUnicode(args[ca].character.c, width, args[ca].character.width);
+        break;
+      case ArgType::FLOAT:
+        w.Floating(args[ca].floating.d, width, frac_width, pc);
+        break;
+      case ArgType::INTEGER:
+      case ArgType::UINTEGER: {
+        bool sign = false;
+        size_t off = 0;
+        auto val = args[ca].ToInteger(&sign);
+        if (sign) {
+          pc = ' '; /// when sign ignore '0
+        }
+        auto p = Decimal(val, digits + off, sign);
+        w.Append(p, dend - p + off, width, pc, left);
+      } break;
+      case ArgType::STRING:
+        w.Append(args[ca].strings.data, args[ca].strings.len, width, pc, left);
+        break;
+      case ArgType::USTRING: {
+        auto ws = bela::ToWide(args[ca].ustring.data, args[ca].ustring.len);
+        w.Append(ws.data(), ws.size(), width, pc, left);
+      } break;
+      default:
+        break;
+      }
+      ca++;
+      break;
     case 'p':
       if (ca >= max_args) {
         return false;

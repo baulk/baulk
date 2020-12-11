@@ -1,13 +1,16 @@
-##
+#
 
 add_subdirectory(appexeclink)
 add_subdirectory(base)
+add_subdirectory(binview)
 add_subdirectory(color)
 add_subdirectory(escape)
 add_subdirectory(escapeargv)
 add_subdirectory(filehash)
 add_subdirectory(fmt)
+add_subdirectory(hazel)
 add_subdirectory(mix)
+add_subdirectory(now)
 add_subdirectory(semver)
 add_subdirectory(tokencmd)
 add_subdirectory(toml)

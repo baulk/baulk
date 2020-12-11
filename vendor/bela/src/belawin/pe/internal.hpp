@@ -52,11 +52,6 @@ struct ImportDelayDirectory {
 
   std::string DllName;
 };
-
-std::string sectionFullName(SectionHeader32 &sh, StringTable &st);
-bool readRelocs(Section &sec, FILE *fd);
-bool readSectionData(std::vector<char> &data, const Section &sec, FILE *fd);
-bool readStringTable(FileHeader *fh, FILE *fd, StringTable &table, bela::error_code &ec);
 } // namespace bela::pe
 
 #endif

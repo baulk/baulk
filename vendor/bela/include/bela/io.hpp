@@ -25,6 +25,7 @@ inline bool WriteText(std::wstring_view text, std::wstring_view file, bela::erro
 inline bool WriteText(std::u16string_view text, std::wstring_view file, bela::error_code &ec) {
   return WriteText(bela::ToNarrow(text), file, ec);
 }
+
 } // namespace bela::io
 
 #endif

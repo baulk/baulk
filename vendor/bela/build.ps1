@@ -1,5 +1,4 @@
 #!/usr/bin/env pwsh
-
 # On Windows, Start-Process -Wait will wait job process, obObject.WaitOne(_waithandle);
 # Don't use it
 Function Invoke-BatchFile {

@@ -105,36 +105,18 @@ inline void swaple(SectionHeader32 &sh) {
   }
 }
 
-void File::Free() {
-  if (fd != nullptr) {
-    fclose(fd);
-    fd = nullptr;
+bool File::ParseFile(bela::error_code &ec) {
+  if (size == SizeUnInitialized) {
+    LARGE_INTEGER li;
+    if (!GetFileSizeEx(fd, &li) == TRUE) {
+      ec = bela::make_system_error_code(L"GetFileSizeEx: ");
+      return false;
+    }
+    size = li.QuadPart;
   }
-}
-
-void File::FileMove(File &&other) {
-  Free();
-  fd = other.fd;
-  is64bit = other.is64bit;
-  other.fd = nullptr;
-  stringTable = std::move(other.stringTable);
-  sections = std::move(other.sections);
-  memcpy(&fh, &other.fh, sizeof(FileHeader));
-  memcpy(&oh, &other.oh, sizeof(OptionalHeader64));
-}
-
-std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
-  FILE *fd = nullptr;
-  if (auto eno = _wfopen_s(&fd, p.data(), L"rb"); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, L"open file: ");
-    return std::nullopt;
-  }
-  File file;
-  file.fd = fd;
   DosHeader dh;
-  if (fread(&dh, 1, sizeof(DosHeader), fd) != sizeof(DosHeader)) {
-    ec = bela::make_stdc_error_code(ferror(fd), L"open file: ");
-    return std::nullopt;
+  if (!ReadAt(&dh, sizeof(DosHeader), 0, ec)) {
+    return false;
   }
   constexpr auto x = 0x3c;
 
@@ -142,65 +124,47 @@ std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
   if (bela::swaple(dh.e_magic) == IMAGE_DOS_SIGNATURE) {
     auto signoff = static_cast<int64_t>(bela::swaple(dh.e_lfanew));
     uint8_t sign[4];
-    if (auto eno = _fseeki64(fd, signoff, SEEK_SET); eno != 0) {
-      ec = bela::make_stdc_error_code(eno, L"Invalid PE COFF file signature of ");
-      return std::nullopt;
-    }
-    if (fread(sign, 1, 4, fd) != 4) {
-      ec = bela::make_stdc_error_code(ferror(fd), L"Invalid PE COFF file signature of ");
-      return std::nullopt;
+    if (!ReadAt(sign, 4, signoff, ec)) {
+      return false;
     }
     if (!(sign[0] == 'P' && sign[1] == 'E' && sign[2] == 0 && sign[3] == 0)) {
       ec = bela::make_error_code(1, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','", int(sign[1]), L"','",
                                  int(sign[2]), L"','", int(sign[3]), L"']");
-      return std::nullopt;
+      return false;
     }
     base = signoff + 4;
   }
-  if (auto eno = _fseeki64(fd, base, SEEK_SET); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, L"unable seek to base");
-    return std::nullopt;
-  }
-  if (fread(&file.fh, 1, sizeof(FileHeader), file.fd) != sizeof(FileHeader)) {
-    ec = bela::make_stdc_error_code(ferror(file.fd), L"Invalid PE COFF file FileHeader ");
-    return std::nullopt;
-  }
-  swaple(file.fh);
-  file.is64bit = (file.fh.SizeOfOptionalHeader == sizeof(OptionalHeader64));
-  if (!readStringTable(&file.fh, fd, file.stringTable, ec)) {
-    return std::nullopt;
-  }
-  // if (!readCOFFSymbols(&file.fh, file.fd, file.coffsymbol, ec)) {
-  //   return std::nullopt;
-  // }
 
-  if (auto eno = _fseeki64(fd, base + sizeof(FileHeader), SEEK_SET); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, L"unable seek to base");
-    return std::nullopt;
+  if (!ReadAt(&fh, sizeof(FileHeader), base, ec)) {
+    return false;
   }
-  if (file.is64bit) {
-    if (fread(&file.oh, 1, sizeof(OptionalHeader64), fd) != sizeof(OptionalHeader64)) {
-      ec = bela::make_stdc_error_code(ferror(file.fd), L"Invalid PE COFF file OptionalHeader64 ");
-      return std::nullopt;
+  swaple(fh);
+  is64bit = (fh.SizeOfOptionalHeader == sizeof(OptionalHeader64));
+  if (!readStringTable(ec)) {
+    return false;
+  }
+
+  if (is64bit) {
+    if (!ReadAt(&oh, sizeof(OptionalHeader64), base + sizeof(FileHeader), ec)) {
+      return false;
     }
-    swaple(&file.oh);
+    swaple(&oh);
   } else {
-    if (fread(&file.oh, 1, sizeof(OptionalHeader32), fd) != sizeof(OptionalHeader32)) {
-      ec = bela::make_stdc_error_code(ferror(file.fd), L"Invalid PE COFF file OptionalHeader32 ");
-      return std::nullopt;
+    if (!ReadAt(&oh, sizeof(OptionalHeader32), base + sizeof(FileHeader), ec)) {
+      ec = bela::make_error_code(1, L"pe: not a valid pe file ", ec.message);
+      return false;
     }
-    swaple(reinterpret_cast<OptionalHeader32 *>(&file.oh));
+    swaple(reinterpret_cast<OptionalHeader32 *>(&oh));
   }
-  file.sections.reserve(file.fh.NumberOfSections);
-  for (int i = 0; i < file.fh.NumberOfSections; i++) {
+  sections.reserve(fh.NumberOfSections);
+  for (int i = 0; i < fh.NumberOfSections; i++) {
     SectionHeader32 sh;
-    if (fread(&sh, 1, sizeof(SectionHeader32), fd) != sizeof(SectionHeader32)) {
-      ec = bela::make_stdc_error_code(ferror(file.fd), L"Invalid PE COFF file SectionHeader32 ");
-      return std::nullopt;
+    if (!ReadFull(&sh, sizeof(SectionHeader32), ec)) {
+      return false;
     }
     swaple(sh);
     Section sec;
-    sec.Header.Name = sectionFullName(sh, file.stringTable);
+    sec.Header.Name = sectionFullName(sh);
     sec.Header.VirtualSize = sh.VirtualSize;
     sec.Header.VirtualAddress = sh.VirtualAddress;
     sec.Header.Size = sh.SizeOfRawData;
@@ -210,12 +174,28 @@ std::optional<File> File::NewFile(std::wstring_view p, bela::error_code &ec) {
     sec.Header.NumberOfRelocations = sh.NumberOfRelocations;
     sec.Header.NumberOfLineNumbers = sh.NumberOfLineNumbers;
     sec.Header.Characteristics = sh.Characteristics;
-    file.sections.emplace_back(std::move(sec));
+    sections.emplace_back(std::move(sec));
   }
-  for (auto &sec : file.sections) {
-    readRelocs(sec, fd);
+  for (auto &sec : sections) {
+    readRelocs(sec);
   }
-  return std::make_optional(std::move(file));
+
+  return true;
+}
+
+bool File::NewFile(std::wstring_view p, bela::error_code &ec) {
+  if (fd != INVALID_HANDLE_VALUE) {
+    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
+    return false;
+  }
+  fd = CreateFileW(p.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                   FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (fd == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code(L"CreateFileW: ");
+    return false;
+  }
+  needClosed = true;
+  return ParseFile(ec);
 }
 
 uint16_t getFunctionHit(std::vector<char> &section, int start) {
@@ -250,7 +230,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     return true;
   }
   std::vector<char> sdata;
-  if (!readSectionData(sdata, *ds, fd)) {
+  if (!readSectionData(*ds, sdata)) {
     ec = bela::make_error_code(L"unable read section data");
     return false;
   }
@@ -347,7 +327,7 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
     return true;
   }
   std::vector<char> sdata;
-  if (!readSectionData(sdata, *ds, fd)) {
+  if (!readSectionData(*ds, sdata)) {
     ec = bela::make_error_code(L"unable read section data");
     return false;
   }
@@ -450,7 +430,7 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
     return true;
   }
   std::vector<char> sdata;
-  if (!readSectionData(sdata, *ds, fd)) {
+  if (!readSectionData(*ds, sdata)) {
     ec = bela::make_error_code(L"unable read section data");
     return false;
   }

@@ -32,6 +32,17 @@ struct error_code {
   long code{None};
   const wchar_t *data() const { return message.data(); }
   explicit operator bool() const noexcept { return code != None; }
+  error_code &assgin(error_code &&o) {
+    message = o.message;
+    o.message.clear();
+    code = o.code;
+    o.code = None;
+    return *this;
+  }
+  void clear() {
+    code = None;
+    message.clear();
+  }
 };
 
 inline bela::error_code make_error_code(const AlphaNum &a) {
@@ -156,6 +167,8 @@ private:
 template <class F> inline final_act<F> finally(const F &f) noexcept { return final_act<F>(f); }
 
 template <class F> inline final_act<F> finally(F &&f) noexcept { return final_act<F>(std::forward<F>(f)); }
+
+constexpr int64_t SizeUnInitialized{-1};
 
 } // namespace bela
 

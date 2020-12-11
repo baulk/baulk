@@ -36,7 +36,7 @@ bool File::LookupClrVersion(std::string &ver, bela::error_code &ec) const {
   }
 
   std::vector<char> sdata;
-  if (!readSectionData(sdata, *ds, fd)) {
+  if (!readSectionData(*ds, sdata)) {
     ec = bela::make_error_code(L"unable read section data");
     return false;
   }

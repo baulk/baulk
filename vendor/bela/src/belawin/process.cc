@@ -14,7 +14,7 @@ int Process::ExecuteInternal(std::wstring_view file, wchar_t *cmdline) {
   if (simulator != nullptr) {
     env = const_cast<bela::env::Simulator *>(simulator)->MakeEnv();
     if (file.find_first_of(L":\\/") == std::wstring_view::npos) {
-      simulator->LookupPath(file, path);
+      simulator->LookPath(file, path, true);
     }
   }
   if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
@@ -122,7 +122,7 @@ int Process::CaptureInternal(std::wstring_view file, wchar_t *cmdline, DWORD fla
   if (simulator != nullptr) {
     env = const_cast<bela::env::Simulator *>(simulator)->MakeEnv();
     if (file.find_first_of(L":\\/") == std::wstring_view::npos) {
-      simulator->LookupPath(file, path);
+      simulator->LookPath(file, path, true);
     }
   }
   if (!helper.create_process_redirect(path, cmdline, env, cwd, flags, ec)) {

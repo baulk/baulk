@@ -304,7 +304,7 @@ bool Searcher::InitializeBaulk(bela::error_code &ec) {
 
 bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
   std::wstring git;
-  if (bela::env::ExecutableExistsInPath(L"git.exe", git)) {
+  if (bela::env::LookPath(L"git.exe", git, true)) {
     if (cleanup) {
       bela::PathStripName(git);
       JoinEnv(paths, git);

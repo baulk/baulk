@@ -1,6 +1,6 @@
 // Test reparse pointer
 
-#include <bela/repasepoint.hpp>
+#include <hazel/fs.hpp>
 #include <bela/terminal.hpp>
 
 int wmain(int argc, wchar_t **argv) {
@@ -8,18 +8,14 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"usage: %s path\n", argv[0]);
     return 1;
   }
-  bela::ReparsePoint rp;
+  hazel::fs::FileReparsePoint frp;
   bela::error_code ec;
-  if (!rp.Analyze(argv[1], ec)) {
-    if (ec) {
-      bela::FPrintF(stderr, L"Analyze %s error: %s\n", argv[0], ec.message);
-      return 1;
-    }
-    bela::FPrintF(stderr, L"Analyze %s bad callback return\n", argv[0]);
+  if (!hazel::fs::LookupReparsePoint(argv[1], frp, ec)) {
+    bela::FPrintF(stderr, L"unable lookup reparse point %s\n", ec.message);
     return 1;
   }
-  for (const auto &e : rp.Attributes()) {
-    bela::FPrintF(stderr, L"%s: %s\n", e.name, e.value);
+  for (auto &kv : frp.attributes) {
+    bela::FPrintF(stderr, L"%s: %s\n", kv.first, kv.second);
   }
   return 0;
 }

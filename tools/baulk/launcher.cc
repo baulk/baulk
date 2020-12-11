@@ -116,7 +116,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
 }
 
 // GenerateLinkSource generate link sources
-std::wstring GenerateLinkSource(std::wstring_view target, bela::pe::Subsystem subs) {
+std::wstring GenerateLinkSource(std::wstring_view target, bool isConsole) {
   std::wstring escapetarget;
   escapetarget.reserve(target.size() + 10);
   for (auto c : target) {
@@ -126,7 +126,7 @@ std::wstring GenerateLinkSource(std::wstring_view target, bela::pe::Subsystem su
     }
     escapetarget.push_back(c);
   }
-  if (subs == bela::pe::Subsystem::CUI) {
+  if (isConsole) {
     return bela::Substitute(launcher_internal::consoletemplete, escapetarget);
   }
   return bela::Substitute(launcher_internal::windowstemplate, escapetarget);
@@ -191,23 +191,18 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, 
   if (!realexe) {
     return false;
   }
-  auto pe = bela::pe::NewFile(*realexe, ec);
-  if (!pe) {
-    // not pe subname
-    return false;
-  }
-  auto subsystem = pe->Subsystem();
-  auto index = SubsystemIndex(subsystem);
+  auto isConsole = bela::pe::IsSubsystemConsole(*realexe);
+  DbgPrint(L"executable %s is subsystem console: %v\n", *realexe, isConsole);
   auto name = StripExtension(lm.alias);
   auto cxxsrcname = bela::StringCat(name, L".cc");
   auto cxxsrc = bela::StringCat(baulktemp, L"\\", cxxsrcname);
   auto rcsrcname = bela::StringCat(name, L".rc");
   auto rcsrc = bela::StringCat(baulktemp, L"\\", rcsrcname);
-  if (!bela::io::WriteText(GenerateLinkSource(source, subsystem), cxxsrc, ec)) {
+  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxsrc, ec)) {
     return false;
   }
   bool rcwrited = false;
-  if (auto vi = bela::pe::LookupVersion(source, ec); vi) {
+  if (auto vi = bela::pe::Lookup(source, ec); vi) {
     baulk::rc::Writer w;
     if (vi->CompanyName.empty()) {
       vi->CompanyName = bela::StringCat(pkg.name, L" contributors");
@@ -243,6 +238,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, 
   }
   int exitcode = 0;
   DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
+  auto index = isConsole ? 0 : 1;
   if (rcwrited) {
     exitcode = baulk::BaulkExecutor().Execute(baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
                                               L"-NODEFAULTLIB", subsystemnane[index], entry[index],

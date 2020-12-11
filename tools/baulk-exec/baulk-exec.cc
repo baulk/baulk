@@ -90,11 +90,11 @@ private:
   std::wstring cwd;
   bool cleanup{false};
   bool console{true};
-  bool LookupPath(std::wstring_view exe, std::wstring &file);
+  bool LookPath(std::wstring_view exe, std::wstring &file);
 };
 
-bool Executor::LookupPath(std::wstring_view cmd, std::wstring &file) {
-  if (!simulator.LookupPath(cmd, file)) {
+bool Executor::LookPath(std::wstring_view cmd, std::wstring &file) {
+  if (!simulator.LookPath(cmd, file)) {
     return false;
   }
   bela::error_code ec;
@@ -104,9 +104,8 @@ bool Executor::LookupPath(std::wstring_view cmd, std::wstring &file) {
     return true;
   }
   DbgPrint(L"resolve realpath %s\n", *realexe);
-  if (auto pe = bela::pe::NewFile(*realexe, ec); pe) {
-    console = (pe->Subsystem() == bela::pe::Subsystem::CUI);
-  }
+  console = bela::pe::IsSubsystemConsole(*realexe);
+  DbgPrint(L"executable %s is subsystem console: %v\n", *realexe, console);
   return true;
 }
 
@@ -132,7 +131,7 @@ int Executor::Exec() {
   std::wstring target;
   std::wstring_view arg0(argv[0]);
   if (!cleanup || !IsPwshTarget(arg0, target)) {
-    if (!LookupPath(arg0, target)) {
+    if (!LookPath(arg0, target)) {
       bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
                     bela::StrJoin(simulator.Paths(), L"\n"));
       return 1;

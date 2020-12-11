@@ -28,10 +28,12 @@
 namespace bela {
 #if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
 #define IS_BIG_ENDIAN 1
+#define BELA_IS_BIG_ENDIAN 1
 constexpr bool IsBigEndianHost = true;
 constexpr bool IsLittleEndianHost = false;
 #else
 #define IS_BIG_ENDIAN 0
+#define BELA_IS_LITTLE_ENDIAN 1
 constexpr bool IsBigEndianHost = false;
 constexpr bool IsLittleEndianHost = true;
 #endif
@@ -165,6 +167,73 @@ template <typename T> inline T readbe(const void *p) {
   }
   return bswap(v);
 }
+
+namespace endian {
+#if IS_BIG_ENDIAN
+enum class Endian { little = 0, big = 1, native = big };
+#else
+enum class Endian { little = 0, big = 1, native = little };
+#endif
+
+template <Endian E = Endian::native> class Reader {
+public:
+  Reader() = default;
+  Reader(const void *p, size_t len) : data(reinterpret_cast<const uint8_t *>(p)), size(len) {}
+  Reader(const Reader &other) {
+    data = other.data;
+    size = other.size;
+  }
+  Reader &operator=(const Reader &other) {
+    data = other.data;
+    size = other.size;
+    return *this;
+  }
+  void Reset(const void *p, size_t len) {
+    data = reinterpret_cast<const uint8_t *>(p);
+    size = len;
+  }
+  template <typename T> T Read() {
+    auto p = reinterpret_cast<const T *>(data);
+    data += sizeof(T);
+    size -= sizeof(T);
+    if constexpr (E == Endian::native) {
+      return *p;
+    }
+    return bela::bswap(*p);
+  }
+  size_t Discard(size_t n) {
+    if (n >= size) {
+      data = nullptr;
+      size = 0;
+    }
+    size -= n;
+    data += n;
+    return size;
+  }
+  uint8_t Pick() {
+    auto c = *data;
+    data++;
+    size--;
+    return c;
+  }
+  Reader Sub(int n) {
+    size += n;
+    auto p = data;
+    data += n;
+    return Reader(p, n);
+  }
+  size_t Size() const { return size; }
+  template <typename T = char> const T *Data() const { return reinterpret_cast<const T *>(data); }
+
+private:
+  const uint8_t *data{nullptr};
+  size_t size{0};
+  const Endian e{E};
+};
+using LittenEndian = Reader<Endian::little>;
+using BigEndian = Reader<Endian::big>;
+
+} // namespace endian
 
 } // namespace bela
 

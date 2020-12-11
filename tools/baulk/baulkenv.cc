@@ -62,7 +62,7 @@ private:
 };
 
 bool InitializeGitPath(std::wstring &git) {
-  if (bela::env::ExecutableExistsInPath(L"git.exe", git)) {
+  if (bela::env::LookPath(L"git.exe", git, true)) {
     baulk::DbgPrint(L"Found git in path '%s'", git);
     return true;
   }

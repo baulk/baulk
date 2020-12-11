@@ -4,7 +4,7 @@
 
 namespace bela::pe {
 
-std::string sectionFullName(SectionHeader32 &sh, StringTable &st) {
+std::string File::sectionFullName(SectionHeader32 &sh) const {
   if (sh.Name[0] != '/') {
     return std::string(cstring_view(sh.Name, sizeof(sh.Name)));
   }
@@ -14,19 +14,16 @@ std::string sectionFullName(SectionHeader32 &sh, StringTable &st) {
     return "";
   }
   bela::error_code ec;
-  return st.String(offset, ec);
+  return stringTable.String(offset, ec);
 }
 
-bool readRelocs(Section &sec, FILE *fd) {
+bool File::readRelocs(Section &sec) const {
   if (sec.Header.NumberOfRelocations == 0) {
     return true;
   }
-  if (_fseeki64(fd, static_cast<int64_t>(sec.Header.PointerToRelocations), SEEK_SET) != 0) {
-    return false;
-  }
+  bela::error_code ec;
   sec.Relocs.resize(sec.Header.NumberOfRelocations);
-  if (fread(sec.Relocs.data(), 1, sizeof(Reloc) * sec.Header.NumberOfRelocations, fd) !=
-      sizeof(Reloc) * sec.Header.NumberOfRelocations) {
+  if (!ReadAt(sec.Relocs.data(), sizeof(Reloc) * sec.Header.NumberOfRelocations, sec.Header.PointerToRelocations, ec)) {
     return false;
   }
   if constexpr (bela::IsBigEndian()) {
@@ -39,12 +36,10 @@ bool readRelocs(Section &sec, FILE *fd) {
   return true;
 }
 
-bool readSectionData(std::vector<char> &data, const Section &sec, FILE *fd) {
-  if (_fseeki64(fd, int64_t(sec.Header.Offset), SEEK_SET) != 0) {
-    return false;
-  }
+bool File::readSectionData(const Section &sec, std::vector<char> &data) const {
+  bela::error_code ec;
   data.resize(sec.Header.Size);
-  return fread(data.data(), 1, sec.Header.Size, fd) == sec.Header.Size;
+  return ReadAt(data.data(), sec.Header.Size, sec.Header.Offset, ec);
 }
 
 } // namespace bela::pe

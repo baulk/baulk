@@ -1,8 +1,11 @@
 # PE format
 
-PE32 Format image (from: [https://en.wikipedia.org/wiki/Portable_Executable](https://en.wikipedia.org/wiki/Portable_Executable)):
 
-![](./pe32.svg)
+Wikipedia: [https://en.wikipedia.org/wiki/Portable_Executable](https://en.wikipedia.org/wiki/Portable_Executable)
+
+PE32 Format image (from: Wikipedia):
+
+![](./images/pe32.svg)
 
 
 ## IsWow64Process2

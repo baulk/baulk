@@ -38,7 +38,7 @@ namespace bela {
 
 namespace strings_internal {
 
-int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) {
+int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) noexcept {
   for (size_t i = 0; i < len; i++) {
     const auto diff = bela::ascii_tolower(s1[i]) - bela::ascii_tolower(s2[i]);
     if (diff != 0) {
@@ -48,7 +48,7 @@ int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) {
   return 0;
 }
 
-[[nodiscard]] wchar_t *memdup(const wchar_t *s, size_t slen) {
+[[nodiscard]] wchar_t *memdup(const wchar_t *s, size_t slen) noexcept {
   void *copy;
   if ((copy = malloc(slen * sizeof(wchar_t))) == nullptr) {
     return nullptr;
@@ -57,7 +57,7 @@ int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) {
   return reinterpret_cast<wchar_t *>(copy);
 }
 
-wchar_t *memrchr(const wchar_t *s, int c, size_t slen) {
+wchar_t *memrchr(const wchar_t *s, int c, size_t slen) noexcept {
   for (const wchar_t *e = s + slen - 1; e >= s; e--) {
     if (*e == c) {
       return const_cast<wchar_t *>(e);
@@ -66,7 +66,7 @@ wchar_t *memrchr(const wchar_t *s, int c, size_t slen) {
   return nullptr;
 }
 
-size_t memspn(const wchar_t *s, size_t slen, const wchar_t *accept) {
+size_t memspn(const wchar_t *s, size_t slen, const wchar_t *accept) noexcept {
   const wchar_t *p = s;
   const wchar_t *spanp;
   wchar_t c, sc;
@@ -84,7 +84,7 @@ cont:
   return p - 1 - s;
 }
 
-size_t memcspn(const wchar_t *s, size_t slen, const wchar_t *reject) {
+size_t memcspn(const wchar_t *s, size_t slen, const wchar_t *reject) noexcept {
   const wchar_t *p = s;
   const wchar_t *spanp;
   wchar_t c, sc;
@@ -100,7 +100,7 @@ size_t memcspn(const wchar_t *s, size_t slen, const wchar_t *reject) {
   return p - s;
 }
 
-wchar_t *mempbrk(const wchar_t *s, size_t slen, const wchar_t *accept) {
+wchar_t *mempbrk(const wchar_t *s, size_t slen, const wchar_t *accept) noexcept {
   const wchar_t *scanp;
   int sc;
 
@@ -116,7 +116,7 @@ wchar_t *mempbrk(const wchar_t *s, size_t slen, const wchar_t *accept) {
 
 // This is significantly faster for case-sensitive matches with very
 // few possible matches.  See unit test for benchmarks.
-const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle, size_t neelen) {
+const wchar_t *memmatch(const wchar_t *phaystack, size_t haylen, const wchar_t *pneedle, size_t neelen) noexcept {
   if (0 == neelen) {
     return phaystack; // even if haylen is 0
   }

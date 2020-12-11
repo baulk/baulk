@@ -13,7 +13,8 @@ elseif("${BELA_COMPILER_ARCH_ID}" STREQUAL "arm64")
 endif()
 message(STATUS "lookup CMAKE_C_COMPILER_ARCHITECTURE_ID: ${BELA_COMPILER_ARCH_ID}")
 
-add_library(belahash STATIC
+add_library(
+  belahash STATIC
   sha256.cc
   sha512.cc
   sha3.cc
@@ -21,12 +22,9 @@ add_library(belahash STATIC
   blake3/blake3.c
   blake3/blake3_dispatch.c
   blake3/blake3_portable.c
-  ${BLAKE3_SIMDSRC}
-)
+  ${BLAKE3_SIMDSRC})
 
-target_link_libraries(belahash
-  bela
-)
+target_link_libraries(belahash bela)
 
 if(BELA_ENABLE_LTO)
   set_property(TARGET belahash PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

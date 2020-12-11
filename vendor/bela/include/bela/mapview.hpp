@@ -41,10 +41,19 @@ public:
     return n + pos <= size_ && (memcmp(data_ + pos, p, n) == 0);
   }
 
-  MemView submv(std::size_t pos, std::size_t n = npos) { return MemView(data_ + pos, (std::min)(n, size_ - pos)); }
+  MemView submv(std::size_t pos, std::size_t n = npos) const {
+    return MemView(data_ + pos, (std::min)(n, size_ - pos));
+  }
   std::size_t size() const { return size_; }
   const uint8_t *data() const { return data_; }
-  std::string_view sv() const { return std::string_view(reinterpret_cast<const char *>(data_), size_); }
+  std::string_view sv() const {
+    //
+    return std::string_view{reinterpret_cast<const char *>(data_), size_};
+  }
+  std::wstring_view wsv() const {
+    //
+    return std::wstring_view{reinterpret_cast<const wchar_t *>(data_), size_ / 2};
+  }
   unsigned char operator[](const std::size_t off) const {
     if (off >= size_) {
       return UCHAR_MAX;

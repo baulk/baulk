@@ -7,6 +7,16 @@ target_link_libraries(pecoff_test
   belawin
 )
 
+##
+add_executable(version_test
+  version.cc
+)
+
+target_link_libraries(version_test
+  belawin
+)
+
+
 add_executable(pick_test
   pick.cc
   ../../res/win10.manifest

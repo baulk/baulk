@@ -291,14 +291,16 @@ bool Simulator::InitializeCleanupEnv() {
   return true;
 }
 
-bool Simulator::LookupPath(std::wstring_view cmd, std::wstring &exe) const {
+bool Simulator::LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath) const {
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
     auto ncmd = bela::PathAbsolute(cmd);
     return FindExecutable(ncmd, pathexts, exe);
   }
-  auto cwdfile = bela::PathAbsolute(cmd);
-  if (FindExecutable(cwdfile, pathexts, exe)) {
-    return true;
+  if (!absPath) {
+    auto cwdfile = bela::PathAbsolute(cmd);
+    if (FindExecutable(cwdfile, pathexts, exe)) {
+      return true;
+    }
   }
   for (auto p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
@@ -350,16 +352,18 @@ bool Simulator::ExpandEnv(std::wstring_view raw, std::wstring &w) const {
   return true;
 }
 
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::wstring> &paths) {
+bool LookPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::wstring> &paths, bool absPath) {
   std::vector<std::wstring> exts;
   cleanupPathExt(bela::GetEnv(L"PATHEXT"), exts);
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
     auto ncmd = bela::PathAbsolute(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
-  auto cwdfile = bela::PathAbsolute(cmd);
-  if (FindExecutable(cwdfile, exts, exe)) {
-    return true;
+  if (!absPath) {
+    auto cwdfile = bela::PathAbsolute(cmd);
+    if (FindExecutable(cwdfile, exts, exe)) {
+      return true;
+    }
   }
   for (auto p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
@@ -370,16 +374,18 @@ bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe, const std:
   return false;
 }
 
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe) {
+bool LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath) {
   std::vector<std::wstring> exts;
   cleanupPathExt(bela::GetEnv(L"PATHEXT"), exts);
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
     auto ncmd = bela::PathAbsolute(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
-  auto cwdfile = bela::PathAbsolute(cmd);
-  if (FindExecutable(cwdfile, exts, exe)) {
-    return true;
+  if (!absPath) {
+    auto cwdfile = bela::PathAbsolute(cmd);
+    if (FindExecutable(cwdfile, exts, exe)) {
+      return true;
+    }
   }
   auto path = GetEnv<4096>(L"PATH"); // 4K suggest.
   std::vector<std::wstring_view> pathv = bela::StrSplit(path, bela::ByChar(L';'), bela::SkipEmpty());

@@ -179,7 +179,7 @@ bool mbrtoc16(const unsigned char *s, size_t len, std::basic_string<T, std::char
   while (it < end) {
     unsigned short nb = trailingbytesu8[*it];
     if (nb >= end - it) {
-      return false;
+      return true;
     }
     // https://docs.microsoft.com/en-us/cpp/cpp/attributes?view=vs-2019
     auto ch = AnnexU8(it, nb);

@@ -1,8 +1,17 @@
 # Bela Utilities
 
-A C++17 tool library that provides a better experience on the Windows 10 operating system.
+A C++20 tool library that provides a better experience on the Windows 10 operating system.
 
 A lot of the code supports wchar_t based on Abseil modifications, some of which come from Visual C++ STL.
+
+## Feature
+
++   `bela::error_code` and `bela::make_system_error_code` `bela::make_stdc_error_code` `bela::from_std_error_code`
++   `bela::finally`
++   `bela::secure_wstring` `bela::secure_string`
++   `bela::StringCat` `bela::StrAppend`
++   `bela::hash` SHA256/SHA512 SHA3 BLAKE3 SM3
++   ...
 
 ## Documents
 

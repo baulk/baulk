@@ -28,23 +28,19 @@ std::string StringTable::String(uint32_t start, bela::error_code &ec) const {
   return std::string(cstring_view(data + start, length - start));
 }
 
-bool readStringTable(FileHeader *fh, FILE *fd, StringTable &table, bela::error_code &ec) {
-  if (table.data != nullptr) {
+bool File::readStringTable(bela::error_code &ec) {
+  if (stringTable.data != nullptr) {
     ec = bela::make_error_code(L"StringTable data not nullptr");
     return false;
   }
-  if (fh->PointerToSymbolTable <= 0) {
+  if (fh.PointerToSymbolTable <= 0) {
     // table nullptr
     return true;
   }
-  auto offset = fh->PointerToSymbolTable + COFFSymbolSize * fh->NumberOfSymbols;
-  if (auto eno = _fseeki64(fd, static_cast<long long>(offset), SEEK_SET); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, L"fail to seek to string table: ");
-    return false;
-  }
+  auto offset = fh.PointerToSymbolTable + COFFSymbolSize * fh.NumberOfSymbols;
   uint32_t l = 0;
-  if (auto eno = fread(&l, sizeof(l), 1, fd); eno != 1) {
-    ec = bela::make_stdc_error_code(ferror(fd), L"fail to read string table length: ");
+
+  if (!ReadAt(&l, sizeof(l), offset, ec)) {
     return false;
   }
   l = bela::swaple(l);
@@ -52,15 +48,15 @@ bool readStringTable(FileHeader *fh, FILE *fd, StringTable &table, bela::error_c
     return false;
   }
   l -= 4;
-  if (table.data = reinterpret_cast<uint8_t *>(HeapAlloc(GetProcessHeap(), 0, l)); table.data == nullptr) {
+  if (stringTable.data = reinterpret_cast<uint8_t *>(HeapAlloc(GetProcessHeap(), 0, l)); stringTable.data == nullptr) {
     ec = bela::make_system_error_code(L"fail to allocate string table memory: ");
     return false;
   }
-  if (auto n = fread(table.data, 1, l, fd); n != l) {
-    ec = bela::make_stdc_error_code(ferror(fd), L"fail to read string table: ");
+  if (!ReadFull(stringTable.data, l, ec)) {
+    ec = bela::make_error_code(1, L"fail to read string table: ", ec.message);
     return false;
   }
-  table.length = l;
+  stringTable.length = l;
   return true;
 }
 } // namespace bela::pe

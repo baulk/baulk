@@ -2,86 +2,469 @@
 #ifndef BELA_REPARSEPOINT_HPP
 #define BELA_REPARSEPOINT_HPP
 #include "base.hpp"
-#include <optional>
-#include <vector>
-#include <variant>
+#include <winioctl.h>
+#include "buffer.hpp"
+
+// protocol
+// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4
+#ifndef IO_REPARSE_TAG_MOUNT_POINT
+#define IO_REPARSE_TAG_MOUNT_POINT (0xA0000003L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_HSM
+#define IO_REPARSE_TAG_HSM (0xC0000004L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_DRIVE_EXTENDER
+#define IO_REPARSE_TAG_DRIVE_EXTENDER (0x80000005L)
+#endif
+
+#ifndef IO_REPARSE_TAG_HSM2
+#define IO_REPARSE_TAG_HSM2 (0x80000006L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_SIS
+#define IO_REPARSE_TAG_SIS (0x80000007L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_WIM
+#define IO_REPARSE_TAG_WIM (0x80000008L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CSV
+#define IO_REPARSE_TAG_CSV (0x80000009L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CSV
+#define IO_REPARSE_TAG_CSV (0x8000000AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_FILTER_MANAGER
+#define IO_REPARSE_TAG_FILTER_MANAGER (0x8000000BL)
+#endif
+
+#ifndef IO_REPARSE_TAG_SYMLINK
+#define IO_REPARSE_TAG_SYMLINK (0xA000000CL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_IIS_CACHE
+#define IO_REPARSE_TAG_IIS_CACHE (0xA0000010L)
+#endif
+
+#ifndef IO_REPARSE_TAG_DFSR
+#define IO_REPARSE_TAG_DFSR (0x80000012L) // winnt
+#endif
+
+#ifdef IO_REPARSE_TAG_DEDUP
+#define IO_REPARSE_TAG_DEDUP (0x80000013L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_APPXSTRM
+#define IO_REPARSE_TAG_APPXSTRM (0xC0000014L)
+#endif
+
+#ifndef IO_REPARSE_TAG_NFS
+#define IO_REPARSE_TAG_NFS (0x80000014L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_NFS
+#define IO_REPARSE_TAG_NFS (0x80000015L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_DFM
+#define IO_REPARSE_TAG_DFM (0x80000016L)
+#endif
+
+#ifdef IO_REPARSE_TAG_WOF
+#define IO_REPARSE_TAG_WOF (0x80000017L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_WOF
+#define IO_REPARSE_TAG_WOF (0x80000018L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_WCI_1
+#define IO_REPARSE_TAG_WCI_1 (0x90001018L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_GLOBAL_REPARSE
+#define IO_REPARSE_TAG_GLOBAL_REPARSE (0xA0000019L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD
+#define IO_REPARSE_TAG_CLOUD (0x9000001AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_1
+#define IO_REPARSE_TAG_CLOUD_1 (0x9000101AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_2
+#define IO_REPARSE_TAG_CLOUD_2 (0x9000201AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_3
+#define IO_REPARSE_TAG_CLOUD_3 (0x9000301AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_4
+#define IO_REPARSE_TAG_CLOUD_4 (0x9000401AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_5
+#define IO_REPARSE_TAG_CLOUD_5 (0x9000501AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_6
+#define IO_REPARSE_TAG_CLOUD_6 (0x9000601AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_7
+#define IO_REPARSE_TAG_CLOUD_7 (0x9000701AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_8
+#define IO_REPARSE_TAG_CLOUD_8 (0x9000801AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_9
+#define IO_REPARSE_TAG_CLOUD_9 (0x9000901AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_A
+#define IO_REPARSE_TAG_CLOUD_A (0x9000A01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_B
+#define IO_REPARSE_TAG_CLOUD_B (0x9000B01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_C
+#define IO_REPARSE_TAG_CLOUD_C (0x9000C01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_D
+#define IO_REPARSE_TAG_CLOUD_D (0x9000D01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_E
+#define IO_REPARSE_TAG_CLOUD_E (0x9000E01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_F
+#define IO_REPARSE_TAG_CLOUD_F (0x9000F01AL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_CLOUD_MASK
+#define IO_REPARSE_TAG_CLOUD_MASK (0x0000F000L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_APPEXECLINK
+#define IO_REPARSE_TAG_APPEXECLINK (0x8000001BL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_PROJFS
+#define IO_REPARSE_TAG_PROJFS (0x9000001CL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_LX_SYMLINK
+// Used by the Windows Subsystem for Linux (WSL) to represent a UNIX symbolic
+// link. Server-side interpretation only, not meaningful over the wire.
+#define IO_REPARSE_TAG_LX_SYMLINK (0xA000001DL) // Linux subsystem symbolic link
+#endif
+
+#ifndef IO_REPARSE_TAG_STORAGE_SYNC
+#define IO_REPARSE_TAG_STORAGE_SYNC (0x8000001EL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_WCI_TOMBSTONE
+#define IO_REPARSE_TAG_WCI_TOMBSTONE (0xA000001FL) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_UNHANDLED
+#define IO_REPARSE_TAG_UNHANDLED (0x80000020L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_ONEDRIVE
+#define IO_REPARSE_TAG_ONEDRIVE (0x80000021L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_PROJFS_TOMBSTONE
+// Used by the Windows Projected File System filter, for files managed by a user
+// mode provider such as VFS for Git. Server-side interpretation only, not
+// meaningful over the wire.
+#define IO_REPARSE_TAG_PROJFS_TOMBSTONE (0xA0000022L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_AF_UNIX // AF_UNIX
+// Used by the Windows Subsystem for Linux (WSL) to represent a UNIX domain
+// socket. Server-side interpretation only, not meaningful over the wire.
+#define IO_REPARSE_TAG_AF_UNIX (0x80000023L) // winnt
+#endif
+
+#ifndef IO_REPARSE_TAG_LX_FIFO
+// Used by the Windows Subsystem for Linux (WSL) to represent a UNIX FIFO (named
+// pipe). Server-side interpretation only, not meaningful over the wire.
+#define IO_REPARSE_TAG_LX_FIFO (0x80000024L) // Linux subsystem FIFO
+#endif
+
+#ifndef IO_REPARSE_TAG_LX_CHR
+// Used by the Windows Subsystem for Linux (WSL) to represent a UNIX character
+// special file. Server-side interpretation only, not meaningful over the wire.
+#define IO_REPARSE_TAG_LX_CHR (0x80000025L) // Linux  subsystem character device
+#endif
+
+#ifndef IO_REPARSE_TAG_LX_BLK
+// Used by the Windows Subsystem for Linux (WSL) to represent a UNIX block
+// special file. Server-side interpretation only, not meaningful over the wire.
+#define IO_REPARSE_TAG_LX_BLK (0x80000026L) // Linux Subsystem block device
+#endif
+
+#ifndef IO_REPARSE_TAG_WCI_LINK
+// Used by the Windows Container Isolation filter. Server-side interpretation
+// only, not meaningful over the wire.
+#define IO_REPARSE_TAG_WCI_LINK (0xA0000027L)
+#endif
+
+#ifndef IO_REPARSE_TAG_WCI_LINK_1
+// Used by the Windows Container Isolation filter. Server-side interpretation
+// only, not meaningful over the wire.
+#define IO_REPARSE_TAG_WCI_LINK_1 (0xA0001027L)
+#endif
+
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
+
+#define SYMLINK_FLAG_RELATIVE 0x00000001 // If set then this is a relative symlink.
+#define SYMLINK_DIRECTORY                                                                                              \
+  0x80000000 // If set then this is a directory symlink. This is not persisted
+             // on disk and is programmatically set by file system.
+#define SYMLINK_FILE                                                                                                   \
+  0x40000000 // If set then this is a file symlink. This is not persisted on
+             // disk and is programmatically set by file system.
+
+#define SYMLINK_RESERVED_MASK 0xF0000000 // We reserve the high nibble for internal use
+
+#if !defined(FSCTL_GET_REPARSE_POINT)
+#define FSCTL_GET_REPARSE_POINT 0x900a8
+#endif
+
+#ifndef MAXIMUM_REPARSE_DATA_BUFFER_SIZE
+#define MAXIMUM_REPARSE_DATA_BUFFER_SIZE (16 * 1024)
+#endif
+
+// NFS https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/ff4df658-7f27-476a-8025-4074c0121eec
+#ifndef NFS_SPECFILE_LNK
+#define NFS_SPECFILE_LNK 0x00000000014B4E4CULL
+#endif
+
+#ifndef NFS_SPECFILE_CHR
+#define NFS_SPECFILE_CHR 0x0000000000524843ULL
+#endif
+
+#ifndef NFS_SPECFILE_BLK
+#define NFS_SPECFILE_BLK 0x00000000004B4C42ULL
+#endif
+
+#ifndef NFS_SPECFILE_FIFO
+#define NFS_SPECFILE_FIFO 0x000000004F464946ULL
+#endif
+
+#ifndef NFS_SPECFILE_SOCK
+#define NFS_SPECFILE_SOCK 0x000000004B434F53ULL
+#endif
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10_RS1)
+#define FSCTL_SET_REPARSE_POINT_EX                                                                                     \
+  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 259, METHOD_BUFFERED, FILE_SPECIAL_ACCESS) // REPARSE_DATA_BUFFER_EX
+// #define FSCTL_GET_REPARSE_POINT_EX                                             \
+//   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 260, METHOD_BUFFERED,                      \
+//            FILE_SPECIAL_ACCESS) // REPARSE_DATA_BUFFER_EX
+#endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN10_RS1) */
+
+typedef struct _REPARSE_DATA_BUFFER {
+  ULONG ReparseTag;         // Reparse tag type
+  USHORT ReparseDataLength; // Length of the reparse data
+  USHORT Reserved;          // Used internally by NTFS to store remaining length
+
+  union {
+    // Structure for IO_REPARSE_TAG_SYMLINK
+    // Handled by nt!IoCompleteRequest
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      ULONG Flags;
+      WCHAR PathBuffer[1];
+      // Example of distinction between substitute and print names:
+      // mklink /d ldrive c:\
+      // SubstituteName: c:\\??\
+      // PrintName: c:\
+
+    } SymbolicLinkReparseBuffer;
+
+    // Structure for IO_REPARSE_TAG_MOUNT_POINT
+    // Handled by nt!IoCompleteRequest
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      WCHAR PathBuffer[1];
+    } MountPointReparseBuffer;
+
+    // Structure for IO_REPARSE_TAG_WIM
+    // Handled by wimmount!FPOpenReparseTarget->wimserv.dll
+    // (wimsrv!ImageExtract)
+    struct {
+      GUID ImageGuid;           // GUID of the mounted VIM image
+      BYTE ImagePathHash[0x14]; // Hash of the path to the file within the image
+    } WimImageReparseBuffer;
+
+    // Structure for IO_REPARSE_TAG_WOF
+    // Handled by FSCTL_GET_EXTERNAL_BACKING, FSCTL_SET_EXTERNAL_BACKING in NTFS
+    // (Windows 10+)
+    struct {
+      //-- WOF_EXTERNAL_INFO --------------------
+      ULONG Wof_Version;  // Should be 1 (WOF_CURRENT_VERSION)
+      ULONG Wof_Provider; // Should be 2 (WOF_PROVIDER_FILE)
+
+      //-- FILE_PROVIDER_EXTERNAL_INFO_V1 --------------------
+      ULONG FileInfo_Version; // Should be 1 (FILE_PROVIDER_CURRENT_VERSION)
+      ULONG
+      FileInfo_Algorithm; // Usually 0 (FILE_PROVIDER_COMPRESSION_XPRESS4K)
+    } WofReparseBuffer;
+
+    // Structure for IO_REPARSE_TAG_APPEXECLINK
+    struct {
+      ULONG StringCount;   // Number of the strings in the StringList, separated
+                           // by '\0'
+      WCHAR StringList[1]; // Multistring (strings separated by '\0', terminated
+                           // by '\0\0')
+    } AppExecLinkReparseBuffer;
+
+    // Structure for IO_REPARSE_TAG_WCI (0x80000018)
+    struct {
+      ULONG Version; // Expected to be 1 by wcifs.sys
+      ULONG Reserved;
+      GUID LookupGuid;      // GUID used for lookup in wcifs!WcLookupLayer
+      USHORT WciNameLength; // Length of the WCI subname, in bytes
+      WCHAR WciName[1];     // The WCI subname (not zero terminated)
+    } WcifsReparseBuffer;
+
+    // Handled by cldflt.sys!HsmpRpReadBuffer
+    struct {
+      USHORT Flags;    // Flags (0x8000 = not compressed)
+      USHORT Length;   // Length of the data (uncompressed)
+      BYTE RawData[1]; // To be RtlDecompressBuffer-ed
+    } HsmReparseBufferRaw;
+
+    // Handled by NFS
+    struct {
+      ULONGLONG Type;
+      BYTE RawData[1];
+    } NfsReparseBufferRaw;
+
+    // Dummy structure
+    struct {
+      UCHAR DataBuffer[1];
+    } GenericReparseBuffer;
+  } DUMMYUNIONNAME;
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
+typedef struct _REPARSE_DATA_BUFFER_EX {
+
+  ULONG Flags;
+
+  //
+  //  This is the existing reparse tag on the file if any,  if the
+  //  caller wants to replace the reparse tag too.
+  //
+  //    - To set the reparse data  along with the reparse tag that
+  //      could be different,  pass the current reparse tag of the
+  //      file.
+  //
+  //    - To update the reparse data while having the same reparse
+  //      tag,  the caller should give the existing reparse tag in
+  //      this ExistingReparseTag field.
+  //
+  //    - To set the reparse tag along with reparse data on a file
+  //      that doesn't have a reparse tag yet, set this to zero.
+  //
+  //  If the ExistingReparseTag  does not match the reparse tag on
+  //  the file,  the FSCTL_SET_REPARSE_POINT_EX  would  fail  with
+  //  STATUS_IO_REPARSE_TAG_MISMATCH. NOTE: If a file doesn't have
+  //  a reparse tag, ExistingReparseTag should be 0.
+  //
+
+  ULONG ExistingReparseTag;
+
+  //
+  //  For non-Microsoft reparse tags, this is the existing reparse
+  //  guid on the file if any,  if the caller wants to replace the
+  //  reparse tag and / or guid along with the data.
+  //
+  //  If ExistingReparseTag is 0, the file is not expected to have
+  //  any reparse tags, so ExistingReparseGuid is ignored. And for
+  //  non-Microsoft tags ExistingReparseGuid should match the guid
+  //  in the file if ExistingReparseTag is non zero.
+  //
+
+  GUID ExistingReparseGuid;
+
+  //
+  //  Reserved
+  //
+
+  ULONGLONG Reserved;
+
+  //
+  //  Reparse data to set
+  //
+
+  union {
+
+    REPARSE_DATA_BUFFER ReparseDataBuffer;
+    REPARSE_GUID_DATA_BUFFER ReparseGuidDataBuffer;
+
+  } DUMMYUNIONNAME;
+
+} REPARSE_DATA_BUFFER_EX, *PREPARSE_DATA_BUFFER_EX;
+
+#define REPARSE_DATA_BUFFER_HEADER_SIZE FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
 namespace bela {
 
-enum ReparsePointTagIndex : unsigned long {
-  MOUNT_POINT = 0xA0000003,
-  HSM = 0xC0000004,
-  DRIVE_EXTENDER = 0x80000005,
-  HSM2 = 0x80000006,
-  SIS = 0x80000007,
-  WIM = 0x80000008,
-  CSV = 0x80000009,
-  DFS = 0x8000000A,
-  FILTER_MANAGER = 0x8000000B,
-  SYMLINK = 0xA000000C,
-  IIS_CACHE = 0xA0000010,
-  DFSR = 0x80000012,
-  DEDUP = 0x80000013,
-  APPXSTRM = 0xC0000014,
-  NFS = 0x80000014,
-  FILE_PLACEHOLDER = 0x80000015,
-  DFM = 0x80000016,
-  WOF = 0x80000017,
-  WCI = 0x80000018,
-  WCI_1 = 0x90001018,
-  GLOBAL_REPARSE = 0xA0000019,
-  CLOUD = 0x9000001A,
-  CLOUD_1 = 0x9000101A,
-  CLOUD_2 = 0x9000201A,
-  CLOUD_3 = 0x9000301A,
-  CLOUD_4 = 0x9000401A,
-  CLOUD_5 = 0x9000501A,
-  CLOUD_6 = 0x9000601A,
-  CLOUD_7 = 0x9000701A,
-  CLOUD_8 = 0x9000801A,
-  CLOUD_9 = 0x9000901A,
-  CLOUD_A = 0x9000A01A,
-  CLOUD_B = 0x9000B01A,
-  CLOUD_C = 0x9000C01A,
-  CLOUD_D = 0x9000D01A,
-  CLOUD_E = 0x9000E01A,
-  CLOUD_F = 0x9000F01A,
-  CLOUD_MASK = 0x0000F000,
-  APPEXECLINK = 0x8000001B,
-  PROJFS = 0x9000001C,
-  LX_SYMLINK = 0xA000001D,
-  STORAGE_SYNC = 0x8000001E,
-  WCI_TOMBSTONE = 0xA000001F,
-  UNHANDLED = 0x80000020,
-  ONEDRIVE = 0x80000021,
-  PROJFS_TOMBSTONE = 0xA0000022,
-  AF_UNIX = 0x80000023,
-  LX_FIFO = 0x80000024,
-  LX_CHR = 0x80000025,
-  LX_BLK = 0x80000026,
-};
-
-// value
-struct FileAttributePair {
-  FileAttributePair() = default;
-  FileAttributePair(std::wstring_view n, std::wstring_view v) : name(n), value(v) {}
-  std::wstring name;
-  std::wstring value;
-};
-
-class ReparsePoint {
-public:
-  ReparsePoint() = default;
-  ReparsePoint(const ReparsePoint &) = delete;
-  ReparsePoint &operator=(const ReparsePoint &) = delete;
-  bool Analyze(std::wstring_view file, bela::error_code &ec);
-  const std::vector<FileAttributePair> &Attributes() const { return values; }
-  unsigned long ReparseTagValue() const { return tagvalue; }
-
-private:
-  unsigned long tagvalue{0};
-  std::vector<FileAttributePair> values;
-};
+inline bool LookupReparsePoint(std::wstring_view file, bela::Buffer &b, bela::error_code &ec) {
+  if (b.capacity() < MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
+    ec = bela::make_error_code(1, L"buffer capacity ", b.capacity(), L" too small");
+    return false;
+  }
+  HANDLE fd{INVALID_HANDLE_VALUE};
+  auto closer = bela::finally([&] {
+    if (fd != INVALID_HANDLE_VALUE) {
+      CloseHandle(fd);
+    }
+  });
+  constexpr auto fileflags = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+  constexpr auto faflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT;
+  if (fd = CreateFileW(file.data(), 0, fileflags, nullptr, OPEN_EXISTING, faflags, nullptr);
+      fd == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  DWORD len{0};
+  if (DeviceIoControl(fd, FSCTL_GET_REPARSE_POINT, nullptr, 0, b.data(), static_cast<DWORD>(b.capacity()), &len,
+                      nullptr) != TRUE) {
+    if (ec.code = GetLastError(); ec.code == ERROR_NOT_A_REPARSE_POINT) {
+      return true;
+    }
+    ec.message = bela::resolve_system_error_message(ec.code);
+    return false;
+  }
+  b.size() = static_cast<size_t>(len);
+  return true;
+}
 
 } // namespace bela
 

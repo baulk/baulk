@@ -70,7 +70,7 @@ public:
   }
   bool InitializeEnv();
   bool InitializeCleanupEnv();
-  bool LookupPath(std::wstring_view cmd, std::wstring &exe) const;
+  bool LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath = false) const;
   bool ExpandEnv(std::wstring_view raw, std::wstring &w) const;
   // Inline support function
   // AddBashCompatible bash compatible val
@@ -299,8 +299,8 @@ private:
   }
 };
 
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe);
-bool ExecutableExistsInPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::wstring> &paths);
+bool LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath = false);
+bool LookPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::wstring> &paths, bool absPath = false);
 } // namespace bela::env
 
 #endif

@@ -12,30 +12,6 @@ std::string symbolFullName(const COFFSymbol &sm, const StringTable &st) {
   return std::string(cstring_view(sm.Name, sizeof(sm.Name)));
 }
 
-bool readCOFFSymbols(const FileHeader &fh, FILE *fd, std::vector<COFFSymbol> &symbols, bela::error_code &ec) {
-  if (fh.PointerToSymbolTable == 0 || fh.NumberOfSymbols <= 0) {
-    return true;
-  }
-  if (auto eno = _fseeki64(fd, int64_t(fh.PointerToSymbolTable), SEEK_SET); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, L"fail to seek to symbol table: ");
-    return false;
-  }
-  symbols.resize(fh.NumberOfSymbols);
-  if (fread(symbols.data(), 1, sizeof(COFFSymbol) * fh.NumberOfSymbols, fd) !=
-      sizeof(COFFSymbol) * fh.NumberOfSymbols) {
-    ec = bela::make_stdc_error_code(ferror(fd), L"fail to read symbol table: ");
-    return false;
-  }
-  if constexpr (bela::IsBigEndian()) {
-    for (auto &s : symbols) {
-      s.SectionNumber = bela::swaple(s.SectionNumber);
-      s.Type = bela::swaple(s.Type);
-      s.Value = bela::swaple(s.Value);
-    }
-  }
-  return true;
-}
-
 bool removeAuxSymbols(const std::vector<COFFSymbol> &csyms, const StringTable &st, std::vector<Symbol> &syms,
                       bela::error_code &ec) {
   if (csyms.empty()) {
@@ -49,7 +25,7 @@ bool removeAuxSymbols(const std::vector<COFFSymbol> &csyms, const StringTable &s
     }
     aux = cm.NumberOfAuxSymbols;
     Symbol sm;
-    sm.Name = std::move(symbolFullName(cm, st));
+    sm.Name = symbolFullName(cm, st);
     sm.Value = cm.Value;
     sm.SectionNumber = cm.SectionNumber;
     sm.StorageClass = cm.StorageClass;
@@ -58,10 +34,29 @@ bool removeAuxSymbols(const std::vector<COFFSymbol> &csyms, const StringTable &s
   }
   return true;
 }
+
+bool File::readCOFFSymbols(std::vector<COFFSymbol> &symbols, bela::error_code &ec) const {
+  if (fh.PointerToSymbolTable == 0 || fh.NumberOfSymbols <= 0) {
+    return true;
+  }
+  symbols.resize(fh.NumberOfSymbols);
+  if (!ReadAt(symbols.data(), sizeof(COFFSymbol) * fh.NumberOfSymbols, fh.PointerToSymbolTable, ec)) {
+    return false;
+  }
+  if constexpr (bela::IsBigEndian()) {
+    for (auto &s : symbols) {
+      s.SectionNumber = bela::swaple(s.SectionNumber);
+      s.Type = bela::swaple(s.Type);
+      s.Value = bela::swaple(s.Value);
+    }
+  }
+  return true;
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-symbol-records
 bool File::LookupSymbols(std::vector<Symbol> &syms, bela::error_code &ec) const {
   std::vector<COFFSymbol> csyms;
-  if (!readCOFFSymbols(fh, fd, csyms, ec)) {
+  if (!readCOFFSymbols(csyms, ec)) {
     return false;
   }
   return removeAuxSymbols(csyms, stringTable, syms, ec);

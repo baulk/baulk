@@ -119,6 +119,39 @@ std::vector<std::wstring_view> SplitPath(std::wstring_view sv) {
   return pv;
 }
 
+bool SplitPathInternal(std::string_view sv, std::vector<std::string_view> &output) {
+  constexpr std::string_view dotdot = "..";
+  constexpr std::string_view dot = ".";
+  size_t first = 0;
+  while (first < sv.size()) {
+    const auto second = sv.find_first_of("/\\", first);
+    if (first != second) {
+      auto s = sv.substr(first, second - first);
+      if (s == dotdot) {
+        if (output.empty()) {
+          return false;
+        }
+        output.pop_back();
+      } else if (s != dot) {
+        output.emplace_back(s);
+      }
+    }
+    if (second == std::string_view::npos) {
+      break;
+    }
+    first = second + 1;
+  }
+  return true;
+}
+
+std::vector<std::string_view> SplitPath(std::string_view sv) {
+  std::vector<std::string_view> pv;
+  if (!SplitPathInternal(sv, pv)) {
+    pv.clear();
+  }
+  return pv;
+}
+
 void PathStripName(std::wstring &s) {
   auto i = s.size() - 1;
   auto p = s.data();

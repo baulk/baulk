@@ -55,16 +55,18 @@ std::optional<std::string> SymbolSearcher::LoadOrdinalFunctionName(std::string_v
   for (auto &p : Paths) {
     auto file = bela::StringCat(p, L"\\", wdn);
     if (bela::PathExists(file)) {
-      if (auto fd = bela::pe::NewFile(file, ec); fd) {
-        if (std::vector<bela::pe::ExportedSymbol> es; fd->LookupExports(es, ec)) {
-          auto it = table.emplace(dllname, std::move(es));
-          if (!it.second) {
-            return std::nullopt;
-          }
-          for (auto &e : it.first->second) {
-            if (e.Ordinal == ordinal) {
-              return std::make_optional(e.Name);
-            }
+      bela::pe::File fd;
+      if (!fd.NewFile(file, ec)) {
+        continue;
+      }
+      if (std::vector<bela::pe::ExportedSymbol> es; fd.LookupExports(es, ec)) {
+        auto it = table.emplace(dllname, std::move(es));
+        if (!it.second) {
+          return std::nullopt;
+        }
+        for (auto &e : it.first->second) {
+          if (e.Ordinal == ordinal) {
+            return std::make_optional(e.Name);
           }
         }
       }

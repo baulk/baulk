@@ -80,8 +80,9 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
   const wchar_t *last_byte = end - 1;
 
   // Small optimization for case where source = dest and there's no escaping
-  while (p == d && p < end && *p != '\\')
+  while (p == d && p < end && *p != '\\') {
     static_cast<void>(p++), d++;
+  }
 
   while (p < end) {
     if (*p != '\\') {
@@ -138,10 +139,12 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         // octal digit: 1 to 3 digits
         const wchar_t *octal_start = p;
         unsigned int ch = *p - L'0';
-        if (p < last_byte && is_octal_digit(p[1]))
+        if (p < last_byte && is_octal_digit(p[1])) {
           ch = ch * 8 + *++p - L'0';
-        if (p < last_byte && is_octal_digit(p[1]))
+        }
+        if (p < last_byte && is_octal_digit(p[1])) {
           ch = ch * 8 + *++p - L'0'; // now points at last digit
+        }
         if (ch > 0xff) {
           if (error) {
             *error =
@@ -153,7 +156,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           // Copy the escape sequence for the null character
           const ptrdiff_t octal_size = p + 1 - octal_start;
           *d++ = '\\';
-          memcpy(d, octal_start, octal_size);
+          memmove(d, octal_start, octal_size * sizeof(wchar_t));
           d += octal_size;
           break;
         }
@@ -163,8 +166,9 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
       case L'x':
       case L'X': {
         if (p >= last_byte) {
-          if (error)
+          if (error) {
             *error = L"String cannot end with \\x";
+          }
           return false;
         } else if (!bela::ascii_isxdigit(p[1])) {
           if (error) {
@@ -187,7 +191,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           // Copy the escape sequence for the null character
           const ptrdiff_t hex_size = p + 1 - hex_start;
           *d++ = '\\';
-          memcpy(d, hex_start, hex_size * 2);
+          memmove(d, hex_start, hex_size * sizeof(wchar_t));
           d += hex_size;
           break;
         }
@@ -220,7 +224,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         if ((rune == 0) && leave_nulls_escaped) {
           // Copy the escape sequence for the null character
           *d++ = '\\';
-          memcpy(d, hex_start, 5 * 2); // u0000
+          memmove(d, hex_start, 5 * sizeof(wchar_t)); // u0000
           d += 5;
           break;
         }
@@ -264,7 +268,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         if ((rune == 0) && leave_nulls_escaped) {
           // Copy the escape sequence for the null character
           *d++ = '\\';
-          memcpy(d, hex_start, 9 * 2); // U00000000
+          memmove(d, hex_start, 9 * sizeof(wchar_t)); // U00000000
           d += 9;
           break;
         }
@@ -272,8 +276,9 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         break;
       }
       default: {
-        if (error)
+        if (error) {
           *error = bela::StringCat(L"Unknown escape sequence: \\", *p);
+        }
         return false;
       }
       }

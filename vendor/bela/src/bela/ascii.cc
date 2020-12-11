@@ -167,8 +167,9 @@ void RemoveExtraAsciiWhitespace(std::wstring *str) {
     if (is_ws) {
       // Consecutive whitespace?  Keep only the last.
       is_ws = ascii_isspace(*input_it);
-      if (is_ws)
+      if (is_ws) {
         --output_it;
+      }
     } else {
       is_ws = ascii_isspace(*input_it);
     }

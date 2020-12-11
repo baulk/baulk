@@ -8,6 +8,9 @@
 #include "base.hpp"
 
 namespace bela {
+constexpr const char PathSeparatorA = '\\';
+constexpr const char PathUnixSeparatorA = '/';
+inline constexpr bool IsPathSeparator(char c) { return c == PathSeparatorA || c == PathUnixSeparatorA; }
 // Windows Path base
 constexpr const wchar_t PathSeparator = L'\\';
 constexpr const wchar_t PathUnixSeparator = L'/';
@@ -42,6 +45,10 @@ inline std::wstring_view ExtensionEx(std::wstring_view path) {
 }
 
 std::vector<std::wstring_view> SplitPath(std::wstring_view sv);
+// UTF-8 SplitPath support resolve url and others
+std::vector<std::string_view> SplitPath(std::string_view sv);
+
+// PathStripName
 void PathStripName(std::wstring &s);
 std::wstring PathAbsolute(std::wstring_view p);
 namespace path_internal {

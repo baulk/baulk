@@ -1,111 +1,122 @@
 //
 #include <bela/pe.hpp>
+#include <bela/buffer.hpp>
+
+// https://github.com/chromium/chromium/blob/master/base/file_version_info_win.cc
 
 namespace bela::pe {
 
-class Exposer {
-public:
-  Exposer() = default;
-  Exposer(const Exposer &) = delete;
-  Exposer &operator=(const Exposer &) = delete;
-  ~Exposer() {
-    if (buffer != nullptr) {
-      HeapFree(GetProcessHeap(), 0, buffer);
-    }
-  }
-  bool Initialize(std::wstring_view file, bela::error_code &ec) {
-    DWORD dwhandle{0};
-    auto N = GetFileVersionInfoSizeW(file.data(), &dwhandle);
-    if (N == 0) {
-      ec = bela::make_system_error_code();
-      return false;
-    }
-    buffer = reinterpret_cast<uint8_t *>(HeapAlloc(GetProcessHeap(), 0, N));
-    if (buffer == nullptr) {
-      ec = bela::make_system_error_code();
-      return false;
-    }
-    if (GetFileVersionInfoW(file.data(), 0, N, buffer) != TRUE) {
-      ec = bela::make_system_error_code();
-      return false;
-    }
-    return true;
-  }
-  bool GetTranslationId(LPVOID lpData, UINT unBlockSize, WORD wLangId, DWORD &dwId, BOOL bPrimaryEnough /*= FALSE*/) {
-    LPWORD lpwData;
-
-    for (lpwData = (LPWORD)lpData; (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
-      if (*lpwData == wLangId) {
-        dwId = *((DWORD *)lpwData);
-        return true;
-      }
-    }
-
-    if (!bPrimaryEnough) {
-      return false;
-    }
-
-    for (lpwData = (LPWORD)lpData; (LPBYTE)lpwData < ((LPBYTE)lpData) + unBlockSize; lpwData += 2) {
-      if (((*lpwData) & 0x00FF) == (wLangId & 0x00FF)) {
-        dwId = *((DWORD *)lpwData);
-        return true;
-      }
-    }
-
-    return false;
-  }
-  void VerQuery(Version &vi) {
-    LPVOID info{nullptr};
-    UINT ilen{0};
-    VerQueryValueW(buffer, L"\\VarFileInfo\\Translation", &info, &ilen);
-    DWORD dwLangCode = 0;
-    if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode, FALSE)) {
-      if (!GetTranslationId(info, ilen, GetUserDefaultLangID(), dwLangCode, TRUE)) {
-        if (!GetTranslationId(info, ilen, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), dwLangCode, TRUE)) {
-          if (!GetTranslationId(info, ilen, MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL), dwLangCode, TRUE))
-            // use the first one we can get
-            dwLangCode = *(reinterpret_cast<DWORD *>(info));
-        }
-      }
-    }
-    // dwLangCode&0x0000FFFF, (dwLangCode&0xFFFF0000)>>16
-
-    auto block =
-        bela::StringCat(L"\\StringFileInfo\\", bela::AlphaNum(bela::Hex(dwLangCode & 0x0000FFFF, bela::kZeroPad4)),
-                        bela::AlphaNum(bela::Hex((dwLangCode & 0xFFFF0000) >> 16, bela::kZeroPad4)), L"\\");
-    auto query = [&](std::wstring_view name, std::wstring &val) {
-      auto k = bela::StringCat(block, name);
-      if (VerQueryValueW(buffer, k.data(), &info, &ilen) == TRUE) {
-        if (ilen > 0) {
-          val.assign(reinterpret_cast<wchar_t *>(info), ilen - 1);
-        }
-      }
-    };
-    query(L"CompanyName", vi.CompanyName);
-    query(L"FileDescription", vi.FileDescription);
-    query(L"FileVersion", vi.FileVersion);
-    query(L"InternalName", vi.InternalName);
-    query(L"LegalCopyright", vi.LegalCopyright);
-    query(L"OriginalFileName", vi.OriginalFileName);
-    query(L"ProductName", vi.ProductName);
-    query(L"ProductVersion", vi.ProductVersion);
-    query(L"Comments", vi.Comments);
-    query(L"LegalTrademarks", vi.LegalTrademarks);
-    query(L"PrivateBuild", vi.PrivateBuild);
-    query(L"SpecialBuild", vi.SpecialBuild);
-  }
-
-private:
-  uint8_t *buffer{nullptr};
+struct LanguageAndCodePage {
+  WORD language;
+  WORD codePage;
 };
 
-std::optional<Version> LookupVersion(std::wstring_view file, bela::error_code &ec) {
-  Exposer exposer;
-  if (!exposer.Initialize(file, ec)) {
+// Returns the \VarFileInfo\Translation value extracted from the
+// VS_VERSION_INFO resource in |data|.
+LanguageAndCodePage *GetTranslate(const void *data) {
+  static constexpr wchar_t kTranslation[] = L"\\VarFileInfo\\Translation";
+  LPVOID translate = nullptr;
+  UINT dummy_size;
+  if (::VerQueryValue(data, kTranslation, &translate, &dummy_size)) {
+    return static_cast<LanguageAndCodePage *>(translate);
+  }
+  return nullptr;
+}
+
+const VS_FIXEDFILEINFO *GetVsFixedFileInfo(const void *data) {
+  static constexpr wchar_t kRoot[] = L"\\";
+  LPVOID fixed_file_info = nullptr;
+  UINT dummy_size;
+  if (::VerQueryValue(data, kRoot, &fixed_file_info, &dummy_size)) {
+    //
+    return nullptr;
+  }
+  return static_cast<VS_FIXEDFILEINFO *>(fixed_file_info);
+}
+
+struct VersionLoader {
+  bela::Buffer buffer;
+  WORD language;
+  WORD codePage;
+  LANGID defaultLangage;
+  bool initialize(std::wstring_view file, bela::error_code &ec);
+  bool getValue(const wchar_t *name, std::wstring &value) const;
+};
+
+bool VersionLoader::initialize(std::wstring_view file, bela::error_code &ec) {
+  DWORD dwhandle{0};
+  auto N = GetFileVersionInfoSizeW(file.data(), &dwhandle);
+  if (N == 0) {
+    ec = bela::make_system_error_code(L"GetFileVersionInfoSizeW ");
+    return false;
+  }
+  buffer.grow(N);
+  if (GetFileVersionInfoW(file.data(), 0, N, buffer.data()) != TRUE) {
+    ec = bela::make_system_error_code(L"GetFileVersionInfoW");
+    return false;
+  }
+  buffer.size() = static_cast<size_t>(N);
+  auto translate = GetTranslate(buffer.data());
+  if (translate == nullptr) {
+    ec = bela::make_error_code(L"no found translate");
+    return false;
+  }
+  language = translate->language;
+  codePage = translate->codePage;
+  defaultLangage = GetUserDefaultLangID();
+  return true;
+}
+
+std::wstring_view cleanupString(void *valuePtr, size_t n) {
+  std::wstring_view sv{reinterpret_cast<const wchar_t *>(valuePtr), n};
+  if (auto pos = sv.find(L'\0'); pos != std::wstring_view::npos) {
+    return sv.substr(0, pos);
+  }
+  return sv;
+}
+
+bool VersionLoader::getValue(const wchar_t *name, std::wstring &value) const {
+  const struct LanguageAndCodePage langCodepages[] = {
+      // Use the language and codepage from the DLL.
+      {language, codePage},
+      // Use the default language and codepage from the DLL.
+      {defaultLangage, codePage},
+      // Use the language from the DLL and Latin codepage (most common).
+      {language, 1252},
+      // Use the default language and Latin codepage (most common).
+      {defaultLangage, 1252},
+  };
+  for (const auto &lc : langCodepages) {
+    wchar_t subBlock[MAX_PATH];
+    _snwprintf_s(subBlock, MAX_PATH, MAX_PATH, L"\\StringFileInfo\\%04x%04x\\%ls", lc.language, lc.codePage, name);
+    LPVOID valuePtr = nullptr;
+    uint32_t size;
+    if (VerQueryValueW(buffer.data(), subBlock, reinterpret_cast<LPVOID *>(&valuePtr), &size) == TRUE &&
+        valuePtr != nullptr && size > 0) {
+      value.assign(cleanupString(valuePtr, size - 1));
+    }
+  }
+  return false;
+}
+
+std::optional<Version> Lookup(std::wstring_view file, bela::error_code &ec) {
+  VersionLoader vl;
+  if (!vl.initialize(file, ec)) {
     return std::nullopt;
   }
   Version vi;
-  exposer.VerQuery(vi);
+  vl.getValue(L"CompanyName", vi.CompanyName);
+  vl.getValue(L"FileDescription", vi.FileDescription);
+  vl.getValue(L"FileVersion", vi.FileVersion);
+  vl.getValue(L"InternalName", vi.InternalName);
+  vl.getValue(L"LegalCopyright", vi.LegalCopyright);
+  vl.getValue(L"OriginalFileName", vi.OriginalFileName);
+  vl.getValue(L"ProductName", vi.ProductName);
+  vl.getValue(L"ProductVersion", vi.ProductVersion);
+  vl.getValue(L"Comments", vi.Comments);
+  vl.getValue(L"LegalTrademarks", vi.LegalTrademarks);
+  vl.getValue(L"PrivateBuild", vi.PrivateBuild);
+  vl.getValue(L"SpecialBuild", vi.SpecialBuild);
   return std::make_optional(std::move(vi));
 }
 } // namespace bela::pe
