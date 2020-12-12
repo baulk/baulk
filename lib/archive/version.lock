@@ -1,4 +1,5 @@
-zlib/zlib-intel/brotli https://github.com/dotnet/runtime/tree/cf66f084ca8b563c42cd814e8ce8b03519af51bd/src/libraries/Native/Windows/clrcompression
+zlib/zlib-intel https://github.com/dotnet/runtime/tree/8c863fe9163aa8ce64d9f4cc62b38feeb7e453b4/src/libraries/Native/Windows/System.IO.Compression.Native
+brotli 1.0.9
 liblzma: https://tukaani.org/xz/ 5.2.5
 minizip: https://github.com/nmoinvaz/minizip/commit/8642018342838358fd654a4b043c80b29e04e7d9
 zstd: https://github.com/facebook/zstd/releases/download/v1.4.5/zstd-1.4.5.tar.gz#lib

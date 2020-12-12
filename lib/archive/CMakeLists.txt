@@ -214,7 +214,10 @@ target_link_libraries(minizip lzma zlib zstd advapi32)
 
 # Brotli
 set(BROTLI_SOURCES
+    brotli/common/constants.c
+    brotli/common/context.c
     brotli/common/dictionary.c
+    brotli/common/platform.c
     brotli/common/transform.c
     brotli/dec/bit_reader.c
     brotli/dec/decode.c
@@ -226,12 +229,14 @@ set(BROTLI_SOURCES
     brotli/enc/block_splitter.c
     brotli/enc/brotli_bit_stream.c
     brotli/enc/cluster.c
+    brotli/enc/command.c
     brotli/enc/compress_fragment.c
     brotli/enc/compress_fragment_two_pass.c
     brotli/enc/dictionary_hash.c
     brotli/enc/encode.c
     brotli/enc/encoder_dict.c
     brotli/enc/entropy_encode.c
+    brotli/enc/fast_log.c
     brotli/enc/histogram.c
     brotli/enc/literal_cost.c
     brotli/enc/memory.c
