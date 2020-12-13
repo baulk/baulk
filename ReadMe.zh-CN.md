@@ -86,6 +86,7 @@ Alias:
 |b3sum|计算文件的 BLAKE3 哈希|N/A|
 |sha256sum|计算文件的 SHA256 哈希|N/A|
 |cleancache|删除下载缓存|过期时间为 30 天，--force 模式将删除所有下载缓存|
+|bucket|添加，删除，列出 buckets|
 
 ### Baulk 配置文件
 
@@ -112,7 +113,27 @@ baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可
 
 在 `bucket` 中，我们设计了 `weights` 机制，在不同的 `bucket` 中，如果存在同名的包，且包的版本一致时，我们将对 `bucket` 的 `weights` 进行比较，权重较大的则会被安装。
 
-添加 bucket 暂无命令行支持，只需要编辑 `baulk.json`，按照其格式添加即可。
+添加源命令帮助：
+
+```txt
+usage: baulk bucket add URL
+       baulk bucket add BucketName URL
+       baulk bucket add BucketName URL Weights
+       baulk bucket add BucketName URL Weights Description
+```
+
+删除某个 bucket:
+
+```shell
+baulk bucket delete BucketName
+```
+
+列出所有的 bucket:
+
+```shell
+baulk bucket list
+```
+
 
 同步 bucket 可以运行 `baulk update` 命令。这和 `apt update` 类似。baulk 同步 bucket 采用的是 RSS 同步机制，即通过请求 bucket 存储库获得最近的提交信息，比较最新的 commitId 与本地上一次记录的 commitId，不一致时则下载 git archive 解压到本地。这种机制的好处是不需要安装 git 便可以支持同步。
 

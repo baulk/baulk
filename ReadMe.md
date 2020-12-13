@@ -85,6 +85,7 @@ Alias:
 |b3sum|Calculate the BLAKE3 hash of the file|N/A|
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
 |cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag|
+|bucket|add, delete or list buckets|
 
 Example:
 
@@ -123,7 +124,27 @@ In the bucket configuration file, we need to set `bucket`, which is used to stor
 
 In `bucket`, we designed the `weights` mechanism. In different `buckets`, if there is a package with the same name and the package version is the same, we will compare the `weights` of `bucket` The larger ones will be installed.
 
-There is no command line support for adding buckets, just edit `baulk.json` and add according to its format.
+`baulk bucket add` usage：
+
+```txt
+usage: baulk bucket add URL
+       baulk bucket add BucketName URL
+       baulk bucket add BucketName URL Weights
+       baulk bucket add BucketName URL Weights Description
+```
+
+Delete some bucket:
+
+```shell
+baulk bucket delete BucketName
+```
+
+List buckets:
+
+```shell
+baulk bucket list
+```
+
 
 To synchronize buckets, you can run the `baulk update` command. This is similar to `apt update`. The baulk synchronization bucket adopts the RSS synchronization mechanism, which is to obtain the latest commit information by requesting the bucket repository, compare the latest commitId with the last commitId recorded locally, and download the git archive to decompress it locally if they are inconsistent. The advantage of this mechanism is that it can support synchronization without installing git.
 

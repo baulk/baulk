@@ -115,7 +115,6 @@ constexpr HashPrefix hnmaps[] = {
     {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
 };
 bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_code &ec) {
-
   std::wstring_view value = hashvalue;
   auto m = hash_t::SHA256;
   if (auto pos = hashvalue.find(':'); pos != std::wstring_view::npos) {

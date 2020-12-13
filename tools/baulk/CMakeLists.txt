@@ -16,6 +16,7 @@ add_executable(
   commands.b3sum.cc
   commands.sha256sum.cc
   commands.cleancache.cc
+  commands.bucket.cc
   compiler.cc
   decompress.cc
   fs.cc

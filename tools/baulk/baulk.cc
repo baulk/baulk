@@ -58,6 +58,7 @@ Command:
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
+  bucket           add, delete or list buckets
 
 Alias:
   i  install
@@ -173,6 +174,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       {L"b3sum", baulk::commands::cmd_b3sum},           // b3sum
       {L"sha256sum", baulk::commands::cmd_sha256sum},   // sha256sum
       {L"cleancache", baulk::commands::cmd_cleancache}, // cleancache
+      {L"bucket", baulk::commands::cmd_bucket},         // bucket command
   };
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {
