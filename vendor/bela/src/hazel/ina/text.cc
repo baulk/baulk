@@ -134,6 +134,7 @@ status_t lookup_text(bela::MemView mv, FileAttributeTable &fat) {
       fat.assign(L"Big-endian UTF-16 Unicode text", types::utf16be);
       return Found;
     }
+    break;
     // FF FE 00 00
   case 0x0:
     if (mv.size() >= 4 && mv[1] == 0 && mv[2] == 0xFE && mv[3] == 0xFF) {
@@ -172,9 +173,7 @@ status_t LookupText(bela::MemView mv, FileAttributeTable &fat) {
       line = line.substr(0, pos);
     }
     shebangline = bela::ToWide(line);
-  }
-
-  break;
+  } break;
   case types::utf8bom: {
     // Note that we may get truncated UTF-8 data
     auto line = mv.submv(3).sv();
@@ -183,7 +182,7 @@ status_t LookupText(bela::MemView mv, FileAttributeTable &fat) {
       line = line.substr(0, pos);
     }
     shebangline = bela::ToWide(line);
-  }
+  } break;
   case types::utf16le: {
     auto line = mv.submv(2).wsv();
     auto pos = line.find_first_of(L"\r\n");

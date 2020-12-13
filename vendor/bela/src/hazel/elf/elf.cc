@@ -31,6 +31,14 @@ bool File::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
 }
 
 bool File::ParseFile(bela::error_code &ec) {
+  if (size == bela::SizeUnInitialized) {
+    LARGE_INTEGER li;
+    if (GetFileSizeEx(fd, &li) != TRUE) {
+      ec = bela::make_system_error_code(L"GetFileSizeEx: ");
+      return false;
+    }
+    size = li.QuadPart;
+  }
   uint8_t ident[16];
   constexpr auto x = sizeof(FileHeader);
   if (!ReadAt(ident, sizeof(ident), 0, ec)) {
@@ -82,42 +90,42 @@ bool File::ParseFile(bela::error_code &ec) {
     if (!ReadAt(&hdr, sizeof(hdr), 0, ec)) {
       return false;
     }
-    fh.Type = EndianCast(hdr.e_type);
-    fh.Machine = EndianCast(hdr.e_machine);
-    fh.Entry = EndianCast(hdr.e_entry);
-    if (auto version = EndianCast(hdr.e_version); version != static_cast<uint32_t>(fh.Version)) {
+    fh.Type = endian_cast(hdr.e_type);
+    fh.Machine = endian_cast(hdr.e_machine);
+    fh.Entry = endian_cast(hdr.e_entry);
+    if (auto version = endian_cast(hdr.e_version); version != static_cast<uint32_t>(fh.Version)) {
       ec = bela::make_error_code(1, L"mismatched ELF version, got ", version, L" want ",
                                  static_cast<uint32_t>(fh.Version));
       return false;
     }
-    phoff = EndianCast(hdr.e_phoff);
-    phentsize = EndianCast(hdr.e_phentsize);
-    phnum = EndianCast(hdr.e_phnum);
-    shoff = EndianCast(hdr.e_shoff);
-    shentsize = EndianCast(hdr.e_shentsize);
-    shnum = EndianCast(hdr.e_shnum);
-    shstrndx = EndianCast(hdr.e_shstrndx);
+    phoff = endian_cast(hdr.e_phoff);
+    phentsize = endian_cast(hdr.e_phentsize);
+    phnum = endian_cast(hdr.e_phnum);
+    shoff = endian_cast(hdr.e_shoff);
+    shentsize = endian_cast(hdr.e_shentsize);
+    shnum = endian_cast(hdr.e_shnum);
+    shstrndx = endian_cast(hdr.e_shstrndx);
   } break;
   case ELFCLASS64: {
     Elf64_Ehdr hdr;
     if (!ReadAt(&hdr, sizeof(hdr), 0, ec)) {
       return false;
     }
-    fh.Type = EndianCast(hdr.e_type);
-    fh.Machine = EndianCast(hdr.e_machine);
-    fh.Entry = EndianCast(hdr.e_entry);
-    if (auto version = EndianCast(hdr.e_version); version != static_cast<uint32_t>(fh.Version)) {
+    fh.Type = endian_cast(hdr.e_type);
+    fh.Machine = endian_cast(hdr.e_machine);
+    fh.Entry = endian_cast(hdr.e_entry);
+    if (auto version = endian_cast(hdr.e_version); version != static_cast<uint32_t>(fh.Version)) {
       ec = bela::make_error_code(1, L"mismatched ELF version, got ", version, L" want ",
                                  static_cast<uint32_t>(fh.Version));
       return false;
     }
-    phoff = EndianCast(hdr.e_phoff);
-    phentsize = EndianCast(hdr.e_phentsize);
-    phnum = EndianCast(hdr.e_phnum);
-    shoff = EndianCast(hdr.e_shoff);
-    shentsize = EndianCast(hdr.e_shentsize);
-    shnum = EndianCast(hdr.e_shnum);
-    shstrndx = EndianCast(hdr.e_shstrndx);
+    phoff = endian_cast(hdr.e_phoff);
+    phentsize = endian_cast(hdr.e_phentsize);
+    phnum = endian_cast(hdr.e_phnum);
+    shoff = endian_cast(hdr.e_shoff);
+    shentsize = endian_cast(hdr.e_shentsize);
+    shnum = endian_cast(hdr.e_shnum);
+    shstrndx = endian_cast(hdr.e_shstrndx);
   } break;
   default:
     break;
@@ -144,27 +152,27 @@ bool File::ParseFile(bela::error_code &ec) {
       if (!ReadAt(&ph, sizeof(ph), off, ec)) {
         return false;
       }
-      p->Type = EndianCast(ph.p_type);
-      p->Flags = EndianCast(ph.p_flags);
-      p->Off = EndianCast(ph.p_offset);
-      p->Vaddr = EndianCast(ph.p_vaddr);
-      p->Paddr = EndianCast(ph.p_paddr);
-      p->Filesz = EndianCast(ph.p_filesz);
-      p->Memsz = EndianCast(ph.p_memsz);
-      p->Align = EndianCast(ph.p_align);
+      p->Type = endian_cast(ph.p_type);
+      p->Flags = endian_cast(ph.p_flags);
+      p->Off = endian_cast(ph.p_offset);
+      p->Vaddr = endian_cast(ph.p_vaddr);
+      p->Paddr = endian_cast(ph.p_paddr);
+      p->Filesz = endian_cast(ph.p_filesz);
+      p->Memsz = endian_cast(ph.p_memsz);
+      p->Align = endian_cast(ph.p_align);
     } else {
       Elf64_Phdr ph;
       if (!ReadAt(&ph, sizeof(ph), off, ec)) {
         return false;
       }
-      p->Type = EndianCast(ph.p_type);
-      p->Flags = EndianCast(ph.p_flags);
-      p->Off = EndianCast(ph.p_offset);
-      p->Vaddr = EndianCast(ph.p_vaddr);
-      p->Paddr = EndianCast(ph.p_paddr);
-      p->Filesz = EndianCast(ph.p_filesz);
-      p->Memsz = EndianCast(ph.p_memsz);
-      p->Align = EndianCast(ph.p_align);
+      p->Type = endian_cast(ph.p_type);
+      p->Flags = endian_cast(ph.p_flags);
+      p->Off = endian_cast(ph.p_offset);
+      p->Vaddr = endian_cast(ph.p_vaddr);
+      p->Paddr = endian_cast(ph.p_paddr);
+      p->Filesz = endian_cast(ph.p_filesz);
+      p->Memsz = endian_cast(ph.p_memsz);
+      p->Align = endian_cast(ph.p_align);
     }
   }
   if (shnum == 0) {
@@ -184,32 +192,32 @@ bool File::ParseFile(bela::error_code &ec) {
       if (!ReadAt(&sh, sizeof(sh), off, ec)) {
         return false;
       }
-      p->Type = EndianCast(sh.sh_type);
-      p->Flags = EndianCast(sh.sh_flags);
-      p->Addr = EndianCast(sh.sh_addr);
-      p->Offset = EndianCast(sh.sh_offset);
-      p->FileSize = EndianCast(sh.sh_size);
-      p->Link = EndianCast(sh.sh_link);
-      p->Info = EndianCast(sh.sh_info);
-      p->Addralign = EndianCast(sh.sh_addralign);
-      p->Entsize = EndianCast(sh.sh_entsize);
-      p->nameIndex = EndianCast(sh.sh_name);
+      p->Type = endian_cast(sh.sh_type);
+      p->Flags = endian_cast(sh.sh_flags);
+      p->Addr = endian_cast(sh.sh_addr);
+      p->Offset = endian_cast(sh.sh_offset);
+      p->FileSize = endian_cast(sh.sh_size);
+      p->Link = endian_cast(sh.sh_link);
+      p->Info = endian_cast(sh.sh_info);
+      p->Addralign = endian_cast(sh.sh_addralign);
+      p->Entsize = endian_cast(sh.sh_entsize);
+      p->nameIndex = endian_cast(sh.sh_name);
     } else {
       Elf64_Shdr sh;
       // constexpr auto n=sizeof(Elf64_Shdr);
       if (!ReadAt(&sh, sizeof(sh), off, ec)) {
         return false;
       }
-      p->Type = EndianCast(sh.sh_type);
-      p->Flags = EndianCast(sh.sh_flags);
-      p->Addr = EndianCast(sh.sh_addr);
-      p->Offset = EndianCast(sh.sh_offset);
-      p->FileSize = EndianCast(sh.sh_size);
-      p->Link = EndianCast(sh.sh_link);
-      p->Info = EndianCast(sh.sh_info);
-      p->Addralign = EndianCast(sh.sh_addralign);
-      p->Entsize = EndianCast(sh.sh_entsize);
-      p->nameIndex = EndianCast(sh.sh_name);
+      p->Type = endian_cast(sh.sh_type);
+      p->Flags = endian_cast(sh.sh_flags);
+      p->Addr = endian_cast(sh.sh_addr);
+      p->Offset = endian_cast(sh.sh_offset);
+      p->FileSize = endian_cast(sh.sh_size);
+      p->Link = endian_cast(sh.sh_link);
+      p->Info = endian_cast(sh.sh_info);
+      p->Addralign = endian_cast(sh.sh_addralign);
+      p->Entsize = endian_cast(sh.sh_entsize);
+      p->nameIndex = endian_cast(sh.sh_name);
     }
     if ((p->Flags & SHF_COMPRESSED) == 0) {
       p->Size = p->FileSize;
@@ -220,18 +228,18 @@ bool File::ParseFile(bela::error_code &ec) {
       if (!ReadAt(&ch, sizeof(ch), off, ec)) {
         return false;
       }
-      p->compressionType = EndianCast(ch.ch_type);
-      p->Size = EndianCast(ch.ch_size);
-      p->Addralign = EndianCast(ch.ch_addralign);
+      p->compressionType = endian_cast(ch.ch_type);
+      p->Size = endian_cast(ch.ch_size);
+      p->Addralign = endian_cast(ch.ch_addralign);
       p->compressionOffset = sizeof(ch);
     } else {
       Elf64_Chdr ch;
       if (!ReadAt(&ch, sizeof(ch), off, ec)) {
         return false;
       }
-      p->compressionType = EndianCast(ch.ch_type);
-      p->Size = EndianCast(ch.ch_size);
-      p->Addralign = EndianCast(ch.ch_addralign);
+      p->compressionType = endian_cast(ch.ch_type);
+      p->Size = endian_cast(ch.ch_size);
+      p->Addralign = endian_cast(ch.ch_addralign);
       p->compressionOffset = sizeof(ch);
     }
   }

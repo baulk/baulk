@@ -5,6 +5,7 @@ add_executable(pecoff_test
 
 target_link_libraries(pecoff_test
   belawin
+  belaund
 )
 
 ##

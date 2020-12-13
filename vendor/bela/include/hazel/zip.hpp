@@ -5,6 +5,8 @@
 #include <bela/buffer.hpp>
 #include <bela/narrow/strcat.hpp>
 #include <bela/time.hpp>
+#include <bela/span.hpp>
+#include <bela/phmap.hpp>
 
 #define HAZEL_COMPRESS_LEVEL_DEFAULT (-1)
 #define HAZEL_COMPRESS_LEVEL_FAST (2)
@@ -152,6 +154,14 @@ struct File {
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
   std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
 };
+constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
+
+enum msoffice_t : int {
+  OfficeNone, // None
+  OfficePptx,
+  OfficeDocx,
+  OfficeXlsx,
+};
 
 class Reader {
 private:
@@ -198,13 +208,14 @@ private:
     Free();
     fd = r.fd;
     r.fd = INVALID_HANDLE_VALUE;
+    needClosed = r.needClosed;
     r.needClosed = false;
     size = r.size;
-    uncompressedSize = r.uncompressedSize;
-    compressedSize = r.compressedSize;
-    r.uncompressedSize = 0;
-    r.compressedSize = 0;
     r.size = 0;
+    uncompressedSize = r.uncompressedSize;
+    r.uncompressedSize = 0;
+    compressedSize = r.compressedSize;
+    r.compressedSize = 0;
     comment = std::move(r.comment);
     files = std::move(r.files);
   }
@@ -230,6 +241,17 @@ public:
     }
     return std::make_optional(std::move(r));
   }
+
+  bool Contains(bela::Span<std::string_view> paths, std::size_t limit = size_max) const;
+  bool Contains(std::string_view p, std::size_t limit = size_max) const;
+  msoffice_t LooksLikeOffice() const;
+  bool LooksLikePptx() const { return LooksLikeOffice() == OfficePptx; }
+  bool LooksLikeDocx() const { return LooksLikeOffice() == OfficeDocx; }
+  bool LooksLikeXlsx() const { return LooksLikeOffice() == OfficeXlsx; }
+  bool LooksLikeOFD() const;
+  bool LooksLikeJar() const;
+  bool LooksLikeAppx() const;
+  bool LooksLikeApk() const;
 
 private:
   std::string comment;

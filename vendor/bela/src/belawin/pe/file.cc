@@ -108,7 +108,7 @@ inline void swaple(SectionHeader32 &sh) {
 bool File::ParseFile(bela::error_code &ec) {
   if (size == SizeUnInitialized) {
     LARGE_INTEGER li;
-    if (!GetFileSizeEx(fd, &li) == TRUE) {
+    if (GetFileSizeEx(fd, &li) != TRUE) {
       ec = bela::make_system_error_code(L"GetFileSizeEx: ");
       return false;
     }

@@ -209,10 +209,10 @@ std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix) {
   return msg;
 }
 
-std::wstring resolve_module_error_message(const wchar_t *module, DWORD ec, std::wstring_view prefix) {
+std::wstring resolve_module_error_message(const wchar_t *moduleName, DWORD ec, std::wstring_view prefix) {
   LPWSTR buf = nullptr;
-  auto rl = FormatMessageW(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER, GetModuleHandleW(module), ec,
-                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&buf, 0, nullptr);
+  auto rl = FormatMessageW(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ALLOCATE_BUFFER, GetModuleHandleW(moduleName),
+                           ec, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&buf, 0, nullptr);
   if (rl == 0) {
     return bela::StringCat(prefix, L"GetLastError(): ", ec);
   }

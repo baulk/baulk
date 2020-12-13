@@ -19,6 +19,7 @@ add_library(
   elf/gnu.cc
   elf/symbol.cc
   macho/macho.cc
+  macho/fat.cc
   fs.cc
   hazel.cc
   mime.cc)

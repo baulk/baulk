@@ -46,7 +46,7 @@ const wchar_t *lookup_mime(types::hazel_types_t t) {
       {types::wasm_object, L"application/wasm"},                        ///< WebAssembly Object file
       {types::pdb, L"application/octet-stream"},                        ///< Windows PDB debug info file
       /// archive
-      {types::epub, L"application/epub츪"},
+      {types::epub, L"application/epub"},
       {types::zip, L"application/zip"},
       {types::tar, L"application/x-tar"},
       {types::rar, L"application/vnd.rar"},

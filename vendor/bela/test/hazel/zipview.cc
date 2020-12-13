@@ -63,6 +63,30 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"File: %s [%s|%s] (%s) %d\n", file.name, bela::FormatTime(file.time),
                   bela::FormatUniversalTime(file.time), hazel::zip::Method(file.method), file.uncompressedSize);
   }
+  switch (zr->LooksLikeOffice()) {
+  case hazel::zip::OfficeDocx:
+    bela::FPrintF(stderr, L"File is Microsoft Office Word (2007+)\n");
+    break;
+  case hazel::zip::OfficePptx:
+    bela::FPrintF(stderr, L"File is Microsoft Office PowerPoint (2007+)\n");
+    break;
+  case hazel::zip::OfficeXlsx:
+    bela::FPrintF(stderr, L"File is Microsoft Office Excel (2007+)\n");
+    break;
+  default:
+    break;
+  }
+  if (zr->LooksLikeOFD()) {
+    bela::FPrintF(stderr, L"File is Open Fixed-layout Document (GB/T 33190-2016)\n");
+  }
+  if (zr->LooksLikeAppx()) {
+    bela::FPrintF(stderr, L"File is Windows App Packages\n");
+  }
+  if (zr->LooksLikeApk()) {
+    bela::FPrintF(stderr, L"File is Android APK\n");
+  } else if (zr->LooksLikeJar()) {
+    bela::FPrintF(stderr, L"File is Java Jar\n");
+  }
   bela::FPrintF(stderr, L"Files: %d\n", zr->Files().size());
   return 0;
 }

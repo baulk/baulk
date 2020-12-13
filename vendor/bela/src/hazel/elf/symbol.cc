@@ -32,14 +32,13 @@ bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   while (symtab.size() >= Sym32Size) {
     auto sym = reinterpret_cast<const Elf32_Sym *>(symtab.data());
     auto symbol = &syms[i];
-    symbol->Name = getString(strdata.Span(), EndianCast(sym->st_name));
-    symbol->Info = EndianCast(sym->st_info);
-    symbol->Other = EndianCast(sym->st_other);
-    symbol->Value = EndianCast(sym->st_shndx);
-    symbol->Size = EndianCast(sym->st_size);
+    symbol->Name = getString(strdata.Span(), endian_cast(sym->st_name));
+    symbol->Info = endian_cast(sym->st_info);
+    symbol->Other = endian_cast(sym->st_other);
+    symbol->Value = endian_cast(sym->st_shndx);
+    symbol->Size = endian_cast(sym->st_size);
     symtab.remove_prefix(Sym32Size);
     i++;
-    symtab.remove_prefix(Sym32Size);
   }
   return true;
 }
@@ -70,16 +69,14 @@ bool File::getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   while (symtab.size() >= Sym64Size) {
     auto sym = reinterpret_cast<const Elf64_Sym *>(symtab.data());
     auto symbol = &syms[i];
-    symbol->Name = getString(strdata.Span(), EndianCast(sym->st_name));
-    symbol->Info = EndianCast(sym->st_info);
-    symbol->Other = EndianCast(sym->st_other);
-    symbol->Value = EndianCast(sym->st_shndx);
-    symbol->Size = EndianCast(sym->st_size);
-    symtab.remove_prefix(Sym32Size);
+    symbol->Name = getString(strdata.Span(), endian_cast(sym->st_name));
+    symbol->Info = endian_cast(sym->st_info);
+    symbol->Other = endian_cast(sym->st_other);
+    symbol->Value = endian_cast(sym->st_shndx);
+    symbol->Size = endian_cast(sym->st_size);
+    symtab.remove_prefix(Sym64Size);
     i++;
-    symtab.remove_prefix(Sym32Size);
   }
   return true;
 }
-
 } // namespace hazel::elf

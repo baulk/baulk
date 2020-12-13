@@ -48,6 +48,16 @@ int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) noexcept {
   return 0;
 }
 
+int memcasecmp_narrow(const char *s1, const char *s2, size_t len) noexcept {
+  for (size_t i = 0; i < len; i++) {
+    const auto diff = std::tolower(s1[i]) - std::tolower(s2[i]);
+    if (diff != 0) {
+      return static_cast<int>(diff);
+    }
+  }
+  return 0;
+}
+
 [[nodiscard]] wchar_t *memdup(const wchar_t *s, size_t slen) noexcept {
   void *copy;
   if ((copy = malloc(slen * sizeof(wchar_t))) == nullptr) {

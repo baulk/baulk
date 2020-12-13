@@ -29,10 +29,7 @@
 using namespace llvm;
 using namespace ms_demangle;
 
-static bool startsWithDigit(StringView S) {
-  return !S.empty() && std::isdigit(S.front());
-}
-
+static bool startsWithDigit(StringView S) { return !S.empty() && std::isdigit(S.front()); }
 
 struct NodeList {
   Node *N = nullptr;
@@ -102,8 +99,7 @@ static bool isMemberPointer(StringView MangledName, bool &Error) {
   }
 }
 
-static SpecialIntrinsicKind
-consumeSpecialIntrinsicKind(StringView &MangledName) {
+static SpecialIntrinsicKind consumeSpecialIntrinsicKind(StringView &MangledName) {
   if (MangledName.consumeFront("?_7"))
     return SpecialIntrinsicKind::Vftable;
   if (MangledName.consumeFront("?_8"))
@@ -208,12 +204,9 @@ static bool isPointerType(StringView S) {
 
 static bool isArrayType(StringView S) { return S[0] == 'Y'; }
 
-static bool isFunctionType(StringView S) {
-  return S.startsWith("$$A8@@") || S.startsWith("$$A6");
-}
+static bool isFunctionType(StringView S) { return S.startsWith("$$A8@@") || S.startsWith("$$A6"); }
 
-static FunctionRefQualifier
-demangleFunctionRefQualifier(StringView &MangledName) {
+static FunctionRefQualifier demangleFunctionRefQualifier(StringView &MangledName) {
   if (MangledName.consumeFront('G'))
     return FunctionRefQualifier::Reference;
   else if (MangledName.consumeFront('H'))
@@ -221,8 +214,7 @@ demangleFunctionRefQualifier(StringView &MangledName) {
   return FunctionRefQualifier::None;
 }
 
-static std::pair<Qualifiers, PointerAffinity>
-demanglePointerCVQualifiers(StringView &MangledName) {
+static std::pair<Qualifiers, PointerAffinity> demanglePointerCVQualifiers(StringView &MangledName) {
   if (MangledName.consumeFront("$$Q"))
     return std::make_pair(Q_None, PointerAffinity::RValueReference);
 
@@ -236,8 +228,7 @@ demanglePointerCVQualifiers(StringView &MangledName) {
   case 'R':
     return std::make_pair(Q_Volatile, PointerAffinity::Pointer);
   case 'S':
-    return std::make_pair(Qualifiers(Q_Const | Q_Volatile),
-                          PointerAffinity::Pointer);
+    return std::make_pair(Qualifiers(Q_Const | Q_Volatile), PointerAffinity::Pointer);
   }
   // This function is only called if isPointerType() returns true,
   // and it only returns true for the six cases listed above.
@@ -252,9 +243,7 @@ StringView Demangler::copyString(StringView Borrowed) {
   return {Stable, Borrowed.size()};
 }
 
-SpecialTableSymbolNode *
-Demangler::demangleSpecialTableSymbolNode(StringView &MangledName,
-                                          SpecialIntrinsicKind K) {
+SpecialTableSymbolNode *Demangler::demangleSpecialTableSymbolNode(StringView &MangledName, SpecialIntrinsicKind K) {
   NamedIdentifierNode *NI = Arena.alloc<NamedIdentifierNode>();
   switch (K) {
   case SpecialIntrinsicKind::Vftable:
@@ -292,14 +281,11 @@ Demangler::demangleSpecialTableSymbolNode(StringView &MangledName,
   return STSN;
 }
 
-LocalStaticGuardVariableNode *
-Demangler::demangleLocalStaticGuard(StringView &MangledName, bool IsThread) {
-  LocalStaticGuardIdentifierNode *LSGI =
-      Arena.alloc<LocalStaticGuardIdentifierNode>();
+LocalStaticGuardVariableNode *Demangler::demangleLocalStaticGuard(StringView &MangledName, bool IsThread) {
+  LocalStaticGuardIdentifierNode *LSGI = Arena.alloc<LocalStaticGuardIdentifierNode>();
   LSGI->IsThread = IsThread;
   QualifiedNameNode *QN = demangleNameScopeChain(MangledName, LSGI);
-  LocalStaticGuardVariableNode *LSGVN =
-      Arena.alloc<LocalStaticGuardVariableNode>();
+  LocalStaticGuardVariableNode *LSGVN = Arena.alloc<LocalStaticGuardVariableNode>();
   LSGVN->Name = QN;
 
   if (MangledName.consumeFront("4IA"))
@@ -316,15 +302,13 @@ Demangler::demangleLocalStaticGuard(StringView &MangledName, bool IsThread) {
   return LSGVN;
 }
 
-static NamedIdentifierNode *synthesizeNamedIdentifier(ArenaAllocator &Arena,
-                                                      StringView Name) {
+static NamedIdentifierNode *synthesizeNamedIdentifier(ArenaAllocator &Arena, StringView Name) {
   NamedIdentifierNode *Id = Arena.alloc<NamedIdentifierNode>();
   Id->Name = Name;
   return Id;
 }
 
-static QualifiedNameNode *synthesizeQualifiedName(ArenaAllocator &Arena,
-                                                  IdentifierNode *Identifier) {
+static QualifiedNameNode *synthesizeQualifiedName(ArenaAllocator &Arena, IdentifierNode *Identifier) {
   QualifiedNameNode *QN = Arena.alloc<QualifiedNameNode>();
   QN->Components = Arena.alloc<NodeArrayNode>();
   QN->Components->Count = 1;
@@ -333,23 +317,20 @@ static QualifiedNameNode *synthesizeQualifiedName(ArenaAllocator &Arena,
   return QN;
 }
 
-static QualifiedNameNode *synthesizeQualifiedName(ArenaAllocator &Arena,
-                                                  StringView Name) {
+static QualifiedNameNode *synthesizeQualifiedName(ArenaAllocator &Arena, StringView Name) {
   NamedIdentifierNode *Id = synthesizeNamedIdentifier(Arena, Name);
   return synthesizeQualifiedName(Arena, Id);
 }
 
-static VariableSymbolNode *synthesizeVariable(ArenaAllocator &Arena,
-                                              TypeNode *Type,
-                                              StringView VariableName) {
+static VariableSymbolNode *synthesizeVariable(ArenaAllocator &Arena, TypeNode *Type, StringView VariableName) {
   VariableSymbolNode *VSN = Arena.alloc<VariableSymbolNode>();
   VSN->Type = Type;
   VSN->Name = synthesizeQualifiedName(Arena, VariableName);
   return VSN;
 }
 
-VariableSymbolNode *Demangler::demangleUntypedVariable(
-    ArenaAllocator &Arena, StringView &MangledName, StringView VariableName) {
+VariableSymbolNode *Demangler::demangleUntypedVariable(ArenaAllocator &Arena, StringView &MangledName,
+                                                       StringView VariableName) {
   NamedIdentifierNode *NI = synthesizeNamedIdentifier(Arena, VariableName);
   QualifiedNameNode *QN = demangleNameScopeChain(MangledName, NI);
   VariableSymbolNode *VSN = Arena.alloc<VariableSymbolNode>();
@@ -361,11 +342,8 @@ VariableSymbolNode *Demangler::demangleUntypedVariable(
   return nullptr;
 }
 
-VariableSymbolNode *
-Demangler::demangleRttiBaseClassDescriptorNode(ArenaAllocator &Arena,
-                                               StringView &MangledName) {
-  RttiBaseClassDescriptorNode *RBCDN =
-      Arena.alloc<RttiBaseClassDescriptorNode>();
+VariableSymbolNode *Demangler::demangleRttiBaseClassDescriptorNode(ArenaAllocator &Arena, StringView &MangledName) {
+  RttiBaseClassDescriptorNode *RBCDN = Arena.alloc<RttiBaseClassDescriptorNode>();
   RBCDN->NVOffset = static_cast<uint32_t>(demangleUnsigned(MangledName));
   RBCDN->VBPtrOffset = static_cast<int32_t>(demangleSigned(MangledName));
   RBCDN->VBTableOffset = static_cast<uint32_t>(demangleUnsigned(MangledName));
@@ -379,10 +357,8 @@ Demangler::demangleRttiBaseClassDescriptorNode(ArenaAllocator &Arena,
   return VSN;
 }
 
-FunctionSymbolNode *Demangler::demangleInitFiniStub(StringView &MangledName,
-                                                    bool IsDestructor) {
-  DynamicStructorIdentifierNode *DSIN =
-      Arena.alloc<DynamicStructorIdentifierNode>();
+FunctionSymbolNode *Demangler::demangleInitFiniStub(StringView &MangledName, bool IsDestructor) {
+  DynamicStructorIdentifierNode *DSIN = Arena.alloc<DynamicStructorIdentifierNode>();
   DSIN->IsDestructor = IsDestructor;
 
   bool IsKnownStaticDataMember = false;
@@ -458,11 +434,9 @@ SymbolNode *Demangler::demangleSpecialIntrinsic(StringView &MangledName) {
     return synthesizeVariable(Arena, T, "`RTTI Type Descriptor'");
   }
   case SpecialIntrinsicKind::RttiBaseClassArray:
-    return demangleUntypedVariable(Arena, MangledName,
-                                   "`RTTI Base Class Array'");
+    return demangleUntypedVariable(Arena, MangledName, "`RTTI Base Class Array'");
   case SpecialIntrinsicKind::RttiClassHierarchyDescriptor:
-    return demangleUntypedVariable(Arena, MangledName,
-                                   "`RTTI Class Hierarchy Descriptor'");
+    return demangleUntypedVariable(Arena, MangledName, "`RTTI Class Hierarchy Descriptor'");
   case SpecialIntrinsicKind::RttiBaseClassDescriptor:
     return demangleRttiBaseClassDescriptorNode(Arena, MangledName);
   case SpecialIntrinsicKind::DynamicInitializer:
@@ -481,8 +455,7 @@ SymbolNode *Demangler::demangleSpecialIntrinsic(StringView &MangledName) {
   return nullptr;
 }
 
-IdentifierNode *
-Demangler::demangleFunctionIdentifierCode(StringView &MangledName) {
+IdentifierNode *Demangler::demangleFunctionIdentifierCode(StringView &MangledName) {
   assert(MangledName.startsWith('?'));
   MangledName = MangledName.dropFront();
   if (MangledName.empty()) {
@@ -491,41 +464,30 @@ Demangler::demangleFunctionIdentifierCode(StringView &MangledName) {
   }
 
   if (MangledName.consumeFront("__"))
-    return demangleFunctionIdentifierCode(
-        MangledName, FunctionIdentifierCodeGroup::DoubleUnder);
+    return demangleFunctionIdentifierCode(MangledName, FunctionIdentifierCodeGroup::DoubleUnder);
   if (MangledName.consumeFront("_"))
-    return demangleFunctionIdentifierCode(MangledName,
-                                          FunctionIdentifierCodeGroup::Under);
-  return demangleFunctionIdentifierCode(MangledName,
-                                        FunctionIdentifierCodeGroup::Basic);
+    return demangleFunctionIdentifierCode(MangledName, FunctionIdentifierCodeGroup::Under);
+  return demangleFunctionIdentifierCode(MangledName, FunctionIdentifierCodeGroup::Basic);
 }
 
-StructorIdentifierNode *
-Demangler::demangleStructorIdentifier(StringView &MangledName,
-                                      bool IsDestructor) {
+StructorIdentifierNode *Demangler::demangleStructorIdentifier(StringView &MangledName, bool IsDestructor) {
   StructorIdentifierNode *N = Arena.alloc<StructorIdentifierNode>();
   N->IsDestructor = IsDestructor;
   return N;
 }
 
-ConversionOperatorIdentifierNode *
-Demangler::demangleConversionOperatorIdentifier(StringView &MangledName) {
-  ConversionOperatorIdentifierNode *N =
-      Arena.alloc<ConversionOperatorIdentifierNode>();
+ConversionOperatorIdentifierNode *Demangler::demangleConversionOperatorIdentifier(StringView &MangledName) {
+  ConversionOperatorIdentifierNode *N = Arena.alloc<ConversionOperatorIdentifierNode>();
   return N;
 }
 
-LiteralOperatorIdentifierNode *
-Demangler::demangleLiteralOperatorIdentifier(StringView &MangledName) {
-  LiteralOperatorIdentifierNode *N =
-      Arena.alloc<LiteralOperatorIdentifierNode>();
+LiteralOperatorIdentifierNode *Demangler::demangleLiteralOperatorIdentifier(StringView &MangledName) {
+  LiteralOperatorIdentifierNode *N = Arena.alloc<LiteralOperatorIdentifierNode>();
   N->Name = demangleSimpleString(MangledName, /*Memorize=*/false);
   return N;
 }
 
-IntrinsicFunctionKind
-Demangler::translateIntrinsicFunctionCode(char CH,
-                                          FunctionIdentifierCodeGroup Group) {
+IntrinsicFunctionKind Demangler::translateIntrinsicFunctionCode(char CH, FunctionIdentifierCodeGroup Group) {
   using IFK = IntrinsicFunctionKind;
   if (!(CH >= '0' && CH <= '9') && !(CH >= 'A' && CH <= 'Z')) {
     Error = true;
@@ -574,35 +536,35 @@ Demangler::translateIntrinsicFunctionCode(char CH,
       IFK::MinusEqual,       // ?Z operator-=
   };
   static IFK Under[36] = {
-      IFK::DivEqual,           // ?_0 operator/=
-      IFK::ModEqual,           // ?_1 operator%=
-      IFK::RshEqual,           // ?_2 operator>>=
-      IFK::LshEqual,           // ?_3 operator<<=
-      IFK::BitwiseAndEqual,    // ?_4 operator&=
-      IFK::BitwiseOrEqual,     // ?_5 operator|=
-      IFK::BitwiseXorEqual,    // ?_6 operator^=
-      IFK::None,               // ?_7 # vftable
-      IFK::None,               // ?_8 # vbtable
-      IFK::None,               // ?_9 # vcall
-      IFK::None,               // ?_A # typeof
-      IFK::None,               // ?_B # local static guard
-      IFK::None,               // ?_C # string literal
-      IFK::VbaseDtor,          // ?_D # vbase destructor
-      IFK::VecDelDtor,         // ?_E # vector deleting destructor
-      IFK::DefaultCtorClosure, // ?_F # default constructor closure
-      IFK::ScalarDelDtor,      // ?_G # scalar deleting destructor
-      IFK::VecCtorIter,        // ?_H # vector constructor iterator
-      IFK::VecDtorIter,        // ?_I # vector destructor iterator
-      IFK::VecVbaseCtorIter,   // ?_J # vector vbase constructor iterator
-      IFK::VdispMap,           // ?_K # virtual displacement map
-      IFK::EHVecCtorIter,      // ?_L # eh vector constructor iterator
-      IFK::EHVecDtorIter,      // ?_M # eh vector destructor iterator
-      IFK::EHVecVbaseCtorIter, // ?_N # eh vector vbase constructor iterator
-      IFK::CopyCtorClosure,    // ?_O # copy constructor closure
-      IFK::None,               // ?_P<name> # udt returning <name>
-      IFK::None,               // ?_Q # <unknown>
-      IFK::None,               // ?_R0 - ?_R4 # RTTI Codes
-      IFK::None,               // ?_S # local vftable
+      IFK::DivEqual,                // ?_0 operator/=
+      IFK::ModEqual,                // ?_1 operator%=
+      IFK::RshEqual,                // ?_2 operator>>=
+      IFK::LshEqual,                // ?_3 operator<<=
+      IFK::BitwiseAndEqual,         // ?_4 operator&=
+      IFK::BitwiseOrEqual,          // ?_5 operator|=
+      IFK::BitwiseXorEqual,         // ?_6 operator^=
+      IFK::None,                    // ?_7 # vftable
+      IFK::None,                    // ?_8 # vbtable
+      IFK::None,                    // ?_9 # vcall
+      IFK::None,                    // ?_A # typeof
+      IFK::None,                    // ?_B # local static guard
+      IFK::None,                    // ?_C # string literal
+      IFK::VbaseDtor,               // ?_D # vbase destructor
+      IFK::VecDelDtor,              // ?_E # vector deleting destructor
+      IFK::DefaultCtorClosure,      // ?_F # default constructor closure
+      IFK::ScalarDelDtor,           // ?_G # scalar deleting destructor
+      IFK::VecCtorIter,             // ?_H # vector constructor iterator
+      IFK::VecDtorIter,             // ?_I # vector destructor iterator
+      IFK::VecVbaseCtorIter,        // ?_J # vector vbase constructor iterator
+      IFK::VdispMap,                // ?_K # virtual displacement map
+      IFK::EHVecCtorIter,           // ?_L # eh vector constructor iterator
+      IFK::EHVecDtorIter,           // ?_M # eh vector destructor iterator
+      IFK::EHVecVbaseCtorIter,      // ?_N # eh vector vbase constructor iterator
+      IFK::CopyCtorClosure,         // ?_O # copy constructor closure
+      IFK::None,                    // ?_P<name> # udt returning <name>
+      IFK::None,                    // ?_Q # <unknown>
+      IFK::None,                    // ?_R0 - ?_R4 # RTTI Codes
+      IFK::None,                    // ?_S # local vftable
       IFK::LocalVftableCtorClosure, // ?_T # local vftable constructor closure
       IFK::ArrayNew,                // ?_U operator new[]
       IFK::ArrayDelete,             // ?_V operator delete[]
@@ -663,9 +625,7 @@ Demangler::translateIntrinsicFunctionCode(char CH,
   DEMANGLE_UNREACHABLE;
 }
 
-IdentifierNode *
-Demangler::demangleFunctionIdentifierCode(StringView &MangledName,
-                                          FunctionIdentifierCodeGroup Group) {
+IdentifierNode *Demangler::demangleFunctionIdentifierCode(StringView &MangledName, FunctionIdentifierCodeGroup Group) {
   if (MangledName.empty()) {
     Error = true;
     return nullptr;
@@ -679,27 +639,23 @@ Demangler::demangleFunctionIdentifierCode(StringView &MangledName,
     case 'B':
       return demangleConversionOperatorIdentifier(MangledName);
     default:
-      return Arena.alloc<IntrinsicFunctionIdentifierNode>(
-          translateIntrinsicFunctionCode(CH, Group));
+      return Arena.alloc<IntrinsicFunctionIdentifierNode>(translateIntrinsicFunctionCode(CH, Group));
     }
   case FunctionIdentifierCodeGroup::Under:
-    return Arena.alloc<IntrinsicFunctionIdentifierNode>(
-        translateIntrinsicFunctionCode(MangledName.popFront(), Group));
+    return Arena.alloc<IntrinsicFunctionIdentifierNode>(translateIntrinsicFunctionCode(MangledName.popFront(), Group));
   case FunctionIdentifierCodeGroup::DoubleUnder:
     switch (char CH = MangledName.popFront()) {
     case 'K':
       return demangleLiteralOperatorIdentifier(MangledName);
     default:
-      return Arena.alloc<IntrinsicFunctionIdentifierNode>(
-          translateIntrinsicFunctionCode(CH, Group));
+      return Arena.alloc<IntrinsicFunctionIdentifierNode>(translateIntrinsicFunctionCode(CH, Group));
     }
   }
 
   DEMANGLE_UNREACHABLE;
 }
 
-SymbolNode *Demangler::demangleEncodedSymbol(StringView &MangledName,
-                                             QualifiedNameNode *Name) {
+SymbolNode *Demangler::demangleEncodedSymbol(StringView &MangledName, QualifiedNameNode *Name) {
   if (MangledName.empty()) {
     Error = true;
     return nullptr;
@@ -720,8 +676,7 @@ SymbolNode *Demangler::demangleEncodedSymbol(StringView &MangledName,
 
   IdentifierNode *UQN = Name->getUnqualifiedIdentifier();
   if (UQN->kind() == NodeKind::ConversionOperatorIdentifier) {
-    ConversionOperatorIdentifierNode *COIN =
-        static_cast<ConversionOperatorIdentifierNode *>(UQN);
+    ConversionOperatorIdentifierNode *COIN = static_cast<ConversionOperatorIdentifierNode *>(UQN);
     if (FSN)
       COIN->TargetType = FSN->Signature->ReturnType;
   }
@@ -742,8 +697,7 @@ SymbolNode *Demangler::demangleDeclarator(StringView &MangledName) {
 
   IdentifierNode *UQN = QN->getUnqualifiedIdentifier();
   if (UQN->kind() == NodeKind::ConversionOperatorIdentifier) {
-    ConversionOperatorIdentifierNode *COIN =
-        static_cast<ConversionOperatorIdentifierNode *>(UQN);
+    ConversionOperatorIdentifierNode *COIN = static_cast<ConversionOperatorIdentifierNode *>(UQN);
     if (!COIN->TargetType) {
       Error = true;
       return nullptr;
@@ -840,8 +794,7 @@ TagTypeNode *Demangler::parseTagUniqueName(StringView &MangledName) {
 //                 ::= 3  # global
 //                 ::= 4  # static local
 
-VariableSymbolNode *Demangler::demangleVariableEncoding(StringView &MangledName,
-                                                        StorageClass SC) {
+VariableSymbolNode *Demangler::demangleVariableEncoding(StringView &MangledName, StorageClass SC) {
   VariableSymbolNode *VSN = Arena.alloc<VariableSymbolNode>();
 
   VSN->Type = demangleType(MangledName, QualifierMangleMode::Drop);
@@ -857,15 +810,13 @@ VariableSymbolNode *Demangler::demangleVariableEncoding(StringView &MangledName,
     PointerTypeNode *PTN = static_cast<PointerTypeNode *>(VSN->Type);
 
     Qualifiers ExtraChildQuals = Q_None;
-    PTN->Quals = Qualifiers(VSN->Type->Quals |
-                            demanglePointerExtQualifiers(MangledName));
+    PTN->Quals = Qualifiers(VSN->Type->Quals | demanglePointerExtQualifiers(MangledName));
 
     bool IsMember = false;
     std::tie(ExtraChildQuals, IsMember) = demangleQualifiers(MangledName);
 
     if (PTN->ClassParent) {
-      QualifiedNameNode *BackRefName =
-          demangleFullyQualifiedTypeName(MangledName);
+      QualifiedNameNode *BackRefName = demangleFullyQualifiedTypeName(MangledName);
       (void)BackRefName;
     }
     PTN->Pointee->Quals = Qualifiers(PTN->Pointee->Quals | ExtraChildQuals);
@@ -979,17 +930,14 @@ void Demangler::memorizeIdentifier(IdentifierNode *Identifier) {
   std::free(Name);
 }
 
-IdentifierNode *
-Demangler::demangleTemplateInstantiationName(StringView &MangledName,
-                                             NameBackrefBehavior NBB) {
+IdentifierNode *Demangler::demangleTemplateInstantiationName(StringView &MangledName, NameBackrefBehavior NBB) {
   assert(MangledName.startsWith("?$"));
   MangledName.consumeFront("?$");
 
   BackrefContext OuterContext;
   std::swap(OuterContext, Backrefs);
 
-  IdentifierNode *Identifier =
-      demangleUnqualifiedSymbolName(MangledName, NBB_Simple);
+  IdentifierNode *Identifier = demangleUnqualifiedSymbolName(MangledName, NBB_Simple);
   if (!Error)
     Identifier->TemplateParams = demangleTemplateParameterList(MangledName);
 
@@ -1013,8 +961,7 @@ Demangler::demangleTemplateInstantiationName(StringView &MangledName,
   return Identifier;
 }
 
-NamedIdentifierNode *Demangler::demangleSimpleName(StringView &MangledName,
-                                                   bool Memorize) {
+NamedIdentifierNode *Demangler::demangleSimpleName(StringView &MangledName, bool Memorize) {
   StringView S = demangleSimpleString(MangledName, Memorize);
   if (Error)
     return nullptr;
@@ -1062,20 +1009,18 @@ uint8_t Demangler::demangleCharLiteral(StringView &MangledName) {
   }
 
   if (MangledName[0] >= 'a' && MangledName[0] <= 'z') {
-    char Lookup[26] = {'\xE1', '\xE2', '\xE3', '\xE4', '\xE5', '\xE6', '\xE7',
-                       '\xE8', '\xE9', '\xEA', '\xEB', '\xEC', '\xED', '\xEE',
-                       '\xEF', '\xF0', '\xF1', '\xF2', '\xF3', '\xF4', '\xF5',
-                       '\xF6', '\xF7', '\xF8', '\xF9', '\xFA'};
+    char Lookup[26] = {'\xE1', '\xE2', '\xE3', '\xE4', '\xE5', '\xE6', '\xE7', '\xE8', '\xE9',
+                       '\xEA', '\xEB', '\xEC', '\xED', '\xEE', '\xEF', '\xF0', '\xF1', '\xF2',
+                       '\xF3', '\xF4', '\xF5', '\xF6', '\xF7', '\xF8', '\xF9', '\xFA'};
     char C = Lookup[MangledName[0] - 'a'];
     MangledName = MangledName.dropFront();
     return C;
   }
 
   if (MangledName[0] >= 'A' && MangledName[0] <= 'Z') {
-    char Lookup[26] = {'\xC1', '\xC2', '\xC3', '\xC4', '\xC5', '\xC6', '\xC7',
-                       '\xC8', '\xC9', '\xCA', '\xCB', '\xCC', '\xCD', '\xCE',
-                       '\xCF', '\xD0', '\xD1', '\xD2', '\xD3', '\xD4', '\xD5',
-                       '\xD6', '\xD7', '\xD8', '\xD9', '\xDA'};
+    char Lookup[26] = {'\xC1', '\xC2', '\xC3', '\xC4', '\xC5', '\xC6', '\xC7', '\xC8', '\xC9',
+                       '\xCA', '\xCB', '\xCC', '\xCD', '\xCE', '\xCF', '\xD0', '\xD1', '\xD2',
+                       '\xD3', '\xD4', '\xD5', '\xD6', '\xD7', '\xD8', '\xD9', '\xDA'};
     char C = Lookup[MangledName[0] - 'A'];
     MangledName = MangledName.dropFront();
     return C;
@@ -1109,7 +1054,7 @@ static void writeHexDigit(char *Buffer, uint8_t Digit) {
 }
 
 static void outputHex(OutputStream &OS, unsigned C) {
-  assert (C != 0);
+  assert(C != 0);
 
   // It's easier to do the math if we can work from right to left, but we need
   // to print the numbers from left to right.  So render this into a temporary
@@ -1193,8 +1138,7 @@ static unsigned countTrailingNullBytes(const uint8_t *StringBytes, int Length) {
   return Count;
 }
 
-static unsigned countEmbeddedNulls(const uint8_t *StringBytes,
-                                   unsigned Length) {
+static unsigned countEmbeddedNulls(const uint8_t *StringBytes, unsigned Length) {
   unsigned Result = 0;
   for (unsigned I = 0; I < Length; ++I) {
     if (*StringBytes++ == 0)
@@ -1206,8 +1150,7 @@ static unsigned countEmbeddedNulls(const uint8_t *StringBytes,
 // A mangled (non-wide) string literal stores the total length of the string it
 // refers to (passed in NumBytes), and it contains up to 32 bytes of actual text
 // (passed in StringBytes, NumChars).
-static unsigned guessCharByteSize(const uint8_t *StringBytes, unsigned NumChars,
-                                  uint64_t NumBytes) {
+static unsigned guessCharByteSize(const uint8_t *StringBytes, unsigned NumChars, uint64_t NumBytes) {
   assert(NumBytes > 0);
 
   // If the number of bytes is odd, this is guaranteed to be a char string.
@@ -1240,8 +1183,7 @@ static unsigned guessCharByteSize(const uint8_t *StringBytes, unsigned NumChars,
   return 1;
 }
 
-static unsigned decodeMultiByteChar(const uint8_t *StringBytes,
-                                    unsigned CharIndex, unsigned CharBytes) {
+static unsigned decodeMultiByteChar(const uint8_t *StringBytes, unsigned CharIndex, unsigned CharBytes) {
   assert(CharBytes == 1 || CharBytes == 2 || CharBytes == 4);
   unsigned Offset = CharIndex * CharBytes;
   unsigned Result = 0;
@@ -1271,8 +1213,7 @@ FunctionSymbolNode *Demangler::demangleVcallThunkNode(StringView &MangledName) {
   return (Error) ? nullptr : FSN;
 }
 
-EncodedStringLiteralNode *
-Demangler::demangleStringLiteral(StringView &MangledName) {
+EncodedStringLiteralNode *Demangler::demangleStringLiteral(StringView &MangledName) {
   // This function uses goto, so declare all variables up front.
   OutputStream OS;
   StringView CRC;
@@ -1351,8 +1292,7 @@ Demangler::demangleStringLiteral(StringView &MangledName) {
     if (StringByteSize > BytesDecoded)
       Result->IsTruncated = true;
 
-    unsigned CharBytes =
-        guessCharByteSize(StringBytes, BytesDecoded, StringByteSize);
+    unsigned CharBytes = guessCharByteSize(StringBytes, BytesDecoded, StringByteSize);
     assert(StringByteSize % CharBytes == 0);
     switch (CharBytes) {
     case 1:
@@ -1369,8 +1309,7 @@ Demangler::demangleStringLiteral(StringView &MangledName) {
     }
     const unsigned NumChars = BytesDecoded / CharBytes;
     for (unsigned CharIndex = 0; CharIndex < NumChars; ++CharIndex) {
-      unsigned NextChar =
-          decodeMultiByteChar(StringBytes, CharIndex, CharBytes);
+      unsigned NextChar = decodeMultiByteChar(StringBytes, CharIndex, CharBytes);
       if (CharIndex + 1 < NumChars || Result->IsTruncated)
         outputEscapedChar(OS, NextChar);
     }
@@ -1390,8 +1329,7 @@ StringLiteralError:
 
 // Returns MangledName's prefix before the first '@', or an error if
 // MangledName contains no '@' or the prefix has length 0.
-StringView Demangler::demangleSimpleString(StringView &MangledName,
-                                           bool Memorize) {
+StringView Demangler::demangleSimpleString(StringView &MangledName, bool Memorize) {
   StringView S;
   for (size_t i = 0; i < MangledName.size(); ++i) {
     if (MangledName[i] != '@')
@@ -1410,8 +1348,7 @@ StringView Demangler::demangleSimpleString(StringView &MangledName,
   return {};
 }
 
-NamedIdentifierNode *
-Demangler::demangleAnonymousNamespaceName(StringView &MangledName) {
+NamedIdentifierNode *Demangler::demangleAnonymousNamespaceName(StringView &MangledName) {
   assert(MangledName.startsWith("?A"));
   MangledName.consumeFront("?A");
 
@@ -1428,8 +1365,7 @@ Demangler::demangleAnonymousNamespaceName(StringView &MangledName) {
   return Node;
 }
 
-NamedIdentifierNode *
-Demangler::demangleLocallyScopedNamePiece(StringView &MangledName) {
+NamedIdentifierNode *Demangler::demangleLocallyScopedNamePiece(StringView &MangledName) {
   assert(startsWithLocalScopePattern(MangledName));
 
   NamedIdentifierNode *Identifier = Arena.alloc<NamedIdentifierNode>();
@@ -1464,10 +1400,8 @@ Demangler::demangleLocallyScopedNamePiece(StringView &MangledName) {
 }
 
 // Parses a type name in the form of A@B@C@@ which represents C::B::A.
-QualifiedNameNode *
-Demangler::demangleFullyQualifiedTypeName(StringView &MangledName) {
-  IdentifierNode *Identifier =
-      demangleUnqualifiedTypeName(MangledName, /*Memorize=*/true);
+QualifiedNameNode *Demangler::demangleFullyQualifiedTypeName(StringView &MangledName) {
+  IdentifierNode *Identifier = demangleUnqualifiedTypeName(MangledName, /*Memorize=*/true);
   if (Error)
     return nullptr;
   assert(Identifier);
@@ -1482,15 +1416,13 @@ Demangler::demangleFullyQualifiedTypeName(StringView &MangledName) {
 // Parses a symbol name in the form of A@B@C@@ which represents C::B::A.
 // Symbol names have slightly different rules regarding what can appear
 // so we separate out the implementations for flexibility.
-QualifiedNameNode *
-Demangler::demangleFullyQualifiedSymbolName(StringView &MangledName) {
+QualifiedNameNode *Demangler::demangleFullyQualifiedSymbolName(StringView &MangledName) {
   // This is the final component of a symbol name (i.e. the leftmost component
   // of a mangled name.  Since the only possible template instantiation that
   // can appear in this context is a function template, and since those are
   // not saved for the purposes of name backreferences, only backref simple
   // names.
-  IdentifierNode *Identifier =
-      demangleUnqualifiedSymbolName(MangledName, NBB_Simple);
+  IdentifierNode *Identifier = demangleUnqualifiedSymbolName(MangledName, NBB_Simple);
   if (Error)
     return nullptr;
 
@@ -1503,8 +1435,7 @@ Demangler::demangleFullyQualifiedSymbolName(StringView &MangledName) {
       Error = true;
       return nullptr;
     }
-    StructorIdentifierNode *SIN =
-        static_cast<StructorIdentifierNode *>(Identifier);
+    StructorIdentifierNode *SIN = static_cast<StructorIdentifierNode *>(Identifier);
     Node *ClassNode = QN->Components->Nodes[QN->Components->Count - 2];
     SIN->Class = static_cast<IdentifierNode *>(ClassNode);
   }
@@ -1512,8 +1443,7 @@ Demangler::demangleFullyQualifiedSymbolName(StringView &MangledName) {
   return QN;
 }
 
-IdentifierNode *Demangler::demangleUnqualifiedTypeName(StringView &MangledName,
-                                                       bool Memorize) {
+IdentifierNode *Demangler::demangleUnqualifiedTypeName(StringView &MangledName, bool Memorize) {
   // An inner-most name can be a back-reference, because a fully-qualified name
   // (e.g. Scope + Inner) can contain other fully qualified names inside of
   // them (for example template parameters), and these nested parameters can
@@ -1527,9 +1457,7 @@ IdentifierNode *Demangler::demangleUnqualifiedTypeName(StringView &MangledName,
   return demangleSimpleName(MangledName, Memorize);
 }
 
-IdentifierNode *
-Demangler::demangleUnqualifiedSymbolName(StringView &MangledName,
-                                         NameBackrefBehavior NBB) {
+IdentifierNode *Demangler::demangleUnqualifiedSymbolName(StringView &MangledName, NameBackrefBehavior NBB) {
   if (startsWithDigit(MangledName))
     return demangleBackRefName(MangledName);
   if (MangledName.startsWith("?$"))
@@ -1555,8 +1483,7 @@ IdentifierNode *Demangler::demangleNameScopePiece(StringView &MangledName) {
   return demangleSimpleName(MangledName, /*Memorize=*/true);
 }
 
-static NodeArrayNode *nodeListToNodeArray(ArenaAllocator &Arena, NodeList *Head,
-                                          size_t Count) {
+static NodeArrayNode *nodeListToNodeArray(ArenaAllocator &Arena, NodeList *Head, size_t Count) {
   NodeArrayNode *N = Arena.alloc<NodeArrayNode>();
   N->Count = Count;
   N->Nodes = Arena.allocArray<Node *>(Count);
@@ -1567,9 +1494,7 @@ static NodeArrayNode *nodeListToNodeArray(ArenaAllocator &Arena, NodeList *Head,
   return N;
 }
 
-QualifiedNameNode *
-Demangler::demangleNameScopeChain(StringView &MangledName,
-                                  IdentifierNode *UnqualifiedName) {
+QualifiedNameNode *Demangler::demangleNameScopeChain(StringView &MangledName, IdentifierNode *UnqualifiedName) {
   NodeList *Head = Arena.alloc<NodeList>();
 
   Head->N = UnqualifiedName;
@@ -1735,8 +1660,7 @@ StorageClass Demangler::demangleVariableStorageClass(StringView &MangledName) {
   DEMANGLE_UNREACHABLE;
 }
 
-std::pair<Qualifiers, bool>
-Demangler::demangleQualifiers(StringView &MangledName) {
+std::pair<Qualifiers, bool> Demangler::demangleQualifiers(StringView &MangledName) {
   if (MangledName.empty()) {
     Error = true;
     return std::make_pair(Q_None, false);
@@ -1768,8 +1692,7 @@ Demangler::demangleQualifiers(StringView &MangledName) {
 
 // <variable-type> ::= <type> <cvr-qualifiers>
 //                 ::= <type> <pointee-cvr-qualifiers> # pointers, references
-TypeNode *Demangler::demangleType(StringView &MangledName,
-                                  QualifierMangleMode QMM) {
+TypeNode *Demangler::demangleType(StringView &MangledName, QualifierMangleMode QMM) {
   Qualifiers Quals = Q_None;
   bool IsMember = false;
   if (QMM == QualifierMangleMode::Mangle) {
@@ -1826,8 +1749,7 @@ bool Demangler::demangleThrowSpecification(StringView &MangledName) {
   return false;
 }
 
-FunctionSignatureNode *Demangler::demangleFunctionType(StringView &MangledName,
-                                                       bool HasThisQuals) {
+FunctionSignatureNode *Demangler::demangleFunctionType(StringView &MangledName, bool HasThisQuals) {
   FunctionSignatureNode *FTy = Arena.alloc<FunctionSignatureNode>();
 
   if (HasThisQuals) {
@@ -1852,8 +1774,7 @@ FunctionSignatureNode *Demangler::demangleFunctionType(StringView &MangledName,
   return FTy;
 }
 
-FunctionSymbolNode *
-Demangler::demangleFunctionEncoding(StringView &MangledName) {
+FunctionSymbolNode *Demangler::demangleFunctionEncoding(StringView &MangledName) {
   FuncClass ExtraFlags = FC_None;
   if (MangledName.consumeFront("$$J0"))
     ExtraFlags = FC_ExternC;
@@ -2011,8 +1932,7 @@ TagTypeNode *Demangler::demangleClassType(StringView &MangledName) {
 PointerTypeNode *Demangler::demanglePointerType(StringView &MangledName) {
   PointerTypeNode *Pointer = Arena.alloc<PointerTypeNode>();
 
-  std::tie(Pointer->Quals, Pointer->Affinity) =
-      demanglePointerCVQualifiers(MangledName);
+  std::tie(Pointer->Quals, Pointer->Affinity) = demanglePointerCVQualifiers(MangledName);
 
   if (MangledName.consumeFront("6")) {
     Pointer->Pointee = demangleFunctionType(MangledName, false);
@@ -2029,8 +1949,7 @@ PointerTypeNode *Demangler::demanglePointerType(StringView &MangledName) {
 PointerTypeNode *Demangler::demangleMemberPointerType(StringView &MangledName) {
   PointerTypeNode *Pointer = Arena.alloc<PointerTypeNode>();
 
-  std::tie(Pointer->Quals, Pointer->Affinity) =
-      demanglePointerCVQualifiers(MangledName);
+  std::tie(Pointer->Quals, Pointer->Affinity) = demanglePointerCVQualifiers(MangledName);
   assert(Pointer->Affinity == PointerAffinity::Pointer);
 
   Qualifiers ExtQuals = demanglePointerExtQualifiers(MangledName);
@@ -2113,8 +2032,7 @@ ArrayTypeNode *Demangler::demangleArrayType(StringView &MangledName) {
 }
 
 // Reads a function's parameters.
-NodeArrayNode *Demangler::demangleFunctionParameterList(StringView &MangledName,
-                                                        bool &IsVariadic) {
+NodeArrayNode *Demangler::demangleFunctionParameterList(StringView &MangledName, bool &IsVariadic) {
   // Empty parameter list.
   if (MangledName.consumeFront('X'))
     return nullptr;
@@ -2122,8 +2040,7 @@ NodeArrayNode *Demangler::demangleFunctionParameterList(StringView &MangledName,
   NodeList *Head = Arena.alloc<NodeList>();
   NodeList **Current = &Head;
   size_t Count = 0;
-  while (!Error && !MangledName.startsWith('@') &&
-         !MangledName.startsWith('Z')) {
+  while (!Error && !MangledName.startsWith('@') && !MangledName.startsWith('Z')) {
     ++Count;
 
     if (startsWithDigit(MangledName)) {
@@ -2178,15 +2095,14 @@ NodeArrayNode *Demangler::demangleFunctionParameterList(StringView &MangledName,
   DEMANGLE_UNREACHABLE;
 }
 
-NodeArrayNode *
-Demangler::demangleTemplateParameterList(StringView &MangledName) {
+NodeArrayNode *Demangler::demangleTemplateParameterList(StringView &MangledName) {
   NodeList *Head = nullptr;
   NodeList **Current = &Head;
   size_t Count = 0;
 
   while (!MangledName.startsWith('@')) {
-    if (MangledName.consumeFront("$S") || MangledName.consumeFront("$$V") ||
-        MangledName.consumeFront("$$$V") || MangledName.consumeFront("$$Z")) {
+    if (MangledName.consumeFront("$S") || MangledName.consumeFront("$$V") || MangledName.consumeFront("$$$V") ||
+        MangledName.consumeFront("$$Z")) {
       // parameter pack separator
       continue;
     }
@@ -2208,8 +2124,8 @@ Demangler::demangleTemplateParameterList(StringView &MangledName) {
     } else if (MangledName.consumeFront("$$C")) {
       // Type has qualifiers.
       TP.N = demangleType(MangledName, QualifierMangleMode::Mangle);
-    } else if (MangledName.startsWith("$1") || MangledName.startsWith("$H") ||
-               MangledName.startsWith("$I") || MangledName.startsWith("$J")) {
+    } else if (MangledName.startsWith("$1") || MangledName.startsWith("$H") || MangledName.startsWith("$I") ||
+               MangledName.startsWith("$J")) {
       // Pointer to member
       TP.N = TPRN = Arena.alloc<TemplateParameterReferenceNode>();
       TPRN->IsMemberPointer = true;
@@ -2232,16 +2148,13 @@ Demangler::demangleTemplateParameterList(StringView &MangledName) {
 
       switch (InheritanceSpecifier) {
       case 'J':
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
         DEMANGLE_FALLTHROUGH;
       case 'I':
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
         DEMANGLE_FALLTHROUGH;
       case 'H':
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
         DEMANGLE_FALLTHROUGH;
       case '1':
         break;
@@ -2265,14 +2178,11 @@ Demangler::demangleTemplateParameterList(StringView &MangledName) {
 
       switch (InheritanceSpecifier) {
       case 'G':
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
         DEMANGLE_FALLTHROUGH;
       case 'F':
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
-        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] =
-            demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
+        TPRN->ThunkOffsets[TPRN->ThunkOffsetCount++] = demangleSigned(MangledName);
         break;
       default:
         DEMANGLE_UNREACHABLE;
@@ -2306,8 +2216,7 @@ Demangler::demangleTemplateParameterList(StringView &MangledName) {
 }
 
 void Demangler::dumpBackReferences() {
-  std::printf("%d function parameter backreferences\n",
-              (int)Backrefs.FunctionParamCount);
+  std::printf("%d function parameter backreferences\n", (int)Backrefs.FunctionParamCount);
 
   // Create an output stream so we can render each type.
   OutputStream OS;
@@ -2319,8 +2228,7 @@ void Demangler::dumpBackReferences() {
     TypeNode *T = Backrefs.FunctionParams[I];
     T->output(OS, OF_Default);
 
-    std::printf("  [%d] - %.*s\n", (int)I, (int)OS.getCurrentPosition(),
-                OS.getBuffer());
+    std::printf("  [%d] - %.*s\n", (int)I, (int)OS.getCurrentPosition(), OS.getBuffer());
   }
   std::free(OS.getBuffer());
 
@@ -2328,23 +2236,21 @@ void Demangler::dumpBackReferences() {
     std::printf("\n");
   std::printf("%d name backreferences\n", (int)Backrefs.NamesCount);
   for (size_t I = 0; I < Backrefs.NamesCount; ++I) {
-    std::printf("  [%d] - %.*s\n", (int)I, (int)Backrefs.Names[I]->Name.size(),
-                Backrefs.Names[I]->Name.begin());
+    std::printf("  [%d] - %.*s\n", (int)I, (int)Backrefs.Names[I]->Name.size(), Backrefs.Names[I]->Name.begin());
   }
   if (Backrefs.NamesCount > 0)
     std::printf("\n");
 }
 
-char *llvm::microsoftDemangle(const char *MangledName, size_t *NMangled,
-                              char *Buf, size_t *N,
-                              int *Status, MSDemangleFlags Flags) {
+char *llvm::microsoftDemangle(const std::string_view MangledName, size_t *NMangled, char *Buf, size_t *N, int *Status,
+                              MSDemangleFlags Flags) {
   Demangler D;
   OutputStream S;
 
-  StringView Name{MangledName};
+  StringView Name{MangledName.data(), MangledName.size()};
   SymbolNode *AST = D.parse(Name);
   if (!D.Error && NMangled)
-    *NMangled = Name.begin() - MangledName;
+    *NMangled = Name.begin() - MangledName.data();
 
   if (Flags & MSDF_DumpBackrefs)
     D.dumpBackReferences();

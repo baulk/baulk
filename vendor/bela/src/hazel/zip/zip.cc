@@ -315,7 +315,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
 
 bool Reader::Initialize(bela::error_code &ec) {
   LARGE_INTEGER li;
-  if (!GetFileSizeEx(fd, &li)) {
+  if (GetFileSizeEx(fd, &li) != TRUE) {
     ec = bela::make_system_error_code(L"GetFileSizeEx: ");
     return false;
   }
@@ -407,6 +407,87 @@ const wchar_t *Method(uint16_t m) {
     }
   }
   return L"NONE";
+}
+
+bool Reader::Contains(bela::Span<std::string_view> paths, std::size_t limit) const {
+  if (paths.empty()) {
+    return false;
+  }
+  size_t found = 0;
+  bela::flat_hash_map<std::string_view, bool> pms;
+  for (const auto p : paths) {
+    pms.emplace(p, false);
+  }
+  auto maxsize = (std::min)(limit, files.size());
+  for (size_t i = 0; i < maxsize; i++) {
+    if (auto it = pms.find(files[i].name); it != pms.end()) {
+      if (!it->second) {
+        it->second = true;
+        found++;
+      }
+    }
+    if (found == paths.size()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Reader::Contains(std::string_view p, std::size_t limit) const {
+  auto maxsize = (std::min)(limit, files.size());
+  for (size_t i = 0; i < maxsize; i++) {
+    if (files[i].name == p) {
+      return true;
+    }
+  }
+  return false;
+}
+
+msoffice_t Reader::LooksLikeOffice() const {
+  // [Content_Types].xml
+  std::string_view paths[] = {"[Content_Types].xml", "_rels/.rels"};
+  if (!Contains(paths, 200)) {
+    return OfficeNone;
+  }
+  for (const auto &file : files) {
+    if (bela::StartsWith(file.name, "word/")) {
+      return OfficeDocx;
+    }
+    if (bela::StartsWith(file.name, "word/")) {
+      return OfficeDocx;
+    }
+    if (bela::StartsWith(file.name, "word/")) {
+      return OfficeDocx;
+    }
+  }
+  return OfficeNone;
+}
+
+bool Reader::LooksLikeOFD() const {
+  std::string_view paths[] = {"OFD.xml", "Doc_1/DocumentRes.xml", "Doc_1/PublicRes.xml", "Doc_1/Annotations.xml",
+                              "Doc_1/Document.xml"};
+  return Contains(paths, 10000);
+}
+
+bool Reader::LooksLikeAppx() const {
+  std::string_view paths = {"[Content_Types].xml", "AppxManifest.xml"};
+  return Contains(paths);
+}
+bool Reader::LooksLikeApk() const {
+  std::string_view paths[] = {"AndroidManifest.xml", "META-INF/MANIFEST.MF"};
+  return Contains(paths);
+}
+
+bool Reader::LooksLikeJar() const {
+  if (!Contains("META-INF/MANIFEST.MF")) {
+    return false;
+  }
+  for (const auto &file : files) {
+    if (bela::EndsWith(file.name, ".class")) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace hazel::zip

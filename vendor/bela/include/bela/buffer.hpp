@@ -47,7 +47,7 @@ public:
   }
   Buffer(const Buffer &) = delete;
   Buffer &operator=(const Buffer &) = delete;
-  ~Buffer() {}
+  ~Buffer() { Free(); }
   [[nodiscard]] size_t size() const { return size_; }
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }

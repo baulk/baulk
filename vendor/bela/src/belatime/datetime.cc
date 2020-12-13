@@ -55,11 +55,14 @@ constexpr auto LeapEpoch = (946684800LL + 86400 * (31 + 29));
 // https://en.cppreference.com/w/c/chrono/tm
 bool MakeDateTime(int64_t second, DateTime &dt) {
   static constexpr const uint8_t days_in_month[] = {31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, 29};
-  auto dsec = second % secondsPerDay;
-  dt.hour = static_cast<std::int_least8_t>(dsec / secondsPerHour);                        // 28937
-  dt.minute = static_cast<std::int_least8_t>((dsec % secondsPerHour) / secondsPerMinute); // 137
-  dt.second = static_cast<std::int_least8_t>(dsec % secondsPerMinute);
-  auto days = (second - LeapEpoch) / secondsPerDay;
+  second -= LeapEpoch;
+  auto days = second / secondsPerDay;
+  auto remsecs = second % secondsPerDay;
+  if (remsecs < 0) {
+    remsecs += 86400;
+    days--;
+  }
+
   // 2000-03-01 Wednesday
   auto wday = (3 + days) % 7;
   if (wday < 0) {
@@ -67,30 +70,36 @@ bool MakeDateTime(int64_t second, DateTime &dt) {
   }
   // days since Sunday – [0, 6]
   dt.wday = static_cast<Weekday>(wday);
+
   auto qccycles = days / daysPer400Years;
   auto remdays = days % daysPer400Years;
   if (remdays < 0) {
     remdays += daysPer400Years;
     qccycles--;
   }
+
   auto ccycles = remdays / daysPer100Years;
   if (ccycles == 4) {
     ccycles--;
   }
+  remdays -= ccycles * daysPer100Years;
+
   auto qcycles = remdays / daysPer4Years;
   if (qcycles == 25) {
     qcycles--;
   }
   remdays -= qcycles * daysPer4Years;
+
   auto remyears = remdays / 365;
   if (remyears == 4) {
     remyears--;
   }
   remdays -= remyears * 365;
-  auto leap = remyears == 0 && (qcycles != 0 || ccycles == 0);
-  auto yday = remdays + 32 + 28 + leap ? 1 : 0;
-  if (yday >= 365 + leap ? 1 : 0) {
-    yday -= 365 + leap;
+
+  auto leap = (remyears == 0) && (qcycles != 0 || ccycles == 0);
+  auto yday = remdays + 31 + 28 + (leap ? 1 : 0);
+  if (yday >= 365 + (leap ? 1 : 0)) {
+    yday -= 365 + (leap ? 1 : 0);
   }
   auto years = remyears + 4 * qcycles + 100 * ccycles + 400LL * qccycles;
   int months = 0;
@@ -113,6 +122,9 @@ bool MakeDateTime(int64_t second, DateTime &dt) {
   // months since January – [0, 11]
   dt.month = static_cast<Month>(months + 2 + 1);
   dt.day = static_cast<std::int_least8_t>(remdays + 1);
+  dt.hour = static_cast<std::int_least8_t>(remsecs / secondsPerHour);                        // 28937
+  dt.minute = static_cast<std::int_least8_t>((remsecs % secondsPerHour) / secondsPerMinute); // 137
+  dt.second = static_cast<std::int_least8_t>(remsecs % secondsPerMinute);
   return true;
 }
 }; // namespace time_internal

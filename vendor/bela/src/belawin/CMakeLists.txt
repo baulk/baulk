@@ -6,10 +6,6 @@ add_library(
   io.cc
   fs.cc
   path.cc
-  pe/llvm/Demangle.cpp
-  pe/llvm/ItaniumDemangle.cpp
-  pe/llvm/MicrosoftDemangle.cpp
-  pe/llvm/MicrosoftDemangleNodes.cpp
   pe/clr.cc
   pe/file.cc
   pe/resource.cc

@@ -3,6 +3,9 @@
 
 namespace hazel::internal {
 static constexpr const uint8_t ElfMagic[] = {0x7f, 'E', 'L', 'F'};
+
+constexpr auto FF = (std::numeric_limits<uint8_t>::max)();
+
 // The PE signature bytes that follows the DOS stub header.
 static constexpr const uint8_t PEMagic[] = {'P', 'E', '\0', '\0'};
 static constexpr const uint8_t BigObjMagic[] = {
@@ -15,8 +18,7 @@ static constexpr const uint8_t ClGlObjMagic[] = {
 };
 // The signature bytes that start a .res file.
 static constexpr const uint8_t WinResMagic[] = {
-    '\x00', '\x00', '\x00', '\x00', '\x20', '\x00', '\x00', '\x00',
-    '\xff', '\xff', '\x00', '\x00', '\xff', '\xff', '\x00', '\x00',
+    '\x00', '\x00', '\x00', '\x00', '\x20', '\x00', '\x00', '\x00', FF, FF, '\x00', '\x00', FF, FF, '\x00', '\x00',
 };
 static constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A, 0x64, 0x65, 0x62,
                                              0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};

@@ -33,8 +33,7 @@ constexpr const char *itanium_demangle::FloatData<long double>::spec;
 // <discriminator> := _ <non-negative number>      # when number < 10
 //                 := __ <non-negative number> _   # when number >= 10
 //  extension      := decimal-digit+               # at the end of string
-const char *itanium_demangle::parse_discriminator(const char *first,
-                                                  const char *last) {
+const char *itanium_demangle::parse_discriminator(const char *first, const char *last) {
   // parse but ignore discriminator
   if (first != last) {
     if (*first == '_') {
@@ -66,13 +65,11 @@ struct DumpVisitor {
   unsigned Depth = 0;
   bool PendingNewline = false;
 
-  template<typename NodeT> static constexpr bool wantsNewline(const NodeT *) {
-    return true;
-  }
+  template <typename NodeT> static constexpr bool wantsNewline(const NodeT *) { return true; }
   static bool wantsNewline(NodeArray A) { return !A.empty(); }
   static constexpr bool wantsNewline(...) { return false; }
 
-  template<typename ...Ts> static bool anyWantNewline(Ts ...Vs) {
+  template <typename... Ts> static bool anyWantNewline(Ts... Vs) {
     for (bool B : {wantsNewline(Vs)...})
       if (B)
         return true;
@@ -80,9 +77,7 @@ struct DumpVisitor {
   }
 
   void printStr(const char *S) { fprintf(stderr, "%s", S); }
-  void print(StringView SV) {
-    fprintf(stderr, "\"%.*s\"", (int)SV.size(), SV.begin());
-  }
+  void print(StringView SV) { fprintf(stderr, "\"%.*s\"", (int)SV.size(), SV.begin()); }
   void print(const Node *N) {
     if (N)
       N->visit(std::ref(*this));
@@ -111,9 +106,7 @@ struct DumpVisitor {
     fprintf(stderr, "%llu", (unsigned long long)N);
   }
 
-  template <class T> std::enable_if_t<std::is_signed<T>::value> print(T N) {
-    fprintf(stderr, "%lld", (long long)N);
-  }
+  template <class T> std::enable_if_t<std::is_signed<T>::value> print(T N) { fprintf(stderr, "%lld", (long long)N); }
 
   void print(ReferenceKind RK) {
     switch (RK) {
@@ -134,17 +127,22 @@ struct DumpVisitor {
     }
   }
   void print(Qualifiers Qs) {
-    if (!Qs) return printStr("QualNone");
-    struct QualName { Qualifiers Q; const char *Name; } Names[] = {
-      {QualConst, "QualConst"},
-      {QualVolatile, "QualVolatile"},
-      {QualRestrict, "QualRestrict"},
+    if (!Qs)
+      return printStr("QualNone");
+    struct QualName {
+      Qualifiers Q;
+      const char *Name;
+    } Names[] = {
+        {QualConst, "QualConst"},
+        {QualVolatile, "QualVolatile"},
+        {QualRestrict, "QualRestrict"},
     };
     for (QualName Name : Names) {
       if (Qs & Name.Q) {
         printStr(Name.Name);
         Qs = Qualifiers(Qs & ~Name.Q);
-        if (Qs) printStr(" | ");
+        if (Qs)
+          printStr(" | ");
       }
     }
   }
@@ -182,13 +180,13 @@ struct DumpVisitor {
     PendingNewline = false;
   }
 
-  template<typename T> void printWithPendingNewline(T V) {
+  template <typename T> void printWithPendingNewline(T V) {
     print(V);
     if (wantsNewline(V))
       PendingNewline = true;
   }
 
-  template<typename T> void printWithComma(T V) {
+  template <typename T> void printWithComma(T V) {
     if (PendingNewline || wantsNewline(V)) {
       printStr(",");
       newLine();
@@ -202,16 +200,16 @@ struct DumpVisitor {
   struct CtorArgPrinter {
     DumpVisitor &Visitor;
 
-    template<typename T, typename ...Rest> void operator()(T V, Rest ...Vs) {
+    template <typename T, typename... Rest> void operator()(T V, Rest... Vs) {
       if (Visitor.anyWantNewline(V, Vs...))
         Visitor.newLine();
       Visitor.printWithPendingNewline(V);
-      int PrintInOrder[] = { (Visitor.printWithComma(Vs), 0)..., 0 };
+      int PrintInOrder[] = {(Visitor.printWithComma(Vs), 0)..., 0};
       (void)PrintInOrder;
     }
   };
 
-  template<typename NodeT> void operator()(const NodeT *Node) {
+  template <typename NodeT> void operator()(const NodeT *Node) {
     Depth += 2;
     fprintf(stderr, "%s(", itanium_demangle::NodeKind<NodeT>::name());
     Node->match(CtorArgPrinter{*this});
@@ -233,7 +231,7 @@ struct DumpVisitor {
     Depth -= 2;
   }
 };
-}
+} // namespace
 
 void itanium_demangle::Node::dump() const {
   DumpVisitor V;
@@ -245,7 +243,7 @@ void itanium_demangle::Node::dump() const {
 namespace {
 class BumpPointerAllocator {
   struct BlockMeta {
-    BlockMeta* Next;
+    BlockMeta *Next;
     size_t Current;
   };
 
@@ -253,29 +251,28 @@ class BumpPointerAllocator {
   static constexpr size_t UsableAllocSize = AllocSize - sizeof(BlockMeta);
 
   alignas(long double) char InitialBuffer[AllocSize];
-  BlockMeta* BlockList = nullptr;
+  BlockMeta *BlockList = nullptr;
 
   void grow() {
-    char* NewMeta = static_cast<char *>(std::malloc(AllocSize));
+    char *NewMeta = static_cast<char *>(std::malloc(AllocSize));
     if (NewMeta == nullptr)
       std::terminate();
     BlockList = new (NewMeta) BlockMeta{BlockList, 0};
   }
 
-  void* allocateMassive(size_t NBytes) {
+  void *allocateMassive(size_t NBytes) {
     NBytes += sizeof(BlockMeta);
-    BlockMeta* NewMeta = reinterpret_cast<BlockMeta*>(std::malloc(NBytes));
+    BlockMeta *NewMeta = reinterpret_cast<BlockMeta *>(std::malloc(NBytes));
     if (NewMeta == nullptr)
       std::terminate();
     BlockList->Next = new (NewMeta) BlockMeta{BlockList->Next, 0};
-    return static_cast<void*>(NewMeta + 1);
+    return static_cast<void *>(NewMeta + 1);
   }
 
 public:
-  BumpPointerAllocator()
-      : BlockList(new (InitialBuffer) BlockMeta{nullptr, 0}) {}
+  BumpPointerAllocator() : BlockList(new (InitialBuffer) BlockMeta{nullptr, 0}) {}
 
-  void* allocate(size_t N) {
+  void *allocate(size_t N) {
     N = (N + 15u) & ~15u;
     if (N + BlockList->Current >= UsableAllocSize) {
       if (N > UsableAllocSize)
@@ -283,15 +280,14 @@ public:
       grow();
     }
     BlockList->Current += N;
-    return static_cast<void*>(reinterpret_cast<char*>(BlockList + 1) +
-                              BlockList->Current - N);
+    return static_cast<void *>(reinterpret_cast<char *>(BlockList + 1) + BlockList->Current - N);
   }
 
   void reset() {
     while (BlockList) {
-      BlockMeta* Tmp = BlockList;
+      BlockMeta *Tmp = BlockList;
       BlockList = BlockList->Next;
-      if (reinterpret_cast<char*>(Tmp) != InitialBuffer)
+      if (reinterpret_cast<char *>(Tmp) != InitialBuffer)
         std::free(Tmp);
     }
     BlockList = new (InitialBuffer) BlockMeta{nullptr, 0};
@@ -306,16 +302,13 @@ class DefaultAllocator {
 public:
   void reset() { Alloc.reset(); }
 
-  template<typename T, typename ...Args> T *makeNode(Args &&...args) {
-    return new (Alloc.allocate(sizeof(T)))
-        T(std::forward<Args>(args)...);
+  template <typename T, typename... Args> T *makeNode(Args &&... args) {
+    return new (Alloc.allocate(sizeof(T))) T(std::forward<Args>(args)...);
   }
 
-  void *allocateNodeArray(size_t sz) {
-    return Alloc.allocate(sizeof(Node *) * sz);
-  }
+  void *allocateNodeArray(size_t sz) { return Alloc.allocate(sizeof(Node *) * sz); }
 };
-}  // unnamed namespace
+} // unnamed namespace
 
 //===----------------------------------------------------------------------===//
 // Code beyond this point should not be synchronized with libc++abi.
@@ -323,16 +316,15 @@ public:
 
 using Demangler = itanium_demangle::ManglingParser<DefaultAllocator>;
 
-char *llvm::itaniumDemangle(const char *MangledName, char *Buf,
-                            size_t *N, int *Status) {
-  if (MangledName == nullptr || (Buf != nullptr && N == nullptr)) {
+char *llvm::itaniumDemangle(const std::string_view MangledName, char *Buf, size_t *N, int *Status) {
+  if (MangledName.empty() || (Buf != nullptr && N == nullptr)) {
     if (Status)
       *Status = demangle_invalid_args;
     return nullptr;
   }
 
   int InternalStatus = demangle_success;
-  Demangler Parser(MangledName, MangledName + std::strlen(MangledName));
+  Demangler Parser(MangledName.data(), MangledName.data() + MangledName.size());
   OutputStream S;
 
   Node *AST = Parser.parse();
@@ -355,21 +347,16 @@ char *llvm::itaniumDemangle(const char *MangledName, char *Buf,
   return InternalStatus == demangle_success ? Buf : nullptr;
 }
 
-ItaniumPartialDemangler::ItaniumPartialDemangler()
-    : RootNode(nullptr), Context(new Demangler{nullptr, nullptr}) {}
+ItaniumPartialDemangler::ItaniumPartialDemangler() : RootNode(nullptr), Context(new Demangler{nullptr, nullptr}) {}
 
-ItaniumPartialDemangler::~ItaniumPartialDemangler() {
-  delete static_cast<Demangler *>(Context);
-}
+ItaniumPartialDemangler::~ItaniumPartialDemangler() { delete static_cast<Demangler *>(Context); }
 
-ItaniumPartialDemangler::ItaniumPartialDemangler(
-    ItaniumPartialDemangler &&Other)
+ItaniumPartialDemangler::ItaniumPartialDemangler(ItaniumPartialDemangler &&Other)
     : RootNode(Other.RootNode), Context(Other.Context) {
   Other.Context = Other.RootNode = nullptr;
 }
 
-ItaniumPartialDemangler &ItaniumPartialDemangler::
-operator=(ItaniumPartialDemangler &&Other) {
+ItaniumPartialDemangler &ItaniumPartialDemangler::operator=(ItaniumPartialDemangler &&Other) {
   std::swap(RootNode, Other.RootNode);
   std::swap(Context, Other.Context);
   return *this;
@@ -424,8 +411,7 @@ char *ItaniumPartialDemangler::getFunctionBaseName(char *Buf, size_t *N) const {
   }
 }
 
-char *ItaniumPartialDemangler::getFunctionDeclContextName(char *Buf,
-                                                          size_t *N) const {
+char *ItaniumPartialDemangler::getFunctionDeclContextName(char *Buf, size_t *N) const {
   if (!isFunction())
     return nullptr;
   const Node *Name = static_cast<const FunctionEncoding *>(RootNode)->getName();
@@ -434,7 +420,7 @@ char *ItaniumPartialDemangler::getFunctionDeclContextName(char *Buf,
   if (!initializeOutputStream(Buf, N, S, 128))
     return nullptr;
 
- KeepGoingLocalFunction:
+KeepGoingLocalFunction:
   while (true) {
     if (Name->getKind() == Node::KAbiTagAttr) {
       Name = static_cast<const AbiTagAttr *>(Name)->Base;
@@ -477,8 +463,7 @@ char *ItaniumPartialDemangler::getFunctionName(char *Buf, size_t *N) const {
   return printNode(Name, Buf, N);
 }
 
-char *ItaniumPartialDemangler::getFunctionParameters(char *Buf,
-                                                     size_t *N) const {
+char *ItaniumPartialDemangler::getFunctionParameters(char *Buf, size_t *N) const {
   if (!isFunction())
     return nullptr;
   NodeArray Params = static_cast<FunctionEncoding *>(RootNode)->getParams();
@@ -496,8 +481,7 @@ char *ItaniumPartialDemangler::getFunctionParameters(char *Buf,
   return S.getBuffer();
 }
 
-char *ItaniumPartialDemangler::getFunctionReturnType(
-    char *Buf, size_t *N) const {
+char *ItaniumPartialDemangler::getFunctionReturnType(char *Buf, size_t *N) const {
   if (!isFunction())
     return nullptr;
 
@@ -505,8 +489,7 @@ char *ItaniumPartialDemangler::getFunctionReturnType(
   if (!initializeOutputStream(Buf, N, S, 128))
     return nullptr;
 
-  if (const Node *Ret =
-          static_cast<const FunctionEncoding *>(RootNode)->getReturnType())
+  if (const Node *Ret = static_cast<const FunctionEncoding *>(RootNode)->getReturnType())
     Ret->print(S);
 
   S += '\0';
@@ -562,8 +545,7 @@ bool ItaniumPartialDemangler::isCtorOrDtor() const {
 
 bool ItaniumPartialDemangler::isFunction() const {
   assert(RootNode != nullptr && "must call partialDemangle()");
-  return static_cast<const Node *>(RootNode)->getKind() ==
-         Node::KFunctionEncoding;
+  return static_cast<const Node *>(RootNode)->getKind() == Node::KFunctionEncoding;
 }
 
 bool ItaniumPartialDemangler::isSpecialName() const {
@@ -572,6 +554,4 @@ bool ItaniumPartialDemangler::isSpecialName() const {
   return K == Node::KSpecialName || K == Node::KCtorVtableSpecialName;
 }
 
-bool ItaniumPartialDemangler::isData() const {
-  return !isFunction() && !isSpecialName();
-}
+bool ItaniumPartialDemangler::isData() const { return !isFunction() && !isSpecialName(); }

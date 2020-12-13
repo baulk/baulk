@@ -12,10 +12,6 @@
 #include "ascii.hpp"
 #include "match.hpp"
 
-namespace llvm {
-std::string demangle(const std::string &MangledName);
-}
-
 namespace bela::pe {
 enum class Machine : uint16_t {
   UNKNOWN = 0,
@@ -461,7 +457,17 @@ struct Version {
 std::optional<Version> Lookup(std::wstring_view file, bela::error_code &ec);
 
 inline bool IsSubsystemConsole(std::wstring_view p) {
-  constexpr const wchar_t *suffix[] = {L".bat", L".cmd", L".vbs", L".vbe", L".js", L".jse", L".wsf", L".wsh", L".msc"};
+  constexpr const wchar_t *suffix[] = {
+      // console suffix
+      L".bat", // batch
+      L".cmd", // batch
+      L".vbs", // Visual Basic script files
+      L".vbe", // Visual Basic script files (encrypted)
+      L".js",  // JavaScript
+      L".jse", // JavaScript (encrypted)
+      L".wsf", // WScript
+      L".wsh", // Windows Script Host Settings File
+  };
   File file;
   bela::error_code ec;
   if (!file.NewFile(p, ec)) {

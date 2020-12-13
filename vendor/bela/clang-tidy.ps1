@@ -10,6 +10,7 @@ if (Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio") {
 $clangtidyobj = Get-Command -CommandType Application "clang-tidy" -ErrorAction SilentlyContinue
 if ($null -eq $clangtidyobj) {
     $clangtidyLocal = $(
+        "$VSRoot\2019\Preview\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
         "$VSRoot\2019\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
         "$VSRoot\2019\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
         "$VSRoot\2019\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
@@ -41,5 +42,5 @@ Write-Host "Use $clangtidy"
 
 $includes = ("*.cc", "*.cxx", "*.cpp", "*.c++");
 Get-ChildItem -Force -Recurse -File -Path "$PSScriptRoot\src" -Include $includes | ForEach-Object {
-    &"$clangtidy" $_.FullName -checks=$checks -- -m64 -x c++ -std=c++17 -ferror-limit=1000 -D_WIN64 -DNDEBUG -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -I"$PSScriptRoot/include" -Wall -Wextra -Wshadow -Wimplicit-fallthrough
+    &"$clangtidy" $_.FullName -checks=$checks -- -m64 -x c++ -std=c++20 -ferror-limit=1000 -D_WIN64 -DNDEBUG -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -I"$PSScriptRoot/include" -Wall -Wextra -Wshadow -Wimplicit-fallthrough
 }

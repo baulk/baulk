@@ -1,6 +1,7 @@
 ///
 #include <bela/pe.hpp>
 #include <bela/terminal.hpp>
+#include <bela/und.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
@@ -55,7 +56,7 @@ int wmain(int argc, wchar_t **argv) {
         continue;
       }
       if (auto fn = sse.LookupOrdinalFunctionName(d.first, n.Ordinal, ec); fn) {
-        bela::FPrintF(stderr, L"(Delay) %s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
+        bela::FPrintF(stderr, L"(Delay) %s (Ordinal %d)\n", bela::demangle(*fn), n.Ordinal);
         continue;
       }
       bela::FPrintF(stderr, L"(Delay) Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
