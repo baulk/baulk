@@ -5,7 +5,7 @@
 #include <bela/endian.hpp>
 #include <bela/algorithm.hpp>
 #include <bela/bufio.hpp>
-#include <numeric>
+#include <bitset>
 
 namespace hazel::zip {
 // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
@@ -83,7 +83,7 @@ bool Reader::readDirectory64End(int64_t offset, directoryEnd &d, bela::error_cod
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
   }
-  b.Discard(16);
+  b.Discard(12);
   d.diskNbr = b.Read<uint32_t>();    // number of this disk
   d.dirDiskNbr = b.Read<uint32_t>(); // number of the disk with the start of the central directory
                                      // total number of entries in the central directory on this disk
@@ -409,10 +409,7 @@ const wchar_t *Method(uint16_t m) {
   return L"NONE";
 }
 
-bool Reader::Contains(bela::Span<std::string_view> paths, std::size_t limit) const {
-  if (paths.empty()) {
-    return false;
-  }
+bool Reader::ContainsSlow(bela::Span<std::string_view> paths, std::size_t limit) const {
   size_t found = 0;
   bela::flat_hash_map<std::string_view, bool> pms;
   for (const auto p : paths) {
@@ -427,6 +424,27 @@ bool Reader::Contains(bela::Span<std::string_view> paths, std::size_t limit) con
       }
     }
     if (found == paths.size()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Reader::Contains(bela::Span<std::string_view> paths, std::size_t limit) const {
+  if (paths.empty() || paths.size() > files.size()) {
+    return false;
+  }
+  if (paths.size() > 128) {
+    return ContainsSlow(paths, limit);
+  }
+  std::bitset<128> mask;
+  for (const auto &file : files) {
+    for (size_t i = 0; i < paths.size(); i++) {
+      if (file.name == paths[i]) {
+        mask.set(i);
+      }
+    }
+    if (mask.count() == paths.size()) {
       return true;
     }
   }
@@ -453,11 +471,11 @@ msoffice_t Reader::LooksLikeOffice() const {
     if (bela::StartsWith(file.name, "word/")) {
       return OfficeDocx;
     }
-    if (bela::StartsWith(file.name, "word/")) {
-      return OfficeDocx;
+    if (bela::StartsWith(file.name, "ppt/")) {
+      return OfficePptx;
     }
-    if (bela::StartsWith(file.name, "word/")) {
-      return OfficeDocx;
+    if (bela::StartsWith(file.name, "xl/")) {
+      return OfficeXlsx;
     }
   }
   return OfficeNone;
@@ -470,7 +488,7 @@ bool Reader::LooksLikeOFD() const {
 }
 
 bool Reader::LooksLikeAppx() const {
-  std::string_view paths = {"[Content_Types].xml", "AppxManifest.xml"};
+  std::string_view paths[] = {"[Content_Types].xml", "AppxManifest.xml"};
   return Contains(paths);
 }
 bool Reader::LooksLikeApk() const {

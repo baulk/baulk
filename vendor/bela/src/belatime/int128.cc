@@ -39,11 +39,11 @@ namespace {
 inline ABSL_ATTRIBUTE_ALWAYS_INLINE int Fls128(uint128 n) {
   if (uint64_t hi = Uint128High64(n)) {
     ABSL_INTERNAL_ASSUME(hi != 0);
-    return 127 - bela::base_internal::CountLeadingZeros64(hi);
+    return 127 - std::countl_zero(hi);
   }
   const uint64_t low = Uint128Low64(n);
   ABSL_INTERNAL_ASSUME(low != 0);
-  return 63 - bela::base_internal::CountLeadingZeros64(low);
+  return 63 - std::countl_zero(low);
 }
 
 // Long division/modulo for uint128 implemented using the shift-subtract

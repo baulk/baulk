@@ -5,6 +5,7 @@ add_executable(elfview_test
 
 target_link_libraries(elfview_test
   hazel
+  belaund
 )
 
 # base
@@ -14,4 +15,5 @@ add_executable(machoview_test
 
 target_link_libraries(machoview_test
   hazel
+  belaund
 )

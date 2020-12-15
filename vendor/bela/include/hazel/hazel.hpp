@@ -1,14 +1,42 @@
 //
 #ifndef HAZEL_HAZEL_HPP
 #define HAZEL_HAZEL_HPP
+#include <variant>
 #include <bela/base.hpp>
 #include <bela/phmap.hpp>
 #include <bela/buffer.hpp>
+#include <bela/time.hpp>
 #include "types.hpp"
 #include "io.hpp"
 
 namespace hazel {
 
+// https://en.cppreference.com/w/cpp/utility/variant/visit
+// https://en.cppreference.com/w/cpp/utility/variant
+
+using hazel_value_t = std::variant<std::string, std::wstring, std::vector<std::string>, std::vector<std::wstring>,
+                                   int32_t, int64_t, uint32_t, uint64_t, bela::Time>;
+class hazel_result {
+public:
+  hazel_result() = default;
+  hazel_result(const hazel_result &) = delete;
+  hazel_result &operator=(const hazel_result &) = delete;
+  const auto &values() const { return values_; }
+  hazel_result &assgin(types::hazel_types_t ty, std::wstring_view desc) {
+    t = ty;
+    values_.emplace(L"description", std::wstring(desc));
+    return *this;
+  }
+  template <typename T> hazel_result &append(std::wstring_view key, T &&value) {
+    values_.emplace(key, std::move(value));
+    return *this;
+  }
+  auto type() const { return t; }
+
+private:
+  bela::flat_hash_map<std::wstring, hazel_value_t> values_;
+  types::hazel_types_t t{types::none};
+};
 // file attribute table
 struct FileAttributeTable {
   bela::flat_hash_map<std::wstring, std::wstring> attributes;

@@ -14,9 +14,9 @@
 // limitations under the License.
 #include <cassert>
 #include <cstring>
+#include <bit>
 #include <bela/narrow/strcat.hpp>
 #include <bela/endian.hpp>
-#include <bela/bits.hpp>
 #ifdef __SSE4_2__
 #include <x86intrin.h>
 #endif
@@ -70,7 +70,7 @@ inline size_t FastHexToBufferZeroPad16(uint64_t val, char *out) {
   }
 #endif
   // | 0x1 so that even 0 has 1 digit.
-  return 16 - bela::base_internal::CountLeadingZeros64(val | 0x1) / 4;
+  return 16 - std::countl_zero(val | 0x1) / 4;
 }
 } // namespace numbers_internal
 

@@ -11,6 +11,10 @@ A lot of the code supports wchar_t based on Abseil modifications, some of which 
 +   `bela::secure_wstring` `bela::secure_string`
 +   `bela::StringCat` `bela::StrAppend`
 +   `bela::hash` SHA256/SHA512 SHA3 BLAKE3 SM3
++   Support list zip files
++   Support analyze PE file
++   Support analyze ELF file
++   Support analyze Mach-O
 +   ...
 
 ## Documents

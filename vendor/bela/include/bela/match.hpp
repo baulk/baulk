@@ -38,6 +38,12 @@
 
 namespace bela {
 
+// StartsWith and EndsWith
+inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcept { return text.starts_with(prefix); }
+inline bool EndsWith(std::wstring_view text, std::wstring_view suffix) noexcept { return text.ends_with(suffix); }
+inline bool StartsWith(std::string_view text, std::string_view prefix) noexcept { return prefix.starts_with(prefix); }
+inline bool EndsWith(std::string_view text, std::string_view suffix) noexcept { return text.ends_with(suffix); }
+
 // StrContains()
 //
 // Returns whether a given string `haystack` contains the substring `needle`.
@@ -49,15 +55,6 @@ inline bool StrContains(std::wstring_view haystack, wchar_t needle) noexcept {
   return haystack.find(needle) != haystack.npos;
 }
 
-inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcept {
-  return prefix.empty() ||
-         (text.size() >= prefix.size() && memcmp(text.data(), prefix.data(), prefix.size() * sizeof(wchar_t)) == 0);
-}
-inline bool EndsWith(std::wstring_view text, std::wstring_view suffix) noexcept {
-  return suffix.empty() ||
-         (text.size() >= suffix.size() &&
-          memcmp(text.data() + (text.size() - suffix.size()), suffix.data(), suffix.size() * sizeof(wchar_t)) == 0);
-}
 bool EqualsIgnoreCase(std::wstring_view piece1, std::wstring_view piece2) noexcept;
 bool StartsWithIgnoreCase(std::wstring_view text, std::wstring_view prefix) noexcept;
 bool EndsWithIgnoreCase(std::wstring_view text, std::wstring_view suffix) noexcept;
@@ -73,15 +70,6 @@ inline bool StrContains(std::string_view haystack, std::string_view needle) noex
 
 inline bool StrContains(std::string_view haystack, char needle) noexcept {
   return haystack.find(needle) != haystack.npos;
-}
-
-inline bool StartsWith(std::string_view text, std::string_view prefix) noexcept {
-  return prefix.empty() || (text.size() >= prefix.size() && memcmp(text.data(), prefix.data(), prefix.size())) == 0;
-}
-
-inline bool EndsWith(std::string_view text, std::string_view suffix) noexcept {
-  return suffix.empty() || (text.size() >= suffix.size() &&
-                            memcmp(text.data() + (text.size() - suffix.size()), suffix.data(), suffix.size()) == 0);
 }
 
 bool EqualsIgnoreCase(std::string_view piece1, std::string_view piece2) noexcept;

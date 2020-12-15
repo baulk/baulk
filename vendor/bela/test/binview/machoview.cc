@@ -1,6 +1,7 @@
 ///
 #include <hazel/macho.hpp>
 #include <bela/terminal.hpp>
+#include <bela/und.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
@@ -24,7 +25,7 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   for (const auto &s : symbols) {
-    bela::FPrintF(stderr, L"S: %s\n", s);
+    bela::FPrintF(stderr, L"S: %s\n", bela::demangle(s));
   }
   return 0;
 }

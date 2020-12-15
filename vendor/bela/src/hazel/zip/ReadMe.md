@@ -1,5 +1,5 @@
 # ZIP
 
-![](./ZIP-64_Internal_Layout.svg)
+![](./images/ZIP-64_Internal_Layout.svg)
 
 

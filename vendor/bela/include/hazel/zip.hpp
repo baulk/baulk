@@ -110,12 +110,12 @@ typedef enum zip_method_e : uint16_t {
 } zip_method_t;
 
 struct directoryEnd {
-  uint32_t diskNbr;            // unused
-  uint32_t dirDiskNbr;         // unused
-  uint64_t dirRecordsThisDisk; // unused
-  uint64_t directoryRecords;
-  uint64_t directorySize;
-  uint64_t directoryOffset; // relative to file
+  uint32_t diskNbr{0};            // unused
+  uint32_t dirDiskNbr{0};         // unused
+  uint64_t dirRecordsThisDisk{0}; // unused
+  uint64_t directoryRecords{0};
+  uint64_t directorySize{0};
+  uint64_t directoryOffset{0}; // relative to file
   uint16_t commentLen;
   std::string comment;
 };
@@ -265,6 +265,7 @@ private:
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);
   int64_t findDirectory64End(int64_t directoryEndOffset, bela::error_code &ec);
+  bool ContainsSlow(bela::Span<std::string_view> paths, std::size_t limit = size_max) const;
 };
 
 // NewReader

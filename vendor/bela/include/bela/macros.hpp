@@ -55,4 +55,12 @@
   (BELA_PREDICT_TRUE((expr)) ? static_cast<void>(0) : [] { assert(false && #expr); }()) // NOLINT
 #endif
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#define BELA_FORCE_INLINE __forceinline
+#define BELA_ATTRIBUTE_ALWAYS_INLINE
+#else
+#define BELA_ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline))
+#define BELA_FORCE_INLINE inline BELA_ATTRIBUTE_ALWAYS_INLINE
+#endif
+
 #endif

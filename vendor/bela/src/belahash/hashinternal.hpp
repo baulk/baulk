@@ -1,7 +1,7 @@
 ///
 #ifndef BELA_HASH_INTERNAL_HPP
 #define BELA_HASH_INTERNAL_HPP
-#include <bela/bits.hpp>
+#include <bela/macros.hpp>
 #include <bela/endian.hpp>
 
 /**

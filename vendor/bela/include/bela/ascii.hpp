@@ -53,9 +53,10 @@
 namespace bela {
 namespace ascii_internal {
 
-template <typename T, size_t N> bool ArrayChr(T (&a)[N], T c) {
-  for (auto i : a) {
-    if (i == c) {
+template <typename T, size_t N> bool character_contains(const T (&a)[N], T c) {
+  static_assert(std::is_same_v<T, typename std::char_traits<T>::char_type>, "Bad char_traits for character_contains");
+  for (const auto ch : a) {
+    if (ch == c) {
       return true;
     }
   }
@@ -71,6 +72,7 @@ extern const char kToUpper[256];
 // Declaration for the array of characters to lower-case characters.
 extern const char kToLower[256];
 } // namespace ascii_internal
+
 // ascii_isalpha()
 //
 // Determines whether the given character is an alphabetic character.
@@ -89,9 +91,10 @@ inline bool ascii_isspace(wchar_t c) {
   // if (c > 0xFF) {
   // }
   // return (ascii_internal::kPropertyBits[c] & 0x08) != 0;
-  wchar_t wspace[] = {' ',    '\t',   '\n',   '\r',   11,     12,     0x0085, 0x2000, 0x2001, 0x2002, 0x2003,
-                      0x2004, 0x2005, 0x2006, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000};
-  return ascii_internal::ArrayChr(wspace, c);
+  static constexpr const wchar_t spaces[] = {' ',    '\t',   '\n',   '\r',   11,     12,     0x0085,
+                                             0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006,
+                                             0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x205f, 0x3000};
+  return ascii_internal::character_contains(spaces, c);
 }
 
 // ascii_ispunct()

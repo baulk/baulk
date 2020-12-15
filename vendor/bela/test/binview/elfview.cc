@@ -1,6 +1,7 @@
 ///
 #include <hazel/elf.hpp>
 #include <bela/terminal.hpp>
+#include <bela/und.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
@@ -45,7 +46,7 @@ int wmain(int argc, wchar_t **argv) {
   if (std::vector<hazel::elf::ImportedSymbol> symbols; file.ImportedSymbols(symbols, ec)) {
     bela::FPrintF(stderr, L"\x1b[34mImported Symbols:\x1b[0m\n");
     for (const auto &s : symbols) {
-      bela::FPrintF(stderr, L"%s (%s@%s)\n", s.Name, s.Library, s.Version);
+      bela::FPrintF(stderr, L"%s (%s@%s)\n", bela::demangle(s.Name), s.Library, s.Version);
     }
   }
 

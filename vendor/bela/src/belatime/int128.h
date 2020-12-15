@@ -29,7 +29,8 @@
 #include <iosfwd>
 #include <limits>
 #include <utility>
-#include <bela/bits.hpp>
+#include <bit>
+#include <bela/macros.hpp>
 
 #if defined(_MSC_VER)
 // In very old versions of MSVC and when the /Zc:wchar_t flag is off, wchar_t is

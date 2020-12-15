@@ -357,7 +357,7 @@ public:
 
   template <class T> std::shared_ptr<const value<T>> as() const;
 
-  template <class Visitor, class... Args> void accept(Visitor &&visitor, Args &&... args) const;
+  template <class Visitor, class... Args> void accept(Visitor &&visitor, Args &&...args) const;
 
   base_type type() const { return type_; }
 
@@ -2418,7 +2418,7 @@ template <> struct value_accept<> {
 };
 
 template <class T, class... Ts> struct value_accept<T, Ts...> {
-  template <class Visitor, class... Args> static void accept(const base &b, Visitor &&visitor, Args &&... args) {
+  template <class Visitor, class... Args> static void accept(const base &b, Visitor &&visitor, Args &&...args) {
     if (auto v = b.as<T>()) {
       visitor.visit(*v, std::forward<Args>(args)...);
     } else {
@@ -2431,7 +2431,7 @@ template <class T, class... Ts> struct value_accept<T, Ts...> {
  * base implementation of accept() that calls visitor.visit() on the concrete
  * class.
  */
-template <class Visitor, class... Args> void base::accept(Visitor &&visitor, Args &&... args) const {
+template <class Visitor, class... Args> void base::accept(Visitor &&visitor, Args &&...args) const {
   if (is_value()) {
     using value_acceptor =
         value_accept<std::string, int64_t, double, bool, local_date, local_time, local_datetime, offset_datetime>;

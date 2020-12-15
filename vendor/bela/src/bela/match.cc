@@ -33,6 +33,7 @@
 #include <bela/match.hpp>
 #include <bela/memutil.hpp>
 
+
 namespace bela {
 
 bool EqualsIgnoreCase(std::wstring_view piece1, std::wstring_view piece2) noexcept {
