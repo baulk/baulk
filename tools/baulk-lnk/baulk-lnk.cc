@@ -15,7 +15,7 @@
 namespace fs = std::filesystem;
 bool IsDebugMode = false;
 // DbgPrint added newline
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &... args) {
   if (!IsDebugMode) {
     return 0;
   }
