@@ -114,6 +114,7 @@ public:
   auto &TimeZoneOffset() noexcept { return tzoffset; }
   // RFC3339
   std::wstring Format(bool nano = false);
+  std::string FormatNarrow(bool nano = false);
   bela::Time Time() const noexcept;
 
 private:
@@ -140,8 +141,14 @@ inline std::wstring FormatTime(bela::Time t, bool nano = false) {
   auto dt = LocalDateTime(t);
   return dt.Format(nano);
 }
-// Coordinated Universal Time 
+
+inline std::string FormatTimeNarrow(bela::Time t, bool nano = false) {
+  auto dt = LocalDateTime(t);
+  return dt.FormatNarrow(nano);
+}
+// Coordinated Universal Time
 inline std::wstring FormatUniversalTime(bela::Time t, bool nano = false) { return DateTime(t).Format(nano); }
+inline std::string FormatUniversalTimeNarrow(bela::Time t, bool nano = false) { return DateTime(t).FormatNarrow(nano); }
 
 std::wstring_view WeekdayName(Weekday wd, bool shortname = true) noexcept;
 std::wstring_view MonthName(Month mon, bool shortname = true) noexcept;
