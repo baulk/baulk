@@ -4,105 +4,53 @@
 
 namespace hazel::fs {
 
-struct description_t {
+struct resparse_point_tagname_t {
   reparse_point_t t;
-  const wchar_t *description;
+  const wchar_t *tagName;
 };
-// https://mediatemple.net/community/products/dv/204403964/mime-types
-const wchar_t *lookup_reparse_description(reparse_point_t t) {
 
-  constexpr const wchar_t *onedriverdesc =
-      L"Used by the Cloud Files filter, for files managed by a sync engine such as "
-      L"OneDrive. Server-side interpretation only, not meaningful over the wire.";
-  constexpr const wchar_t *wcidesc =
-      L"Used by the Windows Container Isolation filter. Server-side interpretation only, not meaningful over the wire.";
-  constexpr description_t descriptions[] = {
-      {MOUNT_POINT, L"Used for mount point support."},
-      {HSM, L"Obsolete. Used by legacy Hierarchical Storage Manager Product."}, //
-      {DRIVE_EXTENDER, L"Home server drive extender."},
-      {HSM2, L"Obsolete. Used by legacy Hierarchical Storage Manager Product."},
-      {SIS, L"Used by single-instance storage (SIS) filter driver. Server-side interpretation only, not meaningful "
-            L"over the wire."},
-      {WIM, L"Used by the WIM Mount filter. Server-side interpretation only, not meaningful over the wire."},
-      {CSV, L"Obsolete. Used by Clustered Shared Volumes (CSV) version 1 in Windows Server 2008 R2 operating system. "
-            L"Server-side interpretation only, not meaningful over the wire."},
-      {DFS, L"Used by the DFS filter. The DFS is described in the Distributed File System (DFS): Referral Protocol "
-            L"Specification [MS-DFSC]. Server-side interpretation only, not meaningful over the wire."},
-      {FILTER_MANAGER, L"Used by filter manager test harness."},
-      {SYMLINK, L"Used for symbolic link support. "},
-      {IIS_CACHE, L"Used by Microsoft Internet Information Services (IIS) caching. Server-side interpretation only, "
-                  L"not meaningful over the wire."},
-      {DFSR, L"Used by the DFS filter. The DFS is described in [MS-DFSC]. Server-side interpretation only, not "
-             L"meaningful over the wire."},
-      {DEDUP, L"Used by the Data Deduplication (Dedup) filter. Server-side interpretation only, not meaningful over "
-              L"the wire."},
-      {APPXSTRM, L"Not used."},
-      {NFS, L"Used by the Network File System (NFS) component. Server-side interpretation only, not meaningful over "
-            L"the wire."},
-      {FILE_PLACEHOLDER, L"Obsolete. Used by Windows Shell for legacy placeholder files in Windows 8.1. Server-side "
-                         L"interpretation only, not meaningful over the wire."},
-      {DFM, L"Used by the Dynamic File filter. Server-side interpretation only, not meaningful over the wire."},
-      {WOF, L"Used by the Windows Overlay filter, for either WIMBoot or single-file compression. Server-side "
-            L"interpretation only, not meaningful over the wire."},
-      {WCI, wcidesc},
-      {WCI_1, wcidesc},
-      {GLOBAL_REPARSE, L"Used by NPFS to indicate a named pipe symbolic link from a server silo into the host silo. "
-                       L"Server-side interpretation only, not meaningful over the wire."},
-      {CLOUD, L"Used by the Cloud Files filter, for files managed by a sync engine such as Microsoft OneDrive. "
-              L"Server-side interpretation only, not meaningful over the wire."},
-      {CLOUD_1, L"Used by the Cloud Files filter, for files managed by a sync engine such as OneDrive. Server-side "
-                L"interpretation only, not meaningful over the wire."},
-      {CLOUD_2, onedriverdesc},
-      {CLOUD_3, onedriverdesc},
-      {CLOUD_4, onedriverdesc},
-      {CLOUD_5, onedriverdesc},
-      {CLOUD_6, onedriverdesc},
-      {CLOUD_7, onedriverdesc}, //
-      {CLOUD_8, onedriverdesc},
-      {CLOUD_9, onedriverdesc},
-      {CLOUD_A, onedriverdesc},
-      {CLOUD_B, onedriverdesc},
-      {CLOUD_C, onedriverdesc},
-      {CLOUD_D, onedriverdesc},
-      {CLOUD_E, onedriverdesc},
-      {CLOUD_F, onedriverdesc},
-      {APPEXECLINK,
-       L"Used by Universal Windows Platform (UWP) packages to encode information that allows the application to be "
-       L"launched by CreateProcess. Server-side interpretation only, not meaningful over the wire."},
-      {PROJFS, L"Used by the Windows Projected File System filter, for files managed by a user mode provider such as "
-               L"VFS for Git. Server-side interpretation only, not meaningful over the wire."},
-      {LX_SYMLINK, L"Used by the Windows Subsystem for Linux (WSL) to represent a UNIX symbolic link. Server-side "
-                   L"interpretation only, not meaningful over the wire."},
-      {STORAGE_SYNC,
-       L"Used by the Azure File Sync (AFS) filter. Server-side interpretation only, not meaningful over the wire."},
-      {WCI_TOMBSTONE, L"Used by the Windows Container Isolation filter. Server-side interpretation only, not "
-                      L"meaningful over the wire."},
-      {UNHANDLED, L"Used by the Windows Container Isolation filter. Server-side interpretation only, not meaningful "
-                  L"over the wire."},
-      {ONEDRIVE, L"Not used."},
-      {PROJFS_TOMBSTONE, L"Used by the Windows Projected File System filter, for files managed by a user mode provider "
-                         L"such as VFS for Git. Server-side interpretation only, not meaningful over the wire."},
-      {AF_UNIX, L"Used by the Windows Subsystem for Linux (WSL) to represent a UNIX domain socket. Server-side "
-                L"interpretation only, not meaningful over the wire."},
-      {LX_FIFO, L"Used by the Windows Subsystem for Linux (WSL) to represent a UNIX FIFO (named pipe). Server-side "
-                L"interpretation only, not meaningful over the wire."},
-      {LX_CHR, L"Used by the Windows Subsystem for Linux (WSL) to represent a UNIX character special file. Server-side "
-               L"interpretation only, not meaningful over the wire."},
-      {LX_BLK, L"Used by the Windows Subsystem for Linux (WSL) to represent a UNIX block special file. Server-side "
-               L"interpretation only, not meaningful over the wire."},
-      {WCI_LINK, wcidesc},
-      {WCI_LINK_1, wcidesc},
+#define DEFINED_NAME_RESP(X)                                                                                           \
+  { static_cast<reparse_point_t>(X), L#X }
+
+// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4
+
+const wchar_t *lookup_reparse_tagname(reparse_point_t t) {
+
+  constexpr resparse_point_tagname_t tagnames[] = {
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_MOUNT_POINT),   DEFINED_NAME_RESP(IO_REPARSE_TAG_HSM),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_HSM2),          DEFINED_NAME_RESP(IO_REPARSE_TAG_SIS),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_WIM),           DEFINED_NAME_RESP(IO_REPARSE_TAG_CSV),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_DFS),           DEFINED_NAME_RESP(IO_REPARSE_TAG_SYMLINK),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_DFSR),          DEFINED_NAME_RESP(IO_REPARSE_TAG_DEDUP),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_NFS),           DEFINED_NAME_RESP(IO_REPARSE_TAG_FILE_PLACEHOLDER),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_WOF),           DEFINED_NAME_RESP(IO_REPARSE_TAG_WCI),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_WCI_1),         DEFINED_NAME_RESP(IO_REPARSE_TAG_GLOBAL_REPARSE),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD),         DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_1),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_2),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_3),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_4),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_5),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_6),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_7),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_8),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_9),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_A),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_B),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_C),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_D),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_E),       DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_F),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_CLOUD_MASK),    DEFINED_NAME_RESP(IO_REPARSE_TAG_APPEXECLINK),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_PROJFS),        DEFINED_NAME_RESP(IO_REPARSE_TAG_STORAGE_SYNC),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_WCI_TOMBSTONE), DEFINED_NAME_RESP(IO_REPARSE_TAG_UNHANDLED),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_ONEDRIVE),      DEFINED_NAME_RESP(IO_REPARSE_TAG_PROJFS_TOMBSTONE),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_AF_UNIX),       DEFINED_NAME_RESP(IO_REPARSE_TAG_WCI_LINK),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_WCI_LINK_1),    DEFINED_NAME_RESP(IO_REPARSE_TAG_DATALESS_CIM),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_LX_FIFO),       DEFINED_NAME_RESP(IO_REPARSE_TAG_LX_CHR),
+      DEFINED_NAME_RESP(IO_REPARSE_TAG_LX_BLK),
       // text index end
-
   };
   //
-  for (const auto &m : descriptions) {
+  for (const auto &m : tagnames) {
     if (m.t == t) {
-      return m.description;
+      return m.tagName;
     }
   }
-  return L"UNKNOWN";
-}
+  return L"IO_REPARSE_TAG_UNKNOWN";
+} // namespace hazel::fs
 
 // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/b41f1cbf-10df-4a47-98d4-1c52a833d913
 inline bool DecodeSymbolicLink(const REPARSE_DATA_BUFFER *buffer, FileReparsePoint &frp, bela::error_code &ec) {
@@ -193,7 +141,7 @@ bool LookupReparsePoint(std::wstring_view file, FileReparsePoint &frp, bela::err
   auto p = b.cast<REPARSE_DATA_BUFFER>();
   frp.type = static_cast<reparse_point_t>(p->ReparseTag);
   frp.attributes.emplace(L"TAG", bela::StringCat(L"0x", bela::Hex(frp.type, bela::kZeroPad8)));
-  frp.attributes.emplace(L"Description", lookup_reparse_description(frp.type));
+  frp.attributes.emplace(L"TagName", lookup_reparse_tagname(frp.type));
   switch (frp.type) {
   case SYMLINK:
     return DecodeSymbolicLink(p, frp, ec);
