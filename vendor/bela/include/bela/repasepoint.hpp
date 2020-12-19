@@ -232,6 +232,9 @@
 #define IO_REPARSE_TAG_WCI_LINK_1 (0xA0001027L)
 #endif
 
+#ifndef IO_REPARSE_TAG_DATALESS_CIM
+#define IO_REPARSE_TAG_DATALESS_CIM             (0xA0000028L)
+#endif
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
 
 #define SYMLINK_FLAG_RELATIVE 0x00000001 // If set then this is a relative symlink.
