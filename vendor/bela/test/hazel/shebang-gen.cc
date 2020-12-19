@@ -1,6 +1,6 @@
 //
 #include <bela/terminal.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/io.hpp>
 #include <bela/algorithm.hpp>
 #include <algorithm>

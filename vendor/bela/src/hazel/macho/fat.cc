@@ -34,10 +34,10 @@ bool FatFile::ParseFile(bela::error_code &ec) {
   if (!ReadAt(ident, sizeof(ident), 0, ec)) {
     return false;
   }
-  if (bela::readbe<uint32_t>(ident) != MagicFat) {
+  if (bela::cast_frombe<uint32_t>(ident) != MagicFat) {
     // See if this is a Mach-O file via its magic number. The magic
     // must be converted to little endian first though.
-    auto lm = bela::readle<uint32_t>(ident);
+    auto lm = bela::cast_fromle<uint32_t>(ident);
     if (lm == Magic32 || lm == Magic64) {
       ec = bela::make_error_code(ErrNotFat, L"not a fat Mach-O file");
       return false;
@@ -52,7 +52,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
   if (!ReadFull(&narch, sizeof(narch), ec)) {
     return false;
   }
-  narch = bela::swapbe(narch);
+  narch = bela::frombe(narch);
   uint32_t mt{0};
   offset += 4;
   if (narch < 1) {
@@ -68,11 +68,11 @@ bool FatFile::ParseFile(bela::error_code &ec) {
       ec = bela::make_error_code(ec.code, L"invalid fat_arch header: ", ec.message);
       return false;
     }
-    fa.align = bela::swapbe(fa.align);
-    fa.cpusubtype = bela::swapbe(fa.cpusubtype);
-    fa.cputype = bela::swapbe(fa.cputype);
-    fa.offset = bela::swapbe(fa.offset);
-    fa.size = bela::swapbe(fa.size);
+    fa.align = bela::frombe(fa.align);
+    fa.cpusubtype = bela::frombe(fa.cpusubtype);
+    fa.cputype = bela::frombe(fa.cputype);
+    fa.offset = bela::frombe(fa.offset);
+    fa.size = bela::frombe(fa.size);
     offset += sizeof(fa);
     p->file.baseOffset = fa.offset;
     if (!p->file.NewFile(fd, p->file.size, ec)) {

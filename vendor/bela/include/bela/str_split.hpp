@@ -41,7 +41,7 @@
 #include <utility>
 #include <vector>
 #include "ascii.hpp"
-#include "str_split_internal.hpp"
+#include "internal/str_split_internal.hpp"
 
 namespace bela {
 //------------------------------------------------------------------------------

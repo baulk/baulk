@@ -33,9 +33,9 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
   if (!ReadAt(ident, sizeof(ident), 0, ec)) {
     return false;
   }
-  auto le = bela::readle<uint32_t>(ident);
+  auto le = bela::cast_fromle<uint32_t>(ident);
   if (le == MH_MAGIC) {
-    en = bela::endian::Endian::little;
+    en = std::endian::little;
     mach_header mh;
     if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
       return false;
@@ -51,7 +51,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
     return true;
   }
   if (le == MH_MAGIC_64) {
-    en = bela::endian::Endian::little;
+    en = std::endian::little;
     mach_header_64 mh;
     if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
       return false;
@@ -67,9 +67,9 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
     return true;
   }
 
-  auto be = bela::readle<uint32_t>(ident);
+  auto be = bela::cast_fromle<uint32_t>(ident);
   if (be == MH_MAGIC) {
-    en = bela::endian::Endian::big;
+    en = std::endian::big;
     mach_header mh;
     if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
       return false;
@@ -85,7 +85,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
     return true;
   }
   if (be == MH_MAGIC_64) {
-    en = bela::endian::Endian::big;
+    en = std::endian::big;
     mach_header_64 mh;
     if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
       return false;
@@ -184,8 +184,8 @@ bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
     sh->Relocs.resize(sh->Nreloc);
     for (uint32_t i = 0; i < sh->Nreloc; i++) {
       auto &rel = (sh->Relocs[i]);
-      auto addr = endian_cast_ptr<uint32_t>(b.data());
-      auto symnum = endian_cast_ptr<uint32_t>(b.data() + 4);
+      auto addr = cast_from<uint32_t>(b.data());
+      auto symnum = cast_from<uint32_t>(b.data() + 4);
       b.remove_prefix(8);
       if ((addr & (1 << 31)) != 0) {
         rel.Addr = addr & ((1 << 24) - 1);
@@ -196,7 +196,7 @@ bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
         rel.Scattered = true;
         continue;
       }
-      if (en == bela::endian::Endian::little) {
+      if (en == std::endian::little) {
         rel.Addr = addr;
         rel.Value = symnum & ((1 << 24) - 1);
         rel.Pcrel = (symnum & (1 << 24)) != 0;
@@ -205,7 +205,7 @@ bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
         rel.Type = static_cast<uint8_t>((symnum >> 28) & ((1 << 4) - 1));
         continue;
       }
-      if (en == bela::endian::Endian::big) {
+      if (en == std::endian::big) {
         rel.Addr = addr;
         rel.Value = symnum >> 8;
         rel.Pcrel = (symnum & (1 << 7)) != 0;
@@ -246,8 +246,8 @@ bool File::ParseFile(bela::error_code &ec) {
       ec = bela::make_error_code(L"command block too small");
       return false;
     }
-    auto cmd = endian_cast_ptr<uint32_t>(dat.data());
-    auto siz = endian_cast_ptr<uint32_t>(dat.data() + 4);
+    auto cmd = cast_from<uint32_t>(dat.data());
+    auto siz = cast_from<uint32_t>(dat.data() + 4);
     if (siz < 8 || siz > static_cast<uint32_t>(dat.size())) {
       ec = bela::make_error_code(L"invalid command block size");
       return false;
@@ -263,9 +263,9 @@ bool File::ParseFile(bela::error_code &ec) {
         return false;
       }
       RpathCmd hdr;
-      hdr.Cmd = endian_cast_ptr<uint32_t>(cmddat.data());
-      hdr.Len = endian_cast_ptr<uint32_t>(cmddat.data() + 4);
-      hdr.Path = endian_cast_ptr<uint32_t>(cmddat.data() + 8);
+      hdr.Cmd = cast_from<uint32_t>(cmddat.data());
+      hdr.Len = cast_from<uint32_t>(cmddat.data() + 4);
+      hdr.Path = cast_from<uint32_t>(cmddat.data() + 8);
       if (hdr.Path >= static_cast<uint32_t>(cmddat.size())) {
         ec = bela::make_error_code(L"invalid path in rpath command");
         return false;

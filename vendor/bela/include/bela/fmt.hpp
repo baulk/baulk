@@ -32,6 +32,10 @@ struct FormatArg {
     character.c = b ? 1 : 0;
     character.width = sizeof(bool);
   }
+  FormatArg(char8_t c) : at(ArgType::CHARACTER) {
+    character.c = static_cast<char>(c);
+    character.width = sizeof(char);
+  }
   // %c
   FormatArg(char c) : at(ArgType::CHARACTER) {
     character.c = c; /// if caset to uint64_t
@@ -96,6 +100,7 @@ struct FormatArg {
     floating.d = f;
     floating.width = sizeof(double);
   }
+  
   // wchar_t
   // A C-style text string. and wstring_view
   FormatArg(const wchar_t *str) : at(ArgType::STRING) {
@@ -117,6 +122,7 @@ struct FormatArg {
     strings.data = sv.data();
     strings.len = sv.size();
   }
+
   // support char16_t under Windows.
   FormatArg(const char16_t *str) : at(ArgType::STRING) {
     strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
@@ -157,6 +163,27 @@ struct FormatArg {
   }
   FormatArg(std::string_view sv) : at(ArgType::USTRING) {
     ustring.data = sv.data();
+    ustring.len = sv.size();
+  }
+
+  // char8_t support
+  FormatArg(const char8_t *str) : at(ArgType::USTRING) {
+    ustring.data = (str == nullptr) ? "(NULL)" : reinterpret_cast<const char *>(str);
+    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(reinterpret_cast<const char *>(str));
+  }
+  FormatArg(char8_t *str) : at(ArgType::USTRING) {
+    ustring.data = (str == nullptr) ? "(NULL)" : reinterpret_cast<char *>(str);
+    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(reinterpret_cast<const char *>(str));
+  }
+  template <typename Allocator>
+  FormatArg( // NOLINT(runtime/explicit)
+      const std::basic_string<char8_t, std::char_traits<char8_t>, Allocator> &str)
+      : at(ArgType::USTRING) {
+    ustring.data = reinterpret_cast<const char *>(str.data());
+    ustring.len = str.size();
+  }
+  FormatArg(std::u8string_view sv) : at(ArgType::USTRING) {
+    ustring.data = reinterpret_cast<const char *>(sv.data());
     ustring.len = sv.size();
   }
 

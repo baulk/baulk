@@ -2,7 +2,7 @@
 // bela expand env
 #include <bela/base.hpp>
 #include <bela/env.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/path.hpp>
 
 namespace bela {

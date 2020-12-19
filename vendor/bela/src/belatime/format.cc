@@ -1,6 +1,6 @@
 /// DateTime format
 #include <bela/datetime.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/terminal.hpp>
 
 namespace bela {

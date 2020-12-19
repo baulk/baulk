@@ -6,102 +6,102 @@
 
 namespace bela::pe {
 
-inline void swaple(FileHeader &fh) {
+inline void fromle(FileHeader &fh) {
   if constexpr (bela::IsBigEndian()) {
-    fh.Characteristics = bela::swaple(fh.Characteristics);
-    fh.Machine = bela::swaple(fh.Machine);
-    fh.NumberOfSections = bela::swaple(fh.NumberOfSections);
-    fh.NumberOfSymbols = bela::swaple(fh.NumberOfSymbols);
-    fh.PointerToSymbolTable = bela::swaple(fh.PointerToSymbolTable);
-    fh.TimeDateStamp = bela::swaple(fh.TimeDateStamp);
-    fh.SizeOfOptionalHeader = bela::swaple(fh.SizeOfOptionalHeader);
+    fh.Characteristics = bela::fromle(fh.Characteristics);
+    fh.Machine = bela::fromle(fh.Machine);
+    fh.NumberOfSections = bela::fromle(fh.NumberOfSections);
+    fh.NumberOfSymbols = bela::fromle(fh.NumberOfSymbols);
+    fh.PointerToSymbolTable = bela::fromle(fh.PointerToSymbolTable);
+    fh.TimeDateStamp = bela::fromle(fh.TimeDateStamp);
+    fh.SizeOfOptionalHeader = bela::fromle(fh.SizeOfOptionalHeader);
   }
 }
 
-inline void swaple(OptionalHeader64 *oh) {
+inline void fromle(OptionalHeader64 *oh) {
   if constexpr (bela::IsBigEndian()) {
-    oh->Magic = bela::swaple(oh->Magic);
-    oh->SizeOfCode = bela::swaple(oh->SizeOfCode);
-    oh->SizeOfInitializedData = bela::swaple(oh->SizeOfInitializedData);
-    oh->SizeOfUninitializedData = bela::swaple(oh->SizeOfUninitializedData);
-    oh->AddressOfEntryPoint = bela::swaple(oh->AddressOfEntryPoint);
-    oh->BaseOfCode = bela::swaple(oh->BaseOfCode);
-    oh->ImageBase = bela::swaple(oh->ImageBase);
-    oh->SectionAlignment = bela::swaple(oh->SectionAlignment);
-    oh->FileAlignment = bela::swaple(oh->FileAlignment);
-    oh->MajorOperatingSystemVersion = bela::swaple(oh->MajorOperatingSystemVersion);
-    oh->MinorOperatingSystemVersion = bela::swaple(oh->MinorOperatingSystemVersion);
-    oh->MajorImageVersion = bela::swaple(oh->MajorImageVersion);
-    oh->MinorImageVersion = bela::swaple(oh->MinorImageVersion);
-    oh->MajorSubsystemVersion = bela::swaple(oh->MajorSubsystemVersion);
-    oh->MinorSubsystemVersion = bela::swaple(oh->MinorSubsystemVersion);
-    oh->Win32VersionValue = bela::swaple(oh->Win32VersionValue);
-    oh->SizeOfImage = bela::swaple(oh->SizeOfImage);
-    oh->SizeOfHeaders = bela::swaple(oh->SizeOfHeaders);
-    oh->CheckSum = bela::swaple(oh->CheckSum);
-    oh->Subsystem = bela::swaple(oh->Subsystem);
-    oh->DllCharacteristics = bela::swaple(oh->DllCharacteristics);
-    oh->SizeOfStackReserve = bela::swaple(oh->SizeOfStackReserve);
-    oh->SizeOfStackCommit = bela::swaple(oh->SizeOfStackCommit);
-    oh->SizeOfHeapReserve = bela::swaple(oh->SizeOfHeapReserve);
-    oh->SizeOfHeapCommit = bela::swaple(oh->SizeOfHeapCommit);
-    oh->LoaderFlags = bela::swaple(oh->LoaderFlags);
-    oh->NumberOfRvaAndSizes = bela::swaple(oh->NumberOfRvaAndSizes);
+    oh->Magic = bela::fromle(oh->Magic);
+    oh->SizeOfCode = bela::fromle(oh->SizeOfCode);
+    oh->SizeOfInitializedData = bela::fromle(oh->SizeOfInitializedData);
+    oh->SizeOfUninitializedData = bela::fromle(oh->SizeOfUninitializedData);
+    oh->AddressOfEntryPoint = bela::fromle(oh->AddressOfEntryPoint);
+    oh->BaseOfCode = bela::fromle(oh->BaseOfCode);
+    oh->ImageBase = bela::fromle(oh->ImageBase);
+    oh->SectionAlignment = bela::fromle(oh->SectionAlignment);
+    oh->FileAlignment = bela::fromle(oh->FileAlignment);
+    oh->MajorOperatingSystemVersion = bela::fromle(oh->MajorOperatingSystemVersion);
+    oh->MinorOperatingSystemVersion = bela::fromle(oh->MinorOperatingSystemVersion);
+    oh->MajorImageVersion = bela::fromle(oh->MajorImageVersion);
+    oh->MinorImageVersion = bela::fromle(oh->MinorImageVersion);
+    oh->MajorSubsystemVersion = bela::fromle(oh->MajorSubsystemVersion);
+    oh->MinorSubsystemVersion = bela::fromle(oh->MinorSubsystemVersion);
+    oh->Win32VersionValue = bela::fromle(oh->Win32VersionValue);
+    oh->SizeOfImage = bela::fromle(oh->SizeOfImage);
+    oh->SizeOfHeaders = bela::fromle(oh->SizeOfHeaders);
+    oh->CheckSum = bela::fromle(oh->CheckSum);
+    oh->Subsystem = bela::fromle(oh->Subsystem);
+    oh->DllCharacteristics = bela::fromle(oh->DllCharacteristics);
+    oh->SizeOfStackReserve = bela::fromle(oh->SizeOfStackReserve);
+    oh->SizeOfStackCommit = bela::fromle(oh->SizeOfStackCommit);
+    oh->SizeOfHeapReserve = bela::fromle(oh->SizeOfHeapReserve);
+    oh->SizeOfHeapCommit = bela::fromle(oh->SizeOfHeapCommit);
+    oh->LoaderFlags = bela::fromle(oh->LoaderFlags);
+    oh->NumberOfRvaAndSizes = bela::fromle(oh->NumberOfRvaAndSizes);
     for (auto &d : oh->DataDirectory) {
-      d.Size = bela::swaple(d.Size);
-      d.VirtualAddress = bela::swaple(d.VirtualAddress);
+      d.Size = bela::fromle(d.Size);
+      d.VirtualAddress = bela::fromle(d.VirtualAddress);
     }
   }
 }
 
-inline void swaple(OptionalHeader32 *oh) {
+inline void fromle(OptionalHeader32 *oh) {
   if constexpr (bela::IsBigEndian()) {
-    oh->Magic = bela::swaple(oh->Magic);
-    oh->SizeOfCode = bela::swaple(oh->SizeOfCode);
-    oh->SizeOfInitializedData = bela::swaple(oh->SizeOfInitializedData);
-    oh->SizeOfUninitializedData = bela::swaple(oh->SizeOfUninitializedData);
-    oh->AddressOfEntryPoint = bela::swaple(oh->AddressOfEntryPoint);
-    oh->BaseOfCode = bela::swaple(oh->BaseOfCode);
-    oh->BaseOfData = bela::swaple(oh->BaseOfData);
-    oh->ImageBase = bela::swaple(oh->ImageBase);
-    oh->SectionAlignment = bela::swaple(oh->SectionAlignment);
-    oh->FileAlignment = bela::swaple(oh->FileAlignment);
-    oh->MajorOperatingSystemVersion = bela::swaple(oh->MajorOperatingSystemVersion);
-    oh->MinorOperatingSystemVersion = bela::swaple(oh->MinorOperatingSystemVersion);
-    oh->MajorImageVersion = bela::swaple(oh->MajorImageVersion);
-    oh->MinorImageVersion = bela::swaple(oh->MinorImageVersion);
-    oh->MajorSubsystemVersion = bela::swaple(oh->MajorSubsystemVersion);
-    oh->MinorSubsystemVersion = bela::swaple(oh->MinorSubsystemVersion);
-    oh->Win32VersionValue = bela::swaple(oh->Win32VersionValue);
-    oh->SizeOfImage = bela::swaple(oh->SizeOfImage);
-    oh->SizeOfHeaders = bela::swaple(oh->SizeOfHeaders);
-    oh->CheckSum = bela::swaple(oh->CheckSum);
-    oh->Subsystem = bela::swaple(oh->Subsystem);
-    oh->DllCharacteristics = bela::swaple(oh->DllCharacteristics);
-    oh->SizeOfStackReserve = bela::swaple(oh->SizeOfStackReserve);
-    oh->SizeOfStackCommit = bela::swaple(oh->SizeOfStackCommit);
-    oh->SizeOfHeapReserve = bela::swaple(oh->SizeOfHeapReserve);
-    oh->SizeOfHeapCommit = bela::swaple(oh->SizeOfHeapCommit);
-    oh->LoaderFlags = bela::swaple(oh->LoaderFlags);
-    oh->NumberOfRvaAndSizes = bela::swaple(oh->NumberOfRvaAndSizes);
+    oh->Magic = bela::fromle(oh->Magic);
+    oh->SizeOfCode = bela::fromle(oh->SizeOfCode);
+    oh->SizeOfInitializedData = bela::fromle(oh->SizeOfInitializedData);
+    oh->SizeOfUninitializedData = bela::fromle(oh->SizeOfUninitializedData);
+    oh->AddressOfEntryPoint = bela::fromle(oh->AddressOfEntryPoint);
+    oh->BaseOfCode = bela::fromle(oh->BaseOfCode);
+    oh->BaseOfData = bela::fromle(oh->BaseOfData);
+    oh->ImageBase = bela::fromle(oh->ImageBase);
+    oh->SectionAlignment = bela::fromle(oh->SectionAlignment);
+    oh->FileAlignment = bela::fromle(oh->FileAlignment);
+    oh->MajorOperatingSystemVersion = bela::fromle(oh->MajorOperatingSystemVersion);
+    oh->MinorOperatingSystemVersion = bela::fromle(oh->MinorOperatingSystemVersion);
+    oh->MajorImageVersion = bela::fromle(oh->MajorImageVersion);
+    oh->MinorImageVersion = bela::fromle(oh->MinorImageVersion);
+    oh->MajorSubsystemVersion = bela::fromle(oh->MajorSubsystemVersion);
+    oh->MinorSubsystemVersion = bela::fromle(oh->MinorSubsystemVersion);
+    oh->Win32VersionValue = bela::fromle(oh->Win32VersionValue);
+    oh->SizeOfImage = bela::fromle(oh->SizeOfImage);
+    oh->SizeOfHeaders = bela::fromle(oh->SizeOfHeaders);
+    oh->CheckSum = bela::fromle(oh->CheckSum);
+    oh->Subsystem = bela::fromle(oh->Subsystem);
+    oh->DllCharacteristics = bela::fromle(oh->DllCharacteristics);
+    oh->SizeOfStackReserve = bela::fromle(oh->SizeOfStackReserve);
+    oh->SizeOfStackCommit = bela::fromle(oh->SizeOfStackCommit);
+    oh->SizeOfHeapReserve = bela::fromle(oh->SizeOfHeapReserve);
+    oh->SizeOfHeapCommit = bela::fromle(oh->SizeOfHeapCommit);
+    oh->LoaderFlags = bela::fromle(oh->LoaderFlags);
+    oh->NumberOfRvaAndSizes = bela::fromle(oh->NumberOfRvaAndSizes);
     for (auto &d : oh->DataDirectory) {
-      d.Size = bela::swaple(d.Size);
-      d.VirtualAddress = bela::swaple(d.VirtualAddress);
+      d.Size = bela::fromle(d.Size);
+      d.VirtualAddress = bela::fromle(d.VirtualAddress);
     }
   }
 }
 
-inline void swaple(SectionHeader32 &sh) {
+inline void fromle(SectionHeader32 &sh) {
   if constexpr (bela::IsBigEndian()) {
-    sh.VirtualSize = bela::swaple(sh.VirtualSize);
-    sh.VirtualAddress = bela::swaple(sh.VirtualAddress);
-    sh.SizeOfRawData = bela::swaple(sh.SizeOfRawData);
-    sh.PointerToRawData = bela::swaple(sh.PointerToRawData);
-    sh.PointerToRelocations = bela::swaple(sh.PointerToRelocations);
-    sh.PointerToLineNumbers = bela::swaple(sh.PointerToLineNumbers);
-    sh.NumberOfRelocations = bela::swaple(sh.NumberOfRelocations);
-    sh.NumberOfLineNumbers = bela::swaple(sh.NumberOfLineNumbers);
-    sh.Characteristics = bela::swaple(sh.Characteristics);
+    sh.VirtualSize = bela::fromle(sh.VirtualSize);
+    sh.VirtualAddress = bela::fromle(sh.VirtualAddress);
+    sh.SizeOfRawData = bela::fromle(sh.SizeOfRawData);
+    sh.PointerToRawData = bela::fromle(sh.PointerToRawData);
+    sh.PointerToRelocations = bela::fromle(sh.PointerToRelocations);
+    sh.PointerToLineNumbers = bela::fromle(sh.PointerToLineNumbers);
+    sh.NumberOfRelocations = bela::fromle(sh.NumberOfRelocations);
+    sh.NumberOfLineNumbers = bela::fromle(sh.NumberOfLineNumbers);
+    sh.Characteristics = bela::fromle(sh.Characteristics);
   }
 }
 
@@ -121,8 +121,8 @@ bool File::ParseFile(bela::error_code &ec) {
   constexpr auto x = 0x3c;
 
   int64_t base = 0;
-  if (bela::swaple(dh.e_magic) == IMAGE_DOS_SIGNATURE) {
-    auto signoff = static_cast<int64_t>(bela::swaple(dh.e_lfanew));
+  if (bela::fromle(dh.e_magic) == IMAGE_DOS_SIGNATURE) {
+    auto signoff = static_cast<int64_t>(bela::fromle(dh.e_lfanew));
     uint8_t sign[4];
     if (!ReadAt(sign, 4, signoff, ec)) {
       return false;
@@ -138,7 +138,7 @@ bool File::ParseFile(bela::error_code &ec) {
   if (!ReadAt(&fh, sizeof(FileHeader), base, ec)) {
     return false;
   }
-  swaple(fh);
+  fromle(fh);
   is64bit = (fh.SizeOfOptionalHeader == sizeof(OptionalHeader64));
   if (!readStringTable(ec)) {
     return false;
@@ -148,13 +148,13 @@ bool File::ParseFile(bela::error_code &ec) {
     if (!ReadAt(&oh, sizeof(OptionalHeader64), base + sizeof(FileHeader), ec)) {
       return false;
     }
-    swaple(&oh);
+    fromle(&oh);
   } else {
     if (!ReadAt(&oh, sizeof(OptionalHeader32), base + sizeof(FileHeader), ec)) {
       ec = bela::make_error_code(1, L"pe: not a valid pe file ", ec.message);
       return false;
     }
-    swaple(reinterpret_cast<OptionalHeader32 *>(&oh));
+    fromle(reinterpret_cast<OptionalHeader32 *>(&oh));
   }
   sections.reserve(fh.NumberOfSections);
   for (int i = 0; i < fh.NumberOfSections; i++) {
@@ -162,7 +162,7 @@ bool File::ParseFile(bela::error_code &ec) {
     if (!ReadFull(&sh, sizeof(SectionHeader32), ec)) {
       return false;
     }
-    swaple(sh);
+    fromle(sh);
     Section sec;
     sec.Header.Name = sectionFullName(sh);
     sec.Header.VirtualSize = sh.VirtualSize;
@@ -202,7 +202,7 @@ uint16_t getFunctionHit(std::vector<char> &section, int start) {
   if (start < 0 || static_cast<size_t>(start - 2) > section.size()) {
     return 0;
   }
-  return bela::readle<uint16_t>(section.data() + start);
+  return bela::cast_fromle<uint16_t>(section.data() + start);
 }
 
 bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code &ec) const {
@@ -244,17 +244,17 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     memcpy(&ied, sv.data(), sizeof(IMAGE_EXPORT_DIRECTORY));
   } else {
     auto cied = reinterpret_cast<const IMAGE_EXPORT_DIRECTORY *>(sv.data());
-    ied.Characteristics = bela::swaple(cied->Characteristics);
-    ied.TimeDateStamp = bela::swaple(cied->TimeDateStamp);
-    ied.MajorVersion = bela::swaple(cied->MajorVersion);
-    ied.MinorVersion = bela::swaple(cied->MinorVersion);
-    ied.Name = bela::swaple(cied->Name);
-    ied.Base = bela::swaple(cied->Base);
-    ied.NumberOfFunctions = bela::swaple(cied->NumberOfFunctions);
-    ied.NumberOfNames = bela::swaple(cied->NumberOfNames);
-    ied.AddressOfFunctions = bela::swaple(cied->AddressOfFunctions);       // RVA from base of image
-    ied.AddressOfNames = bela::swaple(cied->AddressOfNames);               // RVA from base of image
-    ied.AddressOfNameOrdinals = bela::swaple(cied->AddressOfNameOrdinals); // RVA from base of image
+    ied.Characteristics = bela::fromle(cied->Characteristics);
+    ied.TimeDateStamp = bela::fromle(cied->TimeDateStamp);
+    ied.MajorVersion = bela::fromle(cied->MajorVersion);
+    ied.MinorVersion = bela::fromle(cied->MinorVersion);
+    ied.Name = bela::fromle(cied->Name);
+    ied.Base = bela::fromle(cied->Base);
+    ied.NumberOfFunctions = bela::fromle(cied->NumberOfFunctions);
+    ied.NumberOfNames = bela::fromle(cied->NumberOfNames);
+    ied.AddressOfFunctions = bela::fromle(cied->AddressOfFunctions);       // RVA from base of image
+    ied.AddressOfNames = bela::fromle(cied->AddressOfNames);               // RVA from base of image
+    ied.AddressOfNameOrdinals = bela::fromle(cied->AddressOfNameOrdinals); // RVA from base of image
   }
   if (ied.NumberOfNames == 0) {
     return true;
@@ -267,7 +267,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
     if (sv.size() > exports.size() * 2) {
       for (size_t i = 0; i < exports.size(); i++) {
-        exports[i].Ordinal = bela::readle<uint16_t>(sv.data() + i * 2) + ordinalBase;
+        exports[i].Ordinal = bela::cast_fromle<uint16_t>(sv.data() + i * 2) + ordinalBase;
         exports[i].Hint = static_cast<int>(i);
       }
     }
@@ -278,7 +278,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
     if (sv.size() >= exports.size() * 4) {
       for (size_t i = 0; i < exports.size(); i++) {
-        auto start = bela::readle<uint32_t>(sv.data() + i * 4) - ds->Header.VirtualAddress;
+        auto start = bela::cast_fromle<uint32_t>(sv.data() + i * 4) - ds->Header.VirtualAddress;
         exports[i].Name = getString(sdata, start);
       }
     }
@@ -289,7 +289,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     for (size_t i = 0; i < exports.size(); i++) {
       auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
       if (sv.size() > static_cast<size_t>(exports[i].Ordinal * 4 + 4)) {
-        exports[i].Address = bela::readle<uint32_t>(sv.data() + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
+        exports[i].Address = bela::cast_fromle<uint32_t>(sv.data() + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
       }
     }
   }
@@ -340,14 +340,14 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
     const auto dt = reinterpret_cast<const IMAGE_DELAYLOAD_DESCRIPTOR *>(sv.data());
     sv.remove_prefix(dslen);
     ImportDelayDirectory id;
-    id.Attributes = bela::swaple(dt->Attributes.AllAttributes);
-    id.DllNameRVA = bela::swaple(dt->DllNameRVA);
-    id.ModuleHandleRVA = bela::swaple(dt->ModuleHandleRVA);
-    id.ImportAddressTableRVA = bela::swaple(dt->ImportAddressTableRVA);
-    id.ImportNameTableRVA = bela::swaple(dt->ImportNameTableRVA);
-    id.BoundImportAddressTableRVA = bela::swaple(dt->BoundImportAddressTableRVA);
-    id.UnloadInformationTableRVA = bela::swaple(dt->UnloadInformationTableRVA);
-    id.TimeDateStamp = bela::swaple(dt->TimeDateStamp);
+    id.Attributes = bela::fromle(dt->Attributes.AllAttributes);
+    id.DllNameRVA = bela::fromle(dt->DllNameRVA);
+    id.ModuleHandleRVA = bela::fromle(dt->ModuleHandleRVA);
+    id.ImportAddressTableRVA = bela::fromle(dt->ImportAddressTableRVA);
+    id.ImportNameTableRVA = bela::fromle(dt->ImportNameTableRVA);
+    id.BoundImportAddressTableRVA = bela::fromle(dt->BoundImportAddressTableRVA);
+    id.UnloadInformationTableRVA = bela::fromle(dt->UnloadInformationTableRVA);
+    id.TimeDateStamp = bela::fromle(dt->TimeDateStamp);
     if (id.ModuleHandleRVA == 0) {
       break;
     }
@@ -365,7 +365,7 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
     std::vector<Function> functions;
     while (d.size() >= ptrsize) {
       if (is64bit) {
-        auto va = bela::readle<uint64_t>(d.data());
+        auto va = bela::cast_fromle<uint64_t>(d.data());
         d.remove_prefix(8);
         if (va == 0) {
           break;
@@ -381,7 +381,7 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
           functions.emplace_back(fn, static_cast<int>(hit));
         }
       } else {
-        auto va = bela::readle<uint32_t>(d.data());
+        auto va = bela::cast_fromle<uint32_t>(d.data());
         d.remove_prefix(4);
         if (va == 0) {
           break;
@@ -441,11 +441,11 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
     const auto dt = reinterpret_cast<const IMAGE_IMPORT_DESCRIPTOR *>(sv.data());
     sv.remove_prefix(20);
     ImportDirectory id;
-    id.OriginalFirstThunk = bela::swaple(dt->OriginalFirstThunk);
-    id.TimeDateStamp = bela::swaple(dt->TimeDateStamp);
-    id.ForwarderChain = bela::swaple(dt->ForwarderChain);
-    id.Name = bela::swaple(dt->Name);
-    id.FirstThunk = bela::swaple(dt->FirstThunk);
+    id.OriginalFirstThunk = bela::fromle(dt->OriginalFirstThunk);
+    id.TimeDateStamp = bela::fromle(dt->TimeDateStamp);
+    id.ForwarderChain = bela::fromle(dt->ForwarderChain);
+    id.Name = bela::fromle(dt->Name);
+    id.FirstThunk = bela::fromle(dt->FirstThunk);
     if (id.OriginalFirstThunk == 0) {
       break;
     }
@@ -463,7 +463,7 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
     std::vector<Function> functions;
     while (d.size() >= ptrsize) {
       if (is64bit) {
-        auto va = bela::readle<uint64_t>(d.data());
+        auto va = bela::cast_fromle<uint64_t>(d.data());
         d.remove_prefix(8);
         if (va == 0) {
           break;
@@ -479,7 +479,7 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
           functions.emplace_back(fn, static_cast<int>(hit));
         }
       } else {
-        auto va = bela::readle<uint32_t>(d.data());
+        auto va = bela::cast_fromle<uint32_t>(d.data());
         d.remove_prefix(4);
         if (va == 0) {
           break;

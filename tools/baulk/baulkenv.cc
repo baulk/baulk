@@ -2,7 +2,7 @@
 #include <bela/env.hpp>
 #include <bela/path.hpp>
 #include <bela/io.hpp>
-#include <bela/narrow/strcat.hpp>
+#include <bela/str_cat_narrow.hpp>
 #include <filesystem>
 #include <regutils.hpp>
 #include <jsonex.hpp>

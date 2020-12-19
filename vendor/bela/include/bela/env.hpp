@@ -4,10 +4,10 @@
 #include <string>
 #include <string_view>
 #include <shared_mutex>
+#include <span>
 #include "match.hpp"
 #include "str_split.hpp"
 #include "str_join.hpp"
-#include "span.hpp"
 #include "phmap.hpp"
 #include "base.hpp"
 

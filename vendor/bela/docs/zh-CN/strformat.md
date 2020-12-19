@@ -46,7 +46,7 @@ ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args)
 
 ```cpp
 ///
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/stdwriter.hpp>
 
 int wmain(int argc, wchar_t **argv) {

@@ -10,4 +10,4 @@ target_link_libraries(rptest belawin hazel)
 
 add_executable(fileview_test fv.cc)
 
-target_link_libraries(fileview_test belawin hazel)
+target_link_libraries(fileview_test belawin belatime hazel)

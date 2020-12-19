@@ -38,7 +38,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include "strcat.hpp"
+#include "str_cat.hpp"
 
 namespace bela::strings_internal {
 // The default formatter. Converts alpha-numeric types to strings.

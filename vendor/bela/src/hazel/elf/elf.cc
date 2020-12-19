@@ -65,10 +65,10 @@ bool File::ParseFile(bela::error_code &ec) {
   fh.Data = ident[EI_DATA];
   switch (fh.Data) {
   case ELFDATA2LSB:
-    en = bela::endian::Endian::little;
+    en = std::endian::little;
     break;
   case ELFDATA2MSB:
-    en = bela::endian::Endian::big;
+    en = std::endian::big;
     break;
   default:
     ec = bela::make_error_code(1, L"unkonw ELF data encoding ", static_cast<int>(fh.Data));

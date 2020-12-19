@@ -28,42 +28,42 @@ inline bool Mpeg(const uint8_t *buf, size_t size) {
   return (size > 3 && buf[0] == 0x0 && buf[1] == 0x0 && buf[2] == 0x1 && buf[3] >= 0xb0 && buf[3] <= 0xbf);
 }
 
-status_t lookup_mediaaudio(bela::MemView mv, FileAttributeTable &fat) {
+status_t lookup_mediaaudio(bela::MemView mv, hazel_result &hr) {
   constexpr const uint8_t midiMagic[] = {0x4D, 0x54, 0x68, 0x64};
   constexpr const uint8_t oggMagic[] = {0x4F, 0x67, 0x67, 0x53};
   constexpr const uint8_t flacMagic[] = {0x66, 0x4C, 0x61, 0x43};
   constexpr const uint8_t wavMagic[] = {0x52, 0x49, 0x46, 0x46, 0x57, 0x41, 0x56, 0x45};
   constexpr const uint8_t amrMagic[] = {0x23, 0x21, 0x41, 0x4D, 0x52, 0x0A};
   if (mv.StartsWith(midiMagic)) {
-    fat.assign(L"MIDI Audio", types::midi);
+    hr.assign(types::midi, L"MIDI Audio");
     return Found;
   }
   if (IsMp3(mv.data(), mv.size())) {
-    fat.assign(L"MP3 Audio", types::mp3);
+    hr.assign(types::mp3, L"MP3 Audio");
     return Found;
   }
   if (IsM4a(mv.data(), mv.size())) {
-    fat.assign(L"M4A Audio", types::m4a);
+    hr.assign(types::m4a, L"M4A Audio");
     return Found;
   }
   if (mv.StartsWith(oggMagic)) {
-    fat.assign(L"OGG Audio/Video", types::ogg);
+    hr.assign(types::ogg, L"OGG Audio/Video");
     return Found;
   }
   if (mv.StartsWith(flacMagic)) {
-    fat.assign(L"Free Lossless Audio Codec", types::flac);
+    hr.assign(types::flac, L"Free Lossless Audio Codec");
     return Found;
   }
   if (mv.StartsWith(wavMagic)) {
-    fat.assign(L"Waveform Audio File Format", types::wav);
+    hr.assign(types::wav, L"Waveform Audio File Format");
     return Found;
   }
   if (mv.StartsWith(amrMagic)) {
-    fat.assign(L"Adaptive Multi-Rate audio codecat", types::amr);
+    hr.assign(types::amr, L"Adaptive Multi-Rate audio codecat");
     return Found;
   }
   if (IsAac(mv.data(), mv.size())) {
-    fat.assign(L"Advanced Audio Coding", types::aac);
+    hr.assign(types::aac, L"Advanced Audio Coding");
     return Found;
   }
   return None;
@@ -122,49 +122,49 @@ inline bool IsMp4(const uint8_t *buf, size_t size) {
            (buf[8] == 'F' && buf[9] == '4' && buf[10] == 'P' && buf[11] == ' ')));
 }
 
-status_t lookup_mediavideo(bela::MemView mv, FileAttributeTable &fat) {
+status_t lookup_mediavideo(bela::MemView mv, hazel_result &hr) {
   constexpr const uint8_t webmMagic[] = {0x1A, 0x45, 0xDF, 0xA3};
   constexpr const uint8_t wmvMagic[] = {0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD6};
   constexpr const uint8_t flvMagic[] = {0x46, 0x4C, 0x56, 0x01};
   if (IsM4v(mv.data(), mv.size())) {
-    fat.assign(L"M4V Video", types::m4v);
+    hr.assign(types::m4v, L"M4V Video");
     return Found;
   }
   if (IsMkv(mv.data(), mv.size())) {
-    fat.assign(L"Matroska Multimedia Container (.mkv)", types::mkv);
+    hr.assign(types::mkv, L"Matroska Multimedia Container (.mkv)");
     return Found;
   }
   if (mv.StartsWith(webmMagic)) {
-    fat.assign(L"WebM Video", types::webm);
+    hr.assign(types::webm, L"WebM Video");
     return Found;
   }
   if (IsAvi(mv.data(), mv.size())) {
-    fat.assign(L"Audio Video Interleaved (.avi)", types::avi);
+    hr.assign(types::avi, L"Audio Video Interleaved (.avi)");
     return Found;
   }
   if (mv.StartsWith(wmvMagic)) {
-    fat.assign(L"", types::wmv);
+    hr.assign(types::wmv, L"Windows Media Video");
     return Found;
   }
   if (IsMpeg(mv.data(), mv.size())) {
-    fat.assign(L"MPEG Video", types::mpeg);
+    hr.assign(types::mpeg, L"MPEG Video");
     return Found;
   }
   if (mv.StartsWith(flvMagic)) {
-    fat.assign(L"Flash Video", types::flv);
+    hr.assign(types::flv, L"Flash Video");
     return Found;
   }
   if (IsMp4(mv.data(), mv.size())) {
-    fat.assign(L"MPEG-4 Part 14 Video (.mp4)", types::mp4);
+    hr.assign(types::mp4, L"MPEG-4 Part 14 Video (.mp4)");
     return Found;
   }
   return None;
 }
 
-status_t LookupMedia(bela::MemView mv, FileAttributeTable &fat) {
-  if (lookup_mediaaudio(mv, fat) == Found) {
+status_t LookupMedia(bela::MemView mv, hazel_result &hr) {
+  if (lookup_mediaaudio(mv, hr) == Found) {
     return Found;
   }
-  return lookup_mediavideo(mv, fat);
+  return lookup_mediavideo(mv, hr);
 }
 } // namespace hazel::internal

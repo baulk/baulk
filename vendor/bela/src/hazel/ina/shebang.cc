@@ -161,15 +161,15 @@ const std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
 }
 
 namespace internal {
-void LookupShebang(const std::wstring_view line, FileAttributeTable &fat) {
+bool LookupShebang(const std::wstring_view line, hazel_result &hr) {
   constexpr const std::wstring_view prefix = L"#!";
   if (!bela::StartsWith(line, prefix)) {
-    return;
+    return false;
   }
   auto sline = bela::StripAsciiWhitespace(line.substr(2));
   std::vector<std::wstring_view> sv = bela::StrSplit(sline, bela::ByAnyChar(L"\r\n\t "), bela::SkipEmpty());
   if (sv.empty()) {
-    return;
+    return false;
   }
   std::wstring interpreter;
   if (bela::StrContains(sv[0], L"env")) {
@@ -179,7 +179,7 @@ void LookupShebang(const std::wstring_view line, FileAttributeTable &fat) {
   } else {
     std::vector<std::wstring_view> spv = bela::StrSplit(sv[0], bela::ByChar('/'), bela::SkipEmpty());
     if (spv.empty()) {
-      return;
+      return false;
     }
     interpreter = spv.back();
   }
@@ -187,12 +187,14 @@ void LookupShebang(const std::wstring_view line, FileAttributeTable &fat) {
     /// TODO
   }
   if (interpreter.empty()) {
-    return;
+    return false;
   }
-  fat.append(L"Interpreter", interpreter);
-  if (auto ln = LanguagesByInterpreter(interpreter); !ln.empty()) {
-    fat.append(L"Language", ln);
+  auto ln = LanguagesByInterpreter(interpreter);
+  hr.append(L"Interpreter", std::move(interpreter));
+  if (!ln.empty()) {
+    hr.append(L"Language", ln);
   }
+  return true;
 }
 } // namespace internal
 

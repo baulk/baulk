@@ -16,12 +16,12 @@ namespace bela::pe {
 PIMAGE_SECTION_HEADER
 BelaImageRvaToSection(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva) {
   (void)BaseAddress;
-  ULONG count = bela::swaple(nh->FileHeader.NumberOfSections);
+  ULONG count = bela::fromle(nh->FileHeader.NumberOfSections);
   PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(nh);
   ULONG va = 0;
   while (count-- != 0) {
-    va = bela::swaple(section->VirtualAddress);
-    if ((va <= rva) && (rva < va + bela::swaple(section->SizeOfRawData))) {
+    va = bela::fromle(section->VirtualAddress);
+    if ((va <= rva) && (rva < va + bela::fromle(section->SizeOfRawData))) {
       return section;
     }
     section++;
@@ -36,8 +36,8 @@ BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva, PIMAGE_SECT
   if (sh != nullptr) {
     section = *sh;
   }
-  if ((section == nullptr) || (rva < bela::swaple(section->VirtualAddress)) ||
-      (rva >= bela::swaple(section->VirtualAddress) + bela::swaple(section->SizeOfRawData))) {
+  if ((section == nullptr) || (rva < bela::fromle(section->VirtualAddress)) ||
+      (rva >= bela::fromle(section->VirtualAddress) + bela::fromle(section->SizeOfRawData))) {
     section = BelaImageRvaToSection(nh, BaseAddress, rva);
     if (section == nullptr) {
       return nullptr;
@@ -47,8 +47,8 @@ BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva, PIMAGE_SECT
     }
   }
   auto va = reinterpret_cast<ULONG_PTR>(BaseAddress) + rva +
-            static_cast<ULONG_PTR>(bela::swaple(section->PointerToRawData)) -
-            static_cast<ULONG_PTR>(bela::swaple(section->VirtualAddress));
+            static_cast<ULONG_PTR>(bela::fromle(section->PointerToRawData)) -
+            static_cast<ULONG_PTR>(bela::fromle(section->VirtualAddress));
   return reinterpret_cast<PVOID>(va);
 }
 

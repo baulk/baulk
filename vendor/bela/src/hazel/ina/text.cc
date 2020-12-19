@@ -103,42 +103,42 @@ FE FF	UTF-16, big-endian
 FF FE	UTF-16, little-endian
 EF BB BF	UTF-8
 */
-status_t lookup_text(bela::MemView mv, FileAttributeTable &fat) {
+status_t lookup_text(bela::MemView mv, hazel_result &hr) {
   //
   switch (mv[0]) {
   case 0x2B:
     if (mv.size() >= 3 && mv[1] == 0x2F && mv[2] == 0xbf) {
       // constexpr const byte_t utf7mgaic[]={0x2b,0x2f,0xbf};
-      fat.assign(L"UTF-7 text", types::utf7);
+      hr.assign(types::utf7, L"UTF-7 text");
     }
     break;
   case 0xEF: // UTF8 BOM 0xEF 0xBB 0xBF
     if (mv.size() >= 3 && mv[1] == 0xBB && mv[2] == 0xBF) {
-      fat.assign(L"UTF-8 Unicode (with BOM) text", types::utf8bom);
+      hr.assign(types::utf8bom, L"UTF-8 Unicode (with BOM) text");
       return Found;
     }
     break;
   case 0xFF: // UTF16LE 0xFF 0xFE
     if (mv.size() > 4 && mv[1] == 0xFE && mv[2] == 0 && mv[3] == 0) {
-      fat.assign(L"Little-endian UTF-32 Unicode text", types::utf32le);
+      hr.assign(types::utf32le, L"Little-endian UTF-32 Unicode text");
       return Found;
     }
     if (mv.size() >= 2 && mv[1] == 0xFE) {
-      fat.assign(L"Little-endian UTF-16 Unicode text", types::utf16le);
+      hr.assign(types::utf16le, L"Little-endian UTF-16 Unicode text");
       return Found;
     }
 
     break;
   case 0xFE: // UTF16BE 0xFE 0xFF
     if (mv.size() >= 2 && mv[1] == 0xFF) {
-      fat.assign(L"Big-endian UTF-16 Unicode text", types::utf16be);
+      hr.assign(types::utf16be, L"Big-endian UTF-16 Unicode text");
       return Found;
     }
     break;
     // FF FE 00 00
   case 0x0:
     if (mv.size() >= 4 && mv[1] == 0 && mv[2] == 0xFE && mv[3] == 0xFF) {
-      fat.assign(L"Big-endian UTF-32 Unicode text", types::utf32be);
+      hr.assign(types::utf32be, L"Big-endian UTF-32 Unicode text");
       return Found;
     }
     break;
@@ -149,22 +149,22 @@ status_t lookup_text(bela::MemView mv, FileAttributeTable &fat) {
 }
 
 //////// --------------> use chardet
-status_t lookup_chardet(bela::MemView mv, FileAttributeTable &fat) {
+status_t lookup_chardet(bela::MemView mv, hazel_result &hr) {
   if (buffer_is_binary(mv)) {
-    fat.assign(L"Binary data");
+    hr.assign(types::nes, L"Binary data");
     return Found;
   }
-  fat.assign(L"UTF-8 Unicode text", types::utf8);
+  hr.assign(types::utf8, L"UTF-8 Unicode text");
   return Found;
 }
 
-status_t LookupText(bela::MemView mv, FileAttributeTable &fat) {
-  if (lookup_text(mv, fat) != Found) {
-    lookup_chardet(mv, fat);
+status_t LookupText(bela::MemView mv, hazel_result &hr) {
+  if (lookup_text(mv, hr) != Found) {
+    lookup_chardet(mv, hr);
   }
   // check text
   std::wstring shebangline;
-  switch (fat.type) {
+  switch (hr.type()) {
   case types::utf8: {
     // Note that we may get truncated UTF-8 data
     auto line = mv.sv();
@@ -206,7 +206,9 @@ status_t LookupText(bela::MemView mv, FileAttributeTable &fat) {
     return Found;
   }
 
-  hazel::internal::LookupShebang(shebangline, fat);
+  if (hazel::internal::LookupShebang(shebangline, hr)) {
+    return Found;
+  }
   // shlbang
   return Found;
 }

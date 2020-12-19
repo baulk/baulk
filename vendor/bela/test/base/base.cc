@@ -1,5 +1,6 @@
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
+#include <bela/str_cat_narrow.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   if (argc >= 2) {
@@ -11,5 +12,6 @@ int wmain(int argc, wchar_t **argv) {
     }
     fclose(fd);
   }
+  bela::FPrintF(stderr, L"%s\n", bela::narrow::StringCat("H: ", bela::narrow::AlphaNum(bela::narrow::Hex(123456))));
   return 0;
 }

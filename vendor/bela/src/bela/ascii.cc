@@ -41,7 +41,7 @@ namespace ascii_internal {
 // of these bits is tightly coupled to this implementation, the individual bits
 // are not named. Note that bitfields for all characters above ASCII 127 are
 // zero-initialized.
-const unsigned char kPropertyBits[256] = {
+const char8_t kPropertyBits[256] = {
     0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40,  // 0x00
     0x40, 0x68, 0x48, 0x48, 0x48, 0x48, 0x40, 0x40,
     0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40,  // 0x10
@@ -144,7 +144,18 @@ void AsciiStrToLower(std::wstring *s) {
   }
 }
 
+void AsciiStrToLower(std::string *s) {
+  for (auto &ch : *s) {
+    ch = ascii_tolower(ch);
+  }
+}
+
 void AsciiStrToUpper(std::wstring *s) {
+  for (auto &ch : *s) {
+    ch = ascii_toupper(ch);
+  }
+}
+void AsciiStrToUpper(std::string *s) {
   for (auto &ch : *s) {
     ch = ascii_toupper(ch);
   }
@@ -172,6 +183,37 @@ void RemoveExtraAsciiWhitespace(std::wstring *str) {
       }
     } else {
       is_ws = ascii_isspace(*input_it);
+    }
+
+    *output_it = *input_it;
+    ++output_it;
+  }
+
+  str->erase(output_it - &(*str)[0]);
+}
+
+void RemoveExtraAsciiWhitespace(std::string *str) {
+  auto stripped = StripAsciiWhitespace(*str);
+
+  if (stripped.empty()) {
+    str->clear();
+    return;
+  }
+
+  auto input_it = stripped.begin();
+  auto input_end = stripped.end();
+  auto output_it = &(*str)[0];
+  bool is_ws = false;
+
+  for (; input_it < input_end; ++input_it) {
+    if (is_ws) {
+      // Consecutive whitespace?  Keep only the last.
+      is_ws = ascii_isspace(static_cast<char8_t>(*input_it));
+      if (is_ws) {
+        --output_it;
+      }
+    } else {
+      is_ws = ascii_isspace(static_cast<char8_t>(*input_it));
     }
 
     *output_it = *input_it;

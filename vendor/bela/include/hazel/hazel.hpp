@@ -6,81 +6,111 @@
 #include <bela/phmap.hpp>
 #include <bela/buffer.hpp>
 #include <bela/time.hpp>
+#include <bela/io.hpp>
 #include "types.hpp"
-#include "io.hpp"
 
 namespace hazel {
 
 // https://en.cppreference.com/w/cpp/utility/variant/visit
 // https://en.cppreference.com/w/cpp/utility/variant
 
+// helper constant for the visitor #3
+template <class> inline constexpr bool always_false_v = false;
+
+// helper type for the visitor #4
+template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+// explicit deduction guide (not needed as of C++20)
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+class hazel_result;
+bool LookupFile(bela::File &fd, hazel_result &hr, bela::error_code &ec);
 using hazel_value_t = std::variant<std::string, std::wstring, std::vector<std::string>, std::vector<std::wstring>,
-                                   int32_t, int64_t, uint32_t, uint64_t, bela::Time>;
+                                   int16_t, int32_t, int64_t, uint16_t, uint32_t, uint64_t, bela::Time>;
 class hazel_result {
 public:
   hazel_result() = default;
   hazel_result(const hazel_result &) = delete;
   hazel_result &operator=(const hazel_result &) = delete;
-  const auto &values() const { return values_; }
-  hazel_result &assgin(types::hazel_types_t ty, std::wstring_view desc) {
+  hazel_result &assign(types::hazel_types_t ty, std::wstring &&desc) {
     t = ty;
-    values_.emplace(L"description", std::wstring(desc));
+    description_.assign(std::move(desc));
     return *this;
   }
-  template <typename T> hazel_result &append(std::wstring_view key, T &&value) {
-    values_.emplace(key, std::move(value));
+  hazel_result &append(std::wstring_view key, const std::wstring_view &value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::wstring(value)));
     return *this;
   }
+  hazel_result &append(std::wstring_view key, std::wstring &&value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::move(value)));
+    return *this;
+  }
+  hazel_result &append(std::wstring_view key, const std::string_view &value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::string(value)));
+    return *this;
+  }
+  hazel_result &append(std::wstring_view key, std::string &&value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::move(value)));
+    return *this;
+  }
+  hazel_result &append(std::wstring_view key, std::vector<std::wstring> &&value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::move(value)));
+    return *this;
+  }
+  hazel_result &append(std::wstring_view key, std::vector<std::string> &&value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(std::move(value)));
+    return *this;
+  }
+  template <typename T> hazel_result &append(std::wstring_view key, T value) {
+    align_len_ = (std::max)(key.size(), align_len_);
+    values_.emplace(key, hazel_value_t(value));
+    return *this;
+  }
+  const auto &description() const { return description_; }
   auto type() const { return t; }
-
-private:
-  bela::flat_hash_map<std::wstring, hazel_value_t> values_;
-  types::hazel_types_t t{types::none};
-};
-// file attribute table
-struct FileAttributeTable {
-  bela::flat_hash_map<std::wstring, std::wstring> attributes;
-  bela::flat_hash_map<std::wstring, std::vector<std::wstring>> multi_attributes;
-  int64_t size{0};
-  types::hazel_types_t type{types::none};
-  FileAttributeTable &assign(std::wstring_view desc, types::hazel_types_t t = types::none) {
-    attributes.emplace(L"Description", desc);
-    type = t;
-    return *this;
-  }
-  FileAttributeTable &append(const std::wstring_view &name, const std::wstring_view &value) {
-    attributes.emplace(name, value);
-    return *this;
-  }
-  FileAttributeTable &append(std::wstring &&name, std::wstring &&value) {
-    attributes.emplace(std::move(name), std::move(value));
-    return *this;
-  }
-  FileAttributeTable &append(std::wstring &&name, std::vector<std::wstring> &&value) {
-    multi_attributes.emplace(std::move(name), std::move(value));
-    return *this;
-  }
-
+  auto size() const { return size_; }
+  auto align_length() const { return align_len_; }
+  const auto &values() const { return values_; }
   bool LooksLikeELF() const {
-    return type == types::elf || type == types::elf_executable || type == types::elf_relocatable ||
-           type == types::elf_shared_object;
+    return t == types::elf || t == types::elf_executable || t == types::elf_relocatable ||
+           t == types::elf_shared_object;
   }
   bool LooksLikeMachO() const {
-    return type == types::macho_bundle || type == types::macho_core || type == types::macho_dsym_companion ||
-           type == types::macho_dynamic_linker || type == types::macho_dynamically_linked_shared_lib ||
-           type == types::macho_dynamically_linked_shared_lib_stub || type == types::macho_executable ||
-           type == types::macho_fixed_virtual_memory_shared_lib || type == types::macho_kext_bundle ||
-           type == types::macho_object || type == types::macho_preload_executable ||
-           type == types::macho_universal_binary;
+    constexpr types::hazel_types_t machos[] = {
+        types::macho_bundle,
+        types::macho_core,
+        types::macho_dsym_companion,
+        types::macho_dynamic_linker,
+        types::macho_dynamically_linked_shared_lib,
+        types::macho_dynamically_linked_shared_lib_stub,
+        types::macho_executable,
+        types::macho_fixed_virtual_memory_shared_lib,
+        types::macho_kext_bundle,
+        types::macho_object,
+        types::macho_object,
+        types::macho_universal_binary,
+    };
+    return std::find(std::begin(machos), std::end(machos), t) != std::end(machos);
   }
-  bool LooksLikePE() const { return type == types::pecoff_executable; }
+  bool LooksLikePE() const { return t == types::pecoff_executable; }
   bool LooksLikeZIP() const {
-    return type == types::zip || type == types::docx || type == types::xlsx || type == types::pptx ||
-           type == types::ofd;
+    return t == types::zip || t == types::docx || t == types::xlsx || t == types::pptx || t == types::ofd;
   }
+
+private:
+  friend bool LookupFile(bela::File &fd, hazel_result &hr, bela::error_code &ec);
+  std::wstring description_;
+  bela::flat_hash_map<std::wstring, hazel_value_t> values_;
+  int64_t size_{bela::SizeUnInitialized};
+  size_t align_len_{sizeof("description") - 1};
+  types::hazel_types_t t{types::none};
 };
 
-bool LookupFile(hazel::io::File &fd, FileAttributeTable &fat, bela::error_code &ec);
 } // namespace hazel
 
 #endif

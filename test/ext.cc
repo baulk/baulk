@@ -1,6 +1,6 @@
 #include <bela/terminal.hpp>
 #include <bela/match.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/path.hpp>
 
 inline std::wstring UnarchivePath(std::wstring_view path) {

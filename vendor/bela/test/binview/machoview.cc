@@ -17,7 +17,7 @@ int wmain(int argc, wchar_t **argv) {
   std::vector<std::string> libs;
   file.Depends(libs, ec);
   for (const auto &d : libs) {
-    bela::FPrintF(stderr, L"need: %s\n", d);
+    bela::FPrintF(stdout, L"need: %s\n", d);
   }
   std::vector<std::string> symbols;
   if (!file.ImportedSymbols(symbols, ec)) {
@@ -25,7 +25,7 @@ int wmain(int argc, wchar_t **argv) {
     return 1;
   }
   for (const auto &s : symbols) {
-    bela::FPrintF(stderr, L"S: %s\n", bela::demangle(s));
+    bela::FPrintF(stdout, L"S: %s\n", bela::demangle(s));
   }
   return 0;
 }

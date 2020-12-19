@@ -1,7 +1,7 @@
 //
 #include <cstdio>
 #include <io.h>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/match.hpp>
 #include <bela/str_split.hpp>
 #include <bela/terminal.hpp>

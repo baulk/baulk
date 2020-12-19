@@ -15,8 +15,8 @@ add_library(
   winansi.cc
   str_split.cc
   str_replace.cc
-  strcat.cc
-  strcat_narrow.cc
+  str_cat.cc
+  str_cat_narrow.cc
   subsitute.cc
   terminal.cc)
 

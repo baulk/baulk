@@ -28,9 +28,9 @@ bool File::readRelocs(Section &sec) const {
   }
   if constexpr (bela::IsBigEndian()) {
     for (auto &reloc : sec.Relocs) {
-      reloc.VirtualAddress = bela::swaple(reloc.VirtualAddress);
-      reloc.SymbolTableIndex = bela::swaple(reloc.SymbolTableIndex);
-      reloc.Type = bela::swaple(reloc.Type);
+      reloc.VirtualAddress = bela::fromle(reloc.VirtualAddress);
+      reloc.SymbolTableIndex = bela::fromle(reloc.SymbolTableIndex);
+      reloc.Type = bela::fromle(reloc.Type);
     }
   }
   return true;

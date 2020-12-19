@@ -34,7 +34,7 @@
 #define BELA_SUBSITUTE_HPP
 #pragma once
 #include "ascii.hpp"
-#include "strcat.hpp" //AlphaNum
+#include "str_cat.hpp" //AlphaNum
 #include "algorithm.hpp"
 
 namespace bela {

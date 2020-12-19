@@ -15,15 +15,15 @@ typedef enum hazel_status_e : int {
   Found, ///
   Break
 } status_t;
-status_t LookupExecutableFile(bela::MemView mv, hazel::FileAttributeTable &fat);
-status_t LookupArchives(bela::MemView mv, hazel::FileAttributeTable &fat);
-status_t LookupDocs(bela::MemView mv, FileAttributeTable &fat);
-status_t LookupFonts(bela::MemView mv, FileAttributeTable &fat);
-status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat);
-status_t LookupMedia(bela::MemView mv, FileAttributeTable &fat);
-status_t LookupImages(bela::MemView mv, FileAttributeTable &fat);
-status_t LookupText(bela::MemView mv, FileAttributeTable &fat);
-void LookupShebang(const std::wstring_view line, FileAttributeTable &fat);
+status_t LookupExecutableFile(bela::MemView mv, hazel::hazel_result &hr);
+status_t LookupArchives(bela::MemView mv, hazel::hazel_result &hr);
+status_t LookupDocs(bela::MemView mv, hazel_result &hr);
+status_t LookupFonts(bela::MemView mv, hazel_result &hr);
+status_t LookupShellLink(bela::MemView mv, hazel_result &hr);
+status_t LookupMedia(bela::MemView mv, hazel_result &hr);
+status_t LookupImages(bela::MemView mv, hazel_result &hr);
+status_t LookupText(bela::MemView mv, hazel_result &hr);
+bool LookupShebang(const std::wstring_view line, hazel_result &hr);
 } // namespace hazel::internal
 
 #endif

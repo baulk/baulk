@@ -70,7 +70,7 @@ struct mach_header_64 {
   uint32_t reserved;   /* reserved */
 };
 
-status_t LookupExecutableFile(bela::MemView mv, FileAttributeTable &fat) {
+status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
   if (mv.size() < 4) {
     return None;
   }
@@ -79,50 +79,50 @@ status_t LookupExecutableFile(bela::MemView mv, FileAttributeTable &fat) {
     if (mv.StartsWith(bobj)) {
       size_t minsize = offsetof(BigObjHeader, UUID) + sizeof(BigObjMagic);
       if (mv.size() < minsize) {
-        fat.assign(L"COFF import library", types::coff_import_library);
+        hr.assign(types::coff_import_library, L"COFF import library");
         return Found;
       }
       const char *start = reinterpret_cast<const char *>(mv.data()) + offsetof(BigObjHeader, UUID);
       if (memcmp(start, BigObjMagic, sizeof(BigObjMagic)) == 0) {
-        fat.assign(L"COFF object", types::coff_object);
+        hr.assign(types::coff_object, L"COFF object");
         return Found;
       }
       if (memcmp(start, ClGlObjMagic, sizeof(ClGlObjMagic)) == 0) {
-        fat.assign(L"Microsoft cl.exe's intermediate code file", types::coff_cl_gl_object);
+        hr.assign(types::coff_cl_gl_object, L"Microsoft cl.exe's intermediate code file");
         return Found;
       }
-      fat.assign(L"COFF import library", types::coff_import_library);
+      hr.assign(types::coff_import_library, L"COFF import library");
       return Found;
     }
     if (mv.size() >= sizeof(WinResMagic) && memcmp(mv.data(), WinResMagic, sizeof(WinResMagic)) == 0) {
-      fat.assign(L"Windows compiled resource file (.res)", types::windows_resource);
+      hr.assign(types::windows_resource, L"Windows compiled resource file (.res)");
       return Found;
     }
     // if (mv[1] == 0) {
-    //   fat.assign(L"COFF object", types::coff_object);
+    //   hr.assign(L"COFF object", types::coff_object);
     //   return Found;
     // }
     if (mv.StartsWith(wasmobj)) {
-      fat.assign(L"WebAssembly Object file", types::wasm_object);
+      hr.assign(types::wasm_object, L"WebAssembly Object file");
       return Found;
     }
     break;
   case 0xDE:
     if (mv.StartsWith(irobj)) {
-      fat.assign(L"LLVM IR bitcode", types::bitcode);
+      hr.assign(types::bitcode, L"LLVM IR bitcode");
       return Found;
     }
     break;
   case 'B':
     if (mv.StartsWith(irobj2)) {
-      fat.assign(L"LLVM IR bitcode", types::bitcode);
+      hr.assign(types::bitcode, L"LLVM IR bitcode");
       return Found;
     }
     break;
   case '!': // .a
     if (mv.StartsWith("!<arch>\n") && !mv.StartsWith(debMagic) || mv.StartsWith("!<thin>\n")) {
       // Skip DEB package
-      fat.assign(L"ar style archive file", types::archive);
+      hr.assign(types::archive, L"ar style archive file");
       return Found;
     }
     break;
@@ -134,30 +134,29 @@ status_t LookupExecutableFile(bela::MemView mv, FileAttributeTable &fat) {
       if (mv[high] == 0) {
         switch (mv[low]) {
         default:
-          fat.assign(L"ELF Unknown type", types::elf);
-          return Found;
+          break;
         case 1:
-          fat.assign(L"ELF Relocatable object file", types::elf_relocatable);
+          hr.assign(types::elf_relocatable, L"ELF relocatable object file");
           return Found;
         case 2:
-          fat.assign(L"ELF Executable image", types::elf_executable);
+          hr.assign(types::elf_executable, L"ELF executable image");
           return Found;
         case 3:
-          fat.assign(L"ELF dynamically linked shared lib", types::elf_shared_object);
+          hr.assign(types::elf_shared_object, L"ELF dynamically linked shared lib");
           return Found;
         case 4:
-          fat.assign(L"ELF core image", types::elf_core);
+          hr.assign(types::elf_core, L"ELF core image");
           return Found;
         }
       }
-      fat.assign(L"ELF Unknown type", types::elf);
+      hr.assign(types::elf, L"ELF unknown type");
       return Found;
     }
     break;
   case 0xCA:
     if (mv.StartsWith("\xCA\xFE\xBA\xBE") || mv.StartsWith("\xCA\xFE\xBA\xBF")) {
       if (mv.size() >= 8 && mv[7] < 43) {
-        fat.assign(L"Mach-O universal binary", types::macho_universal_binary);
+        hr.assign(types::macho_universal_binary, L"Mach-O universal binary");
         return Found;
       }
     }
@@ -192,37 +191,37 @@ status_t LookupExecutableFile(bela::MemView mv, FileAttributeTable &fat) {
     default:
       break;
     case 1:
-      fat.assign(L"Mach-O Object file", types::macho_object);
+      hr.assign(types::macho_object, L"Mach-O Object file");
       return Found;
     case 2:
-      fat.assign(L"Mach-O Executable", types::macho_executable);
+      hr.assign(types::macho_executable, L"Mach-O Executable");
       return Found;
     case 3:
-      fat.assign(L"Mach-O Shared Lib, FVM", types::macho_fixed_virtual_memory_shared_lib);
+      hr.assign(types::macho_fixed_virtual_memory_shared_lib, L"Mach-O Shared Lib, FVM");
       return Found;
     case 4:
-      fat.assign(L"Mach-O Core File", types::macho_core);
+      hr.assign(types::macho_core, L"Mach-O Core File");
       return Found;
     case 5:
-      fat.assign(L"Mach-O Preloaded Executable", types::macho_preload_executable);
+      hr.assign(types::macho_preload_executable, L"Mach-O Preloaded Executable");
       return Found;
     case 6:
-      fat.assign(L"Mach-O dynlinked shared lib", types::macho_dynamically_linked_shared_lib);
+      hr.assign(types::macho_dynamically_linked_shared_lib, L"Mach-O dynlinked shared lib");
       return Found;
     case 7:
-      fat.assign(L"The Mach-O dynamic linker", types::macho_dynamic_linker);
+      hr.assign(types::macho_dynamic_linker, L"The Mach-O dynamic linker");
       return Found;
     case 8:
-      fat.assign(L"Mach-O Bundle file", types::macho_bundle);
+      hr.assign(types::macho_bundle, L"Mach-O Bundle file");
       return Found;
     case 9:
-      fat.assign(L"Mach-O Shared lib stub", types::macho_dynamically_linked_shared_lib_stub);
+      hr.assign(types::macho_dynamically_linked_shared_lib_stub, L"Mach-O Shared lib stub");
       return Found;
     case 10:
-      fat.assign(L"Mach-O dSYM companion file", types::macho_dsym_companion);
+      hr.assign(types::macho_dsym_companion, L"Mach-O dSYM companion file");
       return Found;
     case 11:
-      fat.assign(L"Mach-O kext bundle file", types::macho_kext_bundle);
+      hr.assign(types::macho_kext_bundle, L"Mach-O kext bundle file");
       return Found;
     }
     break;
@@ -235,35 +234,35 @@ status_t LookupExecutableFile(bela::MemView mv, FileAttributeTable &fat) {
   case 0x4c: // 80386 Windows
   case 0xc4: // ARMNT Windows
     if (mv[1] == 0x01) {
-      fat.assign(L"COFF object", types::coff_object);
+      hr.assign(types::coff_object, L"COFF object");
       return Found;
     }
     [[fallthrough]];
   case 0x90: // PA-RISC Windows
   case 0x68: // mc68K Windows
     if (mv[1] == 0x02) {
-      fat.assign(L"COFF object", types::coff_object);
+      hr.assign(types::coff_object, L"COFF object");
       return Found;
     }
     break;
   case 'M':
     if (mv.StartsWith("Microsoft C/C++ MSF 7.00\r\n")) {
-      fat.assign(L"Windows PDB debug info file", types::pdb);
+      hr.assign(types::pdb, L"Windows PDB debug info file");
       return Found;
     }
     if (mv.StartsWith("MZ") && mv.size() >= 0x3c + 4) {
       // read32le
-      uint32_t off = bela::readle<uint32_t>(mv.data() + 0x3c);
+      uint32_t off = bela::cast_fromle<uint32_t>(mv.data() + 0x3c);
       auto sv = mv.submv(off);
       if (sv.StartsWith(PEMagic)) {
-        fat.assign(L"PE executable file", types::pecoff_executable);
+        hr.assign(types::pecoff_executable, L"PE executable file");
         return Found;
       }
     }
     break;
   case 0x64: // x86-64 or ARM64 Windows.
     if (mv[1] == 0x86 || mv[1] == 0xaa) {
-      fat.assign(L"COFF object", types::coff_object);
+      hr.assign(types::coff_object, L"COFF object");
       return Found;
     }
     break;

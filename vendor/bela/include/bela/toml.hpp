@@ -28,7 +28,7 @@
 #include <charconv>
 #include "phmap.hpp"
 #include "codecvt.hpp"
-#include "narrow/strcat.hpp"
+#include "str_cat_narrow.hpp"
 
 #ifndef _WIN32
 error_t _get_timezone(long *tz) {

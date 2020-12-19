@@ -12,6 +12,7 @@ add_library(
   ina/shebang.cc
   ina/shl.cc
   ina/text.cc
+  zip/decompress.cc
   zip/zip.cc
   elf/dynamic.cc
   elf/elf.cc

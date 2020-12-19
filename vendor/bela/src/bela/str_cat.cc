@@ -32,7 +32,7 @@
 // ---------------------------------------------------------------------------
 #include <cassert>
 #include <bela/memutil.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela {
 AlphaNum::AlphaNum(Hex hex) {

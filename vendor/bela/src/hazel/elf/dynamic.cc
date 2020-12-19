@@ -22,8 +22,8 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
   std::string_view dss{reinterpret_cast<const char *>(d.data()), d.size()};
   if (fh.Class == ELFCLASS32) {
     while (dss.size() >= 8) {
-      auto t = endian_cast_ptr<uint32_t>(dss.data());
-      auto v = endian_cast_ptr<uint32_t>(dss.data() + 4);
+      auto t = cast_from<uint32_t>(dss.data());
+      auto v = cast_from<uint32_t>(dss.data() + 4);
       dss.remove_prefix(8);
       if (t == tag) {
         if (auto s = getStringO(str.Span(), static_cast<int>(v)); s) {
@@ -34,8 +34,8 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
     return true;
   }
   while (dss.size() >= 16) {
-    auto t = endian_cast_ptr<uint64_t>(dss.data());
-    auto v = endian_cast_ptr<uint64_t>(dss.data() + 8);
+    auto t = cast_from<uint64_t>(dss.data());
+    auto v = cast_from<uint64_t>(dss.data() + 8);
     dss.remove_prefix(16);
     if (t == tag) {
       if (auto s = getStringO(str.Span(), static_cast<int>(v)); s) {

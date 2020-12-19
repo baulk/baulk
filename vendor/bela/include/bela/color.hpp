@@ -5,7 +5,7 @@
 #include "charconv.hpp"
 #include "base.hpp"
 #include "numbers.hpp"
-#include "narrow/strcat.hpp"
+#include "str_cat_narrow.hpp"
 
 namespace bela {
 // color is a universal integral 8bpp RGBA (0-255) color type implicitly convertible to/from

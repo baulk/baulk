@@ -1,7 +1,7 @@
 ///
 #include <bela/terminal.hpp>
 #include <bela/unicode.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 
 int wmain(int argc, wchar_t **argv) {
   const auto ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4 --> \xF0\xA0\x83\xA3 \x41 "

@@ -43,7 +43,7 @@ bool File::readStringTable(bela::error_code &ec) {
   if (!ReadAt(&l, sizeof(l), offset, ec)) {
     return false;
   }
-  l = bela::swaple(l);
+  l = bela::fromle(l);
   if (l <= 4) {
     return false;
   }

@@ -1,5 +1,5 @@
 ///
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/terminal.hpp>
 #include <bela/codecvt.hpp>
 #include "ucwidth-wt.hpp"

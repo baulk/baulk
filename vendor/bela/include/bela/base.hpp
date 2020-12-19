@@ -17,24 +17,25 @@
 #include <vector>
 #include <system_error>
 #include <memory>
-#include "strcat.hpp"
+#include "str_cat.hpp"
 
 namespace bela {
-enum bela_extend_error_category : long {
+// error code index
+enum error_code_index : long {
   None = 0, // None error
   SkipParse = 0x4001,
   ParseBroken = 0x4002,
   FileSizeTooSmall = 0x4003,
 };
 
+// bela::error_code
 struct error_code {
   std::wstring message;
   long code{None};
   const wchar_t *data() const { return message.data(); }
   explicit operator bool() const noexcept { return code != None; }
   error_code &assgin(error_code &&o) {
-    message = o.message;
-    o.message.clear();
+    message.assign(std::move(o.message));
     code = o.code;
     o.code = None;
     return *this;
@@ -45,11 +46,7 @@ struct error_code {
   }
 };
 
-inline bela::error_code make_error_code(const AlphaNum &a) {
-  // error code ==1
-  return bela::error_code{std::wstring(a.Piece()), 1};
-}
-
+inline bela::error_code make_error_code(const AlphaNum &a) { return bela::error_code{std::wstring(a.Piece()), 1}; }
 inline bela::error_code make_error_code(long code, const AlphaNum &a) {
   return bela::error_code{std::wstring(a.Piece()), code};
 }

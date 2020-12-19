@@ -10,7 +10,8 @@ struct link_value_flags_t {
   uint32_t v;
   const wchar_t *n;
 };
-inline std::wstring DumpFlags(uint32_t flag) {
+
+inline void FlagsToArray(uint32_t flag, std::vector<std::wstring> &av) {
   static const link_value_flags_t lfv[] = {
       {HasLinkTargetIDList, L"HasLinkTargetIDList"},
       {HasLinkInfo, L"HasLinkInfo"},
@@ -40,16 +41,11 @@ inline std::wstring DumpFlags(uint32_t flag) {
       {PersistVolumeIDRelative, L"PersistVolumeIDRelative"}
       //
   };
-  std::wstring sf;
   for (const auto &v : lfv) {
     if ((v.v & flag) != 0) {
-      sf.append(v.n).append(L", ");
+      av.emplace_back(v.n);
     }
   }
-  if (sf.size() > 2) {
-    sf.resize(sf.size() - 2);
-  }
-  return sf;
 }
 } // namespace shl
 
@@ -75,14 +71,14 @@ public:
     if (size_ < sizeof(shl::shell_link_t)) {
       return false;
     }
-    auto dwSize = bela::readle<uint32_t>(data_);
+    auto dwSize = bela::cast_fromle<uint32_t>(data_);
     if (dwSize != 0x0000004C) {
       return false;
     }
     if (memcmp(data_ + 4, shuuid, hazel::internal::ArrayLength(shuuid)) != 0) {
       return false;
     }
-    linkflags_ = bela::readle<uint32_t>(data_ + 20);
+    linkflags_ = bela::cast_fromle<uint32_t>(data_ + 20);
     IsUnicode = (linkflags_ & shl::IsUnicode) != 0;
     return true;
   }
@@ -111,7 +107,7 @@ public:
     // default code page, or a Unicode string with a length specified by the
     // CountCharacters field. This string MUST NOT be NULL-terminated.
 
-    auto len = bela::readle<uint16_t>(data_ + pos); /// Ch
+    auto len = bela::cast_fromle<uint16_t>(data_ + pos); /// Ch
     if (IsUnicode) {
       sdlen = len * 2 + 2;
       if (sdlen + pos >= size_) {
@@ -121,7 +117,7 @@ public:
       sd.clear();
       for (size_t i = 0; i < len; i++) {
         // Winodws UTF16LE
-        sd.push_back(bela::swaple(p[i]));
+        sd.push_back(bela::fromle(p[i]));
       }
       return true;
     }
@@ -155,7 +151,7 @@ public:
       if (*it == 0) {
         return true;
       }
-      su.push_back(bela::swaple(*it));
+      su.push_back(bela::fromle(*it));
     }
     return false;
   }
@@ -228,7 +224,7 @@ private:
 // This field can be present only if the value of the LinkInfoHeaderSize field
 // is greater than or equal to 0x00000024
 
-status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat) {
+status_t LookupShellLink(bela::MemView mv, hazel_result &hr) {
   shl_memview shm(reinterpret_cast<const char *>(mv.data()), mv.size());
   if (!shm.prepare()) {
     return None;
@@ -239,7 +235,7 @@ status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat) {
     if (shm.size() <= offset + 2) {
       return None;
     }
-    auto l = bela::readle<uint16_t>(shm.data() + offset);
+    auto l = bela::cast_fromle<uint16_t>(shm.data() + offset);
     if (l + 2 + offset >= shm.size()) {
       return None;
     }
@@ -247,8 +243,10 @@ status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat) {
     offset += l + 2;
   }
 
-  fat.assign(L"Windows Shortcut", types::shelllink);
-  fat.append(L"Attribute", shl::DumpFlags(flag));
+  hr.assign(types::shelllink, L"Windows Shortcut");
+  std::vector<std::wstring> av;
+  shl::FlagsToArray(flag, av);
+  hr.append(L"Attribute", std::move(av));
 
   // LinkINFO https://msdn.microsoft.com/en-us/library/dd871404.aspx
   if ((flag & shl::HasLinkInfo) != 0) {
@@ -256,27 +254,27 @@ status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat) {
     if (li == nullptr) {
       return Found;
     }
-    auto liflag = bela::swaple(li->dwFlags);
+    auto liflag = bela::fromle(li->dwFlags);
     if ((liflag & shl::VolumeIDAndLocalBasePath) != 0) {
       std::wstring su;
       bool isunicode;
       size_t pos;
-      if (bela::swaple(li->cbHeaderSize) < 0x00000024) {
+      if (bela::fromle(li->cbHeaderSize) < 0x00000024) {
         isunicode = false;
-        pos = offset + bela::swaple(li->cbLocalBasePathOffset);
+        pos = offset + bela::fromle(li->cbLocalBasePathOffset);
       } else {
         isunicode = true;
-        pos = offset + bela::swaple(li->cbLocalBasePathUnicodeOffset);
+        pos = offset + bela::fromle(li->cbLocalBasePathUnicodeOffset);
       }
 
       if (!shm.stringvalue(pos, isunicode, su)) {
         return Found;
       }
-      fat.append(L"Target", su);
+      hr.append(L"Target", su);
     } else if ((liflag & shl::CommonNetworkRelativeLinkAndPathSuffix) != 0) {
       //// NetworkRelative
     }
-    offset += bela::swaple(li->cbSize);
+    offset += bela::fromle(li->cbSize);
   }
   // StringData https://msdn.microsoft.com/en-us/library/dd871306.aspx
   static const shl::link_value_flags_t sdv[] = {
@@ -298,7 +296,7 @@ status_t LookupShellLink(bela::MemView mv, FileAttributeTable &fat) {
       return Found;
     }
     offset += sdlen;
-    fat.append(i.n, sd);
+    hr.append(i.n, sd);
   }
 
   // ExtraData https://msdn.microsoft.com/en-us/library/dd891345.aspx

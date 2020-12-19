@@ -50,9 +50,8 @@
 // a `PadSpec` enum.
 //
 // -----------------------------------------------------------------------------
-#ifndef BELA_NARROW_STRCAT_HPP
-#define BELA_NARROW_STRCAT_HPP
-#pragma once
+#ifndef BELA_NARROW_STRINGCAT_HPP
+#define BELA_NARROW_STRINGCAT_HPP
 #include <string>
 #include <array>
 #include <string_view>
@@ -148,7 +147,9 @@ struct Hex {
 
 private:
   Hex(PadSpec spec, uint64_t v)
-      : value(v), width(spec == kNoPad ? 1 : spec >= kSpacePad2 ? spec - kSpacePad2 + 2 : spec - kZeroPad2 + 2),
+      : value(v), width(spec == kNoPad       ? 1
+                        : spec >= kSpacePad2 ? spec - kSpacePad2 + 2
+                                             : spec - kZeroPad2 + 2),
         fill(spec >= kSpacePad2 ? ' ' : '0') {}
 };
 
@@ -168,7 +169,9 @@ struct Dec {
   template <typename Int>
   explicit Dec(Int v, PadSpec spec = kNoPad, typename std::enable_if<(sizeof(Int) <= 8)>::type * = nullptr)
       : value(v >= 0 ? static_cast<uint64_t>(v) : uint64_t{0} - static_cast<uint64_t>(v)),
-        width(spec == kNoPad ? 1 : spec >= kSpacePad2 ? spec - kSpacePad2 + 2 : spec - kZeroPad2 + 2),
+        width(spec == kNoPad       ? 1
+              : spec >= kSpacePad2 ? spec - kSpacePad2 + 2
+                                   : spec - kZeroPad2 + 2),
         fill(spec >= kSpacePad2 ? ' ' : '0'), neg(v < 0) {}
 };
 
@@ -266,7 +269,7 @@ void AppendPieces(std::string *dest, std::initializer_list<std::string_view> pie
 // Support 5 or more arguments
 template <typename... AV>
 [[nodiscard]] inline std::string StringCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
-                                           const AlphaNum &e, const AV &... args) {
+                                           const AlphaNum &e, const AV &...args) {
   return strings_internal::CatPieces(
       {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(), static_cast<const AlphaNum &>(args).Piece()...});
 }
@@ -307,7 +310,7 @@ void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b, const Al
 // Support 5 or more arguments
 template <typename... AV>
 inline void StrAppend(std::string *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
-                      const AlphaNum &e, const AV &... args) {
+                      const AlphaNum &e, const AV &...args) {
   strings_internal::AppendPieces(
       dest, {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(), static_cast<const AlphaNum &>(args).Piece()...});
 }

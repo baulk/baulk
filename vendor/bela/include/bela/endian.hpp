@@ -4,45 +4,14 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
-
-#if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__)
-#include <endian.h>
-#elif defined(_AIX)
-#include <sys/machine.h>
-#elif defined(__sun)
-/* Solaris provides _BIG_ENDIAN/_LITTLE_ENDIAN selector in sys/types.h */
-#include <sys/types.h>
-#define BIG_ENDIAN 4321
-#define LITTLE_ENDIAN 1234
-#if defined(_BIG_ENDIAN)
-#define BYTE_ORDER BIG_ENDIAN
-#else
-#define BYTE_ORDER LITTLE_ENDIAN
-#endif
-#else
-#if !defined(BYTE_ORDER) && !defined(_WIN32)
-#include <machine/endian.h>
-#endif
-#endif
+#include <bit>
 
 namespace bela {
-#if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
-#define IS_BIG_ENDIAN 1
-#define BELA_IS_BIG_ENDIAN 1
-constexpr bool IsBigEndianHost = true;
-constexpr bool IsLittleEndianHost = false;
-#else
-#define IS_BIG_ENDIAN 0
-#define BELA_IS_LITTLE_ENDIAN 1
-constexpr bool IsBigEndianHost = false;
-constexpr bool IsLittleEndianHost = true;
-#endif
-
-constexpr inline bool IsBigEndian() { return IsBigEndianHost; }
-constexpr inline bool IsLittleEndian() { return IsLittleEndianHost; }
+constexpr inline bool IsBigEndian() { return std::endian::native == std::endian::big; }
+constexpr inline bool IsLittleEndian() { return std::endian::native == std::endian::little; }
 
 inline uint16_t swap16(uint16_t value) {
-#if defined(_MSC_VER) && !defined(_DEBUG)
+#if defined(_MSC_VER)
   // The DLL version of the runtime lacks these functions (bug!?), but in a
   // release build they're replaced with BSWAP instructions anyway.
   return _byteswap_ushort(value);
@@ -56,7 +25,7 @@ inline uint16_t swap16(uint16_t value) {
 inline uint32_t swap32(uint32_t value) {
 #if defined(__llvm__) || (defined(__GNUC__) && !defined(__ICC))
   return __builtin_bswap32(value);
-#elif defined(_MSC_VER) && !defined(_DEBUG)
+#elif defined(_MSC_VER)
   return _byteswap_ulong(value);
 #else
   uint32_t Byte0 = value & 0x000000FF;
@@ -70,7 +39,7 @@ inline uint32_t swap32(uint32_t value) {
 inline uint64_t swap64(uint64_t value) {
 #if defined(__llvm__) || (defined(__GNUC__) && !defined(__ICC))
   return __builtin_bswap64(value);
-#elif defined(_MSC_VER) && !defined(_DEBUG)
+#elif defined(_MSC_VER)
   return _byteswap_uint64(value);
 #else
   uint64_t Hi = swap32(uint32_t(value));
@@ -87,20 +56,16 @@ inline unsigned int bswap(unsigned int v) { return static_cast<unsigned int>(swa
 inline signed int bswap(signed int v) { return static_cast<signed int>(swap32(static_cast<uint32_t>(v))); }
 
 inline unsigned long bswap(unsigned long v) {
+  static_assert(sizeof(unsigned long) == 8 || sizeof(unsigned long) == 4, "unsigned long size must 8 byte or 4 byte");
   if constexpr (sizeof(unsigned long) == 8) {
     return static_cast<unsigned long>(swap64(static_cast<uint64_t>(v)));
-  } else if constexpr (sizeof(unsigned long) != 4) {
-    // BAD long size
-    return v;
   }
   return static_cast<unsigned long>(swap32(static_cast<uint32_t>(v)));
 }
 inline signed long bswap(signed long v) {
+  static_assert(sizeof(signed long) == 8 || sizeof(signed long) == 4, "signed long size must 8 byte or 4 byte");
   if constexpr (sizeof(signed long) == 8) {
     return static_cast<signed long>(swap64(static_cast<uint64_t>(v)));
-  } else if constexpr (sizeof(signed long) != 4) {
-    // BAD long size
-    return v;
   }
   return static_cast<signed long>(swap32(static_cast<uint32_t>(v)));
 }
@@ -115,67 +80,63 @@ inline signed long long bswap(signed long long v) {
 
 // SO Network order is BigEndian
 template <typename T> inline T htons(T v) {
-  static_assert(std::is_integral_v<T>, "must integer");
-  if constexpr (IsBigEndianHost) {
+  static_assert(std::is_integral_v<T>, "htnos requires integer");
+  if constexpr (IsBigEndian()) {
     return v;
   }
   return bswap(v);
 }
 template <typename T> inline T ntohs(T v) {
-  static_assert(std::is_integral_v<T>, "must integer");
-  if constexpr (IsBigEndianHost) {
+  static_assert(std::is_integral_v<T>, "ntohs requires integer");
+  if constexpr (IsBigEndian()) {
     return v;
   }
   return bswap(v);
 }
 
-template <typename T> inline T swaple(T i) {
-  static_assert(std::is_integral<T>::value, "Integral required.");
-  if constexpr (IsBigEndianHost) {
+template <typename T> inline T fromle(T i) {
+  static_assert(std::is_integral<T>::value, "fromle requires integer");
+  if constexpr (IsBigEndian()) {
     return bswap(i);
   }
   return i;
 }
 
-template <typename T> inline T swapbe(T i) {
-  static_assert(std::is_integral<T>::value, "Integral required.");
-  if constexpr (IsBigEndianHost) {
+template <typename T> inline T frombe(T i) {
+  static_assert(std::is_integral<T>::value, "frombe requires integer");
+  if constexpr (IsBigEndian()) {
     return i;
   }
   return bswap(i);
 }
 
-template <typename T> inline T unalignedloadT(const void *p) {
-  static_assert(std::is_integral_v<T>, "must integer");
+template <typename T> inline T unaligned_load(const void *p) {
+  static_assert(std::is_integral_v<T>, "unaligned_load requires integer");
   T t;
   memcpy(&t, p, sizeof(T));
   return t;
 }
 
-template <typename T> inline T readle(const void *p) {
-  auto v = unalignedloadT<T>(p);
-  if constexpr (IsLittleEndianHost) {
+template <typename T> inline T cast_fromle(const void *p) {
+  static_assert(std::is_integral_v<T>, "cast_fromle requires integer");
+  auto v = unaligned_load<T>(p);
+  if constexpr (IsLittleEndian()) {
     return v;
   }
   return bswap(v);
 }
 
-template <typename T> inline T readbe(const void *p) {
-  auto v = unalignedloadT<T>(p);
-  if constexpr (IsBigEndianHost) {
+template <typename T> inline T cast_frombe(const void *p) {
+  static_assert(std::is_integral_v<T>, "cast_frombe requires integer");
+  auto v = unaligned_load<T>(p);
+  if constexpr (IsBigEndian()) {
     return v;
   }
   return bswap(v);
 }
 
 namespace endian {
-#if IS_BIG_ENDIAN
-enum class Endian { little = 0, big = 1, native = big };
-#else
-enum class Endian { little = 0, big = 1, native = little };
-#endif
-
-template <Endian E = Endian::native> class Reader {
+template <std::endian E = std::endian::native> class Reader {
 public:
   Reader() = default;
   Reader(const void *p, size_t len) : data(reinterpret_cast<const uint8_t *>(p)), size(len) {}
@@ -193,10 +154,11 @@ public:
     size = len;
   }
   template <typename T> T Read() {
+    static_assert(std::is_integral_v<T>, "bela::endian::Reader::Read requires integer");
     auto p = reinterpret_cast<const T *>(data);
     data += sizeof(T);
     size -= sizeof(T);
-    if constexpr (E == Endian::native) {
+    if constexpr (E == std::endian::native) {
       return *p;
     }
     return bela::bswap(*p);
@@ -228,10 +190,10 @@ public:
 private:
   const uint8_t *data{nullptr};
   size_t size{0};
-  const Endian e{E};
+  const std::endian e{E};
 };
-using LittenEndian = Reader<Endian::little>;
-using BigEndian = Reader<Endian::big>;
+using LittenEndian = Reader<std::endian::little>;
+using BigEndian = Reader<std::endian::big>;
 
 } // namespace endian
 

@@ -53,7 +53,7 @@ bool File::LookupClrVersion(std::string &ver, bela::error_code &ec) const {
   }
   auto d = reinterpret_cast<const STORAGESIGNATURE *>(sv2.data());
   STORAGESIGNATURE ssi = {0};
-  if (bela::swaple(d->lSignature) != STORAGE_MAGIC_SIG) {
+  if (bela::fromle(d->lSignature) != STORAGE_MAGIC_SIG) {
     return false;
   }
   ver = getString(sdata, N + sizeof(STORAGESIGNATURE));

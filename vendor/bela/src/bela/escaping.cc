@@ -32,7 +32,7 @@
 // ---------------------------------------------------------------------------
 #include <bela/escaping.hpp>
 #include <bela/ascii.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela {
 constexpr wchar_t uhc[] = L"0123456789ABCDEF";

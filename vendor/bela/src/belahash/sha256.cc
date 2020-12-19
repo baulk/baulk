@@ -53,7 +53,7 @@ constexpr const uint32_t k256[64] = {
     unsigned T1 = h + Sigma1(e) + Ch(e, f, g) + k + (data);                                                            \
     d += T1, h = T1 + Sigma0(a) + Maj(a, b, c);                                                                        \
   }
-#define ROUND_1_16(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k256[n], W[n] = bela::swapbe(block[n]))
+#define ROUND_1_16(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k256[n], W[n] = bela::frombe(block[n]))
 #define ROUND_17_64(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k[n], RECALCULATE_W(W, n))
 
 void Hasher::Initialize(HashBits hb_) {
@@ -176,8 +176,8 @@ void Hasher::Finalize(uint8_t *out, size_t out_len) {
   /* pad message and run for last block */
 
   /* append the byte 0x80 to the message */
-  message[index] &= bela::swaple(~(0xFFFFFFFFu << shift));
-  message[index++] ^= bela::swaple(0x80u << shift);
+  message[index] &= bela::fromle(~(0xFFFFFFFFu << shift));
+  message[index++] ^= bela::fromle(0x80u << shift);
 
   /* if no room left in the message to store 64-bit message length */
   if (index > 14) {
@@ -191,8 +191,8 @@ void Hasher::Finalize(uint8_t *out, size_t out_len) {
   while (index < 14) {
     message[index++] = 0;
   }
-  message[14] = bela::swapbe((unsigned)(length >> 29));
-  message[15] = bela::swapbe((unsigned)(length << 3));
+  message[14] = bela::frombe((unsigned)(length >> 29));
+  message[15] = bela::frombe((unsigned)(length << 3));
   sha256_process_block(hash, message);
 
   if (out != nullptr && out_len >= digest_length) {

@@ -2,7 +2,7 @@
 #define BAULK_RCWRITER_HPP
 #include <string>
 #include <string_view>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/str_split.hpp>
 #include <bela/str_replace.hpp>
 #include <bela/pe.hpp>

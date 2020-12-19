@@ -31,7 +31,7 @@
 // limitations under the License.
 // ---------------------------------------------------------------------------
 #include <bela/str_replace.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela {
 namespace strings_internal {

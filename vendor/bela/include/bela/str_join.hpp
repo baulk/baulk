@@ -41,7 +41,7 @@
 #include <type_traits>
 #include <utility>
 #include <string_view>
-#include "str_join_internal.hpp"
+#include "internal/str_join_internal.hpp"
 
 namespace bela {
 // AlphaNumFormatter()

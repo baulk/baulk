@@ -3,7 +3,7 @@
 #include "internal.hpp"
 
 namespace hazel::elf {
-bool File::gnuVersionInit(bela::Span<uint8_t> str) {
+bool File::gnuVersionInit(std::span<uint8_t> str) {
   if (gnuNeed.size() != 0) {
     // Already initialized
     return true;
@@ -26,13 +26,13 @@ bool File::gnuVersionInit(bela::Span<uint8_t> str) {
     if (i + 16 > size) {
       break;
     }
-    if (auto vers = endian_cast_ptr<uint16_t>(d.data() + i); vers != 1) {
+    if (auto vers = cast_from<uint16_t>(d.data() + i); vers != 1) {
       break;
     }
-    auto cnt = static_cast<int>(endian_cast_ptr<uint16_t>(d.data() + i + 2));
-    auto fileoff = endian_cast_ptr<uint32_t>(d.data() + i + 4);
-    auto aux = endian_cast_ptr<uint32_t>(d.data() + i + 8);
-    auto next = endian_cast_ptr<uint32_t>(d.data() + i + 12);
+    auto cnt = static_cast<int>(cast_from<uint16_t>(d.data() + i + 2));
+    auto fileoff = cast_from<uint32_t>(d.data() + i + 4);
+    auto aux = cast_from<uint32_t>(d.data() + i + 8);
+    auto next = cast_from<uint32_t>(d.data() + i + 12);
     auto file = getString(str, static_cast<int>(fileoff));
     auto j = i + static_cast<int>(aux);
     for (auto c = 0; c < cnt; c++) {
@@ -41,9 +41,9 @@ bool File::gnuVersionInit(bela::Span<uint8_t> str) {
       }
       // uint32_t hash
       // uint16_t flags;
-      auto ndx = static_cast<int>(endian_cast_ptr<uint16_t>(d.data() + j + 6));
-      auto nameoff = endian_cast_ptr<uint32_t>(d.data() + j + 8);
-      auto ndxNext = endian_cast_ptr<uint32_t>(d.data() + j + 12);
+      auto ndx = static_cast<int>(cast_from<uint16_t>(d.data() + j + 6));
+      auto nameoff = cast_from<uint32_t>(d.data() + j + 8);
+      auto ndxNext = cast_from<uint32_t>(d.data() + j + 12);
       auto name = getString(str, static_cast<int>(nameoff));
       if (ndx >= gnuNeed.size()) {
         gnuNeed.resize(2 * (ndx + 1));

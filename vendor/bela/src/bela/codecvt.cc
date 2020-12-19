@@ -138,7 +138,7 @@ std::string c16tomb(const char16_t *data, size_t len) {
   return s;
 }
 
-inline char32_t AnnexU8(const uint8_t *it, int nb) {
+inline char32_t AnnexU8(const char8_t *it, int nb) {
   char32_t ch = 0;
   switch (nb) {
   case 5:
@@ -169,12 +169,12 @@ inline char32_t AnnexU8(const uint8_t *it, int nb) {
 }
 
 template <typename T, typename Allocator>
-bool mbrtoc16(const unsigned char *s, size_t len, std::basic_string<T, std::char_traits<T>, Allocator> &container) {
+bool mbrtoc16(const char8_t *s, size_t len, std::basic_string<T, std::char_traits<T>, Allocator> &container) {
   if (s == nullptr || len == 0) {
     return false;
   }
   container.reserve(len);
-  auto it = reinterpret_cast<const unsigned char *>(s);
+  auto it = reinterpret_cast<const char8_t *>(s);
   auto end = it + len;
   while (it < end) {
     unsigned short nb = trailingbytesu8[*it];
@@ -204,14 +204,14 @@ bool mbrtoc16(const unsigned char *s, size_t len, std::basic_string<T, std::char
   return true;
 }
 
-std::wstring mbrtowc(const unsigned char *str, size_t len) {
+std::wstring mbrtowc(const char8_t *str, size_t len) {
   std::wstring s;
   if (!mbrtoc16(str, len, s)) {
     s.clear();
   }
   return s;
 }
-std::u16string mbrtoc16(const unsigned char *str, size_t len) {
+std::u16string mbrtoc16(const char8_t *str, size_t len) {
   std::u16string s;
   if (!mbrtoc16(str, len, s)) {
     s.clear();
@@ -248,7 +248,7 @@ std::string EscapeNonBMP(std::string_view sv) {
   s.reserve(sv.size());
   char ub[10] = {0};
   auto len = sv.size();
-  auto it = reinterpret_cast<const unsigned char *>(sv.data());
+  auto it = reinterpret_cast<const char8_t *>(sv.data());
   auto end = it + len;
   while (it < end) {
     auto c = *it;
@@ -318,7 +318,7 @@ std::u16string EscapeNonBMP(std::u16string_view sv) { return EscapeNonBMPInterna
 // Calculate UTF-8 string display width
 size_t StringWidth(std::string_view str) {
   size_t width = 0;
-  auto it = reinterpret_cast<const unsigned char *>(str.data());
+  auto it = reinterpret_cast<const char8_t *>(str.data());
   auto end = it + str.size();
   while (it < end) {
     if (*it == 0x1b) {

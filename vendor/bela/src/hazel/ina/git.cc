@@ -34,7 +34,7 @@ struct git_midx_header_t {
 };
 #pragma pack()
 // https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
-status_t explore_git_file(bela::MemView mv, FileAttributeTable &fat) {
+status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
   constexpr const uint8_t packMagic[] = {'P', 'A', 'C', 'K'};
   constexpr const uint8_t midxMagic[] = {'M', 'I', 'D', 'X'};
   constexpr const uint8_t indexMagic[] = {0xFF, 0x74, 0x4F, 0x63};
@@ -43,9 +43,9 @@ status_t explore_git_file(bela::MemView mv, FileAttributeTable &fat) {
     if (hd == nullptr) {
       return None;
     }
-    auto name = bela::StringCat(L"Git pack file, version ", bela::swapbe(hd->version), L", objects ",
-                                bela::swapbe(hd->objsize));
-    fat.assign(std::move(name), types::gitpack);
+    hr.assign(types::gitpack, L"Git pack file");
+    hr.append(L"Version", bela::frombe(hd->version));
+    hr.append(L"Counts", bela::frombe(hd->objsize));
     return Found;
   }
   if (mv.StartsWith(indexMagic)) {
@@ -53,24 +53,21 @@ status_t explore_git_file(bela::MemView mv, FileAttributeTable &fat) {
     if (hd == nullptr) {
       return None;
     }
-    std::wstring name;
-    auto ver = bela::swapbe(hd->version);
-    switch (ver) {
+    hr.assign(types::gitpkindex, L"Git pack indexs file");
+    auto version = bela::frombe(hd->version);
+    hr.append(L"Version", version);
+    switch (version) {
     case 2:
-      name =
-          bela::StringCat(L"Git pack indexs file, version ", ver, L", total objects ", bela::swapbe(hd->fanout[255]));
+      hr.append(L"Counts", bela::frombe(hd->fanout[255]));
       break;
-    case 3: {
-      auto hd3 = mv.cast<git_index3_header_t>(0);
-      name =
-          bela::StringCat(L"Git pack indexs file, version ", ver, L", total objects ", bela::swapbe(hd3->packobjects));
-    } break;
+    case 3:
+      if (auto hdr3 = mv.cast<git_index3_header_t>(0); hdr3 != nullptr) {
+        hr.append(L"Counts", bela::frombe(hdr3->packobjects));
+      }
+      break;
     default:
-      name = bela::StringCat(L"Git pack indexs file, version ", ver);
       break;
     };
-
-    fat.assign(std::move(name), types::gitpkindex);
     return Found;
   }
   if (mv.StartsWith(midxMagic)) {
@@ -78,10 +75,11 @@ status_t explore_git_file(bela::MemView mv, FileAttributeTable &fat) {
     if (hd == nullptr) {
       return None;
     }
-    fat.assign(bela::StringCat(L"Git multi-pack-index, version ", (int)hd->version, L", oid version ",
-                               (int)hd->oidversion, L", chunks ", (int)hd->chunks, L", pack files ",
-                               bela::swapbe(hd->packfiles)),
-               types::gitpack);
+    hr.assign(types::gitmidx, L"Git multi-pack-index");
+    hr.append(L"Version", static_cast<int>(hd->version));
+    hr.append(L"OidVersion", static_cast<int>(hd->oidversion));
+    hr.append(L"Chunks", static_cast<int>(hd->chunks));
+    hr.append(L"Packfiles", bela::frombe(hd->packfiles));
     return Found;
   }
 

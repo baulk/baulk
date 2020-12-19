@@ -3,7 +3,7 @@
 #include <bela/base.hpp>
 #include <bela/path.hpp>
 #include <bela/pe.hpp>
-#include <bela/narrow/strcat.hpp>
+#include <bela/str_cat_narrow.hpp>
 #include <bela/io.hpp>
 #include <bela/str_split.hpp>
 #include <time.hpp>

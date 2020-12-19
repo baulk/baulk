@@ -5,7 +5,7 @@ namespace bela::pe {
 
 std::string symbolFullName(const COFFSymbol &sm, const StringTable &st) {
   if (sm.Name[0] == 0 && sm.Name[1] == 0 && sm.Name[2] == 0 && sm.Name[3] == 0) {
-    auto offset = bela::readle<uint32_t>(sm.Name + 4);
+    auto offset = bela::cast_fromle<uint32_t>(sm.Name + 4);
     bela::error_code ec;
     return st.String(offset, ec);
   }
@@ -45,9 +45,9 @@ bool File::readCOFFSymbols(std::vector<COFFSymbol> &symbols, bela::error_code &e
   }
   if constexpr (bela::IsBigEndian()) {
     for (auto &s : symbols) {
-      s.SectionNumber = bela::swaple(s.SectionNumber);
-      s.Type = bela::swaple(s.Type);
-      s.Value = bela::swaple(s.Value);
+      s.SectionNumber = bela::fromle(s.SectionNumber);
+      s.Type = bela::fromle(s.Type);
+      s.Value = bela::fromle(s.Value);
     }
   }
   return true;

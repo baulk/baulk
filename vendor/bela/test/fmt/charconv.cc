@@ -1,6 +1,6 @@
 ////
 #include <bela/charconv.hpp>
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/terminal.hpp>
 
 int wmain() {

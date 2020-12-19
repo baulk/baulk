@@ -4,7 +4,7 @@
 #include <string_view>
 #include <bela/base.hpp>
 #include <bela/fmt.hpp> // ssize_t
-#include <bela/strcat.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela {
 #define lenof(array) (sizeof(array) / sizeof(*(array)))

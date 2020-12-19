@@ -3,7 +3,7 @@
 #define BELA_ESCAPE_ARGV_HPP
 #include <string_view>
 #include <vector>
-#include "span.hpp"
+#include <span>
 
 namespace bela {
 
@@ -43,7 +43,7 @@ public:
   basic_escape_argv(const basic_escape_argv &) = delete;
   basic_escape_argv &operator=(const basic_escape_argv &) = delete;
   // AssignFull
-  basic_escape_argv &AssignFull(const bela::Span<string_view_t> args) {
+  basic_escape_argv &AssignFull(const std::span<string_view_t> args) {
     struct arg_status {
       unsigned len{0};
       bool hasspace{false};

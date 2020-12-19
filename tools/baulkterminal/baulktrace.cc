@@ -1,6 +1,6 @@
 //
 #include <bela/terminal.hpp>
-#include <bela/narrow/strcat.hpp>
+#include <bela/str_cat_narrow.hpp>
 #include <bela/path.hpp>
 #include <time.hpp>
 #include "baulkterminal.hpp"

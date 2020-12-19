@@ -2,9 +2,9 @@
 #ifndef BELA_WIN_PATH_HPP
 #define BELA_WIN_PATH_HPP
 #pragma once
-#include "strcat.hpp"
+#include <span>
+#include "str_cat.hpp"
 #include "match.hpp"
-#include "span.hpp"
 #include "base.hpp"
 
 namespace bela {
@@ -52,8 +52,8 @@ std::vector<std::string_view> SplitPath(std::string_view sv);
 void PathStripName(std::wstring &s);
 std::wstring PathAbsolute(std::wstring_view p);
 namespace path_internal {
-std::wstring PathCatPieces(bela::Span<std::wstring_view> pieces);
-std::wstring PathAbsoluteCatPieces(bela::Span<std::wstring_view> pieces);
+std::wstring PathCatPieces(std::span<std::wstring_view> pieces);
+std::wstring PathAbsoluteCatPieces(std::span<std::wstring_view> pieces);
 } // namespace path_internal
 
 [[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a) {

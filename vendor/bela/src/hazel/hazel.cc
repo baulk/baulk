@@ -7,15 +7,15 @@
 
 namespace hazel {
 
-typedef hazel::internal::status_t (*lookup_handle_t)(bela::MemView mv, FileAttributeTable &fat);
+typedef hazel::internal::status_t (*lookup_handle_t)(bela::MemView mv, hazel_result &hr);
 
-bool LookupFile(hazel::io::File &fd, FileAttributeTable &fat, bela::error_code &ec) {
+bool LookupFile(bela::File &fd, hazel_result &hr, bela::error_code &ec) {
   LARGE_INTEGER li = {0};
   if (GetFileSizeEx(fd.FD(), &li) != TRUE) {
     ec = bela::make_system_error_code();
     return false;
   }
-  fat.size = li.QuadPart;
+  hr.size_ = li.QuadPart;
   uint8_t buffer[4096];
   auto outlen = fd.ReadAt(buffer, sizeof(buffer), 0, ec);
   if (outlen == -1) {
@@ -34,7 +34,7 @@ bool LookupFile(hazel::io::File &fd, FileAttributeTable &fat, bela::error_code &
       LookupText,
   };
   for (auto h : handles) {
-    if (h(mv, fat) == Found) {
+    if (h(mv, hr) == Found) {
       return true;
     }
   }
