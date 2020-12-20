@@ -111,6 +111,8 @@ private:
   types::hazel_types_t t{types::none};
 };
 
+const wchar_t *LookupMIME(types::hazel_types_t t);
+
 } // namespace hazel
 
 #endif

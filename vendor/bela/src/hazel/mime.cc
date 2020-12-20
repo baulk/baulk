@@ -7,7 +7,7 @@ struct mime_value_t {
   const wchar_t *mime;
 };
 // https://mediatemple.net/community/products/dv/204403964/mime-types
-const wchar_t *lookup_mime(types::hazel_types_t t) {
+const wchar_t *LookupMIME(types::hazel_types_t t) {
   constexpr mime_value_t mimes[] = {
       {types::ascii, L"text/plain"},
       {types::utf7, L"text/plain;charset=UTF-7"},
