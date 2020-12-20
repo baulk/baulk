@@ -39,7 +39,8 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
   constexpr const uint8_t midxMagic[] = {'M', 'I', 'D', 'X'};
   constexpr const uint8_t indexMagic[] = {0xFF, 0x74, 0x4F, 0x63};
   if (mv.StartsWith(packMagic)) {
-    auto hd = mv.cast<git_pack_header_t>(0);
+    git_pack_header_t hdr;
+    auto hd = mv.bit_cast<git_pack_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }
@@ -49,7 +50,8 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
     return Found;
   }
   if (mv.StartsWith(indexMagic)) {
-    auto hd = mv.cast<git_index_header_t>(0);
+    git_index_header_t hdr;
+    auto hd = mv.bit_cast<git_index_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }
@@ -60,18 +62,20 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
     case 2:
       hr.append(L"Counts", bela::frombe(hd->fanout[255]));
       break;
-    case 3:
-      if (auto hdr3 = mv.cast<git_index3_header_t>(0); hdr3 != nullptr) {
+    case 3: {
+      git_index3_header_t hdr;
+      if (auto hdr3 = mv.bit_cast<git_index3_header_t>(&hdr); hdr3 != nullptr) {
         hr.append(L"Counts", bela::frombe(hdr3->packobjects));
       }
-      break;
+    } break;
     default:
       break;
     };
     return Found;
   }
   if (mv.StartsWith(midxMagic)) {
-    auto hd = mv.cast<git_midx_header_t>(0);
+    git_midx_header_t hdr;
+    auto hd = mv.bit_cast<git_midx_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }

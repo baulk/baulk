@@ -22,7 +22,6 @@ status_t lookup_rtfinternal(bela::MemView mv, hazel_result &hr) {
   }
   hr.assign(types::rtf, L"Rich Text Format");
   hr.append(L"Version", version);
-  std::wstring name(L"Rich Text Format data, version ");
   return Found;
 }
 
@@ -41,7 +40,11 @@ status_t LookupDocs(bela::MemView mv, hazel_result &hr) {
   if (mv.StartsWith(msofficeMagic) || mv.size() < 512) {
     return None;
   }
-  auto oh = mv.cast<oleheader_t>(0);
+  oleheader_t hdr;
+  auto oh = mv.bit_cast<oleheader_t>(&hdr);
+  if (oh == nullptr) {
+    return None;
+  }
   // PowerPoint Document
 
   return None;

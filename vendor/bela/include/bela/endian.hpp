@@ -155,13 +155,13 @@ public:
   }
   template <typename T> T Read() {
     static_assert(std::is_integral_v<T>, "bela::endian::Reader::Read requires integer");
-    auto p = reinterpret_cast<const T *>(data);
+    auto v = bela::unaligned_load<T>(data);
     data += sizeof(T);
     size -= sizeof(T);
     if constexpr (E == std::endian::native) {
-      return *p;
+      return v;
     }
-    return bela::bswap(*p);
+    return bela::bswap(v);
   }
   size_t Discard(size_t n) {
     if (n >= size) {

@@ -443,10 +443,11 @@ private:
   }
   template <typename Integer, std::enable_if_t<std::is_integral<Integer>::value, bool> = true>
   Integer cast_from(const void *p) {
+    auto v = bela::unaligned_load<Integer>(p);
     if (en == std::endian::native) {
-      return *reinterpret_cast<const Integer *>(p);
+      return v;
     }
-    return bela::bswap(*reinterpret_cast<const Integer *>(p));
+    return bela::bswap(v);
   }
   bool readFileHeader(int64_t &offset, bela::error_code &ec);
   bool parseSymtab(std::string_view symdat, std::string_view strtab, std::string_view cmddat, const SymtabCmd &hdr,

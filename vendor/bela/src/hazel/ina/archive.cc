@@ -26,11 +26,12 @@ struct p7z_header_t {
 status_t lookup_7zinternal(bela::MemView mv, hazel_result &hr) {
   constexpr const uint8_t k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
   constexpr const uint8_t k7zFinishSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C + 1};
-  auto hd = mv.cast<p7z_header_t>(0);
-  if (hd == nullptr) {
+  if (!mv.StartsWith(k7zSignature)) {
     return None;
   }
-  if (memcmp(hd->signature, k7zSignature, k7zSignatureSize) != 0) {
+  p7z_header_t hdr;
+  auto hd = mv.bit_cast<p7z_header_t>(&hdr);
+  if (hd == nullptr) {
     return None;
   }
   hr.assign(types::p7z, L"7-zip archive data");
@@ -82,7 +83,8 @@ status_t lookup_xarinternal(bela::MemView mv, hazel_result &hr) {
   if (!mv.StartsWith(xarSignature)) {
     return None;
   }
-  auto xhd = mv.cast<xar_header>(0);
+  xar_header hdr;
+  auto xhd = mv.bit_cast<xar_header>(&hdr);
   if (xhd == nullptr || bela::frombe(xhd->size) < 28) {
     return None;
   }
@@ -132,7 +134,8 @@ status_t lookup_dmginternal(bela::MemView mv, hazel_result &hr) {
   if (!mv.StartsWith(dmgSignature)) {
     return None;
   }
-  auto hd = mv.cast<apple_disk_image_header>(0);
+  apple_disk_image_header hdr;
+  auto hd = mv.bit_cast<apple_disk_image_header>(&hdr);
   constexpr auto hsize = sizeof(apple_disk_image_header);
   if (hd == nullptr || bela::frombe(hd->HeaderSize) != hsize) {
     return None;
@@ -216,8 +219,9 @@ status_t lookup_wiminternal(bela::MemView mv, hazel_result &hr) {
   if (!mv.StartsWith(wimMagic)) {
     return None;
   }
-  auto hd = mv.cast<wim_header_t>(0);
   constexpr const size_t hdsize = sizeof(wim_header_t);
+  wim_header_t hdr;
+  auto hd = mv.bit_cast<wim_header_t>(&hdr);
   if (hd == nullptr || bela::fromle(hd->cbSize) < hdsize) {
     return None;
   }
@@ -288,7 +292,8 @@ status_t lookup_cabinetinternal(bela::MemView mv, hazel_result &hr) {
   if (!mv.StartsWith(cabMagic)) {
     return None;
   }
-  auto hd = mv.cast<cabinet_header_t>(0);
+  cabinet_header_t hdr;
+  auto hd = mv.bit_cast<cabinet_header_t>(&hdr);
   if (hd == nullptr) {
     return None;
   }
@@ -360,7 +365,8 @@ struct gnutar_header_t {
 #pragma pack()
 
 status_t lookup_tarinternal(bela::MemView mv, hazel_result &hr) {
-  auto hd = mv.cast<ustar_header_t>(0);
+  ustar_header_t hdr;
+  auto hd = mv.bit_cast<ustar_header_t>(&hdr);
   if (hd == nullptr) {
     return None;
   }
@@ -388,7 +394,8 @@ status_t lookup_sqliteinternal(bela::MemView mv, hazel_result &hr) {
   if (!mv.StartsWith(sqliteMagic)) {
     return None;
   }
-  auto hd = mv.cast<sqlite_header_t>(0);
+  sqlite_header_t hdr;
+  auto hd = mv.bit_cast<sqlite_header_t>(&hdr);
   if (hd == nullptr || hd->sigver[15] != 0) {
     return None;
   }

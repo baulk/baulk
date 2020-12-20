@@ -16,7 +16,6 @@ add_library(
   zip/zip.cc
   elf/dynamic.cc
   elf/elf.cc
-  elf/elfdata.cc
   elf/gnu.cc
   elf/symbol.cc
   macho/macho.cc

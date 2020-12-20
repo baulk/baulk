@@ -41,7 +41,7 @@ namespace bela {
 // StartsWith and EndsWith
 inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcept { return text.starts_with(prefix); }
 inline bool EndsWith(std::wstring_view text, std::wstring_view suffix) noexcept { return text.ends_with(suffix); }
-inline bool StartsWith(std::string_view text, std::string_view prefix) noexcept { return prefix.starts_with(prefix); }
+inline bool StartsWith(std::string_view text, std::string_view prefix) noexcept { return text.starts_with(prefix); }
 inline bool EndsWith(std::string_view text, std::string_view suffix) noexcept { return text.ends_with(suffix); }
 
 // StrContains()

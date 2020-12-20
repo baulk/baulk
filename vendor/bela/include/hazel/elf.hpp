@@ -160,10 +160,11 @@ private:
   }
   template <typename Integer, std::enable_if_t<std::is_integral<Integer>::value, bool> = true>
   Integer cast_from(const void *p) {
+    auto v = bela::unaligned_load<Integer>(p);
     if (en == std::endian::native) {
-      return *reinterpret_cast<const Integer *>(p);
+      return v;
     }
-    return bela::bswap(*reinterpret_cast<const Integer *>(p));
+    return bela::bswap(v);
   }
   const Section *SectionByType(uint32_t st) const {
     for (const auto &s : sections) {

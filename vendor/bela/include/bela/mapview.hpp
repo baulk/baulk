@@ -60,11 +60,11 @@ public:
     }
     return (unsigned char)data_[off];
   }
-  template <typename T> const T *cast(size_t off) const {
+  template <typename T> T *bit_cast(T *t, size_t off = 0) const {
     if (off + sizeof(T) >= size_) {
       return nullptr;
     }
-    return reinterpret_cast<const T *>(data_ + off);
+    return reinterpret_cast<T *>(memcpy(t, data_ + off, sizeof(T)));
   }
 
 private:

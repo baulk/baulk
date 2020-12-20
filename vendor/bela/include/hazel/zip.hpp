@@ -153,14 +153,19 @@ struct File {
   bool utf8{false};
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
   std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
+  bool StartsWith(std::string_view prefix) const { return name.starts_with(prefix); }
+  bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
+  bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
+  bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
 };
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
 using Receiver = std::function<bool(const void *data, size_t len)>;
-enum msoffice_t : int {
+enum mszipconatiner_t : int {
   OfficeNone, // None
-  OfficePptx,
   OfficeDocx,
+  OfficePptx,
   OfficeXlsx,
+  NuGetPackage,
 };
 
 class Reader {
@@ -245,10 +250,10 @@ public:
   bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
   bool Contains(std::string_view p, std::size_t limit = size_max) const;
   bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  msoffice_t LooksLikeOffice() const;
-  bool LooksLikePptx() const { return LooksLikeOffice() == OfficePptx; }
-  bool LooksLikeDocx() const { return LooksLikeOffice() == OfficeDocx; }
-  bool LooksLikeXlsx() const { return LooksLikeOffice() == OfficeXlsx; }
+  mszipconatiner_t LooksLikeMsZipContainer() const;
+  bool LooksLikePptx() const { return LooksLikeMsZipContainer() == OfficePptx; }
+  bool LooksLikeDocx() const { return LooksLikeMsZipContainer() == OfficeDocx; }
+  bool LooksLikeXlsx() const { return LooksLikeMsZipContainer() == OfficeXlsx; }
   bool LooksLikeOFD() const;
   bool LooksLikeJar() const;
   bool LooksLikeAppx() const;

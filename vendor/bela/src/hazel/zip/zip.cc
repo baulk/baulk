@@ -4,6 +4,7 @@
 #include <bela/algorithm.hpp>
 #include <bela/bufio.hpp>
 #include <bitset>
+#include <bela/terminal.hpp>
 #include "zipinternal.hpp"
 
 namespace hazel::zip {
@@ -407,21 +408,24 @@ bool Reader::Contains(std::string_view p, std::size_t limit) const {
   return false;
 }
 
-msoffice_t Reader::LooksLikeOffice() const {
+mszipconatiner_t Reader::LooksLikeMsZipContainer() const {
   // [Content_Types].xml
   std::string_view paths[] = {"[Content_Types].xml", "_rels/.rels"};
   if (!Contains(paths, 200)) {
     return OfficeNone;
   }
   for (const auto &file : files) {
-    if (bela::StartsWith(file.name, "word/")) {
+    if (file.StartsWith("word/")) {
       return OfficeDocx;
     }
-    if (bela::StartsWith(file.name, "ppt/")) {
+    if (file.StartsWith("ppt/")) {
       return OfficePptx;
     }
-    if (bela::StartsWith(file.name, "xl/")) {
+    if (file.StartsWith("xl/")) {
       return OfficeXlsx;
+    }
+    if (!file.Contains('/') && file.EndsWith(".nuspec")) {
+      return NuGetPackage;
     }
   }
   return OfficeNone;

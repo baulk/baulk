@@ -63,7 +63,7 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stdout, L"File: %s [%s|%s] (%s) %d\n", file.name, bela::FormatTime(file.time),
                   bela::FormatUniversalTime(file.time), hazel::zip::Method(file.method), file.uncompressedSize);
   }
-  switch (zr->LooksLikeOffice()) {
+  switch (zr->LooksLikeMsZipContainer()) {
   case hazel::zip::OfficeDocx:
     bela::FPrintF(stdout, L"File is Microsoft Office Word (2007+)\n");
     break;
@@ -72,6 +72,9 @@ int wmain(int argc, wchar_t **argv) {
     break;
   case hazel::zip::OfficeXlsx:
     bela::FPrintF(stdout, L"File is Microsoft Office Excel (2007+)\n");
+    break;
+  case hazel::zip::NuGetPackage:
+    bela::FPrintF(stdout, L"File is NuGet Package\n");
     break;
   default:
     break;
