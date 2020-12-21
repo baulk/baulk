@@ -10,6 +10,7 @@ namespace hazel::internal {
 using bela::ArrayEnd;
 using bela::ArrayEqual;
 using bela::ArrayLength;
+bool buffer_is_binary(bela::MemView mv);
 typedef enum hazel_status_e : int {
   None = 0,
   Found, ///

@@ -276,6 +276,12 @@ struct Function {
   std::string Name;
   int Index{0};
   int Ordinal{0};
+  int GetIndex() const {
+    if (Ordinal != 0) {
+      return Ordinal;
+    }
+    return Index;
+  }
 };
 
 struct FunctionTable {

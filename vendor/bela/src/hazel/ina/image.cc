@@ -3,6 +3,46 @@
 
 namespace hazel::internal {
 
+struct image_offset_detect {
+  size_t offset;
+  const char *magic;
+  const wchar_t *mime;
+  const wchar_t *desc;
+  types::hazel_types_t t;
+};
+
+status_t LookupNewImages(bela::MemView mv, hazel_result &hr) {
+  constexpr const image_offset_detect images[]{
+      {8, "mif1", L"image/heif", L"HEIF Image", types::mif1},
+      {8, "msf1", L"image/heif-sequence", L"HEIF Image Sequence", types::msf1},
+      {8, "heic", L"image/heic", L"HEIF Image HEVC Main or Main Still Picture Profile", types::heic},
+      {8, "heix", L"image/heic", L"HEIF Image HEVC Main 10 Profile", types::heix},
+      {8, "hevc", L"image/heic-sequence", L"HEIF Image Sequenz HEVC Main or Main Still Picture Profile", types::hevc},
+      {8, "hevx", L"image/heic-sequence", L"HEIF Image Sequence HEVC Main 10 Profile", types::hevx},
+      // https://github.com/nokiatech/heif/blob/d5e9a21c8ba8df712bdf643021dd9f6518134776/Srcs/reader/hevcimagefilereader.cpp
+      {8, "heim", L"image/heif", L"HEIF Image L-HEVC", types::heim},
+      {8, "heis", L"image/heif", L"HEIF Image L-HEVC", types::heis},
+      {8, "avic", L"image/heif", L"HEIF Image AVC", types::avic},
+      {8, "hevm", L"image/heif-sequence", L"HEIF Image Sequence L-HEVC", types::hevm},
+      {8, "hevs", L"image/heif-sequence", L"HEIF Image Sequence L-HEVC", types::hevs},
+      {8, "avcs", L"image/heif-sequence", L"HEIF Image Sequence AVC", types::avcs},
+      // https://aomediacodec.github.io/av1-avif/
+      {8, "avif", L"image/avif", L"AVIF Image", types::avif},
+      {8, "avis", L"image/avif", L"AVIF Image Sequence", types::avis},
+  };
+  for (const auto &i : images) {
+    if (mv.size() > i.offset && mv.IndexsWith(i.offset, i.magic)) {
+      if (!buffer_is_binary(mv)) {
+        return None;
+      }
+      hr.assign(i.t, i.desc);
+      hr.append(L"MIME", i.mime);
+      return Found;
+    }
+  }
+  return None;
+}
+
 // struct psd_header_t {
 //   uint8_t sig[4];
 //   uint16_t ver;
@@ -107,7 +147,7 @@ status_t LookupImages(bela::MemView mv, hazel_result &hr) {
   default:
     break;
   }
-  return None;
+  return LookupNewImages(mv, hr);
 }
 
 } // namespace hazel::internal
