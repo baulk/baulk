@@ -3,10 +3,10 @@
 #define HAZEL_ELF_HPP
 #include <bela/endian.hpp>
 #include "hazel.hpp"
-#include "details/elf.h"
+#include "details/ELF.h"
 
 namespace hazel::elf {
-
+using namespace llvm::ELF;
 constexpr int COMPRESS_ZLIB = 1;            /* ZLIB compression. */
 constexpr int COMPRESS_LOOS = 0x60000000;   /* First OS-specific. */
 constexpr int COMPRESS_HIOS = 0x6fffffff;   /* Last OS-specific. */
