@@ -469,6 +469,7 @@ public:
   bool NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec);
   bool Is64Bit() const { return is64bit; }
   int64_t Size() const { return size; }
+  const auto &Fh() { return fh; }
   bool Depends(std::vector<std::string> &libs, bela::error_code &ec);
   bool ImportedSymbols(std::vector<std::string> &symbols, bela::error_code &ec);
   const hazel::macho::Section *Section(std::string_view name) const {

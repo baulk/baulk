@@ -75,7 +75,8 @@ bool File::ParseFile(bela::error_code &ec) {
     return false;
   }
   fh.Version = ident[EI_VERSION];
-  fh.OSABI = ident[EI_OSABI];
+  fh.ABI = ident[EI_OSABI];
+  fh.ABIVersion = ident[EI_ABIVERSION];
   // buna/debug/elf/file.go
   int64_t phoff = 0;
   int phentsize = 0;

@@ -15,15 +15,15 @@ constexpr int COMPRESS_HIPROC = 0x7fffffff; /* Last processor-specific type. */
 
 // ELF64 file header.
 struct FileHeader {
+  uint64_t Entry;   /* Entry point. */
+  uint16_t Type;    /* File type. */
+  uint16_t Machine; /* Machine architecture. */
+  // magic 4 bytes
   uint8_t Class;
   uint8_t Data;
   uint8_t Version;
-  uint8_t OSABI;
+  uint8_t ABI;
   uint8_t ABIVersion;
-  uint8_t LSB;
-  uint16_t Type;    /* File type. */
-  uint16_t Machine; /* Machine architecture. */
-  uint64_t Entry;   /* Entry point. */
 };
 
 struct ProgHeader {
@@ -219,6 +219,7 @@ public:
   int64_t Size() const { return size; }
   const auto &Sections() const { return sections; }
   const auto &Progs() const { return progs; }
+  const auto &Fh() const { return fh; }
   bool DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec);
   bool DynamicSymbols(std::vector<Symbol> &syms, bela::error_code &ec);
   bool ImportedSymbols(std::vector<ImportedSymbol> &symbols, bela::error_code &ec);
