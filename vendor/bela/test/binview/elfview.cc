@@ -20,6 +20,12 @@ int wmain(int argc, wchar_t **argv) {
   if (auto so = file.LibSoName(ec); so) {
     bela::FPrintF(stdout, L"SONAME: %s\n", *so);
   }
+  if (auto rpath = file.Rpath(ec); rpath) {
+    bela::FPrintF(stdout, L"RPATH: %s\n", *rpath);
+  }
+  if (auto rupath = file.Rupath(ec); rupath) {
+    bela::FPrintF(stdout, L"RUPATH: %s\n", *rupath);
+  }
   std::vector<std::string> libs;
   if (!file.Depends(libs, ec)) {
     bela::FPrintF(stderr, L"parse elf file depends %s error: %s\n", argv[1], ec.message);

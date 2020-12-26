@@ -114,13 +114,13 @@ private:
     return true;
   }
   // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
     if (!PositionAt(pos, ec)) {
       return false;
     }
     return ReadFull(buffer, len, ec);
   }
-  bool ReadAt(bela::Buffer &buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(bela::Buffer &buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
     if (!PositionAt(pos, ec)) {
       return false;
     }
@@ -152,14 +152,14 @@ private:
   }
 
   template <typename Integer, std::enable_if_t<std::is_integral<Integer>::value, bool> = true>
-  Integer endian_cast(Integer t) {
+  Integer endian_cast(Integer t) const {
     if (en == std::endian::native) {
       return t;
     }
     return bela::bswap(t);
   }
   template <typename Integer, std::enable_if_t<std::is_integral<Integer>::value, bool> = true>
-  Integer cast_from(const void *p) {
+  Integer cast_from(const void *p) const {
     auto v = bela::unaligned_load<Integer>(p);
     if (en == std::endian::native) {
       return v;
@@ -174,11 +174,11 @@ private:
     }
     return nullptr;
   }
-  bool sectionData(const Section &sec, bela::Buffer &buffer, bela::error_code &ec) {
+  bool sectionData(const Section &sec, bela::Buffer &buffer, bela::error_code &ec) const {
     buffer.grow(sec.Size);
     return ReadAt(buffer, sec.Size, sec.Offset, ec);
   }
-  bool stringTable(uint32_t link, bela::Buffer &buf, bela::error_code &ec) {
+  bool stringTable(uint32_t link, bela::Buffer &buf, bela::error_code &ec) const {
     if (link <= 0 || link >= static_cast<uint32_t>(sections.size())) {
       ec = bela::make_error_code(L"section has invalid string table link");
       return false;
@@ -198,9 +198,9 @@ private:
     lib = gnuNeed[j].file;
     ver = gnuNeed[j].name;
   }
-  bool getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec);
-  bool getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec);
-  bool getSymbols(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) {
+  bool getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) const;
+  bool getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) const;
+  bool getSymbols(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) const {
     if (is64bit) {
       return getSymbols64(st, syms, strdata, ec);
     }
@@ -220,26 +220,31 @@ public:
   const auto &Sections() const { return sections; }
   const auto &Progs() const { return progs; }
   const auto &Fh() const { return fh; }
-  bool DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec);
+  bool DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec) const;
+  std::optional<std::string> DynString(int tag, bela::error_code &ec) const {
+    std::vector<std::string> so;
+    if (!DynString(tag, so, ec)) {
+      return std::nullopt;
+    }
+    if (so.empty()) {
+      ec = bela::make_error_code(1, L"DynString: 0x", bela::AlphaNum(bela::Hex(tag)), L" not exists");
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(so.front()));
+  }
   bool DynamicSymbols(std::vector<Symbol> &syms, bela::error_code &ec);
   bool ImportedSymbols(std::vector<ImportedSymbol> &symbols, bela::error_code &ec);
-  bool Symbols(std::vector<Symbol> &syms, bela::error_code &ec) {
+  bool Symbols(std::vector<Symbol> &syms, bela::error_code &ec) const {
     bela::Buffer strdata;
     return getSymbols(SHT_SYMTAB, syms, strdata, ec);
   }
   // depend libs
   bool Depends(std::vector<std::string> &libs, bela::error_code &ec) { return DynString(DT_NEEDED, libs, ec); }
-  std::optional<std::string> LibSoName(bela::error_code &ec) {
-    std::vector<std::string> so;
-    if (!DynString(DT_SONAME, so, ec)) {
-      return std::nullopt;
-    }
-    if (so.empty()) {
-      ec = bela::make_error_code(L"elf no soname");
-      return std::nullopt;
-    }
-    return std::make_optional(std::move(so.front()));
-  };
+  std::optional<std::string> LibSoName(bela::error_code &ec) const { return DynString(DT_SONAME, ec); };
+  // https://www.qt.io/blog/2011/10/28/rpath-and-runpath
+  // https://wiki.debian.org/RpathIssue
+  std::optional<std::string> Rpath(bela::error_code &ec) const { return DynString(DT_RPATH, ec); };
+  std::optional<std::string> Rupath(bela::error_code &ec) const { return DynString(DT_RPATH, ec); };
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};

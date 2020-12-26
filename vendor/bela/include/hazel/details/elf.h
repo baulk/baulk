@@ -1280,9 +1280,153 @@ struct Elf64_Dyn {
 
 // Dynamic table entry tags.
 enum {
-#define DYNAMIC_TAG(name, value) DT_##name = value,
-#include "DynamicTags.def"
-#undef DYNAMIC_TAG
+// #define DYNAMIC_TAG(name, value) DT_##name = value,
+// #include "DynamicTags.def"
+// #undef DYNAMIC_TAG
+  DT_NULL = 0,             /* Terminating entry. */
+  DT_NEEDED = 1,           /* String table offset of a needed shared library. */
+  DT_PLTRELSZ = 2,         /* Total size in bytes of PLT relocations. */
+  DT_PLTGOT = 3,           /* Processor-dependent address. */
+  DT_HASH = 4,             /* Address of symbol hash table. */
+  DT_STRTAB = 5,           /* Address of string table. */
+  DT_SYMTAB = 6,           /* Address of symbol table. */
+  DT_RELA = 7,             /* Address of ElfNN_Rela relocations. */
+  DT_RELASZ = 8,           /* Total size of ElfNN_Rela relocations. */
+  DT_RELAENT = 9,          /* Size of each ElfNN_Rela relocation entry. */
+  DT_STRSZ = 10,           /* Size of string table. */
+  DT_SYMENT = 11,          /* Size of each symbol table entry. */
+  DT_INIT = 12,            /* Address of initialization function. */
+  DT_FINI = 13,            /* Address of finalization function. */
+  DT_SONAME = 14,          /* String table offset of shared object name. */
+  DT_RPATH = 15,           /* String table offset of library path. [sup] */
+  DT_SYMBOLIC = 16,        /* Indicates "symbolic" linking. [sup] */
+  DT_REL = 17,             /* Address of ElfNN_Rel relocations. */
+  DT_RELSZ = 18,           /* Total size of ElfNN_Rel relocations. */
+  DT_RELENT = 19,          /* Size of each ElfNN_Rel relocation. */
+  DT_PLTREL = 20,          /* Type of relocation used for PLT. */
+  DT_DEBUG = 21,           /* Reserved (not used). */
+  DT_TEXTREL = 22,         /* Indicates there may be relocations in non-writable segments. [sup] */
+  DT_JMPREL = 23,          /* Address of PLT relocations. */
+  DT_BIND_NOW = 24,        /* [sup] */
+  DT_INIT_ARRAY = 25,      /* Address of the array of pointers to initialization functions */
+  DT_FINI_ARRAY = 26,      /* Address of the array of pointers to termination functions */
+  DT_INIT_ARRAYSZ = 27,    /* Size in bytes of the array of initialization functions. */
+  DT_FINI_ARRAYSZ = 28,    /* Size in bytes of the array of termination functions. */
+  DT_RUNPATH = 29,         /* String table offset of a null-terminated library search path string. */
+  DT_FLAGS = 30,           /* Object specific flag values. */
+  DT_ENCODING = 32,        /* Values greater than or equal to DT_ENCODING
+        and less than DT_LOOS follow the rules for
+        the interpretation of the d_un union
+        as follows: even == 'd_ptr', even == 'd_val'
+        or none */
+  DT_PREINIT_ARRAY = 32,   /* Address of the array of pointers to pre-initialization functions. */
+  DT_PREINIT_ARRAYSZ = 33, /* Size in bytes of the array of pre-initialization functions. */
+  DT_SYMTAB_SHNDX = 34,    /* Address of SHT_SYMTAB_SHNDX section. */
+
+  DT_LOOS = 0x6000000d, /* First OS-specific */
+  DT_HIOS = 0x6ffff000, /* Last OS-specific */
+
+  DT_VALRNGLO = 0x6ffffd00,
+  DT_GNU_PRELINKED = 0x6ffffdf5,
+  DT_GNU_CONFLICTSZ = 0x6ffffdf6,
+  DT_GNU_LIBLISTSZ = 0x6ffffdf7,
+  DT_CHECKSUM = 0x6ffffdf8,
+  DT_PLTPADSZ = 0x6ffffdf9,
+  DT_MOVEENT = 0x6ffffdfa,
+  DT_MOVESZ = 0x6ffffdfb,
+  DT_FEATURE = 0x6ffffdfc,
+  DT_POSFLAG_1 = 0x6ffffdfd,
+  DT_SYMINSZ = 0x6ffffdfe,
+  DT_SYMINENT = 0x6ffffdff,
+  DT_VALRNGHI = 0x6ffffdff,
+
+  DT_ADDRRNGLO = 0x6ffffe00,
+  DT_GNU_HASH = 0x6ffffef5,
+  DT_TLSDESC_PLT = 0x6ffffef6,
+  DT_TLSDESC_GOT = 0x6ffffef7,
+  DT_GNU_CONFLICT = 0x6ffffef8,
+  DT_GNU_LIBLIST = 0x6ffffef9,
+  DT_CONFIG = 0x6ffffefa,
+  DT_DEPAUDIT = 0x6ffffefb,
+  DT_AUDIT = 0x6ffffefc,
+  DT_PLTPAD = 0x6ffffefd,
+  DT_MOVETAB = 0x6ffffefe,
+  DT_SYMINFO = 0x6ffffeff,
+  DT_ADDRRNGHI = 0x6ffffeff,
+
+  DT_VERSYM = 0x6ffffff0,
+  DT_RELACOUNT = 0x6ffffff9,
+  DT_RELCOUNT = 0x6ffffffa,
+  DT_FLAGS_1 = 0x6ffffffb,
+  DT_VERDEF = 0x6ffffffc,
+  DT_VERDEFNUM = 0x6ffffffd,
+  DT_VERNEED = 0x6ffffffe,
+  DT_VERNEEDNUM = 0x6fffffff,
+
+  DT_LOPROC = 0x70000000, /* First processor-specific type. */
+
+  DT_MIPS_RLD_VERSION = 0x70000001,
+  DT_MIPS_TIME_STAMP = 0x70000002,
+  DT_MIPS_ICHECKSUM = 0x70000003,
+  DT_MIPS_IVERSION = 0x70000004,
+  DT_MIPS_FLAGS = 0x70000005,
+  DT_MIPS_BASE_ADDRESS = 0x70000006,
+  DT_MIPS_MSYM = 0x70000007,
+  DT_MIPS_CONFLICT = 0x70000008,
+  DT_MIPS_LIBLIST = 0x70000009,
+  DT_MIPS_LOCAL_GOTNO = 0x7000000a,
+  DT_MIPS_CONFLICTNO = 0x7000000b,
+  DT_MIPS_LIBLISTNO = 0x70000010,
+  DT_MIPS_SYMTABNO = 0x70000011,
+  DT_MIPS_UNREFEXTNO = 0x70000012,
+  DT_MIPS_GOTSYM = 0x70000013,
+  DT_MIPS_HIPAGENO = 0x70000014,
+  DT_MIPS_RLD_MAP = 0x70000016,
+  DT_MIPS_DELTA_CLASS = 0x70000017,
+  DT_MIPS_DELTA_CLASS_NO = 0x70000018,
+  DT_MIPS_DELTA_INSTANCE = 0x70000019,
+  DT_MIPS_DELTA_INSTANCE_NO = 0x7000001a,
+  DT_MIPS_DELTA_RELOC = 0x7000001b,
+  DT_MIPS_DELTA_RELOC_NO = 0x7000001c,
+  DT_MIPS_DELTA_SYM = 0x7000001d,
+  DT_MIPS_DELTA_SYM_NO = 0x7000001e,
+  DT_MIPS_DELTA_CLASSSYM = 0x70000020,
+  DT_MIPS_DELTA_CLASSSYM_NO = 0x70000021,
+  DT_MIPS_CXX_FLAGS = 0x70000022,
+  DT_MIPS_PIXIE_INIT = 0x70000023,
+  DT_MIPS_SYMBOL_LIB = 0x70000024,
+  DT_MIPS_LOCALPAGE_GOTIDX = 0x70000025,
+  DT_MIPS_LOCAL_GOTIDX = 0x70000026,
+  DT_MIPS_HIDDEN_GOTIDX = 0x70000027,
+  DT_MIPS_PROTECTED_GOTIDX = 0x70000028,
+  DT_MIPS_OPTIONS = 0x70000029,
+  DT_MIPS_INTERFACE = 0x7000002a,
+  DT_MIPS_DYNSTR_ALIGN = 0x7000002b,
+  DT_MIPS_INTERFACE_SIZE = 0x7000002c,
+  DT_MIPS_RLD_TEXT_RESOLVE_ADDR = 0x7000002d,
+  DT_MIPS_PERF_SUFFIX = 0x7000002e,
+  DT_MIPS_COMPACT_SIZE = 0x7000002f,
+  DT_MIPS_GP_VALUE = 0x70000030,
+  DT_MIPS_AUX_DYNAMIC = 0x70000031,
+  DT_MIPS_PLTGOT = 0x70000032,
+  DT_MIPS_RWPLT = 0x70000034,
+  DT_MIPS_RLD_MAP_REL = 0x70000035,
+
+  DT_PPC_GOT = 0x70000000,
+  DT_PPC_OPT = 0x70000001,
+
+  DT_PPC64_GLINK = 0x70000000,
+  DT_PPC64_OPD = 0x70000001,
+  DT_PPC64_OPDSZ = 0x70000002,
+  DT_PPC64_OPT = 0x70000003,
+
+  DT_SPARC_REGISTER = 0x70000001,
+
+  DT_AUXILIARY = 0x7ffffffd,
+  DT_USED = 0x7ffffffe,
+  DT_FILTER = 0x7fffffff,
+
+  DT_HIPROC = 0x7fffffff, /* Last processor-specific type. */
 };
 
 // DT_FLAGS values.

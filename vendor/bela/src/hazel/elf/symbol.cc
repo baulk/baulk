@@ -6,7 +6,7 @@ namespace hazel::elf {
 constexpr size_t Sym64Size = sizeof(Elf64_Sym);
 constexpr size_t Sym32Size = sizeof(Elf32_Sym);
 
-bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) {
+bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) const {
   auto symSec = SectionByType(st);
   if (symSec == nullptr) {
     ec = bela::make_error_code(L"no symbol section");
@@ -43,7 +43,7 @@ bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   return true;
 }
 
-bool File::getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) {
+bool File::getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &strdata, bela::error_code &ec) const {
   auto symSec = SectionByType(st);
   if (symSec == nullptr) {
     ec = bela::make_error_code(L"no symbol section");
