@@ -441,7 +441,7 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
     return Found;
   }
   constexpr const uint8_t crxMagic[] = {0x43, 0x72, 0x32, 0x34};
-  if (mv.StartsWith(crxMagic)) {
+  if (mv.StartsWith(crxMagic) && hr.ZeroExists()) {
     uint32_t version = {0};
     if (auto pv = mv.bit_cast(&version, 4); pv != nullptr) {
       hr.assign(types::crx, L"Chrome Extension");
@@ -457,14 +457,14 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   }
   // GZ
   constexpr const uint8_t gzMagic[] = {0x1F, 0x8B, 0x8};
-  if (mv.StartsWith(gzMagic)) {
+  if (mv.StartsWith(gzMagic) && hr.ZeroExists()) {
     hr.assign(types::gz, L"GZ archive data");
     return Found;
   }
   // BZ2
   // https://github.com/dsnet/compress/blob/master/doc/bzip2-format.pdf
   constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
-  if (mv.StartsWith(bz2Magic) && buffer_is_binary(mv)) {
+  if (mv.StartsWith(bz2Magic) && hr.ZeroExists()) {
     hr.assign(types::bz2, L"BZ2 archive data");
     return Found;
   }
@@ -472,7 +472,7 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   // https://wiki.nesdev.com/w/index.php/UNIF
   // UNIF
   constexpr const uint8_t nesMagic[] = {0x41, 0x45, 0x53, 0x1A};
-  if (mv.StartsWith(nesMagic) && buffer_is_binary(mv)) {
+  if (mv.StartsWith(nesMagic) && hr.ZeroExists()) {
     hr.assign(types::nes, L"Nintendo NES ROM");
     return Found;
   }
@@ -490,13 +490,13 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   // AR
   // constexpr const uint8_t arMagic[]={0x21,0x3c,0x61,0x72,0x63,0x68,0x3E};
   constexpr const uint8_t zMagic[] = {0x1F, 0xA0, 0x1F, 0x9D};
-  if (mv.StartsWith(zMagic) && buffer_is_binary(mv)) {
+  if (mv.StartsWith(zMagic) && hr.ZeroExists()) {
     hr.assign(types::z, L"X compressed archive data");
     return Found;
   }
 
   constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
-  if (mv.StartsWith(lzMagic) && buffer_is_binary(mv)) {
+  if (mv.StartsWith(lzMagic) && hr.ZeroExists()) {
     hr.assign(types::lz, L"LZ archive data");
     return Found;
   }

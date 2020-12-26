@@ -5,15 +5,6 @@
 
 namespace hazel::internal {
 // check text details
-
-bool buffer_is_binary(bela::MemView mv) {
-  auto size = (std::min)(mv.size(), size_t(0x8000));
-  if (memchr(mv.data(), 0, size) != nullptr) {
-    return true;
-  }
-  return false;
-}
-
 /*
  * legal utf-8 byte sequence
  * http://www.unicode.org/versions/Unicode6.0.0/ch03.pdf - page 94
@@ -150,7 +141,7 @@ status_t lookup_text(bela::MemView mv, hazel_result &hr) {
 
 //////// --------------> use chardet
 status_t lookup_chardet(bela::MemView mv, hazel_result &hr) {
-  if (buffer_is_binary(mv)) {
+  if (hr.ZeroExists()) {
     hr.assign(types::none, L"Binary data");
     return Found;
   }

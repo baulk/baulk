@@ -30,11 +30,11 @@ status_t LookupNewImages(bela::MemView mv, hazel_result &hr) {
       {8, "avif", L"image/avif", L"AVIF Image", types::avif},
       {8, "avis", L"image/avif", L"AVIF Image Sequence", types::avis},
   };
+  if (!hr.ZeroExists()) {
+    return None;
+  }
   for (const auto &i : images) {
     if (mv.size() > i.offset && mv.IndexsWith(i.offset, i.magic)) {
-      if (!buffer_is_binary(mv)) {
-        return None;
-      }
       hr.assign(i.t, i.desc);
       hr.append(L"MIME", i.mime);
       return Found;
