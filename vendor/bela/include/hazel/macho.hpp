@@ -597,7 +597,8 @@ public:
   // NewFile resolve pe file
   bool NewFile(std::wstring_view p, bela::error_code &ec);
   bool NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec);
-  const auto &Archs() const { return arches; }
+  const auto &Arches() const { return arches; }
+  auto &Arches() { return arches; }
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
