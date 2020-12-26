@@ -40,10 +40,12 @@ struct BigObjHeader {
   uint32_t NumberOfSymbols;
 };
 
-constexpr std::string_view wasmobj{"\0asm", 4};
-constexpr std::string_view irobj{"\xDE\xC0\x17\x0B", 4};
-constexpr std::string_view irobj2{"\xBC\xC0\xDE", 3};
-constexpr std::string_view bobj{"\0\0\xFF\xFF", 4};
+constexpr std::u8string_view wasmobj{u8"\0asm", 4};
+constexpr std::u8string_view irobj{u8"\xDE\xC0\x17\x0B", 4};
+constexpr std::u8string_view irobj2{u8"\xBC\xC0\xDE", 3};
+constexpr std::u8string_view bobj{u8"\0\0\xFF\xFF", 4};
+constexpr std::u8string_view xo32{u8"\x01\xDF", 2};
+constexpr std::u8string_view xo64{u8"\x01\xF7", 2};
 
 struct mach_header {
   uint32_t magic;      /* mach magic number identifier */
@@ -107,6 +109,16 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
       return Found;
     }
     break;
+  case 0x01:
+    if (mv.StartsWith(xo32)) {
+      hr.assign(types::xcoff_object_32, L"32-bit XCOFF object file");
+      return Found;
+    }
+    if (mv.StartsWith(xo64)) {
+      hr.assign(types::xcoff_object_64, L"64-bit XCOFF object file");
+      return Found;
+    }
+    break;
   case 0xDE:
     if (mv.StartsWith(irobj)) {
       hr.assign(types::bitcode, L"LLVM IR bitcode");
@@ -149,7 +161,7 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
           return Found;
         }
       }
-      hr.assign(types::elf, L"ELF unknown type");
+      hr.assign(types::elf, L"ELF Unknown type");
       return Found;
     }
     break;
@@ -162,7 +174,9 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     }
     break;
   case 0xFE:
+    [[fallthrough]];
   case 0xCE:
+    [[fallthrough]];
   case 0xCF: {
     uint16_t type = 0;
     if (mv.StartsWith("\xFE\xED\xFA\xCE") || mv.StartsWith("\xFE\xED\xFA\xCF")) {
@@ -227,11 +241,17 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     break;
   }
   case 0xF0: // PowerPC Windows
+    [[fallthrough]];
   case 0x83: // Alpha 32-bit
+    [[fallthrough]];
   case 0x84: // Alpha 64-bit
+    [[fallthrough]];
   case 0x66: // MPS R4000 Windows
+    [[fallthrough]];
   case 0x50: // mc68K
+    [[fallthrough]];
   case 0x4c: // 80386 Windows
+    [[fallthrough]];
   case 0xc4: // ARMNT Windows
     if (mv[1] == 0x01) {
       hr.assign(types::coff_object, L"COFF object");
@@ -239,6 +259,7 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     }
     [[fallthrough]];
   case 0x90: // PA-RISC Windows
+    [[fallthrough]];
   case 0x68: // mc68K Windows
     if (mv[1] == 0x02) {
       hr.assign(types::coff_object, L"COFF object");
@@ -246,10 +267,6 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     }
     break;
   case 'M':
-    if (mv.StartsWith("Microsoft C/C++ MSF 7.00\r\n")) {
-      hr.assign(types::pdb, L"Windows PDB debug info file");
-      return Found;
-    }
     if (mv.StartsWith("MZ") && mv.size() >= 0x3c + 4) {
       // read32le
       uint32_t off = bela::cast_fromle<uint32_t>(mv.data() + 0x3c);
@@ -258,6 +275,14 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
         hr.assign(types::pecoff_executable, L"PE executable file");
         return Found;
       }
+    }
+    if (mv.StartsWith("Microsoft C/C++ MSF 7.00\r\n")) {
+      hr.assign(types::pdb, L"Windows PDB debug info file");
+      return Found;
+    }
+    if (mv.StartsWith("MDMP")) {
+      hr.assign(types::minidump, L"Windows minidump file");
+      return Found;
     }
     break;
   case 0x64: // x86-64 or ARM64 Windows.

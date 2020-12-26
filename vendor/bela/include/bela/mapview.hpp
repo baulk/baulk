@@ -22,21 +22,31 @@ public:
   template <size_t ArrayLen> bool StartsWith(const uint8_t (&bv)[ArrayLen]) const {
     return ArrayLen <= size_ && (memcmp(data_, bv, ArrayLen) == 0);
   }
+  template <size_t ArrayLen> bool StartsWith(const char8_t (&bv)[ArrayLen]) const {
+    return ArrayLen <= size_ && (memcmp(data_, bv, ArrayLen) == 0);
+  }
 
   bool StartsWith(std::string_view sv) const {
     return sv.size() <= size_ && (memcmp(data_, sv.data(), sv.size()) == 0);
   }
-
+  bool StartsWith(std::u8string_view sv) const {
+    return sv.size() <= size_ && (memcmp(data_, sv.data(), sv.size()) == 0);
+  }
   bool StartsWith(const void *p, size_t n) { return (n <= size_ && memcmp(data_, p, n) == 0); }
 
   template <size_t ArrayLen> bool IndexsWith(size_t pos, const uint8_t (&bv)[ArrayLen]) const {
+    return ArrayLen + pos <= size_ && (memcmp(data_ + pos, bv, ArrayLen) == 0);
+  }
+  template <size_t ArrayLen> bool IndexsWith(size_t pos, const char8_t (&bv)[ArrayLen]) const {
     return ArrayLen + pos <= size_ && (memcmp(data_ + pos, bv, ArrayLen) == 0);
   }
 
   bool IndexsWith(size_t pos, std::string_view sv) const {
     return sv.size() + pos <= size_ && (memcmp(data_ + pos, sv.data(), sv.size()) == 0);
   }
-
+  bool IndexsWith(size_t pos, std::u8string_view sv) const {
+    return sv.size() + pos <= size_ && (memcmp(data_ + pos, sv.data(), sv.size()) == 0);
+  }
   bool IndexsWith(size_t pos, const void *p, size_t n) const {
     return n + pos <= size_ && (memcmp(data_ + pos, p, n) == 0);
   }
@@ -46,14 +56,9 @@ public:
   }
   std::size_t size() const { return size_; }
   const uint8_t *data() const { return data_; }
-  std::string_view sv() const {
-    //
-    return std::string_view{reinterpret_cast<const char *>(data_), size_};
-  }
-  std::wstring_view wsv() const {
-    //
-    return std::wstring_view{reinterpret_cast<const wchar_t *>(data_), size_ / 2};
-  }
+  std::string_view sv() const { return std::string_view{reinterpret_cast<const char *>(data_), size_}; }
+  std::u8string_view usv() const { return std::u8string_view{reinterpret_cast<const char8_t *>(data_), size_}; }
+  std::wstring_view wsv() const { return std::wstring_view{reinterpret_cast<const wchar_t *>(data_), size_ / 2}; }
   unsigned char operator[](const std::size_t off) const {
     if (off >= size_) {
       return UCHAR_MAX;
