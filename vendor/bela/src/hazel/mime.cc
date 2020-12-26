@@ -60,7 +60,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::eot, L"application/octet-stream"},
       {types::ps, L"application/postscript"},
       {types::sqlite, L"application/vnd.sqlite3"},
-      {types::nes, L"application/x-nintendo-nes-rom"},
+      {types::nes, L"application/x-nes-rom"},
       {types::crx, L"application/x-google-chrome-extension"},
       {types::deb, L"application/vnd.debian.binary-package"},
       {types::lz, L"application/x-lzip"},

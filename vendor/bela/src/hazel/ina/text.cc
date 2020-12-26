@@ -151,7 +151,7 @@ status_t lookup_text(bela::MemView mv, hazel_result &hr) {
 //////// --------------> use chardet
 status_t lookup_chardet(bela::MemView mv, hazel_result &hr) {
   if (buffer_is_binary(mv)) {
-    hr.assign(types::nes, L"Binary data");
+    hr.assign(types::none, L"Binary data");
     return Found;
   }
   hr.assign(types::utf8, L"UTF-8 Unicode text");

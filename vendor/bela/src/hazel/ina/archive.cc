@@ -442,8 +442,12 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   }
   constexpr const uint8_t crxMagic[] = {0x43, 0x72, 0x32, 0x34};
   if (mv.StartsWith(crxMagic)) {
-    hr.assign(types::crx, L"Chrome Extension");
-    return Found;
+    uint32_t version = {0};
+    if (auto pv = mv.bit_cast(&version, 4); pv != nullptr) {
+      hr.assign(types::crx, L"Chrome Extension");
+      hr.append(L"Version", bela::fromle(version));
+      return Found;
+    }
   }
   // XZ
   constexpr const uint8_t xzMagic[] = {0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00};
@@ -460,28 +464,39 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   // BZ2
   // https://github.com/dsnet/compress/blob/master/doc/bzip2-format.pdf
   constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
-  if (mv.StartsWith(bz2Magic)) {
+  if (mv.StartsWith(bz2Magic) && buffer_is_binary(mv)) {
     hr.assign(types::bz2, L"BZ2 archive data");
     return Found;
   }
 
-  // NES
+  // https://wiki.nesdev.com/w/index.php/UNIF
+  // UNIF
   constexpr const uint8_t nesMagic[] = {0x41, 0x45, 0x53, 0x1A};
-  if (mv.StartsWith(nesMagic)) {
+  if (mv.StartsWith(nesMagic) && buffer_is_binary(mv)) {
     hr.assign(types::nes, L"Nintendo NES ROM");
     return Found;
+  }
+  // Universal NES Image Format
+  constexpr const uint8_t unifMagic[] = {'U', 'N', 'I', 'F'};
+  if (mv.size() > 40 && mv.StartsWith(unifMagic)) {
+    uint32_t v = 0;
+    if (auto pv = mv.bit_cast(&v, 4); pv != nullptr && mv[8] == 0x0 && mv[9] == 0) {
+      hr.assign(types::nes, L"Universal NES Image Format");
+      hr.append(L"Version", bela::fromle(v));
+      return Found;
+    }
   }
 
   // AR
   // constexpr const uint8_t arMagic[]={0x21,0x3c,0x61,0x72,0x63,0x68,0x3E};
   constexpr const uint8_t zMagic[] = {0x1F, 0xA0, 0x1F, 0x9D};
-  if (mv.StartsWith(zMagic)) {
+  if (mv.StartsWith(zMagic) && buffer_is_binary(mv)) {
     hr.assign(types::z, L"X compressed archive data");
     return Found;
   }
 
   constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
-  if (mv.StartsWith(lzMagic)) {
+  if (mv.StartsWith(lzMagic) && buffer_is_binary(mv)) {
     hr.assign(types::lz, L"LZ archive data");
     return Found;
   }
