@@ -3,7 +3,7 @@
 #include <bela/terminal.hpp>
 #include <bela/codecvt.hpp>
 #include <bela/path.hpp>
-#include <zip.hpp>
+#include <oldzip.hpp>
 #include "indicators.hpp"
 #include "fs.hpp"
 #include "baulk.hpp"

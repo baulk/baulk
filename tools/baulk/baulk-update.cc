@@ -8,7 +8,7 @@
 #include <bela/process.hpp>
 #include <bela/parseargv.hpp>
 #include <jsonex.hpp>
-#include <zip.hpp>
+#include <oldzip.hpp>
 #include "fs.hpp"
 #include "net.hpp"
 

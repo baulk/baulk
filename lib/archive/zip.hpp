@@ -1,58 +1,287 @@
-///
+//
 #ifndef BAULK_ZIP_HPP
 #define BAULK_ZIP_HPP
-#include <cstdint>
 #include <bela/base.hpp>
-// https://www.winzip.com/win/en/comp_info.html
-#ifndef MZ_ZIP_H
-typedef struct mz_zip_file_s {
-  uint16_t version_madeby;     /* version made by */
-  uint16_t version_needed;     /* version needed to extract */
-  uint16_t flag;               /* general purpose bit flag */
-  uint16_t compression_method; /* compression method */
-  time_t modified_date;        /* last modified date in unix time */
-  time_t accessed_date;        /* last accessed date in unix time */
-  time_t creation_date;        /* creation date in unix time */
-  uint32_t crc;                /* crc-32 */
-  int64_t compressed_size;     /* compressed size */
-  int64_t uncompressed_size;   /* uncompressed size */
-  uint16_t filename_size;      /* filename length */
-  uint16_t extrafield_size;    /* extra field length */
-  uint16_t comment_size;       /* file comment length */
-  uint32_t disk_number;        /* disk number start */
-  int64_t disk_offset;         /* relative offset of local header */
-  uint16_t internal_fa;        /* internal file attributes */
-  uint32_t external_fa;        /* external file attributes */
+#include <bela/buffer.hpp>
+#include <bela/str_cat_narrow.hpp>
+#include <bela/time.hpp>
+#include <span>
+#include <bela/phmap.hpp>
 
-  const char *filename;      /* filename utf8 null-terminated string */
-  const uint8_t *extrafield; /* extrafield data */
-  const char *comment;       /* comment utf8 null-terminated string */
-  const char *linkname;      /* sym-link filename utf8 null-terminated string */
+#define BAULK_COMPRESS_LEVEL_DEFAULT (-1)
+#define BAULK_COMPRESS_LEVEL_FAST (2)
+#define BAULK_COMPRESS_LEVEL_NORMAL (6)
+#define BAULK_COMPRESS_LEVEL_BEST (9)
 
-  uint16_t zip64;              /* zip64 extension mode */
-  uint16_t aes_version;        /* winzip aes extension if not 0 */
-  uint8_t aes_encryption_mode; /* winzip aes encryption mode */
+/* BAULK_ZIP_FLAG */
+#define BAULK_ZIP_FLAG_ENCRYPTED (1 << 0)
+#define BAULK_ZIP_FLAG_LZMA_EOS_MARKER (1 << 1)
+#define BAULK_ZIP_FLAG_DEFLATE_MAX (1 << 1)
+#define BAULK_ZIP_FLAG_DEFLATE_NORMAL (0)
+#define BAULK_ZIP_FLAG_DEFLATE_FAST (1 << 2)
+#define BAULK_ZIP_FLAG_DEFLATE_SUPER_FAST (BAULK_ZIP_FLAG_DEFLATE_FAST | BAULK_ZIP_FLAG_DEFLATE_MAX)
+#define BAULK_ZIP_FLAG_DATA_DESCRIPTOR (1 << 3)
+#define BAULK_ZIP_FLAG_UTF8 (1 << 11)
+#define BAULK_ZIP_FLAG_MASK_LOCAL_INFO (1 << 13)
 
-} mz_zip_file, mz_zip_entry;
-#endif
+/* BAULK_ZIP_EXTENSION */
+#define BAULK_ZIP_EXTENSION_ZIP64 (0x0001)
+#define BAULK_ZIP_EXTENSION_NTFS (0x000a)
+#define BAULK_ZIP_EXTENSION_AES (0x9901)
+#define BAULK_ZIP_EXTENSION_UNIX1 (0x000d)
+#define BAULK_ZIP_EXTENSION_SIGN (0x10c5)
+#define BAULK_ZIP_EXTENSION_HASH (0x1a51)
+#define BAULK_ZIP_EXTENSION_CDCD (0xcdcd)
 
-extern "C" {
-int32_t mz_zip_reader_get_raw(void *handle, uint8_t *raw);
-}
+/* BAULK_ZIP64 */
+#define BAULK_ZIP64_AUTO (0)
+#define BAULK_ZIP64_FORCE (1)
+#define BAULK_ZIP64_DISABLE (2)
 
-typedef int32_t (*mz_zip_reader_progress_cb)(void *handle, void *userdata, mz_zip_file *file_info, int64_t position);
-typedef int32_t (*mz_zip_reader_entry_cb)(void *handle, void *userdata, mz_zip_file *file_info, const char *path);
+/* BAULK_HOST_SYSTEM */
+#define BAULK_HOST_SYSTEM(VERSION_MADEBY) ((uint8_t)(VERSION_MADEBY >> 8))
+#define BAULK_HOST_SYSTEM_MSDOS (0)
+#define BAULK_HOST_SYSTEM_UNIX (3)
+#define BAULK_HOST_SYSTEM_WINDOWS_NTFS (10)
+#define BAULK_HOST_SYSTEM_RISCOS (13)
+#define BAULK_HOST_SYSTEM_OSX_DARWIN (19)
+
+/* BAULK_PKCRYPT */
+#define BAULK_PKCRYPT_HEADER_SIZE (12)
+
+/* BAULK_AES */
+#define BAULK_AES_VERSION (1)
+#define BAULK_AES_ENCRYPTION_MODE_128 (0x01)
+#define BAULK_AES_ENCRYPTION_MODE_192 (0x02)
+#define BAULK_AES_ENCRYPTION_MODE_256 (0x03)
+#define BAULK_AES_KEY_LENGTH(MODE) (8 * (MODE & 3) + 8)
+#define BAULK_AES_KEY_LENGTH_MAX (32)
+#define BAULK_AES_BLOCK_SIZE (16)
+#define BAULK_AES_HEADER_SIZE(MODE) ((4 * (MODE & 3) + 4) + 2)
+#define BAULK_AES_FOOTER_SIZE (10)
+
+/* BAULK_HASH */
+#define BAULK_HASH_MD5 (10)
+#define BAULK_HASH_MD5_SIZE (16)
+#define BAULK_HASH_SHA1 (20)
+#define BAULK_HASH_SHA1_SIZE (20)
+#define BAULK_HASH_SHA256 (23)
+#define BAULK_HASH_SHA256_SIZE (32)
+#define BAULK_HASH_MAX_SIZE (256)
+
+/* BAULK_ENCODING */
+#define BAULK_ENCODING_CODEPAGE_437 (437)
+#define BAULK_ENCODING_CODEPAGE_932 (932)
+#define BAULK_ENCODING_CODEPAGE_936 (936)
+#define BAULK_ENCODING_CODEPAGE_950 (950)
+#define BAULK_ENCODING_UTF8 (65001)
 
 namespace baulk::archive::zip {
-struct zip_closure {
-  void *userdata;
-  mz_zip_reader_progress_cb progress;
-  mz_zip_reader_entry_cb entry;
+// https://www.hanshq.net/zip.html
+
+// https://github.com/nih-at/libzip/blob/master/lib/zip.h
+typedef enum zip_method_e : uint16_t {
+  ZIP_STORE = 0,    /* stored (uncompressed) */
+  ZIP_SHRINK = 1,   /* shrunk */
+  ZIP_REDUCE_1 = 2, /* reduced with factor 1 */
+  ZIP_REDUCE_2 = 3, /* reduced with factor 2 */
+  ZIP_REDUCE_3 = 4, /* reduced with factor 3 */
+  ZIP_REDUCE_4 = 5, /* reduced with factor 4 */
+  ZIP_IMPLODE = 6,  /* imploded */
+  /* 7 - Reserved for Tokenizing compression algorithm */
+  ZIP_DEFLATE = 8,         /* deflated */
+  ZIP_DEFLATE64 = 9,       /* deflate64 */
+  ZIP_PKWARE_IMPLODE = 10, /* PKWARE imploding */
+  /* 11 - Reserved by PKWARE */
+  ZIP_BZIP2 = 12, /* compressed using BZIP2 algorithm */
+  /* 13 - Reserved by PKWARE */
+  ZIP_LZMA = 14, /* LZMA (EFS) */
+  /* 15-17 - Reserved by PKWARE */
+  ZIP_TERSE = 18, /* compressed using IBM TERSE (new) */
+  ZIP_LZ77 = 19,  /* IBM LZ77 z Architecture (PFS) */
+  /* 20 - old value for Zstandard */
+  ZIP_LZMA2 = 33,
+  ZIP_ZSTD = 93,    /* Zstandard compressed data */
+  ZIP_XZ = 95,      /* XZ compressed data */
+  ZIP_JPEG = 96,    /* Compressed Jpeg data */
+  ZIP_WAVPACK = 97, /* WavPack compressed data */
+  ZIP_PPMD = 98,    /* PPMd version I, Rev 1 */
+  ZIP_AES = 99,     /* AE-x encryption marker (see APPENDIX E) */
+} zip_method_t;
+
+struct directoryEnd {
+  uint32_t diskNbr{0};            // unused
+  uint32_t dirDiskNbr{0};         // unused
+  uint64_t dirRecordsThisDisk{0}; // unused
+  uint64_t directoryRecords{0};
+  uint64_t directorySize{0};
+  uint64_t directoryOffset{0}; // relative to file
+  uint16_t commentLen;
+  std::string comment;
 };
 
-bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code &ec,
-                const zip_closure *closure = nullptr, int encoding = 0);
+inline const char *AESStrength(uint8_t i) {
+  switch (i) {
+  case 1:
+    return "AES-128";
+  case 2:
+    return "AES-192";
+  case 3:
+    return "AES-256";
+  default:
+    break;
+  }
+  return "AES-???";
+}
 
+struct File {
+  std::string name;
+  std::string comment;
+  std::string extra;
+  uint64_t compressedSize{0};
+  uint64_t uncompressedSize{0};
+  uint64_t position{0}; // file position
+  bela::Time time;
+  uint32_t crc32{0};
+  uint32_t externalAttrs{0};
+  uint16_t cversion{0};
+  uint16_t rversion{0};
+  uint16_t flags{0};
+  uint16_t method{0};
+  uint16_t aesVersion{0};
+  uint8_t aesStrength{0};
+  bool utf8{false};
+  bool IsEncrypted() const { return (flags & 0x1) != 0; }
+  std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
+  bool StartsWith(std::string_view prefix) const { return name.starts_with(prefix); }
+  bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
+  bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
+  bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
+};
+constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
+using Receiver = std::function<bool(const void *data, size_t len)>;
+
+enum mszipconatiner_t : int {
+  OfficeNone, // None
+  OfficeDocx,
+  OfficePptx,
+  OfficeXlsx,
+  NuGetPackage,
+};
+
+class Reader {
+private:
+  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+    auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
+    LARGE_INTEGER oli{0};
+    if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
+      ec = bela::make_system_error_code(L"SetFilePointerEx: ");
+      return false;
+    }
+    return true;
+  }
+  bool ReadFull(void *buffer, size_t len, bela::error_code &ec) const {
+    auto p = reinterpret_cast<uint8_t *>(buffer);
+    size_t total = 0;
+    while (total < len) {
+      DWORD dwSize = 0;
+      if (ReadFile(fd, p + total, static_cast<DWORD>(len - total), &dwSize, nullptr) != TRUE) {
+        ec = bela::make_system_error_code(L"ReadFile: ");
+        return false;
+      }
+      if (dwSize == 0) {
+        ec = bela::make_error_code(ERROR_HANDLE_EOF, L"Reached the end of the file");
+        return false;
+      }
+      total += dwSize;
+    }
+    return true;
+  }
+  // ReadAt ReadFull
+  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
+    if (!PositionAt(pos, ec)) {
+      return false;
+    }
+    return ReadFull(buffer, len, ec);
+  }
+  void Free() {
+    if (needClosed && fd != INVALID_HANDLE_VALUE) {
+      CloseHandle(fd);
+      fd = INVALID_HANDLE_VALUE;
+    }
+  }
+  void MoveFrom(Reader &&r) {
+    Free();
+    fd = r.fd;
+    r.fd = INVALID_HANDLE_VALUE;
+    needClosed = r.needClosed;
+    r.needClosed = false;
+    size = r.size;
+    r.size = 0;
+    uncompressedSize = r.uncompressedSize;
+    r.uncompressedSize = 0;
+    compressedSize = r.compressedSize;
+    r.compressedSize = 0;
+    comment = std::move(r.comment);
+    files = std::move(r.files);
+  }
+
+public:
+  Reader() = default;
+  Reader(Reader &&r) { MoveFrom(std::move(r)); }
+  Reader &operator=(Reader &&r) {
+    MoveFrom(std::move(r));
+    return *this;
+  }
+  ~Reader() { Free(); }
+  bool OpenReader(std::wstring_view file, bela::error_code &ec);
+  bool OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec);
+  std::string_view Comment() const { return comment; }
+  const auto &Files() const { return files; }
+  int64_t CompressedSize() const { return compressedSize; }
+  int64_t UncompressedSize() const { return uncompressedSize; }
+  static std::optional<Reader> NewReader(HANDLE fd, int64_t sz, bela::error_code &ec) {
+    Reader r;
+    if (!r.OpenReader(fd, sz, ec)) {
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(r));
+  }
+
+  bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
+  bool Contains(std::string_view p, std::size_t limit = size_max) const;
+  bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  mszipconatiner_t LooksLikeMsZipContainer() const;
+  bool LooksLikePptx() const { return LooksLikeMsZipContainer() == OfficePptx; }
+  bool LooksLikeDocx() const { return LooksLikeMsZipContainer() == OfficeDocx; }
+  bool LooksLikeXlsx() const { return LooksLikeMsZipContainer() == OfficeXlsx; }
+  bool LooksLikeOFD() const;
+  bool LooksLikeJar() const;
+  bool LooksLikeAppx() const;
+  bool LooksLikeApk() const;
+  bool LooksLikeODF(std::string *mime = nullptr) const;
+
+private:
+  std::string comment;
+  std::vector<File> files;
+  HANDLE fd{INVALID_HANDLE_VALUE};
+  int64_t size{bela::SizeUnInitialized};
+  int64_t uncompressedSize{0};
+  int64_t compressedSize{0};
+  bool needClosed{false};
+  bool Initialize(bela::error_code &ec);
+  bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
+  bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);
+  int64_t findDirectory64End(int64_t directoryEndOffset, bela::error_code &ec);
+  bool ContainsSlow(std::span<std::string_view> paths, std::size_t limit = size_max) const;
+};
+
+// NewReader
+inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
+  return Reader::NewReader(fd, size, ec);
+}
+
+const wchar_t *Method(uint16_t m);
 } // namespace baulk::archive::zip
 
 #endif
