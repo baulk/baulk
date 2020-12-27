@@ -54,6 +54,21 @@ constexpr int extTimeExtraID = 0x5455;     // Extended timestamp
 constexpr int infoZipUnixExtraID = 0x5855; // Info-ZIP Unix extension
 constexpr int winzipAesExtraID = 0x9901;   // winzip AES Extra Field
 
+constexpr auto s_IFMT = 0xf000;
+constexpr auto s_IFSOCK = 0xc000;
+constexpr auto s_IFLNK = 0xa000;
+constexpr auto s_IFREG = 0x8000;
+constexpr auto s_IFBLK = 0x6000;
+constexpr auto s_IFDIR = 0x4000;
+constexpr auto s_IFCHR = 0x2000;
+constexpr auto s_IFIFO = 0x1000;
+constexpr auto s_ISUID = 0x800;
+constexpr auto s_ISGID = 0x400;
+constexpr auto s_ISVTX = 0x200;
+
+constexpr auto msdosDir = 0x10;
+constexpr auto msdosReadOnly = 0x01;
+
 inline bool IsSuperficialPath(std::string_view sv) {
   auto pv = bela::SplitPath(sv);
   return pv.size() <= 3;

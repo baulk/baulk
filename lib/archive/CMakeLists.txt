@@ -246,6 +246,9 @@ set(BROTLI_SOURCES
 
 add_library(
   baulkarchive STATIC
+  zip/decompress.cc
+  zip/filemode.cc
+  zip/zip.cc
   oldzip.cc
   bzip2/blocksort.c
   bzip2/bzlib.c
@@ -257,5 +260,5 @@ add_library(
   ${BROTLI_SOURCES})
 
 target_include_directories(baulkarchive PRIVATE brotli/include)
-
+target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
 target_link_libraries(baulkarchive belawin minizip)

@@ -7,6 +7,7 @@
 #include <bela/time.hpp>
 #include <span>
 #include <bela/phmap.hpp>
+#include "archive.hpp"
 
 #define BAULK_COMPRESS_LEVEL_DEFAULT (-1)
 #define BAULK_COMPRESS_LEVEL_FAST (2)
@@ -120,6 +121,9 @@ struct directoryEnd {
   std::string comment;
 };
 
+// FileMode to string
+std::string String(FileMode m);
+
 struct File {
   std::string name;
   std::string comment;
@@ -143,6 +147,7 @@ struct File {
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
+  baulk::archive::FileMode FileMode() const;
 };
 
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
@@ -256,6 +261,7 @@ private:
 inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
   return Reader::NewReader(fd, size, ec);
 }
+//
 } // namespace baulk::archive::zip
 
 #endif
