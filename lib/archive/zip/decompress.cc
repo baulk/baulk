@@ -18,8 +18,14 @@ bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, bel
 }
 // zstd
 bool Reader::decompressZstd(const File &file, const Receiver &receiver, bela::error_code &ec) const {
-  //
-  return false;
+  auto zds = ZSTD_createDStream();
+  if (zds == nullptr) {
+    ec = bela::make_error_code(L"ZSTD_createDStream() out of memory");
+    return false;
+  }
+  auto closer = bela::finally([&] { ZSTD_freeDStream(zds); });
+  //ZSTD_decompressStream(zds);
+  return true;
 }
 // bzip2
 bool Reader::decompressBz2(const File &file, const Receiver &receiver, bela::error_code &ec) const {
