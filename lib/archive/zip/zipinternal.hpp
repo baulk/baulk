@@ -1,6 +1,7 @@
 //
 #ifndef BAULK_ZIP_INTERNAL_HPP
 #define BAULK_ZIP_INTERNAL_HPP
+#include <bela/path.hpp>
 #include <zip.hpp>
 
 namespace baulk::archive::zip {

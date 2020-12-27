@@ -1,8 +1,42 @@
 ///
 #include "zipinternal.hpp"
 #include <bela/endian.hpp>
+#include <zlib.h>
+#include <zstd.h>
+#include <bzlib.h>
 
 namespace baulk::archive::zip {
+// DEFLATE
+bool Reader::decompressDeflate(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+// DEFLATE64
+bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+// zstd
+bool Reader::decompressZstd(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+// bzip2
+bool Reader::decompressBz2(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+// XZ
+bool Reader::decompressXz(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+// LZMA2
+bool Reader::decompressLZMA2(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+  //
+  return false;
+}
+
 bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
   if (!ReadAt(buf, fileHeaderLen, file.position, ec)) {
@@ -34,22 +68,21 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
       }
       compressedSize -= minsize;
     }
-
   } break;
   case ZIP_DEFLATE:
-    break;
+    return decompressDeflate(file, receiver, ec);
   case ZIP_DEFLATE64:
-    break;
+    return decompressDeflate64(file, receiver, ec);
   case ZIP_ZSTD:
-    break;
+    return decompressZstd(file, receiver, ec);
   case ZIP_LZMA2:
-    break;
+    return decompressLZMA2(file, receiver, ec);
   case ZIP_XZ:
-    break;
+    return decompressXz(file, receiver, ec);
   case ZIP_BZIP2:
-    break;
+    return decompressBz2(file, receiver, ec);
   default:
-    ec = bela::make_error_code(1, L"support zip method ", file.method);
+    ec = bela::make_error_code(1, L"unsupport zip method ", file.method);
     return false;
   }
   return true;

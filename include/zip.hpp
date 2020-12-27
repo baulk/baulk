@@ -120,20 +120,6 @@ struct directoryEnd {
   std::string comment;
 };
 
-inline const char *AESStrength(uint8_t i) {
-  switch (i) {
-  case 1:
-    return "AES-128";
-  case 2:
-    return "AES-192";
-  case 3:
-    return "AES-256";
-  default:
-    break;
-  }
-  return "AES-???";
-}
-
 struct File {
   std::string name;
   std::string comment;
@@ -152,23 +138,15 @@ struct File {
   uint8_t aesStrength{0};
   bool utf8{false};
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
-  std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
+  bool IsDir() const { return name.ends_with('/'); }
   bool StartsWith(std::string_view prefix) const { return name.starts_with(prefix); }
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
 };
+
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
 using Receiver = std::function<bool(const void *data, size_t len)>;
-
-enum mszipconatiner_t : int {
-  OfficeNone, // None
-  OfficeDocx,
-  OfficePptx,
-  OfficeXlsx,
-  NuGetPackage,
-};
-
 class Reader {
 private:
   bool PositionAt(uint64_t pos, bela::error_code &ec) const {
@@ -236,6 +214,10 @@ public:
   ~Reader() { Free(); }
   bool OpenReader(std::wstring_view file, bela::error_code &ec);
   bool OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec);
+  Reader &Credential(std::string_view password) {
+    passwd.assign(password);
+    return *this;
+  }
   std::string_view Comment() const { return comment; }
   const auto &Files() const { return files; }
   int64_t CompressedSize() const { return compressedSize; }
@@ -247,21 +229,10 @@ public:
     }
     return std::make_optional(std::move(r));
   }
-
-  bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
-  bool Contains(std::string_view p, std::size_t limit = size_max) const;
   bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  mszipconatiner_t LooksLikeMsZipContainer() const;
-  bool LooksLikePptx() const { return LooksLikeMsZipContainer() == OfficePptx; }
-  bool LooksLikeDocx() const { return LooksLikeMsZipContainer() == OfficeDocx; }
-  bool LooksLikeXlsx() const { return LooksLikeMsZipContainer() == OfficeXlsx; }
-  bool LooksLikeOFD() const;
-  bool LooksLikeJar() const;
-  bool LooksLikeAppx() const;
-  bool LooksLikeApk() const;
-  bool LooksLikeODF(std::string *mime = nullptr) const;
 
 private:
+  std::string passwd;
   std::string comment;
   std::vector<File> files;
   HANDLE fd{INVALID_HANDLE_VALUE};
@@ -273,15 +244,18 @@ private:
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);
   int64_t findDirectory64End(int64_t directoryEndOffset, bela::error_code &ec);
-  bool ContainsSlow(std::span<std::string_view> paths, std::size_t limit = size_max) const;
+  bool decompressDeflate(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressDeflate64(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressZstd(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressBz2(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressXz(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressLZMA2(const File &file, const Receiver &receiver, bela::error_code &ec) const;
 };
 
 // NewReader
 inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
   return Reader::NewReader(fd, size, ec);
 }
-
-const wchar_t *Method(uint16_t m);
 } // namespace baulk::archive::zip
 
 #endif
