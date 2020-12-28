@@ -91,7 +91,8 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
       return false;
     }
   }
-  if (b.Discard(4) < 14) {
+  // 5*2 +4*2
+  if (b.Discard(4) < 18) {
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
   }
