@@ -138,7 +138,7 @@ DateTime::DateTime(bela::Time t, std::int_least32_t tz) noexcept {
 }
 
 bela::Time DateTime::Time() const noexcept {
-  if (second < 0 || second > 59 || minute > 59 || minute < 0 || hour < 0 || hour > 23 || month < 1 && month > 12 ||
+  if (second < 0 || second > 59 || minute > 59 || minute < 0 || hour < 0 || hour > 23 || month < 1 || month > 12 ||
       year < 1970) {
     return bela::UnixEpoch();
   }

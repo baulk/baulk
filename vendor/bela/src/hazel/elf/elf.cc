@@ -40,7 +40,6 @@ bool File::ParseFile(bela::error_code &ec) {
     size = li.QuadPart;
   }
   uint8_t ident[16];
-  constexpr auto x = sizeof(FileHeader);
   if (!ReadAt(ident, sizeof(ident), 0, ec)) {
     return false;
   }

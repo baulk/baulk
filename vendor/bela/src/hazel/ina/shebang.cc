@@ -154,7 +154,7 @@ const std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
     }
     min = mid + 1;
   }
-  if (min < bela::ArrayLength(languages) && languages[min].interpreter == ie) {
+  if (static_cast<size_t>(min) < bela::ArrayLength(languages) && languages[min].interpreter == ie) {
     return languages[min].language;
   }
   return L"";

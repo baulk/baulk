@@ -20,7 +20,7 @@ public:
       return -1;
     }
     if (r == w) {
-      if (len > sizeof(data)) {
+      if (static_cast<size_t>(len) > sizeof(data)) {
         // Large read, empty buffer.
         // Read directly into p to avoid copy.
         ssize_t rlen = 0;

@@ -167,6 +167,7 @@ public:
     if (n >= size) {
       data = nullptr;
       size = 0;
+      return 0;
     }
     size -= n;
     data += n;
