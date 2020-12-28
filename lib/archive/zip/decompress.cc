@@ -4,12 +4,49 @@
 #include <zlib.h>
 #include <zstd.h>
 #include <bzlib.h>
+#include <lzma.h>
+
+enum header_state { INCOMPLETE, OUTPUT, DONE };
+
+#define HEADER_BYTES_ZIP 9
+#define HEADER_MAGIC_LENGTH 4
+#define HEADER_MAGIC1_OFFSET 0
+#define HEADER_MAGIC2_OFFSET 2
+#define HEADER_SIZE_OFFSET 9
+#define HEADER_SIZE_LENGTH 8
+#define HEADER_PARAMETERS_LENGTH 5
+#define HEADER_LZMA_ALONE_LENGTH (HEADER_PARAMETERS_LENGTH + HEADER_SIZE_LENGTH)
 
 namespace baulk::archive::zip {
 // DEFLATE
 bool Reader::decompressDeflate(const File &file, const Receiver &receiver, bela::error_code &ec) const {
-  //
-  return false;
+  z_stream zs;
+  if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
+    ec = bela::make_error_code(1, L"", zerr);
+    return false;
+  }
+  auto closer = bela::finally([&] { inflateEnd(&zs); });
+  bela::Buffer out(32 * 1024);
+  bela::Buffer in(16 * 1024);
+  int64_t uncsize = 0;
+  auto csize = file.compressedSize;
+  while (csize != 0) {
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(in.capacity()));
+    if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
+      return false;
+    }
+    zs.avail_in = static_cast<int>(minsize);
+    zs.next_in = in.data();
+    do {
+      zs.avail_out = static_cast<int>(out.capacity());
+      zs.next_out = out.data();
+      if (auto ze = inflate(&zs, Z_SYNC_FLUSH); ze != Z_OK) {
+      }
+    } while (zs.avail_in > 0);
+
+    csize -= minsize;
+  }
+  return true;
 }
 // DEFLATE64
 bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, bela::error_code &ec) const {
@@ -24,12 +61,15 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, bela::er
     return false;
   }
   auto closer = bela::finally([&] { ZSTD_freeDStream(zds); });
-  //ZSTD_decompressStream(zds);
+
+  // ZSTD_decompressStream(zds);
   return true;
 }
 // bzip2
 bool Reader::decompressBz2(const File &file, const Receiver &receiver, bela::error_code &ec) const {
   //
+  bz_stream bzs;
+  memset(&bzs, 0, sizeof(bzs));
   return false;
 }
 // XZ
@@ -63,16 +103,16 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
   switch (file.method) {
   case ZIP_STORE: {
     uint8_t buffer[4096];
-    auto compressedSize = file.compressedSize;
-    while (compressedSize != 0) {
-      auto minsize = (std::min)(compressedSize, static_cast<uint64_t>(sizeof(buffer)));
+    auto csize = file.compressedSize;
+    while (csize != 0) {
+      auto minsize = (std::min)(csize, static_cast<uint64_t>(sizeof(buffer)));
       if (!ReadFull(buffer, static_cast<size_t>(minsize), ec)) {
         return false;
       }
       if (!receiver(buffer, static_cast<size_t>(minsize))) {
         return false;
       }
-      compressedSize -= minsize;
+      csize -= minsize;
     }
   } break;
   case ZIP_DEFLATE:
