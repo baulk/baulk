@@ -246,6 +246,7 @@ set(BROTLI_SOURCES
 
 add_library(
   baulkarchive STATIC
+  archive.cc
   zip/decompress.cc
   zip/filemode.cc
   zip/zip.cc

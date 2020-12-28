@@ -26,8 +26,8 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, bela:
     return false;
   }
   auto closer = bela::finally([&] { inflateEnd(&zs); });
-  bela::Buffer out(32 * 1024);
-  bela::Buffer in(16 * 1024);
+  Buffer out(32 * 1024);
+  Buffer in(16 * 1024);
   int64_t uncsize = 0;
   auto csize = file.compressedSize;
   while (csize != 0) {
