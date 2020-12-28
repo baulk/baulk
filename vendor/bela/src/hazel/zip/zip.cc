@@ -91,7 +91,10 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
       return false;
     }
   }
-  b.Discard(4);
+  if (b.Discard(4) < 14) {
+    ec = bela::make_error_code(L"zip: not a valid zip file");
+    return false;
+  }
   d.diskNbr = b.Read<uint16_t>();
   d.dirDiskNbr = b.Read<uint16_t>();
   d.dirRecordsThisDisk = b.Read<uint16_t>();
@@ -171,7 +174,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   for (; extra.Size() >= 4;) {
     auto fieldTag = extra.Read<uint16_t>();
     auto fieldSize = static_cast<int>(extra.Read<uint16_t>());
-    if (extra.Size() < fieldSize) {
+    if (extra.Size() < static_cast<size_t>(fieldSize)) {
       break;
     }
     auto fb = extra.Sub(fieldSize);
@@ -471,10 +474,11 @@ bool Reader::LooksLikeODF(std::string *mime) const {
   for (const auto &file : files) {
     if (file.name == "mimetype" && file.method == ZIP_STORE && file.compressedSize < 120) {
       bela::error_code ec;
+      mime->reserve(file.compressedSize);
       return Decompress(
           file,
-          [&](const void *data, size_t size) -> bool {
-            mime->append(static_cast<const char *>(data), size);
+          [&](const void *data, size_t sz) -> bool {
+            mime->append(static_cast<const char *>(data), sz);
             return true;
           },
           ec);

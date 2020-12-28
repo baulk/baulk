@@ -159,7 +159,7 @@ public:
 private:
   const char *data_{nullptr};
   size_t size_{0};
-  uint32_t linkflags_;
+  uint32_t linkflags_{0};
   bool IsUnicode{false};
 };
 

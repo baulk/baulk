@@ -235,15 +235,15 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     return false;
   }
   auto N = exd->VirtualAddress - ds->Header.VirtualAddress;
-  std::string_view sv{sdata.data() + N, sdata.size() - N};
-  if (sv.size() < sizeof(IMAGE_EXPORT_DIRECTORY)) {
+  std::string_view sdv{sdata.data() + N, sdata.size() - N};
+  if (sdv.size() < sizeof(IMAGE_EXPORT_DIRECTORY)) {
     return true;
   }
   IMAGE_EXPORT_DIRECTORY ied;
   if constexpr (bela::IsLittleEndian()) {
-    memcpy(&ied, sv.data(), sizeof(IMAGE_EXPORT_DIRECTORY));
+    memcpy(&ied, sdv.data(), sizeof(IMAGE_EXPORT_DIRECTORY));
   } else {
-    auto cied = reinterpret_cast<const IMAGE_EXPORT_DIRECTORY *>(sv.data());
+    auto cied = reinterpret_cast<const IMAGE_EXPORT_DIRECTORY *>(sdv.data());
     ied.Characteristics = bela::fromle(cied->Characteristics);
     ied.TimeDateStamp = bela::fromle(cied->TimeDateStamp);
     ied.MajorVersion = bela::fromle(cied->MajorVersion);
@@ -333,13 +333,13 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
     return false;
   }
   auto N = delay->VirtualAddress - ds->Header.VirtualAddress;
-  std::string_view sv{sdata.data() + N, sdata.size() - N};
+  std::string_view sdv{sdata.data() + N, sdata.size() - N};
 
   constexpr size_t dslen = sizeof(IMAGE_DELAYLOAD_DESCRIPTOR);
   std::vector<ImportDelayDirectory> ida;
-  while (sv.size() > dslen) {
-    const auto dt = reinterpret_cast<const IMAGE_DELAYLOAD_DESCRIPTOR *>(sv.data());
-    sv.remove_prefix(dslen);
+  while (sdv.size() > dslen) {
+    const auto dt = reinterpret_cast<const IMAGE_DELAYLOAD_DESCRIPTOR *>(sdv.data());
+    sdv.remove_prefix(dslen);
     ImportDelayDirectory id;
     id.Attributes = bela::fromle(dt->Attributes.AllAttributes);
     id.DllNameRVA = bela::fromle(dt->DllNameRVA);

@@ -63,8 +63,8 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
       hr.append(L"Counts", bela::frombe(hd->fanout[255]));
       break;
     case 3: {
-      git_index3_header_t hdr;
-      if (auto hdr3 = mv.bit_cast<git_index3_header_t>(&hdr); hdr3 != nullptr) {
+      git_index3_header_t hdr_;
+      if (auto hdr3 = mv.bit_cast<git_index3_header_t>(&hdr_); hdr3 != nullptr) {
         hr.append(L"Counts", bela::frombe(hdr3->packobjects));
       }
     } break;

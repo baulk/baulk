@@ -32,14 +32,8 @@ private:
   allocator_type alloc_;
 
 public:
-  Buffer() : data_(nullptr), size_(0), capacity_(0) {
-    //
-  }
-  Buffer(size_t maxsize) {
-    data_ = get_allocator().allocate(maxsize);
-    capacity_ = maxsize;
-    size_ = 0;
-  }
+  Buffer() = default;
+  Buffer(size_t maxsize) { grow(maxsize); }
   Buffer(Buffer &&other) { MoveFrom(std::move(other)); }
   Buffer &operator=(Buffer &&other) {
     MoveFrom(std::move(other));
@@ -65,7 +59,7 @@ public:
     data_ = b;
     capacity_ = n;
   }
-  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const T *data() const { return data_; }
   [[nodiscard]] T operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] T *data() { return data_; }

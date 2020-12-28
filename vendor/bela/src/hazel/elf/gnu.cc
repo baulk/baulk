@@ -21,9 +21,9 @@ bool File::gnuVersionInit(std::span<uint8_t> str) {
     return false;
   }
   int i = 0;
-  auto size = static_cast<int>(d.size());
+  auto sz = static_cast<int>(d.size());
   for (;;) {
-    if (i + 16 > size) {
+    if (i + 16 > sz) {
       break;
     }
     if (auto vers = cast_from<uint16_t>(d.data() + i); vers != 1) {
@@ -36,7 +36,7 @@ bool File::gnuVersionInit(std::span<uint8_t> str) {
     auto file = getString(str, static_cast<int>(fileoff));
     auto j = i + static_cast<int>(aux);
     for (auto c = 0; c < cnt; c++) {
-      if (j + 16 > size) {
+      if (j + 16 > sz) {
         break;
       }
       // uint32_t hash

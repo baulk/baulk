@@ -22,7 +22,7 @@ bela::Time FromDosDateTime(uint16_t dosDate, uint16_t dosTime) {
   auto hour = static_cast<int>(dosTime) >> 11;
   auto minute = static_cast<int>((dosTime >> 5) & 0x3f);
   auto sec = static_cast<int>(dosTime & 0x1f) << 1;
-  if (sec < 0 || sec > 59 || minute > 59 || minute < 0 || hour < 0 || hour > 23 || mon < 1 && mon > 12 || year < 1601) {
+  if (sec < 0 || sec > 59 || minute > 59 || minute < 0 || hour < 0 || hour > 23 || mon < 1 || mon > 12 || year < 1601) {
     return bela::UnixEpoch();
   }
   auto leapYear = IsLeapYear(year);

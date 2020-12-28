@@ -24,16 +24,16 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
   switch (file.method) {
   case ZIP_STORE: {
     uint8_t buffer[4096];
-    auto compressedSize = file.compressedSize;
-    while (compressedSize != 0) {
-      auto minsize = (std::min)(compressedSize, static_cast<uint64_t>(sizeof(buffer)));
+    auto cSize = file.compressedSize;
+    while (cSize != 0) {
+      auto minsize = (std::min)(cSize, static_cast<uint64_t>(sizeof(buffer)));
       if (!ReadFull(buffer, static_cast<size_t>(minsize), ec)) {
         return false;
       }
       if (!receiver(buffer, static_cast<size_t>(minsize))) {
         return false;
       }
-      compressedSize -= minsize;
+      cSize -= minsize;
     }
 
   } break;

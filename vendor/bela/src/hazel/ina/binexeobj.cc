@@ -9,16 +9,14 @@ constexpr auto FF = (std::numeric_limits<uint8_t>::max)();
 // The PE signature bytes that follows the DOS stub header.
 static constexpr const uint8_t PEMagic[] = {'P', 'E', '\0', '\0'};
 static constexpr const uint8_t BigObjMagic[] = {
-    '\xc7', '\xa1', '\xba', '\xd1', '\xee', '\xba', '\xa9', '\x4b',
-    '\xaf', '\x20', '\xfa', '\xf6', '\x6a', '\xa4', '\xdc', '\xb8',
+    0xc7, 0xa1, 0xba, 0xd1, 0xee, 0xba, 0xa9, 0x4b, 0xaf, 0x20, 0xfa, 0xf6, 0x6a, 0xa4, 0xdc, 0xb8,
 };
 static constexpr const uint8_t ClGlObjMagic[] = {
-    '\x38', '\xfe', '\xb3', '\x0c', '\xa5', '\xd9', '\xab', '\x4d',
-    '\xac', '\x9b', '\xd6', '\xb6', '\x22', '\x26', '\x53', '\xc2',
+    0x38, 0xfe, 0xb3, 0x0c, 0xa5, 0xd9, 0xab, 0x4d, 0xac, 0x9b, 0xd6, 0xb6, 0x22, 0x26, 0x53, 0xc2,
 };
 // The signature bytes that start a .res file.
 static constexpr const uint8_t WinResMagic[] = {
-    '\x00', '\x00', '\x00', '\x00', '\x20', '\x00', '\x00', '\x00', FF, FF, '\x00', '\x00', FF, FF, '\x00', '\x00',
+    0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, FF, FF, 0x00, 0x00, FF, FF, 0x00, 0x00,
 };
 static constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A, 0x64, 0x65, 0x62,
                                              0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};
@@ -132,7 +130,7 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     }
     break;
   case '!': // .a
-    if (mv.StartsWith("!<arch>\n") && !mv.StartsWith(debMagic) || mv.StartsWith("!<thin>\n")) {
+    if ((mv.StartsWith("!<arch>\n") && !mv.StartsWith(debMagic)) || mv.StartsWith("!<thin>\n")) {
       // Skip DEB package
       hr.assign(types::archive, L"ar style archive file");
       return Found;
