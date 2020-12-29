@@ -73,6 +73,8 @@ inline bool IsSuperficialPath(std::string_view sv) {
   auto pv = bela::SplitPath(sv);
   return pv.size() <= 3;
 }
+constexpr size_t outsize = 64 * 1024;
+constexpr size_t insize = 16 * 1024;
 
 } // namespace baulk::archive::zip
 

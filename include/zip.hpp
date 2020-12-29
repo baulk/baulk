@@ -79,6 +79,7 @@
 
 namespace baulk::archive::zip {
 // https://www.hanshq.net/zip.html
+constexpr long ErrCanceled = 654321;
 
 // https://github.com/nih-at/libzip/blob/master/lib/zip.h
 typedef enum zip_method_e : uint16_t {
@@ -111,7 +112,7 @@ typedef enum zip_method_e : uint16_t {
   ZIP_AES = 99,     /* AE-x encryption marker (see APPENDIX E) */
 
   // Private magic number
-  ZIP_BORTLI = 121,
+  ZIP_BROTLI = 121,
 } zip_method_t;
 
 struct directoryEnd {
@@ -155,6 +156,7 @@ struct File {
 };
 
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
+
 using Receiver = std::function<bool(const void *data, size_t len)>;
 class Reader {
 private:
@@ -238,7 +240,7 @@ public:
     }
     return std::make_optional(std::move(r));
   }
-  bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool Decompress(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
 
 private:
   std::string passwd;
@@ -253,12 +255,14 @@ private:
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);
   int64_t findDirectory64End(int64_t directoryEndOffset, bela::error_code &ec);
-  bool decompressDeflate(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  bool decompressDeflate64(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  bool decompressZstd(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  bool decompressBz2(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  bool decompressXz(const File &file, const Receiver &receiver, bela::error_code &ec) const;
-  bool decompressLZMA2(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool decompressDeflate(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressDeflate64(const File &file, const Receiver &receiver, int64_t &decompressed,
+                           bela::error_code &ec) const;
+  bool decompressZstd(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressBz2(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressXz(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressLZMA2(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressBrotli(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
 };
 
 // NewReader
