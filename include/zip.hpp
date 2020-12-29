@@ -103,11 +103,15 @@ typedef enum zip_method_e : uint16_t {
   /* 20 - old value for Zstandard */
   ZIP_LZMA2 = 33,
   ZIP_ZSTD = 93,    /* Zstandard compressed data */
+  ZIP_MP3 = 94,     /* MP3 compression data */
   ZIP_XZ = 95,      /* XZ compressed data */
   ZIP_JPEG = 96,    /* Compressed Jpeg data */
   ZIP_WAVPACK = 97, /* WavPack compressed data */
   ZIP_PPMD = 98,    /* PPMd version I, Rev 1 */
   ZIP_AES = 99,     /* AE-x encryption marker (see APPENDIX E) */
+
+  // Private magic number
+  ZIP_BORTLI = 121,
 } zip_method_t;
 
 struct directoryEnd {

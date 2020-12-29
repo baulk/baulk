@@ -119,6 +119,8 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
     return decompressDeflate(file, receiver, ec);
   case ZIP_DEFLATE64:
     return decompressDeflate64(file, receiver, ec);
+  case 20:
+    [[fallthrough]];
   case ZIP_ZSTD:
     return decompressZstd(file, receiver, ec);
   case ZIP_LZMA2:
