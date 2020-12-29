@@ -25,6 +25,9 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
       return false;
     }
     zs.avail_in = static_cast<int>(minsize);
+    if (zs.avail_in == 0) {
+      break;
+    }
     zs.next_in = in.data();
     do {
       zs.avail_out = static_cast<int>(out.capacity());
