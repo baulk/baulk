@@ -1,7 +1,6 @@
 ///
-#include "zipinternal.hpp"
 #include <bela/endian.hpp>
-
+#include "zipinternal.hpp"
 
 
 namespace baulk::archive::zip {

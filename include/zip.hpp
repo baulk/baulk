@@ -102,6 +102,7 @@ typedef enum zip_method_e : uint16_t {
   ZIP_TERSE = 18, /* compressed using IBM TERSE (new) */
   ZIP_LZ77 = 19,  /* IBM LZ77 z Architecture (PFS) */
   /* 20 - old value for Zstandard */
+  /* ZIP LZMA2*/
   ZIP_LZMA2 = 33,
   ZIP_ZSTD = 93,    /* Zstandard compressed data */
   ZIP_MP3 = 94,     /* MP3 compression data */
