@@ -49,6 +49,7 @@ FileMode unixModeToFileMode(uint32_t m) {
     break;
   case s_IFSOCK:
     mode |= ModeSocket;
+    break;
   default:
     break;
   }
