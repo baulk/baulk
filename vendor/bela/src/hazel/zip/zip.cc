@@ -162,7 +162,6 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
     return false;
   }
   file.name.assign(reinterpret_cast<const char *>(buffer.data()), filenameLen);
-  file.extra.assign(reinterpret_cast<const char *>(buffer.data() + filenameLen), extraLen);
   file.comment.assign(reinterpret_cast<const char *>(buffer.data() + filenameLen + extraLen), commentLen);
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
@@ -170,7 +169,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   file.mode = resolveFileMode(file, externalAttrs);
   bela::Time modified;
 
-  bela::endian::LittenEndian extra(file.extra.data(), file.extra.size());
+  bela::endian::LittenEndian extra(buffer.data() + filenameLen, static_cast<size_t>(extraLen));
   for (; extra.Size() >= 4;) {
     auto fieldTag = extra.Read<uint16_t>();
     auto fieldSize = static_cast<int>(extra.Read<uint16_t>());
