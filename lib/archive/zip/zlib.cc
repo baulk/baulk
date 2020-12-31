@@ -20,7 +20,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
   auto csize = file.compressedSize;
   int ret = Z_OK;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(in.capacity()));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
@@ -30,7 +30,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
     }
     zs.next_in = in.data();
     do {
-      zs.avail_out = static_cast<int>(out.capacity());
+      zs.avail_out = static_cast<int>(outsize);
       zs.next_out = out.data();
       ret = inflate(&zs, Z_NO_FLUSH);
       switch (ret) {

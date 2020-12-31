@@ -129,20 +129,18 @@ endif()
 add_library(zlib STATIC ${ZLIB_SOURCES})
 
 set(ZSTD_COMMON_SOURCES
-  zstd/common/debug.c
-  zstd/common/entropy_common.c
-  zstd/common/error_private.c
-  zstd/common/fse_decompress.c
-  zstd/common/pool.c
-  zstd/common/threading.c
-  zstd/common/zstd_common.c
-)
+    zstd/common/debug.c
+    zstd/common/entropy_common.c
+    zstd/common/error_private.c
+    zstd/common/fse_decompress.c
+    zstd/common/pool.c
+    zstd/common/threading.c
+    zstd/common/zstd_common.c)
 
 file(GLOB ZSTD_COMPRESS_SOURCES zstd/compress/*.c)
 file(GLOB ZSTD_DECOMPRESS_SOURCES zstd/decompress/*.c)
 file(GLOB ZSTD_DICTBUILDER_SOURCES zstd/dictBuilder/*.c)
 file(GLOB ZSTD_DEPRECATED_SOURCES zstd/deprecated/*.c)
-
 
 add_library(
   zstd STATIC
@@ -210,7 +208,12 @@ list(APPEND MINIZIP_INC zstd)
 
 target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
 target_include_directories(minizip PRIVATE ${MINIZIP_INC})
-target_link_libraries(minizip lzma zlib zstd advapi32)
+target_link_libraries(
+  minizip
+  lzma
+  zlib
+  zstd
+  advapi32)
 
 # Brotli
 set(BROTLI_SOURCES
@@ -244,6 +247,8 @@ set(BROTLI_SOURCES
     brotli/enc/static_dict.c
     brotli/enc/utf8_util.c)
 
+add_subdirectory(ced)
+
 add_library(
   baulkarchive STATIC
   archive.cc
@@ -251,6 +256,7 @@ add_library(
   zip/bzlib.cc
   zip/decompress.cc
   zip/filemode.cc
+  zip/path.cc
   zip/xz.cc
   zip/zip.cc
   zip/zlib.cc
@@ -267,4 +273,5 @@ add_library(
 
 target_include_directories(baulkarchive PRIVATE brotli/include)
 target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
-target_link_libraries(baulkarchive belawin minizip)
+target_include_directories(baulkarchive PRIVATE ced)
+target_link_libraries(baulkarchive belawin minizip ced)

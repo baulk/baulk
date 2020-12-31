@@ -19,12 +19,12 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
   auto closer = bela::finally([&] { ZSTD_freeDCtx(zds); });
   auto csize = file.compressedSize;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(inbuf.capacity()));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(bufferInSize));
     if (!ReadFull(inbuf.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
     ZSTD_inBuffer in{inbuf.data(), minsize, 0};
-    ZSTD_outBuffer out{outbuf.data(), outbuf.capacity(), 0};
+    ZSTD_outBuffer out{outbuf.data(), bufferOutSize, 0};
     while (in.pos < in.size) {
       auto result = ZSTD_decompressStream(zds, &out, &in);
       if (ZSTD_isError(result)) {

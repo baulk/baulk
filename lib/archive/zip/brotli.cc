@@ -21,7 +21,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
   BrotliDecoderResult result{};
   size_t totalout = 0;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(in.capacity()));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
@@ -29,7 +29,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
     const unsigned char *inptr = in.data();
     for (;;) {
       auto outptr = out.data();
-      auto avail_out = out.capacity();
+      auto avail_out = outsize;
       result = BrotliDecoderDecompressStream(state, &avail_in, &inptr, &avail_out, &outptr, &totalout);
       if (outptr != out.data()) {
         auto have = outptr - out.data();

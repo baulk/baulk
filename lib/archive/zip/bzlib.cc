@@ -19,14 +19,14 @@ bool Reader::decompressBz2(const File &file, const Receiver &receiver, int64_t &
   auto csize = file.compressedSize;
   int ret = BZ_OK;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(in.capacity()));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
     bzs.avail_in = static_cast<unsigned int>(minsize);
     bzs.next_in = reinterpret_cast<char *>(in.data());
     do {
-      bzs.avail_out = static_cast<int>(out.capacity());
+      bzs.avail_out = static_cast<int>(outsize);
       bzs.next_out = reinterpret_cast<char *>(out.data());
       ret = BZ2_bzDecompress(&bzs);
       switch (ret) {

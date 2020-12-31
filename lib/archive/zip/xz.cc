@@ -44,11 +44,11 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
   Buffer out(outsize);
   Buffer in(insize);
   auto csize = file.compressedSize;
-  lzma_action action = LZMA_RUN;
+  lzma_action action = LZMA_RUN; // no C26812
   zs.next_out = out.data();
-  zs.avail_out = out.capacity();
+  zs.avail_out = outsize;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(in.capacity()));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
