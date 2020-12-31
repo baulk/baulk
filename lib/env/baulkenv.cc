@@ -83,7 +83,16 @@ std::optional<VisualStudioInstance> LookupVisualStudioInstance(bool preview, bel
   if (!VisualStudioResultEncode(process.Out(), vsis, ec)) {
     return std::nullopt;
   }
+  if (vsis.empty()) {
+    ec = bela::make_error_code(-1, L"visual studio not installed");
+    return std::nullopt;
+  }
   if (!preview) {
+    for (auto &vsi : vsis) {
+      if (!vsi.isPrerelease) {
+        return std::make_optional(std::move(vsi));
+      }
+    }
     return std::make_optional(std::move(vsis[0]));
   }
   for (auto &vsi : vsis) {

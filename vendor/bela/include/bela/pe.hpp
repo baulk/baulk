@@ -272,7 +272,7 @@ struct ExportedSymbol {
 struct Function {
   Function(std::string &&name, int index = 0, int ordinal = 0)
       : Name(std::move(name)), Index(index), Ordinal(ordinal) {}
-  Function(const std::string_view &name, int index = 0, int ordinal = 0) : Name(name), Index(index), Ordinal(ordinal) {}
+  Function(const std::string &name, int index = 0, int ordinal = 0) : Name(name), Index(index), Ordinal(ordinal) {}
   std::string Name;
   int Index{0};
   int Ordinal{0};
