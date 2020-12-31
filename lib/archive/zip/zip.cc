@@ -130,6 +130,31 @@ constexpr uint64_t OffsetMin = 0xFFFFFFFFull;
 
 // Thanks github.com\klauspost\compress@v1.11.3\zip\reader.go
 
+/*
+        central file header signature   4 bytes  (0x02014b50)
+        version made by                 2 bytes
+        version needed to extract       2 bytes
+        general purpose bit flag        2 bytes
+        compression method              2 bytes
+        last mod file time              2 bytes
+        last mod file date              2 bytes
+        crc-32                          4 bytes
+        compressed size                 4 bytes
+        uncompressed size               4 bytes
+        file name length                2 bytes
+        extra field length              2 bytes
+        file comment length             2 bytes
+        disk number start               2 bytes
+        internal file attributes        2 bytes
+        external file attributes        4 bytes
+        relative offset of local header 4 bytes
+
+        file name (variable size)
+        extra field (variable size)
+        file comment (variable size)
+
+*/
+
 bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela::error_code &ec) {
   uint8_t buf[directoryHeaderLen];
   if (br.ReadFull(buf, sizeof(buf), ec) != sizeof(buf)) {
@@ -152,8 +177,12 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   auto filenameLen = b.Read<uint16_t>();
   auto extraLen = b.Read<uint16_t>();
   auto commentLen = b.Read<uint16_t>();
+  /* skip
+        disk number start               2 bytes
+        internal file attributes        2 bytes
+  */
   b.Discard(4);
-  file.externalAttrs = b.Read<uint32_t>();
+  auto externalAttrs = b.Read<uint32_t>();
   file.position = b.Read<uint32_t>();
   auto totallen = filenameLen + extraLen + commentLen;
   buffer.grow(totallen);
@@ -163,6 +192,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   file.name.assign(reinterpret_cast<const char *>(buffer.data()), filenameLen);
   file.extra.assign(reinterpret_cast<const char *>(buffer.data() + filenameLen), extraLen);
   file.comment.assign(reinterpret_cast<const char *>(buffer.data() + filenameLen + extraLen), commentLen);
+  file.mode = resolveFileMode(file, externalAttrs);
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
   auto needOffset = file.position == OffsetMin;

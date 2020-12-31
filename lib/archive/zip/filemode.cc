@@ -78,15 +78,15 @@ FileMode msdosModeToFileMode(uint32_t m) {
   return static_cast<FileMode>(mode);
 }
 
-baulk::archive::FileMode File::FileMode() const {
+baulk::archive::FileMode resolveFileMode(const File &file, uint32_t externalAttrs) {
   auto mode = static_cast<baulk::archive::FileMode>(0);
-  auto n = cversion >> 8;
+  auto n = file.cversion >> 8;
   if (n == creatorUnix || n == creatorMacOSX) {
     mode = unixModeToFileMode(externalAttrs >> 16);
   } else if (n == creatorNTFS || n == creatorVFAT || n == creatorFAT) {
     mode = msdosModeToFileMode(externalAttrs);
   }
-  if (name.ends_with('/')) {
+  if (file.name.ends_with('/')) {
     mode = mode | ModeDir;
   }
   return mode;

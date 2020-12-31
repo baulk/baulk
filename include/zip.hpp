@@ -1,11 +1,11 @@
 //
 #ifndef BAULK_ZIP_HPP
 #define BAULK_ZIP_HPP
+#include <span>
 #include <bela/base.hpp>
 #include <bela/buffer.hpp>
 #include <bela/str_cat_narrow.hpp>
 #include <bela/time.hpp>
-#include <span>
 #include <bela/phmap.hpp>
 #include "archive.hpp"
 
@@ -139,7 +139,7 @@ struct File {
   uint64_t position{0}; // file position
   bela::Time time;
   uint32_t crc32{0};
-  uint32_t externalAttrs{0};
+  FileMode mode{0};
   uint16_t cversion{0};
   uint16_t rversion{0};
   uint16_t flags{0};
@@ -148,12 +148,12 @@ struct File {
   uint8_t aesStrength{0};
   bool utf8{false};
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
-  bool IsDir() const { return name.ends_with('/'); }
+  bool IsDir() const { return (mode & FileMode::ModeDir) != 0; }
+  bool IsSymlink() const { return (mode & FileMode::ModeSymlink) != 0; }
   bool StartsWith(std::string_view prefix) const { return name.starts_with(prefix); }
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
-  baulk::archive::FileMode FileMode() const;
 };
 
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();

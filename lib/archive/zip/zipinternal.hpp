@@ -75,7 +75,7 @@ inline bool IsSuperficialPath(std::string_view sv) {
 }
 constexpr size_t outsize = 64 * 1024;
 constexpr size_t insize = 16 * 1024;
-
+baulk::archive::FileMode resolveFileMode(const File& file, uint32_t externalAttrs);
 } // namespace baulk::archive::zip
 
 #endif

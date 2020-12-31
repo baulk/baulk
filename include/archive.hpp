@@ -49,8 +49,8 @@ private:
 public:
   Buffer() = default;
   Buffer(size_t maxsize) { grow(maxsize); }
-  Buffer(Buffer &&other) { MoveFrom(std::move(other)); }
-  Buffer &operator=(Buffer &&other) {
+  Buffer(Buffer &&other) noexcept { MoveFrom(std::move(other)); }
+  Buffer &operator=(Buffer &&other) noexcept {
     MoveFrom(std::move(other));
     return *this;
   }
