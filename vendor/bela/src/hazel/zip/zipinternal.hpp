@@ -3,6 +3,7 @@
 #define HAZEL_ZIP_INTERNAL_HPP
 #include <hazel/zip.hpp>
 #include <hazel/hazel.hpp>
+#include <bela/os.hpp>
 
 namespace hazel::zip{
 // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
@@ -58,6 +59,23 @@ inline bool IsSuperficialPath(std::string_view sv) {
   auto pv = bela::SplitPath(sv);
   return pv.size() <= 3;
 }
+
+constexpr auto s_IFMT = 0xf000;
+constexpr auto s_IFSOCK = 0xc000;
+constexpr auto s_IFLNK = 0xa000;
+constexpr auto s_IFREG = 0x8000;
+constexpr auto s_IFBLK = 0x6000;
+constexpr auto s_IFDIR = 0x4000;
+constexpr auto s_IFCHR = 0x2000;
+constexpr auto s_IFIFO = 0x1000;
+constexpr auto s_ISUID = 0x800;
+constexpr auto s_ISGID = 0x400;
+constexpr auto s_ISVTX = 0x200;
+
+constexpr auto msdosDir = 0x10;
+constexpr auto msdosReadOnly = 0x01;
+
+bela::os::FileMode resolveFileMode(const File& file, uint32_t externalAttrs);
 
 }
 

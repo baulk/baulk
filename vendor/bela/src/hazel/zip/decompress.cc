@@ -3,7 +3,6 @@
 #include <bela/endian.hpp>
 
 namespace hazel::zip {
-
 bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
   if (!ReadAt(buf, fileHeaderLen, file.position, ec)) {

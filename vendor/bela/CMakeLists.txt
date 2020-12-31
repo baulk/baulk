@@ -39,6 +39,7 @@ if(MSVC)
   add_compile_options("-W3")
   add_compile_options("-DUNICODE=1")
   add_compile_options("-D_UNICODE=1")
+  add_compile_options("-wd26812")
 endif(MSVC)
 
 include_directories(./include)

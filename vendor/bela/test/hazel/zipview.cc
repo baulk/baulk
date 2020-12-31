@@ -45,25 +45,26 @@ int wmain(int argc, wchar_t **argv) {
   }
   bela::FPrintF(stderr, L"sizeof(zip::Reader) = %d %d %d\n", sizeof(hazel::zip::Reader), sizeof(std::string),
                 sizeof(std::vector<hazel::zip::File>));
-  auto zr = hazel::zip::NewReader(file.FD(), hr.size(), ec);
-  if (!zr) {
+  hazel::zip::Reader zr;
+  if (!zr.OpenReader(file.FD(), hr.size(), ec)) {
     bela::FPrintF(stderr, L"open zip file: %s error %s\n", path, ec.message);
     return 1;
   }
-  if (!zr->Comment().empty()) {
-    bela::FPrintF(stdout, L"comment: %s\n", zr->Comment());
+  if (!zr.Comment().empty()) {
+    bela::FPrintF(stdout, L"comment: %s\n", zr.Comment());
   }
 
-  for (const auto &file : zr->Files()) {
+  for (const auto &file : zr.Files()) {
     if (file.IsEncrypted()) {
-      bela::FPrintF(stdout, L"File: %s [%s] (%s %s) %d\n", file.name, bela::FormatTime(file.time),
-                    hazel::zip::Method(file.method), file.AesText(), file.uncompressedSize);
+      bela::FPrintF(stdout, L"%s\t%s\t%d\t%s\t%s\t%b\t%s\n", hazel::zip::String(file.mode),
+                    hazel::zip::Method(file.method), file.uncompressedSize, bela::FormatTime(file.time), file.name,
+                    file.IsFileNameUTF8(), file.AesText());
       continue;
     }
-    bela::FPrintF(stdout, L"File: %s [%s|%s] (%s) %d\n", file.name, bela::FormatTime(file.time),
-                  bela::FormatUniversalTime(file.time), hazel::zip::Method(file.method), file.uncompressedSize);
+    bela::FPrintF(stdout, L"%s\t%s\t%d\t%s\t%s\t%b\n", hazel::zip::String(file.mode), hazel::zip::Method(file.method),
+                  file.uncompressedSize, bela::FormatTime(file.time), file.name, file.IsFileNameUTF8());
   }
-  switch (zr->LooksLikeMsZipContainer()) {
+  switch (zr.LooksLikeMsZipContainer()) {
   case hazel::zip::OfficeDocx:
     bela::FPrintF(stdout, L"File is Microsoft Office Word (2007+)\n");
     break;
@@ -79,22 +80,22 @@ int wmain(int argc, wchar_t **argv) {
   default:
     break;
   }
-  if (zr->LooksLikeOFD()) {
+  if (zr.LooksLikeOFD()) {
     bela::FPrintF(stdout, L"File is Open Fixed-layout Document (GB/T 33190-2016)\n");
   }
-  if (zr->LooksLikeAppx()) {
+  if (zr.LooksLikeAppx()) {
     bela::FPrintF(stdout, L"File is Windows App Packages\n");
   }
-  if (zr->LooksLikeApk()) {
+  if (zr.LooksLikeApk()) {
     bela::FPrintF(stdout, L"File is Android APK\n");
-  } else if (zr->LooksLikeJar()) {
+  } else if (zr.LooksLikeJar()) {
     bela::FPrintF(stdout, L"File is Java Jar\n");
   }
   std::string odfmime;
-  if (zr->LooksLikeODF(&odfmime)) {
+  if (zr.LooksLikeODF(&odfmime)) {
     bela::FPrintF(stdout, L"File is OpenDocument Format, mime: %s\n", odfmime);
   }
-  bela::FPrintF(stdout, L"Files: %d CompressedSize: %d UncompressedSize: %d\n", zr->Files().size(),
-                zr->CompressedSize(), zr->UncompressedSize());
+  bela::FPrintF(stdout, L"Files: %d CompressedSize: %d UncompressedSize: %d\n", zr.Files().size(), zr.CompressedSize(),
+                zr.UncompressedSize());
   return 0;
 }
