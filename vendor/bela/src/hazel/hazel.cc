@@ -21,7 +21,7 @@ bool LookupFile(bela::File &fd, hazel_result &hr, bela::error_code &ec) {
   if (outlen == -1) {
     return false;
   }
-  if (auto p = memchr(buffer, 0, sizeof(buffer)); p != nullptr) {
+  if (auto p = memchr(buffer, 0, outlen); p != nullptr) {
     hr.zeroPosition = static_cast<int64_t>(reinterpret_cast<const uint8_t *>(p) - buffer);
   }
   bela::MemView mv(buffer, static_cast<size_t>(outlen));
