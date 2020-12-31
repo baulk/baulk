@@ -1,12 +1,13 @@
 //
 #ifndef HAZEL_ZIP_HPP
 #define HAZEL_ZIP_HPP
+#include <span>
 #include <bela/base.hpp>
 #include <bela/buffer.hpp>
 #include <bela/str_cat_narrow.hpp>
 #include <bela/time.hpp>
-#include <span>
 #include <bela/phmap.hpp>
+#include <bela/os.hpp>
 
 #define HAZEL_COMPRESS_LEVEL_DEFAULT (-1)
 #define HAZEL_COMPRESS_LEVEL_FAST (2)
@@ -133,6 +134,7 @@ inline const char *AESStrength(uint8_t i) {
   }
   return "AES-???";
 }
+using bela::os::FileMode;
 
 struct File {
   std::string name;
@@ -143,21 +145,26 @@ struct File {
   uint64_t position{0}; // file position
   bela::Time time;
   uint32_t crc32{0};
-  uint32_t externalAttrs{0};
+  FileMode mode{0};
   uint16_t cversion{0};
   uint16_t rversion{0};
   uint16_t flags{0};
   uint16_t method{0};
   uint16_t aesVersion{0};
   uint8_t aesStrength{0};
-  bool utf8{false};
+  bool IsFileNameUTF8() const { return (flags & 0x800) != 0; }
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
-  std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
+  bool IsDir() const { return (mode & FileMode::ModeDir) != 0; }
+  bool IsSymlink() const { return (mode & FileMode::ModeSymlink) != 0; }
   bool StartsWith(std::string_view prefix) const { return name.starts_with(prefix); }
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
+  std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
 };
+
+std::string String(bela::os::FileMode m);
+
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
 using Receiver = std::function<bool(const void *data, size_t len)>;
 enum mszipconatiner_t : int {
@@ -227,8 +234,8 @@ private:
 
 public:
   Reader() = default;
-  Reader(Reader &&r) { MoveFrom(std::move(r)); }
-  Reader &operator=(Reader &&r) {
+  Reader(Reader &&r) noexcept { MoveFrom(std::move(r)); }
+  Reader &operator=(Reader &&r) noexcept {
     MoveFrom(std::move(r));
     return *this;
   }
@@ -239,14 +246,6 @@ public:
   const auto &Files() const { return files; }
   int64_t CompressedSize() const { return compressedSize; }
   int64_t UncompressedSize() const { return uncompressedSize; }
-  static std::optional<Reader> NewReader(HANDLE fd, int64_t sz, bela::error_code &ec) {
-    Reader r;
-    if (!r.OpenReader(fd, sz, ec)) {
-      return std::nullopt;
-    }
-    return std::make_optional(std::move(r));
-  }
-
   bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
   bool Contains(std::string_view p, std::size_t limit = size_max) const;
   bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
@@ -274,11 +273,6 @@ private:
   int64_t findDirectory64End(int64_t directoryEndOffset, bela::error_code &ec);
   bool ContainsSlow(std::span<std::string_view> paths, std::size_t limit = size_max) const;
 };
-
-// NewReader
-inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
-  return Reader::NewReader(fd, size, ec);
-}
 
 const wchar_t *Method(uint16_t m);
 } // namespace hazel::zip

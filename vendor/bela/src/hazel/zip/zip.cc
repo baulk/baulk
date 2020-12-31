@@ -154,7 +154,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   auto extraLen = b.Read<uint16_t>();
   auto commentLen = b.Read<uint16_t>();
   b.Discard(4);
-  file.externalAttrs = b.Read<uint32_t>();
+  auto externalAttrs = b.Read<uint32_t>();
   file.position = b.Read<uint32_t>();
   auto totallen = filenameLen + extraLen + commentLen;
   buffer.grow(totallen);
@@ -167,8 +167,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
   auto needOffset = file.position == OffsetMin;
-  file.utf8 = (file.flags & 0x800) != 0;
-
+  file.mode = resolveFileMode(file, externalAttrs);
   bela::Time modified;
 
   bela::endian::LittenEndian extra(file.extra.data(), file.extra.size());

@@ -63,12 +63,12 @@ public:
   File(const File &) = delete;
   File &operator=(const File &) = delete;
   ~File() { Free(); }
-  File(File &&o) {
+  File(File &&o) noexcept {
     Free();
     fd = o.fd;
     o.fd = INVALID_HANDLE_VALUE;
   }
-  File &operator=(File &&o) {
+  File &operator=(File &&o) noexcept {
     Free();
     fd = o.fd;
     o.fd = INVALID_HANDLE_VALUE;
@@ -154,7 +154,7 @@ inline bool File::Open(std::wstring_view file, bela::error_code &ec) {
   return true;
 }
 
-// Open 
+// Open
 inline bool File::Open(std::wstring_view file, DWORD dwDesiredAccess, DWORD dwShareMode,
                        LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
                        DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, bela::error_code &ec) {

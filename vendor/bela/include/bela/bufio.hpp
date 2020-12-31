@@ -65,8 +65,8 @@ public:
   constexpr int size() const { return Size; }
 
 private:
-  HANDLE fd;
-  uint8_t data[Size];
+  HANDLE fd{INVALID_HANDLE_VALUE};
+  uint8_t data[Size] = {0};
   ssize_t w{0};
   ssize_t r{0};
   bool fsread(void *b, ssize_t len, ssize_t &rlen, bela::error_code &ec) {

@@ -13,6 +13,7 @@ add_library(
   ina/shl.cc
   ina/text.cc
   zip/decompress.cc
+  zip/filemode.cc
   zip/zip.cc
   elf/dynamic.cc
   elf/elf.cc
