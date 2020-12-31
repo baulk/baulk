@@ -144,7 +144,7 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
     DbgPrint(L"Turn on cleanup env");
   }
   if (usevspreview) {
-    ea.Append(L"--vs");
+    ea.Append(L"--vs-preview");
     DbgPrint(L"Turn on vs preview env");
     if (!arch.empty()) {
       ea.Append(L"-A").Append(arch);
