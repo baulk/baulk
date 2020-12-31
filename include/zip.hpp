@@ -134,7 +134,6 @@ std::string String(FileMode m);
 struct File {
   std::string name;
   std::string comment;
-  std::string extra;
   uint64_t compressedSize{0};
   uint64_t uncompressedSize{0};
   uint64_t position{0}; // file position
