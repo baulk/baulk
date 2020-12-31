@@ -4,7 +4,7 @@
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
 
-using baulk::archive::FileMode;
+using bela::os::FileMode;
 using baulk::archive::zip::File;
 using baulk::archive::zip::Reader;
 

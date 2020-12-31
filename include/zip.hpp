@@ -127,6 +127,7 @@ struct directoryEnd {
   std::string comment;
 };
 
+using bela::os::FileMode;
 // FileMode to string
 std::string String(FileMode m);
 

@@ -31,36 +31,36 @@ FileMode unixModeToFileMode(uint32_t m) {
   uint32_t mode = static_cast<FileMode>(m & 0777);
   switch (m & s_IFMT) {
   case s_IFBLK:
-    mode |= ModeDevice;
+    mode |= FileMode::ModeDevice;
     break;
   case s_IFCHR:
-    mode |= ModeDevice | ModeCharDevice;
+    mode |= FileMode::ModeDevice | FileMode::ModeCharDevice;
     break;
   case s_IFDIR:
-    mode |= ModeDir;
+    mode |= FileMode::ModeDir;
     break;
   case s_IFIFO:
-    mode |= ModeNamedPipe;
+    mode |= FileMode::ModeNamedPipe;
     break;
   case s_IFLNK:
-    mode |= ModeSymlink;
+    mode |= FileMode::ModeSymlink;
     break;
   case s_IFREG:
     break;
   case s_IFSOCK:
-    mode |= ModeSocket;
+    mode |= FileMode::ModeSocket;
     break;
   default:
     break;
   }
   if ((m & s_ISGID) != 0) {
-    mode |= ModeSetgid;
+    mode |= FileMode::ModeSetgid;
   }
   if ((m & s_ISUID) != 0) {
-    mode |= ModeSetuid;
+    mode |= FileMode::ModeSetuid;
   }
   if ((m & s_ISVTX) != 0) {
-    mode |= ModeSticky;
+    mode |= FileMode::ModeSticky;
   }
   return static_cast<FileMode>(mode);
 }
@@ -68,7 +68,7 @@ FileMode unixModeToFileMode(uint32_t m) {
 FileMode msdosModeToFileMode(uint32_t m) {
   uint32_t mode = 0;
   if ((m & msdosDir) != 0) {
-    mode = ModeDir | 0777;
+    mode = FileMode::ModeDir | 0777;
   } else {
     mode = 0666;
   }
@@ -78,8 +78,8 @@ FileMode msdosModeToFileMode(uint32_t m) {
   return static_cast<FileMode>(mode);
 }
 
-baulk::archive::FileMode resolveFileMode(const File &file, uint32_t externalAttrs) {
-  auto mode = static_cast<baulk::archive::FileMode>(0);
+FileMode resolveFileMode(const File &file, uint32_t externalAttrs) {
+  auto mode = static_cast<FileMode>(0);
   auto n = file.cversion >> 8;
   if (n == creatorUnix || n == creatorMacOSX) {
     mode = unixModeToFileMode(externalAttrs >> 16);
@@ -87,7 +87,7 @@ baulk::archive::FileMode resolveFileMode(const File &file, uint32_t externalAttr
     mode = msdosModeToFileMode(externalAttrs);
   }
   if (file.name.ends_with('/')) {
-    mode = mode | ModeDir;
+    mode = mode | FileMode::ModeDir;
   }
   return mode;
 }
