@@ -19,6 +19,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
   int64_t uncsize = 0;
   auto csize = file.compressedSize;
   int ret = Z_OK;
+  uint32_t crc32val = 0;
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
@@ -46,6 +47,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
         break;
       }
       auto have = minsize - zs.avail_out;
+      crc32val = ::crc32(crc32val, out.data(), static_cast<int>(have));
       if (!receiver(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
@@ -56,6 +58,10 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
     if (ret == Z_STREAM_END) {
       break;
     }
+  }
+  if (crc32val != file.crc32) {
+    ec = bela::make_error_code(1, L"crc32 want ", file.crc32, L" got ", crc32val, L" not match");
+    return false;
   }
   return true;
 }

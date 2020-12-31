@@ -20,6 +20,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
   auto csize = file.compressedSize;
   BrotliDecoderResult result{};
   size_t totalout = 0;
+  uint32_t crc32val = 0;
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
@@ -33,6 +34,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
       result = BrotliDecoderDecompressStream(state, &avail_in, &inptr, &avail_out, &outptr, &totalout);
       if (outptr != out.data()) {
         auto have = outptr - out.data();
+        crc32val = baulk_crc32_update(crc32val, out.data(), static_cast<int32_t>(have));
         if (!receiver(out.data(), have)) {
           ec = bela::make_error_code(ErrCanceled, L"canceled");
           return false;
@@ -54,6 +56,10 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
     if (result == BROTLI_DECODER_RESULT_SUCCESS) {
       break;
     }
+  }
+  if (crc32val != file.crc32) {
+    ec = bela::make_error_code(1, L"crc32 want ", file.crc32, L" got ", crc32val, L" not match");
+    return false;
   }
   return true;
 }

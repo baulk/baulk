@@ -18,6 +18,7 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
   }
   auto closer = bela::finally([&] { ZSTD_freeDCtx(zds); });
   auto csize = file.compressedSize;
+  uint32_t crc32val = 0;
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(bufferInSize));
     if (!ReadFull(inbuf.data(), static_cast<size_t>(minsize), ec)) {
@@ -31,6 +32,7 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
         ec = bela::make_error_code(1, bela::ToWide(ZSTD_getErrorName(result)));
         return false;
       }
+      crc32val = baulk_crc32_update(crc32val, reinterpret_cast<const uint8_t *>(out.dst), out.pos);
       if (!receiver(out.dst, out.pos)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
@@ -38,6 +40,10 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
       decompressed += out.pos;
     }
     csize -= minsize;
+  }
+  if (crc32val != file.crc32) {
+    ec = bela::make_error_code(1, L"crc32 want ", file.crc32, L" got ", crc32val, L" not match");
+    return false;
   }
   return true;
 }
