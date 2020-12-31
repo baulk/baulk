@@ -108,7 +108,7 @@ inline ssize_t File::Read(void *buffer, size_t len, bela::error_code &ec) {
     ec = bela::make_system_error_code(L"ReadFile: ");
     return -1;
   }
-  return static_cast<ssize_t>(len);
+  return static_cast<ssize_t>(drSize);
 }
 
 inline ssize_t File::ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) {
