@@ -101,6 +101,7 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
+  bela::FPrintF(stderr, L"x: %s\n", *dest);
   if (file.IsSymlink()) {
     return extractSymlink(file, *dest, ec);
   }
@@ -109,9 +110,11 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
   }
   auto fd = baulk::archive::NewFD(*dest, ec, owfile);
   if (!fd) {
+    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec.message);
     return false;
   }
   if (!fd->SetFileTime(file.time, ec)) {
+    bela::FPrintF(stderr, L"unable SetFileTime %s error: %s\n", *dest, ec.message);
     return false;
   }
   bela::error_code ec2;
@@ -124,30 +127,28 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
       decompressed, ec);
   if (!ret) {
     ec = ec2;
+    bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
     return false;
   }
   return true;
 }
 
 int unzip(std::wstring_view path) {
-  std::wstring out;
+  Extractor extractor;
   if (bela::EndsWithIgnoreCase(path, L".zip")) {
-    out = path.substr(0, path.size() - 4);
+    extractor.Destination() = path.substr(0, path.size() - 4);
   } else {
-    out.assign(path).append(L".out");
+    extractor.Destination() = bela::StringCat(path, L".out");
   }
-  baulk::archive::zip::Reader zr;
+  extractor.OverwriteFile(true);
   bela::error_code ec;
-  if (!zr.OpenReader(path, ec)) {
+  if (!extractor.OpenReader(path, ec)) {
     bela::FPrintF(stderr, L"unable open zip file %s error: %s\n", path, ec.message);
     return 1;
   }
-  for (const auto &file : zr.Files()) {
-    auto filepath = baulk::archive::zip::PathCat(out, file);
-    if (!filepath) {
-      bela::FPrintF(stderr, L"dangerous path %s\n", file.name);
-      continue;
-    }
+  if (!extractor.Extract(ec)) {
+    bela::FPrintF(stderr, L"unable extract file: %s error: %s\n", path, ec.message);
+    return 1;
   }
   return 0;
 }

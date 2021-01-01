@@ -275,4 +275,5 @@ add_library(
 target_include_directories(baulkarchive PRIVATE brotli/include)
 target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
 target_include_directories(baulkarchive PRIVATE ced)
+target_compile_definitions(baulkarchive PRIVATE ${LZMA_DEF})
 target_link_libraries(baulkarchive belawin minizip ced)

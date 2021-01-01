@@ -111,10 +111,7 @@ std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overw
       return std::nullopt;
     }
   } else {
-    if (!std::filesystem::create_directories(p.parent_path(), sec)) {
-      ec = bela::from_std_error_code(sec, L"mkdirall ");
-      return std::nullopt;
-    }
+    std::filesystem::create_directories(p.parent_path(), sec);
   }
   auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -141,10 +138,7 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
     }
     std::filesystem::remove_all(p, sec);
   } else {
-    if (!std::filesystem::create_directories(p.parent_path(), sec)) {
-      ec = bela::from_std_error_code(sec);
-      return true;
-    }
+    std::filesystem::create_directories(p.parent_path(), sec);
   }
   DWORD flags = linkname.ends_with('/') ? SYMBOLIC_LINK_DIR : SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
   if (CreateSymbolicLinkW(path.data(), linkname.data(), flags) != TRUE) {
