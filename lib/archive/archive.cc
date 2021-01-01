@@ -125,4 +125,33 @@ std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overw
   return std::make_optional<FD>(fd);
 }
 
+#ifndef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+#define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE (0x2)
+#endif
+
+#define SYMBOLIC_LINK_DIR (SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE | SYMBOLIC_LINK_FLAG_DIRECTORY)
+
+bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite) {
+  std::filesystem::path p(path);
+  std::error_code sec;
+  if (std::filesystem::exists(p, sec)) {
+    if (!overwrite) {
+      ec = bela::make_error_code(1, L"file '", p.filename().wstring(), L"' exists");
+      return false;
+    }
+    std::filesystem::remove_all(p, sec);
+  } else {
+    if (!std::filesystem::create_directories(p.parent_path(), sec)) {
+      ec = bela::from_std_error_code(sec);
+      return true;
+    }
+  }
+  DWORD flags = linkname.ends_with('/') ? SYMBOLIC_LINK_DIR : SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
+  if (CreateSymbolicLinkW(path.data(), linkname.data(), flags) != TRUE) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  return true;
+}
+
 } // namespace baulk::archive

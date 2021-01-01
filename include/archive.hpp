@@ -37,7 +37,7 @@ public:
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }
   void grow(size_t n);
-  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }
@@ -49,8 +49,6 @@ private:
   size_t capacity_{0};
 };
 
-class FD;
-std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite = false);
 class FD {
 private:
   void Free() {
@@ -84,7 +82,8 @@ public:
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
-
+std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite = false);
+bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite = false);
 } // namespace baulk::archive
 
 #endif

@@ -1,12 +1,14 @@
 //
 #include <zip.hpp>
+#include <archive.hpp>
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
+#include <filesystem>
 
-using bela::os::FileMode;
 using baulk::archive::zip::File;
 using baulk::archive::zip::Reader;
+using bela::os::FileMode;
 
 class Extractor {
 public:
@@ -24,9 +26,11 @@ public:
 private:
   Reader reader;
   std::wstring destination;
+  int64_t decompressed{0};
   bool owfile{false};
   bool extractFile(const File &file, bela::error_code &ec);
   bool extractDir(const File &file, std::wstring_view dir, bela::error_code &ec);
+  bool extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec);
 };
 
 FILETIME TimeToFileTime(bela::Time t) {
@@ -59,9 +63,35 @@ bool Extractor::Extract(bela::error_code &ec) {
   return true;
 }
 
-bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_code &ec) {
-  //
+bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec) {
+  std::string linkname;
+  auto ret = reader.Decompress(
+      file,
+      [&](const void *data, size_t len) {
+        linkname.append(reinterpret_cast<const char *>(data), len);
+        return true;
+      },
+      decompressed, ec);
+  if (!ret) {
+    return false;
+  }
+  auto wn = bela::ToWide(linkname);
+  if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
+    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
+    return false;
+  }
+  return true;
+}
 
+bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_code &ec) {
+  if (bela::PathExists(dir, bela::FileAttribute::Dir)) {
+    return true;
+  }
+  std::error_code e;
+  if (!std::filesystem::create_directories(dir, e)) {
+    ec = bela::from_std_error_code(e, L"mkdir ");
+    return false;
+  }
   return true;
 }
 
@@ -71,9 +101,30 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
+  if (file.IsSymlink()) {
+    return extractSymlink(file, *dest, ec);
+  }
   if (file.IsDir()) {
-
     return extractDir(file, *dest, ec);
+  }
+  auto fd = baulk::archive::NewFD(*dest, ec, owfile);
+  if (!fd) {
+    return false;
+  }
+  if (!fd->SetFileTime(file.time, ec)) {
+    return false;
+  }
+  bela::error_code ec2;
+  auto ret = reader.Decompress(
+      file,
+      [&](const void *data, size_t len) {
+        //
+        return fd->Write(data, len, ec2);
+      },
+      decompressed, ec);
+  if (!ret) {
+    ec = ec2;
+    return false;
   }
   return true;
 }
