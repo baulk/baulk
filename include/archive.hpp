@@ -5,6 +5,8 @@
 #include <type_traits>
 #include <span>
 #include <bela/os.hpp>
+#include <bela/base.hpp>
+#include <bela/time.hpp>
 
 namespace baulk::archive {
 class Buffer {
@@ -45,6 +47,42 @@ private:
   uint8_t *data_{nullptr};
   size_t size_{0};
   size_t capacity_{0};
+};
+
+class FD;
+std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec);
+class FD {
+private:
+  void Free() {
+    if (fd != INVALID_HANDLE_VALUE) {
+      CloseHandle(fd);
+      fd = INVALID_HANDLE_VALUE;
+    }
+  }
+  void MoveFrom(FD &&o) {
+    Free();
+    fd = o.fd;
+    o.fd = INVALID_HANDLE_VALUE;
+  }
+
+public:
+  FD() = default;
+  FD(HANDLE fd_) : fd(fd_) {}
+  FD(const FD &) = delete;
+  FD &operator=(const FD &) = delete;
+  FD(FD &&o) noexcept { MoveFrom(std::move(o)); }
+  FD &operator=(FD &&o) noexcept {
+    MoveFrom(std::move(o));
+    return *this;
+  }
+  ~FD() { Free(); }
+  bool SetFileTime(bela::Time t, bela::error_code &ec);
+  bool Discard();
+  bool WriteFull(const void *data, size_t bytes, bela::error_code &ec);
+
+private:
+  HANDLE fd{INVALID_HANDLE_VALUE};
+  friend std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec);
 };
 
 } // namespace baulk::archive

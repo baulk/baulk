@@ -195,10 +195,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
   auto needOffset = file.position == OffsetMin;
-  file.utf8 = (file.flags & 0x800) != 0;
-
   bela::Time modified;
-
   bela::endian::LittenEndian extra(buffer.data() + filenameLen, static_cast<size_t>(extraLen));
   for (; extra.Size() >= 4;) {
     auto fieldTag = extra.Read<uint16_t>();

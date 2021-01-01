@@ -47,7 +47,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
         break;
       }
       auto have = minsize - zs.avail_out;
-      crc32val = ::crc32(crc32val, out.data(), static_cast<int>(have));
+      crc32val = crc32_fast(out.data(), have, crc32val);
       if (!receiver(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;

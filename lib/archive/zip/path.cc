@@ -41,7 +41,7 @@ std::wstring FileNameRecoding(std::string_view name) {
 }
 
 inline std::wstring PathConvert(const File &file) {
-  if (file.utf8) {
+  if (file.IsFileNameUTF8()) {
     return bela::ToWide(file.name);
   }
   return FileNameRecoding(file.name);

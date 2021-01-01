@@ -32,7 +32,7 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
         ec = bela::make_error_code(1, bela::ToWide(ZSTD_getErrorName(result)));
         return false;
       }
-      crc32val = baulk_crc32_update(crc32val, reinterpret_cast<const uint8_t *>(out.dst), out.pos);
+      crc32val = crc32_fast(out.dst, out.pos, crc32val);
       if (!receiver(out.dst, out.pos)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;

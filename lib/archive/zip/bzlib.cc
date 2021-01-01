@@ -40,7 +40,7 @@ bool Reader::decompressBz2(const File &file, const Receiver &receiver, int64_t &
         break;
       }
       auto have = minsize - bzs.avail_out;
-      crc32val = baulk_crc32_update(crc32val, out.data(), static_cast<int32_t>(have));
+      crc32val = crc32_fast(out.data(), have, crc32val);
       if (!receiver(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;

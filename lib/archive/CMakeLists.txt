@@ -254,6 +254,7 @@ add_library(
   archive.cc
   zip/brotli.cc
   zip/bzlib.cc
+  zip/Crc32.cpp
   zip/decompress.cc
   zip/filemode.cc
   zip/path.cc
