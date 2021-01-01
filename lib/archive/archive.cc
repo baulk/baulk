@@ -4,6 +4,7 @@
 #include <archive.hpp>
 #include <bela/datetime.hpp>
 #include <bela/path.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk::archive {
 // https://en.cppreference.com/w/cpp/memory/unsynchronized_pool_resource
@@ -40,17 +41,17 @@ void Buffer::grow(size_t n) {
 }
 
 FILETIME TimeToFileTime(bela::Time t) {
-  FILETIME ft{};
   auto parts = bela::Split(t);
-  auto tick = (parts.sec - 11644473600ll) * 10000000 + parts.nsec / 100;
-  ft.dwHighDateTime = static_cast<DWORD>(tick << 32);
+  auto tick = (parts.sec + 11644473600ll) * 10000000 + parts.nsec / 100;
+  FILETIME ft{};
+  ft.dwHighDateTime = static_cast<DWORD>(tick >> 32);
   ft.dwLowDateTime = static_cast<DWORD>(tick);
   return ft;
 }
 // https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime
 bool FD::SetFileTime(bela::Time t, bela::error_code &ec) {
   auto filetime = TimeToFileTime(t);
-  if (::SetFileTime(fd, &filetime, nullptr, nullptr) != TRUE) {
+  if (::SetFileTime(fd, &filetime, &filetime, &filetime) != TRUE) {
     ec = bela::make_system_error_code(L"SetFileTime ");
     return false;
   }
