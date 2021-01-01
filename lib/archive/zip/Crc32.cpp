@@ -31,6 +31,7 @@
   // Windows always little endian
   #define __BYTE_ORDER __LITTLE_ENDIAN
 
+#if defined(_M_AMD64) || defined(_M_IX86)
   // intrinsics / prefetching
   #include <xmmintrin.h>
   #ifdef __MINGW32__
@@ -38,6 +39,12 @@
   #else
     #define PREFETCH(location) _mm_prefetch(location, _MM_HINT_T0)
   #endif
+
+#else
+     // no prefetching
+    #define PREFETCH(location) ;
+#endif
+
 #else
   // defines __BYTE_ORDER as __LITTLE_ENDIAN or __BIG_ENDIAN
   #include <sys/param.h>
