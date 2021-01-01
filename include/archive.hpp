@@ -37,7 +37,7 @@ public:
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }
   void grow(size_t n);
-  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }
@@ -50,7 +50,7 @@ private:
 };
 
 class FD;
-std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec);
+std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite = false);
 class FD {
 private:
   void Free() {
@@ -77,12 +77,12 @@ public:
   }
   ~FD() { Free(); }
   bool SetFileTime(bela::Time t, bela::error_code &ec);
+  // Discard file changes
   bool Discard();
-  bool WriteFull(const void *data, size_t bytes, bela::error_code &ec);
+  bool Write(const void *data, size_t bytes, bela::error_code &ec);
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
-  friend std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec);
 };
 
 } // namespace baulk::archive

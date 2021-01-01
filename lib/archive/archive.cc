@@ -1,7 +1,9 @@
 ///
 #include <memory_resource>
+#include <filesystem>
 #include <archive.hpp>
 #include <bela/datetime.hpp>
+#include <bela/path.hpp>
 
 namespace baulk::archive {
 // https://en.cppreference.com/w/cpp/memory/unsynchronized_pool_resource
@@ -86,9 +88,41 @@ bool FD::Discard() {
   return false;
 }
 
-std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec) {
-  //
-  return std::nullopt;
+bool FD::Write(const void *data, size_t bytes, bela::error_code &ec) {
+  auto p = reinterpret_cast<const char *>(data);
+  while (bytes != 0) {
+    DWORD dwSize = 0;
+    if (WriteFile(fd, p, static_cast<DWORD>(bytes), &dwSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"WriteFull ");
+      return false;
+    }
+    bytes -= dwSize;
+    p += dwSize;
+  }
+  return true;
+}
+
+std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite) {
+  std::filesystem::path p(path);
+  std::error_code sec;
+  if (std::filesystem::exists(p, sec)) {
+    if (!overwrite) {
+      ec = bela::make_error_code(1, L"file '", p.filename().wstring(), L"' exists");
+      return std::nullopt;
+    }
+  } else {
+    if (!std::filesystem::create_directories(p.parent_path(), sec)) {
+      ec = bela::from_std_error_code(sec, L"mkdirall ");
+      return std::nullopt;
+    }
+  }
+  auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
+                        FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (fd == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code(L"CreateFileW ");
+    return std::nullopt;
+  }
+  return std::make_optional<FD>(fd);
 }
 
 } // namespace baulk::archive

@@ -68,7 +68,7 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
       }
       decompressed += have;
       zs.next_out = out.data();
-      zs.avail_out = out.capacity();
+      zs.avail_out = outsize;
     }
     csize -= minsize;
     if (ret == LZMA_STREAM_END) {
