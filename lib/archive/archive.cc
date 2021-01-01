@@ -4,7 +4,6 @@
 #include <archive.hpp>
 #include <bela/datetime.hpp>
 #include <bela/path.hpp>
-#include <bela/terminal.hpp>
 
 namespace baulk::archive {
 // https://en.cppreference.com/w/cpp/memory/unsynchronized_pool_resource
