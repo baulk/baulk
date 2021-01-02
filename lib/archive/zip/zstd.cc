@@ -7,10 +7,10 @@ namespace baulk::archive::zip {
 // https://github.com/facebook/zstd/blob/dev/examples/streaming_decompression.c
 bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t &decompressed,
                             bela::error_code &ec) const {
-  const auto bufferOutSize = ZSTD_DStreamOutSize();
-  const auto bufferInSize = ZSTD_DStreamInSize();
-  Buffer outbuf(bufferOutSize);
-  Buffer inbuf(bufferInSize);
+  const auto boutsize = ZSTD_DStreamOutSize();
+  const auto binsize = ZSTD_DStreamInSize();
+  Buffer outbuf(boutsize);
+  Buffer inbuf(binsize);
   auto zds = ZSTD_createDCtx();
   if (zds == nullptr) {
     ec = bela::make_error_code(L"ZSTD_createDStream() out of memory");
@@ -20,16 +20,16 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
   auto csize = file.compressedSize;
   uint32_t crc32val = 0;
   while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(bufferInSize));
+    auto minsize = (std::min)(csize, static_cast<uint64_t>(binsize));
     if (!ReadFull(inbuf.data(), static_cast<size_t>(minsize), ec)) {
       return false;
     }
     ZSTD_inBuffer in{inbuf.data(), minsize, 0};
-    ZSTD_outBuffer out{outbuf.data(), bufferOutSize, 0};
     while (in.pos < in.size) {
+      ZSTD_outBuffer out{outbuf.data(), boutsize, 0};
       auto result = ZSTD_decompressStream(zds, &out, &in);
-      if (ZSTD_isError(result)) {
-        ec = bela::make_error_code(1, bela::ToWide(ZSTD_getErrorName(result)));
+      if (ZSTD_isError(result) != 0) {
+        ec = bela::make_error_code(1, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
         return false;
       }
       crc32val = crc32_fast(out.dst, out.pos, crc32val);

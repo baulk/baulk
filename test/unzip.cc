@@ -101,7 +101,7 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
-  bela::FPrintF(stderr, L"x: %s\n", *dest);
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", *dest);
   if (file.IsSymlink()) {
     return extractSymlink(file, *dest, ec);
   }
@@ -126,7 +126,6 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
       },
       decompressed, ec);
   if (!ret) {
-    ec = ec2;
     bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
     return false;
   }
