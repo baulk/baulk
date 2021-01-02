@@ -263,6 +263,7 @@ private:
   bool decompressBz2(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
   bool decompressXz(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
   bool decompressLZMA2(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
+  bool decompressPpmd(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
   bool decompressBrotli(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const;
 };
 

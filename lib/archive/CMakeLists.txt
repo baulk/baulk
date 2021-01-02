@@ -259,6 +259,7 @@ add_library(
   zip/filemode.cc
   zip/inflate64.cc
   zip/path.cc
+  zip/ppmd.cc
   zip/xz.cc
   zip/zip.cc
   zip/zlib.cc
