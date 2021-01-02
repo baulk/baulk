@@ -248,6 +248,7 @@ set(BROTLI_SOURCES
     brotli/enc/utf8_util.c)
 
 add_subdirectory(ced)
+add_subdirectory(ppmd)
 
 add_library(
   baulkarchive STATIC
