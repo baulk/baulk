@@ -257,6 +257,7 @@ add_library(
   zip/Crc32.cpp
   zip/decompress.cc
   zip/filemode.cc
+  zip/inflate64.cc
   zip/path.cc
   zip/xz.cc
   zip/zip.cc
