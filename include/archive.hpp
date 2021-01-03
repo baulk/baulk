@@ -4,11 +4,23 @@
 #include <cstdint>
 #include <type_traits>
 #include <span>
+#include <memory>
+#include <memory_resource>
 #include <bela/os.hpp>
 #include <bela/base.hpp>
 #include <bela/time.hpp>
 
 namespace baulk::archive {
+namespace archive_internal {
+#ifdef PARALLEL_UNZIP
+extern std::pmr::synchronized_pool_resource pool;
+#else
+extern std::pmr::unsynchronized_pool_resource pool;
+#endif
+template <typename T> T *Allocate(int n = 1) { return reinterpret_cast<T *>(pool.allocate(sizeof(T) * n)); }
+template <typename T> void Deallocate(T *data, int n = 1) { pool.deallocate(data, sizeof(T) * n); }
+} // namespace archive_internal
+
 class Buffer {
 private:
   void MoveFrom(Buffer &&other) {
@@ -37,7 +49,7 @@ public:
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }
   void grow(size_t n);
-  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }

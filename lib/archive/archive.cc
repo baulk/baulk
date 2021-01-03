@@ -9,16 +9,17 @@ namespace baulk::archive {
 // https://en.cppreference.com/w/cpp/memory/unsynchronized_pool_resource
 // https://quuxplusone.github.io/blog/2018/06/05/libcpp-memory-resource/
 // https://www.bfilipek.com/2020/06/pmr-hacking.html
-
+namespace archive_internal {
 #ifdef PARALLEL_UNZIP
-std::pmr::synchronized_pool_resource pool_;
+std::pmr::synchronized_pool_resource pool;
 #else
-std::pmr::unsynchronized_pool_resource pool_;
+std::pmr::unsynchronized_pool_resource pool;
 #endif
+} // namespace archive_internal
 
 void Buffer::Free() {
   if (data_ != nullptr) {
-    pool_.deallocate(data_, capacity_);
+    archive_internal::pool.deallocate(data_, capacity_);
     data_ = nullptr;
     capacity_ = 0;
   }
@@ -28,12 +29,12 @@ void Buffer::grow(size_t n) {
   if (n <= capacity_) {
     return;
   }
-  auto b = reinterpret_cast<uint8_t *>(pool_.allocate(n));
+  auto b = reinterpret_cast<uint8_t *>(archive_internal::pool.allocate(n));
   if (size_ != 0) {
     memcpy(b, data_, n);
   }
   if (data_ != nullptr) {
-    pool_.deallocate(data_, capacity_);
+    archive_internal::pool.deallocate(data_, capacity_);
   }
   data_ = b;
   capacity_ = n;
