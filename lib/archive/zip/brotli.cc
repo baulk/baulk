@@ -57,8 +57,8 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
       break;
     }
   }
-  if (crc32val != file.crc32) {
-    ec = bela::make_error_code(1, L"crc32 want ", file.crc32, L" got ", crc32val, L" not match");
+  if (crc32val != file.crc32sum) {
+    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
     return false;
   }
   return true;
