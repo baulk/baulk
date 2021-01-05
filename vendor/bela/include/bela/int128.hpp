@@ -19,8 +19,8 @@
 //
 // This header file defines 128-bit integer types, `uint128` and `int128`.
 
-#ifndef ABSL_NUMERIC_INT128_H_
-#define ABSL_NUMERIC_INT128_H_
+#ifndef BELA_NUMERIC_INT128_HPP_
+#define BELA_NUMERIC_INT128_HPP_
 
 #include <cassert>
 #include <cmath>
@@ -30,39 +30,23 @@
 #include <limits>
 #include <utility>
 #include <bit>
-#include <bela/macros.hpp>
+#include "macros.hpp"
 
 #if defined(_MSC_VER)
 // In very old versions of MSVC and when the /Zc:wchar_t flag is off, wchar_t is
 // a typedef for unsigned short.  Otherwise wchar_t is mapped to the __wchar_t
 // builtin type.  We need to make sure not to define operator wchar_t()
 // alongside operator unsigned short() in these instances.
-#define ABSL_INTERNAL_WCHAR_T __wchar_t
+#define BELA_INTERNAL_WCHAR_T __wchar_t
 #if defined(_M_X64)
 #include <intrin.h>
 #pragma intrinsic(_umul128)
 #endif // defined(_M_X64)
 #else  // defined(_MSC_VER)
-#define ABSL_INTERNAL_WCHAR_T wchar_t
+#define BELA_INTERNAL_WCHAR_T wchar_t
 #endif // defined(_MSC_VER)
 
-#define ABSL_ATTRIBUTE_ALWAYS_INLINE BELA_ATTRIBUTE_ALWAYS_INLINE
-
-#ifdef BELA_IS_LITTLE_ENDIAN
-#define ABSL_IS_LITTLE_ENDIAN 1
-#endif
-
-#ifndef BELA_IS_BIG_ENDIAN
-#define ABSL_IS_BIG_ENDIAN 1
-#endif
-
-#define ABSL_NAMESPACE_BEGIN
-#define ABSL_NAMESPACE_END
-
-#define ABSL_DLL
-
-namespace absl {
-ABSL_NAMESPACE_BEGIN
+namespace bela {
 
 class int128;
 
@@ -86,7 +70,7 @@ class int128;
 //
 // Additionally, if your compiler supports `__int128`, `uint128` is
 // interoperable with that type. (Abseil checks for this compatibility through
-// the `ABSL_HAVE_INTRINSIC_INT128` macro.)
+// the `BELA_HAVE_INTRINSIC_INT128` macro.)
 //
 // However, a `uint128` differs from intrinsic integral types in the following
 // ways:
@@ -103,17 +87,17 @@ class int128;
 //
 // Example:
 //
-//     float y = absl::Uint128Max();  // Error. uint128 cannot be implicitly
+//     float y = bela::Uint128Max();  // Error. uint128 cannot be implicitly
 //                                    // converted to float.
 //
-//     absl::uint128 v;
+//     bela::uint128 v;
 //     uint64_t i = v;                         // Error
 //     uint64_t i = static_cast<uint64_t>(v);  // OK
 //
 class
-#if defined(ABSL_HAVE_INTRINSIC_INT128)
+#if defined(BELA_HAVE_INTRINSIC_INT128)
     alignas(unsigned __int128)
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
         uint128 {
 public:
   uint128() = default;
@@ -125,10 +109,10 @@ public:
   constexpr uint128(unsigned long v);      // NOLINT(runtime/int)
   constexpr uint128(long long v);          // NOLINT(runtime/int)
   constexpr uint128(unsigned long long v); // NOLINT(runtime/int)
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   constexpr uint128(__int128 v);          // NOLINT(runtime/explicit)
   constexpr uint128(unsigned __int128 v); // NOLINT(runtime/explicit)
-#endif                                    // ABSL_HAVE_INTRINSIC_INT128
+#endif                                    // BELA_HAVE_INTRINSIC_INT128
   constexpr uint128(int128 v);            // NOLINT(runtime/explicit)
   explicit uint128(float v);
   explicit uint128(double v);
@@ -141,10 +125,10 @@ public:
   uint128 &operator=(unsigned long v);      // NOLINT(runtime/int)
   uint128 &operator=(long long v);          // NOLINT(runtime/int)
   uint128 &operator=(unsigned long long v); // NOLINT(runtime/int)
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   uint128 &operator=(__int128 v);
   uint128 &operator=(unsigned __int128 v);
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   uint128 &operator=(int128 v);
 
   // Conversion operators to other arithmetic types
@@ -154,7 +138,7 @@ public:
   constexpr explicit operator unsigned char() const;
   constexpr explicit operator char16_t() const;
   constexpr explicit operator char32_t() const;
-  constexpr explicit operator ABSL_INTERNAL_WCHAR_T() const;
+  constexpr explicit operator BELA_INTERNAL_WCHAR_T() const;
   constexpr explicit operator short() const; // NOLINT(runtime/int)
   // NOLINTNEXTLINE(runtime/int)
   constexpr explicit operator unsigned short() const;
@@ -167,10 +151,10 @@ public:
   constexpr explicit operator long long() const;
   // NOLINTNEXTLINE(runtime/int)
   constexpr explicit operator unsigned long long() const;
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   constexpr explicit operator __int128() const;
   constexpr explicit operator unsigned __int128() const;
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   explicit operator float() const;
   explicit operator double() const;
   explicit operator long double() const;
@@ -212,7 +196,7 @@ public:
   //
   // Example:
   //
-  //   absl::uint128 big = absl::MakeUint128(1, 0);
+  //   bela::uint128 big = bela::MakeUint128(1, 0);
   friend constexpr uint128 MakeUint128(uint64_t high, uint64_t low);
 
   // Uint128Max()
@@ -220,7 +204,7 @@ public:
   // Returns the highest value for a 128-bit unsigned integer.
   friend constexpr uint128 Uint128Max();
 
-  // Support for absl::Hash.
+  // Support for bela::Hash.
   template <typename H> friend H AbslHashValue(H h, uint128 v) {
     return H::combine(std::move(h), Uint128High64(v), Uint128Low64(v));
   }
@@ -232,10 +216,10 @@ private:
   // uint128 are fixed to not depend on alignof(uint128) == 8. Also add
   // alignas(16) to class definition to keep alignment consistent across
   // platforms.
-#if defined(ABSL_IS_LITTLE_ENDIAN)
+#if defined(BELA_IS_LITTLE_ENDIAN)
   uint64_t lo_;
   uint64_t hi_;
-#elif defined(ABSL_IS_BIG_ENDIAN)
+#elif defined(BELA_IS_BIG_ENDIAN)
   uint64_t hi_;
   uint64_t lo_;
 #else // byte order
@@ -246,7 +230,7 @@ private:
 // Prefer to use the constexpr `Uint128Max()`.
 //
 // TODO(absl-team) deprecate kuint128max once migration tool is released.
-ABSL_DLL extern const uint128 kuint128max;
+extern const uint128 kuint128max;
 
 // allow uint128 to be logged
 std::ostream &operator<<(std::ostream &os, uint128 v);
@@ -257,12 +241,11 @@ constexpr uint128 Uint128Max() {
   return uint128((std::numeric_limits<uint64_t>::max)(), (std::numeric_limits<uint64_t>::max)());
 }
 
-ABSL_NAMESPACE_END
-} // namespace absl
+} // namespace bela
 
 // Specialized numeric_limits for uint128.
 namespace std {
-template <> class numeric_limits<absl::uint128> {
+template <> class numeric_limits<bela::uint128> {
 public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = false;
@@ -285,27 +268,26 @@ public:
   static constexpr int min_exponent10 = 0;
   static constexpr int max_exponent = 0;
   static constexpr int max_exponent10 = 0;
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   static constexpr bool traps = numeric_limits<unsigned __int128>::traps;
-#else  // ABSL_HAVE_INTRINSIC_INT128
+#else  // BELA_HAVE_INTRINSIC_INT128
   static constexpr bool traps = numeric_limits<uint64_t>::traps;
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   static constexpr bool tinyness_before = false;
 
-  static constexpr absl::uint128(min)() { return 0; }
-  static constexpr absl::uint128 lowest() { return 0; }
-  static constexpr absl::uint128(max)() { return absl::Uint128Max(); }
-  static constexpr absl::uint128 epsilon() { return 0; }
-  static constexpr absl::uint128 round_error() { return 0; }
-  static constexpr absl::uint128 infinity() { return 0; }
-  static constexpr absl::uint128 quiet_NaN() { return 0; }
-  static constexpr absl::uint128 signaling_NaN() { return 0; }
-  static constexpr absl::uint128 denorm_min() { return 0; }
+  static constexpr bela::uint128(min)() { return 0; }
+  static constexpr bela::uint128 lowest() { return 0; }
+  static constexpr bela::uint128(max)() { return bela::Uint128Max(); }
+  static constexpr bela::uint128 epsilon() { return 0; }
+  static constexpr bela::uint128 round_error() { return 0; }
+  static constexpr bela::uint128 infinity() { return 0; }
+  static constexpr bela::uint128 quiet_NaN() { return 0; }
+  static constexpr bela::uint128 signaling_NaN() { return 0; }
+  static constexpr bela::uint128 denorm_min() { return 0; }
 };
 } // namespace std
 
-namespace absl {
-ABSL_NAMESPACE_BEGIN
+namespace bela {
 
 // int128
 //
@@ -327,17 +309,17 @@ ABSL_NAMESPACE_BEGIN
 
 // Additionally, if your compiler supports `__int128`, `int128` is
 // interoperable with that type. (Abseil checks for this compatibility through
-// the `ABSL_HAVE_INTRINSIC_INT128` macro.)
+// the `BELA_HAVE_INTRINSIC_INT128` macro.)
 //
 // The design goal for `int128` is that it will be compatible with a future
 // `int128_t`, if that type becomes a part of the standard.
 //
 // Example:
 //
-//     float y = absl::int128(17);  // Error. int128 cannot be implicitly
+//     float y = bela::int128(17);  // Error. int128 cannot be implicitly
 //                                  // converted to float.
 //
-//     absl::int128 v;
+//     bela::int128 v;
 //     int64_t i = v;                        // Error
 //     int64_t i = static_cast<int64_t>(v);  // OK
 //
@@ -352,10 +334,10 @@ public:
   constexpr int128(unsigned long v);      // NOLINT(runtime/int)
   constexpr int128(long long v);          // NOLINT(runtime/int)
   constexpr int128(unsigned long long v); // NOLINT(runtime/int)
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   constexpr int128(__int128 v); // NOLINT(runtime/explicit)
   constexpr explicit int128(unsigned __int128 v);
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   constexpr explicit int128(uint128 v);
   explicit int128(float v);
   explicit int128(double v);
@@ -368,9 +350,9 @@ public:
   int128 &operator=(unsigned long v);      // NOLINT(runtime/int)
   int128 &operator=(long long v);          // NOLINT(runtime/int)
   int128 &operator=(unsigned long long v); // NOLINT(runtime/int)
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   int128 &operator=(__int128 v);
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
   // Conversion operators to other arithmetic types
   constexpr explicit operator bool() const;
@@ -379,7 +361,7 @@ public:
   constexpr explicit operator unsigned char() const;
   constexpr explicit operator char16_t() const;
   constexpr explicit operator char32_t() const;
-  constexpr explicit operator ABSL_INTERNAL_WCHAR_T() const;
+  constexpr explicit operator BELA_INTERNAL_WCHAR_T() const;
   constexpr explicit operator short() const; // NOLINT(runtime/int)
   // NOLINTNEXTLINE(runtime/int)
   constexpr explicit operator unsigned short() const;
@@ -392,10 +374,10 @@ public:
   constexpr explicit operator long long() const;
   // NOLINTNEXTLINE(runtime/int)
   constexpr explicit operator unsigned long long() const;
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   constexpr explicit operator __int128() const;
   constexpr explicit operator unsigned __int128() const;
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   explicit operator float() const;
   explicit operator double() const;
   explicit operator long double() const;
@@ -433,15 +415,15 @@ public:
   // Constructs a `int128` numeric value from two 64-bit integers. Note that
   // signedness is conveyed in the upper `high` value.
   //
-  //   (absl::int128(1) << 64) * high + low
+  //   (bela::int128(1) << 64) * high + low
   //
   // Note that this factory function is the only way to construct a `int128`
   // from integer values greater than 2^64 or less than -2^64.
   //
   // Example:
   //
-  //   absl::int128 big = absl::MakeInt128(1, 0);
-  //   absl::int128 big_n = absl::MakeInt128(-1, 0);
+  //   bela::int128 big = bela::MakeInt128(1, 0);
+  //   bela::int128 big_n = bela::MakeInt128(-1, 0);
   friend constexpr int128 MakeInt128(int64_t high, uint64_t low);
 
   // Int128Max()
@@ -454,7 +436,7 @@ public:
   // Returns the minimum value for a 128-bit signed integer.
   friend constexpr int128 Int128Min();
 
-  // Support for absl::Hash.
+  // Support for bela::Hash.
   template <typename H> friend H AbslHashValue(H h, int128 v) {
     return H::combine(std::move(h), Int128High64(v), Int128Low64(v));
   }
@@ -462,19 +444,19 @@ public:
 private:
   constexpr int128(int64_t high, uint64_t low);
 
-#if defined(ABSL_HAVE_INTRINSIC_INT128)
+#if defined(BELA_HAVE_INTRINSIC_INT128)
   __int128 v_;
-#else // ABSL_HAVE_INTRINSIC_INT128
-#if defined(ABSL_IS_LITTLE_ENDIAN)
+#else // BELA_HAVE_INTRINSIC_INT128
+#if defined(BELA_IS_LITTLE_ENDIAN)
   uint64_t lo_;
   int64_t hi_;
-#elif defined(ABSL_IS_BIG_ENDIAN)
+#elif defined(BELA_IS_BIG_ENDIAN)
   int64_t hi_;
   uint64_t lo_;
 #else // byte order
 #error "Unsupported byte order: must be little-endian or big-endian."
 #endif // byte order
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 };
 
 std::ostream &operator<<(std::ostream &os, int128 v);
@@ -487,12 +469,11 @@ constexpr int128 Int128Max() {
 
 constexpr int128 Int128Min() { return int128((std::numeric_limits<int64_t>::min)(), 0); }
 
-ABSL_NAMESPACE_END
-} // namespace absl
+} // namespace bela
 
 // Specialized numeric_limits for int128.
 namespace std {
-template <> class numeric_limits<absl::int128> {
+template <> class numeric_limits<bela::int128> {
 public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
@@ -515,30 +496,29 @@ public:
   static constexpr int min_exponent10 = 0;
   static constexpr int max_exponent = 0;
   static constexpr int max_exponent10 = 0;
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   static constexpr bool traps = numeric_limits<__int128>::traps;
-#else  // ABSL_HAVE_INTRINSIC_INT128
+#else  // BELA_HAVE_INTRINSIC_INT128
   static constexpr bool traps = numeric_limits<uint64_t>::traps;
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
   static constexpr bool tinyness_before = false;
 
-  static constexpr absl::int128(min)() { return absl::Int128Min(); }
-  static constexpr absl::int128 lowest() { return absl::Int128Min(); }
-  static constexpr absl::int128(max)() { return absl::Int128Max(); }
-  static constexpr absl::int128 epsilon() { return 0; }
-  static constexpr absl::int128 round_error() { return 0; }
-  static constexpr absl::int128 infinity() { return 0; }
-  static constexpr absl::int128 quiet_NaN() { return 0; }
-  static constexpr absl::int128 signaling_NaN() { return 0; }
-  static constexpr absl::int128 denorm_min() { return 0; }
+  static constexpr bela::int128(min)() { return bela::Int128Min(); }
+  static constexpr bela::int128 lowest() { return bela::Int128Min(); }
+  static constexpr bela::int128(max)() { return bela::Int128Max(); }
+  static constexpr bela::int128 epsilon() { return 0; }
+  static constexpr bela::int128 round_error() { return 0; }
+  static constexpr bela::int128 infinity() { return 0; }
+  static constexpr bela::int128 quiet_NaN() { return 0; }
+  static constexpr bela::int128 signaling_NaN() { return 0; }
+  static constexpr bela::int128 denorm_min() { return 0; }
 };
 } // namespace std
 
 // --------------------------------------------------------------------------
 //                      Implementation details follow
 // --------------------------------------------------------------------------
-namespace absl {
-ABSL_NAMESPACE_BEGIN
+namespace bela {
 
 constexpr uint128 MakeUint128(uint64_t high, uint64_t low) { return uint128(high, low); }
 
@@ -561,11 +541,11 @@ inline uint128 &uint128::operator=(long long v) { return *this = uint128(v); }
 // NOLINTNEXTLINE(runtime/int)
 inline uint128 &uint128::operator=(unsigned long long v) { return *this = uint128(v); }
 
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
 inline uint128 &uint128::operator=(__int128 v) { return *this = uint128(v); }
 
 inline uint128 &uint128::operator=(unsigned __int128 v) { return *this = uint128(v); }
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
 inline uint128 &uint128::operator=(int128 v) { return *this = uint128(v); }
 
@@ -620,7 +600,7 @@ constexpr uint64_t Uint128High64(uint128 v) { return v.hi_; }
 
 // Constructors from integer types.
 
-#if defined(ABSL_IS_LITTLE_ENDIAN)
+#if defined(BELA_IS_LITTLE_ENDIAN)
 
 constexpr uint128::uint128(uint64_t high, uint64_t low) : lo_{low}, hi_{high} {}
 
@@ -637,17 +617,17 @@ constexpr uint128::uint128(unsigned long v) : lo_{v}, hi_{0} {}
 // NOLINTNEXTLINE(runtime/int)
 constexpr uint128::uint128(unsigned long long v) : lo_{v}, hi_{0} {}
 
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
 constexpr uint128::uint128(__int128 v)
     : lo_{static_cast<uint64_t>(v & ~uint64_t{0})}, hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >>
                                                                               64)} {}
 constexpr uint128::uint128(unsigned __int128 v)
     : lo_{static_cast<uint64_t>(v & ~uint64_t{0})}, hi_{static_cast<uint64_t>(v >> 64)} {}
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
 constexpr uint128::uint128(int128 v) : lo_{Int128Low64(v)}, hi_{static_cast<uint64_t>(Int128High64(v))} {}
 
-#elif defined(ABSL_IS_BIG_ENDIAN)
+#elif defined(BELA_IS_BIG_ENDIAN)
 
 constexpr uint128::uint128(uint64_t high, uint64_t low) : hi_{high}, lo_{low} {}
 
@@ -664,13 +644,13 @@ constexpr uint128::uint128(unsigned long v) : hi_{0}, lo_{v} {}
 // NOLINTNEXTLINE(runtime/int)
 constexpr uint128::uint128(unsigned long long v) : hi_{0}, lo_{v} {}
 
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
 constexpr uint128::uint128(__int128 v)
     : hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >> 64)}, lo_{static_cast<uint64_t>(v &
                                                                                                      ~uint64_t{0})} {}
 constexpr uint128::uint128(unsigned __int128 v)
     : hi_{static_cast<uint64_t>(v >> 64)}, lo_{static_cast<uint64_t>(v & ~uint64_t{0})} {}
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
 constexpr uint128::uint128(int128 v) : hi_{static_cast<uint64_t>(Int128High64(v))}, lo_{Int128Low64(v)} {}
 
@@ -692,7 +672,7 @@ constexpr uint128::operator char16_t() const { return static_cast<char16_t>(lo_)
 
 constexpr uint128::operator char32_t() const { return static_cast<char32_t>(lo_); }
 
-constexpr uint128::operator ABSL_INTERNAL_WCHAR_T() const { return static_cast<ABSL_INTERNAL_WCHAR_T>(lo_); }
+constexpr uint128::operator BELA_INTERNAL_WCHAR_T() const { return static_cast<BELA_INTERNAL_WCHAR_T>(lo_); }
 
 // NOLINTNEXTLINE(runtime/int)
 constexpr uint128::operator short() const { return static_cast<short>(lo_); }
@@ -720,11 +700,11 @@ constexpr uint128::operator unsigned long long() const { // NOLINT(runtime/int)
   return static_cast<unsigned long long>(lo_);           // NOLINT(runtime/int)
 }
 
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
 constexpr uint128::operator __int128() const { return (static_cast<__int128>(hi_) << 64) + lo_; }
 
 constexpr uint128::operator unsigned __int128() const { return (static_cast<unsigned __int128>(hi_) << 64) + lo_; }
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
 // Conversion operators to floating point types.
 
@@ -745,7 +725,7 @@ inline bool operator==(uint128 lhs, uint128 rhs) {
 inline bool operator!=(uint128 lhs, uint128 rhs) { return !(lhs == rhs); }
 
 inline bool operator<(uint128 lhs, uint128 rhs) {
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) < static_cast<unsigned __int128>(rhs);
 #else
   return (Uint128High64(lhs) == Uint128High64(rhs)) ? (Uint128Low64(lhs) < Uint128Low64(rhs))
@@ -808,7 +788,7 @@ inline uint128 &uint128::operator^=(uint128 other) {
 // Arithmetic operators.
 
 inline uint128 operator<<(uint128 lhs, int amount) {
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) << amount;
 #else
   // uint64_t shifts of >= 64 are undefined, so we will need some
@@ -825,7 +805,7 @@ inline uint128 operator<<(uint128 lhs, int amount) {
 }
 
 inline uint128 operator>>(uint128 lhs, int amount) {
-#ifdef ABSL_HAVE_INTRINSIC_INT128
+#ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) >> amount;
 #else
   // uint64_t shifts of >= 64 are undefined, so we will need some
@@ -858,7 +838,7 @@ inline uint128 operator-(uint128 lhs, uint128 rhs) {
 }
 
 inline uint128 operator*(uint128 lhs, uint128 rhs) {
-#if defined(ABSL_HAVE_INTRINSIC_INT128)
+#if defined(BELA_HAVE_INTRINSIC_INT128)
   // TODO(strel) Remove once alignment issues are resolved and unsigned __int128
   // can be used for uint128 storage.
   return static_cast<unsigned __int128>(lhs) * static_cast<unsigned __int128>(rhs);
@@ -866,7 +846,7 @@ inline uint128 operator*(uint128 lhs, uint128 rhs) {
   uint64_t carry;
   uint64_t low = _umul128(Uint128Low64(lhs), Uint128Low64(rhs), &carry);
   return MakeUint128(Uint128Low64(lhs) * Uint128High64(rhs) + Uint128High64(lhs) * Uint128Low64(rhs) + carry, low);
-#else  // ABSL_HAVE_INTRINSIC128
+#else  // BELA_HAVE_INTRINSIC128
   uint64_t a32 = Uint128Low64(lhs) >> 32;
   uint64_t a00 = Uint128Low64(lhs) & 0xffffffff;
   uint64_t b32 = Uint128Low64(rhs) >> 32;
@@ -876,7 +856,7 @@ inline uint128 operator*(uint128 lhs, uint128 rhs) {
   result += uint128(a32 * b00) << 32;
   result += uint128(a00 * b32) << 32;
   return result;
-#endif // ABSL_HAVE_INTRINSIC128
+#endif // BELA_HAVE_INTRINSIC128
 }
 
 // Increment/decrement operators.
@@ -1001,15 +981,14 @@ constexpr int64_t BitCastToSigned(uint64_t v) {
 
 } // namespace int128_internal
 
-#if defined(ABSL_HAVE_INTRINSIC_INT128)
-#include "int128_have_intrinsic.inc" // IWYU pragma: export
-#else                                // ABSL_HAVE_INTRINSIC_INT128
-#include "int128_no_intrinsic.inc"   // IWYU pragma: export
-#endif                               // ABSL_HAVE_INTRINSIC_INT128
+#if defined(BELA_HAVE_INTRINSIC_INT128)
+#include "internal/int128_have_intrinsic.inc" // IWYU pragma: export
+#else                                         // BELA_HAVE_INTRINSIC_INT128
+#include "internal/int128_no_intrinsic.inc"   // IWYU pragma: export
+#endif                                        // BELA_HAVE_INTRINSIC_INT128
 
-ABSL_NAMESPACE_END
-} // namespace absl
+} // namespace bela
 
-#undef ABSL_INTERNAL_WCHAR_T
+#undef BELA_INTERNAL_WCHAR_T
 
-#endif // ABSL_NUMERIC_INT128_H_
+#endif // BELA_NUMERIC_INT128_HPP_

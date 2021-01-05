@@ -14,14 +14,14 @@
 // limitations under the License.
 
 // This file contains :int128 implementation details that depend on internal
-// representation when ABSL_HAVE_INTRINSIC_INT128 is *not* defined. This file
-// is included by int128.h and relies on ABSL_INTERNAL_WCHAR_T being defined.
+// representation when BELA_HAVE_INTRINSIC_INT128 is *not* defined. This file
+// is included by int128.h and relies on BELA_INTERNAL_WCHAR_T being defined.
 
 constexpr uint64_t Int128Low64(int128 v) { return v.lo_; }
 
 constexpr int64_t Int128High64(int128 v) { return v.hi_; }
 
-#if defined(ABSL_IS_LITTLE_ENDIAN)
+#if defined(BELA_IS_LITTLE_ENDIAN)
 
 constexpr int128::int128(int64_t high, uint64_t low) : lo_(low), hi_(high) {}
 
@@ -39,7 +39,7 @@ constexpr int128::int128(unsigned long long v) : lo_{v}, hi_{0} {}
 
 constexpr int128::int128(uint128 v) : lo_{Uint128Low64(v)}, hi_{static_cast<int64_t>(Uint128High64(v))} {}
 
-#elif defined(ABSL_IS_BIG_ENDIAN)
+#elif defined(BELA_IS_BIG_ENDIAN)
 
 constexpr int128::int128(int64_t high, uint64_t low) : hi_{high}, lo_{low} {}
 
@@ -79,9 +79,9 @@ constexpr int128::operator char16_t() const { return static_cast<char16_t>(lo_);
 
 constexpr int128::operator char32_t() const { return static_cast<char32_t>(lo_); }
 
-constexpr int128::operator ABSL_INTERNAL_WCHAR_T() const {
+constexpr int128::operator BELA_INTERNAL_WCHAR_T() const {
   // NOLINTNEXTLINE(runtime/int)
-  return static_cast<ABSL_INTERNAL_WCHAR_T>(static_cast<long long>(*this));
+  return static_cast<BELA_INTERNAL_WCHAR_T>(static_cast<long long>(*this));
 }
 
 constexpr int128::operator short() const { // NOLINT(runtime/int)

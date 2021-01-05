@@ -4,11 +4,13 @@ add_library(
   bela STATIC
   errno.cc
   ascii.cc
+  city.cc
   ucwidth.cc
   codecvt.cc
   escaping.cc
   fmt.cc
   fnmatch.cc
+  int128.cc
   match.cc
   memutil.cc
   numbers.cc

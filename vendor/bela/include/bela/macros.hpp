@@ -63,4 +63,16 @@
 #define BELA_FORCE_INLINE inline BELA_ATTRIBUTE_ALWAYS_INLINE
 #endif
 
+#if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
+     __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#define BELA_IS_LITTLE_ENDIAN 1
+#elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
+    __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define BELA_IS_BIG_ENDIAN 1
+#elif defined(_WIN32)
+#define BELA_IS_LITTLE_ENDIAN 1
+#else
+#error "bela endian detection needs to be set up for your compiler"
+#endif
+
 #endif
