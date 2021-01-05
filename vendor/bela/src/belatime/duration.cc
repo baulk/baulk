@@ -34,7 +34,7 @@
 #include <functional>
 #include <bit>
 #include <algorithm>
-#include "int128.h"
+#include <bela/int128.hpp>
 
 #if defined(__cplusplus) && defined(__has_cpp_attribute)
 // NOTE: requiring __cplusplus above should not be necessary, but
@@ -51,9 +51,9 @@
 #endif // BELA_HAVE_CPP_ATTRIBUTE(clang::require_constant_initialization)
 
 namespace bela {
-using absl::int128;
-using absl::kuint128max;
-using absl::uint128;
+using bela::int128;
+using bela::kuint128max;
+using bela::uint128;
 
 namespace {
 

@@ -8,6 +8,16 @@ target_link_libraries(base_test
 )
 
 # base
+add_executable(cityhash_test
+  cityhash.cc
+)
+
+target_link_libraries(cityhash_test
+  bela
+)
+
+
+# base
 add_executable(ascii_test
   ascii.cc
 )

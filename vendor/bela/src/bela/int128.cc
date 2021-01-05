@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "int128.h"
+#include <bela/int128.hpp>
 
 #include <cstddef>
 #include <cassert>
@@ -20,13 +20,11 @@
 #include <string>
 #include <type_traits>
 
-#define ABSL_INTERNAL_ASSUME(cond) assert(cond)
+#define BELA_INTERNAL_ASSUME(cond) assert(cond)
 
-namespace absl {
-ABSL_NAMESPACE_BEGIN
+namespace bela {
 
-ABSL_DLL const uint128 kuint128max =
-    MakeUint128(std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max());
+const uint128 kuint128max = MakeUint128(std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max());
 
 namespace {
 
@@ -36,13 +34,13 @@ namespace {
 // For example:
 //   Given: 5 (decimal) == 101 (binary)
 //   Returns: 2
-inline ABSL_ATTRIBUTE_ALWAYS_INLINE int Fls128(uint128 n) {
+inline BELA_ATTRIBUTE_ALWAYS_INLINE int Fls128(uint128 n) {
   if (uint64_t hi = Uint128High64(n)) {
-    ABSL_INTERNAL_ASSUME(hi != 0);
+    BELA_INTERNAL_ASSUME(hi != 0);
     return 127 - std::countl_zero(hi);
   }
   const uint64_t low = Uint128Low64(n);
-  ABSL_INTERNAL_ASSUME(low != 0);
+  BELA_INTERNAL_ASSUME(low != 0);
   return 63 - std::countl_zero(low);
 }
 
@@ -160,7 +158,7 @@ uint128 UnsignedAbsoluteValue(int128 v) {
 
 } // namespace
 
-#if !defined(ABSL_HAVE_INTRINSIC_INT128)
+#if !defined(BELA_HAVE_INTRINSIC_INT128)
 namespace {
 
 template <typename T> int128 MakeInt128FromFloat(T v) {
@@ -206,55 +204,54 @@ int128 operator%(int128 lhs, int128 rhs) {
 }
 #endif // ABSL_HAVE_INTRINSIC_INT128
 
-ABSL_NAMESPACE_END
-} // namespace absl
+} // namespace bela
 
 namespace std {
-constexpr bool numeric_limits<absl::uint128>::is_specialized;
-constexpr bool numeric_limits<absl::uint128>::is_signed;
-constexpr bool numeric_limits<absl::uint128>::is_integer;
-constexpr bool numeric_limits<absl::uint128>::is_exact;
-constexpr bool numeric_limits<absl::uint128>::has_infinity;
-constexpr bool numeric_limits<absl::uint128>::has_quiet_NaN;
-constexpr bool numeric_limits<absl::uint128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<absl::uint128>::has_denorm;
-constexpr bool numeric_limits<absl::uint128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<absl::uint128>::round_style;
-constexpr bool numeric_limits<absl::uint128>::is_iec559;
-constexpr bool numeric_limits<absl::uint128>::is_bounded;
-constexpr bool numeric_limits<absl::uint128>::is_modulo;
-constexpr int numeric_limits<absl::uint128>::digits;
-constexpr int numeric_limits<absl::uint128>::digits10;
-constexpr int numeric_limits<absl::uint128>::max_digits10;
-constexpr int numeric_limits<absl::uint128>::radix;
-constexpr int numeric_limits<absl::uint128>::min_exponent;
-constexpr int numeric_limits<absl::uint128>::min_exponent10;
-constexpr int numeric_limits<absl::uint128>::max_exponent;
-constexpr int numeric_limits<absl::uint128>::max_exponent10;
-constexpr bool numeric_limits<absl::uint128>::traps;
-constexpr bool numeric_limits<absl::uint128>::tinyness_before;
+constexpr bool numeric_limits<bela::uint128>::is_specialized;
+constexpr bool numeric_limits<bela::uint128>::is_signed;
+constexpr bool numeric_limits<bela::uint128>::is_integer;
+constexpr bool numeric_limits<bela::uint128>::is_exact;
+constexpr bool numeric_limits<bela::uint128>::has_infinity;
+constexpr bool numeric_limits<bela::uint128>::has_quiet_NaN;
+constexpr bool numeric_limits<bela::uint128>::has_signaling_NaN;
+constexpr float_denorm_style numeric_limits<bela::uint128>::has_denorm;
+constexpr bool numeric_limits<bela::uint128>::has_denorm_loss;
+constexpr float_round_style numeric_limits<bela::uint128>::round_style;
+constexpr bool numeric_limits<bela::uint128>::is_iec559;
+constexpr bool numeric_limits<bela::uint128>::is_bounded;
+constexpr bool numeric_limits<bela::uint128>::is_modulo;
+constexpr int numeric_limits<bela::uint128>::digits;
+constexpr int numeric_limits<bela::uint128>::digits10;
+constexpr int numeric_limits<bela::uint128>::max_digits10;
+constexpr int numeric_limits<bela::uint128>::radix;
+constexpr int numeric_limits<bela::uint128>::min_exponent;
+constexpr int numeric_limits<bela::uint128>::min_exponent10;
+constexpr int numeric_limits<bela::uint128>::max_exponent;
+constexpr int numeric_limits<bela::uint128>::max_exponent10;
+constexpr bool numeric_limits<bela::uint128>::traps;
+constexpr bool numeric_limits<bela::uint128>::tinyness_before;
 
-constexpr bool numeric_limits<absl::int128>::is_specialized;
-constexpr bool numeric_limits<absl::int128>::is_signed;
-constexpr bool numeric_limits<absl::int128>::is_integer;
-constexpr bool numeric_limits<absl::int128>::is_exact;
-constexpr bool numeric_limits<absl::int128>::has_infinity;
-constexpr bool numeric_limits<absl::int128>::has_quiet_NaN;
-constexpr bool numeric_limits<absl::int128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<absl::int128>::has_denorm;
-constexpr bool numeric_limits<absl::int128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<absl::int128>::round_style;
-constexpr bool numeric_limits<absl::int128>::is_iec559;
-constexpr bool numeric_limits<absl::int128>::is_bounded;
-constexpr bool numeric_limits<absl::int128>::is_modulo;
-constexpr int numeric_limits<absl::int128>::digits;
-constexpr int numeric_limits<absl::int128>::digits10;
-constexpr int numeric_limits<absl::int128>::max_digits10;
-constexpr int numeric_limits<absl::int128>::radix;
-constexpr int numeric_limits<absl::int128>::min_exponent;
-constexpr int numeric_limits<absl::int128>::min_exponent10;
-constexpr int numeric_limits<absl::int128>::max_exponent;
-constexpr int numeric_limits<absl::int128>::max_exponent10;
-constexpr bool numeric_limits<absl::int128>::traps;
-constexpr bool numeric_limits<absl::int128>::tinyness_before;
+constexpr bool numeric_limits<bela::int128>::is_specialized;
+constexpr bool numeric_limits<bela::int128>::is_signed;
+constexpr bool numeric_limits<bela::int128>::is_integer;
+constexpr bool numeric_limits<bela::int128>::is_exact;
+constexpr bool numeric_limits<bela::int128>::has_infinity;
+constexpr bool numeric_limits<bela::int128>::has_quiet_NaN;
+constexpr bool numeric_limits<bela::int128>::has_signaling_NaN;
+constexpr float_denorm_style numeric_limits<bela::int128>::has_denorm;
+constexpr bool numeric_limits<bela::int128>::has_denorm_loss;
+constexpr float_round_style numeric_limits<bela::int128>::round_style;
+constexpr bool numeric_limits<bela::int128>::is_iec559;
+constexpr bool numeric_limits<bela::int128>::is_bounded;
+constexpr bool numeric_limits<bela::int128>::is_modulo;
+constexpr int numeric_limits<bela::int128>::digits;
+constexpr int numeric_limits<bela::int128>::digits10;
+constexpr int numeric_limits<bela::int128>::max_digits10;
+constexpr int numeric_limits<bela::int128>::radix;
+constexpr int numeric_limits<bela::int128>::min_exponent;
+constexpr int numeric_limits<bela::int128>::min_exponent10;
+constexpr int numeric_limits<bela::int128>::max_exponent;
+constexpr int numeric_limits<bela::int128>::max_exponent10;
+constexpr bool numeric_limits<bela::int128>::traps;
+constexpr bool numeric_limits<bela::int128>::tinyness_before;
 } // namespace std
