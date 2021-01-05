@@ -143,7 +143,7 @@ struct File {
   uint64_t uncompressedSize{0};
   uint64_t position{0}; // file position
   bela::Time time;
-  uint32_t crc32{0};
+  uint32_t crc32sum{0}; // avoid chromium zlib define
   FileMode mode{0};
   uint16_t cversion{0};
   uint16_t rversion{0};

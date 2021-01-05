@@ -1,4 +1,6 @@
 # bela::hash
+# https://docs.microsoft.com/en-us/cpp/intrinsics/arm64-intrinsics
+# https://static.docs.arm.com/ihi0073/c/IHI0073C_arm_neon_intrinsics_ref.pdf
 string(TOLOWER "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" BELA_COMPILER_ARCH_ID)
 # blake3
 if("${BELA_COMPILER_ARCH_ID}" STREQUAL "x86_64"

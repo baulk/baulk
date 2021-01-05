@@ -147,7 +147,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   file.method = b.Read<uint16_t>();
   auto dosTime = b.Read<uint16_t>();
   auto dosDate = b.Read<uint16_t>();
-  file.crc32 = b.Read<uint32_t>();
+  file.crc32sum = b.Read<uint32_t>();
   file.compressedSize = b.Read<uint32_t>();
   file.uncompressedSize = b.Read<uint32_t>();
   auto filenameLen = b.Read<uint16_t>();
