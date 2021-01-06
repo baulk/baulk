@@ -38,14 +38,16 @@ bool File::readStringTable(bela::error_code &ec) {
     return true;
   }
   auto offset = fh.PointerToSymbolTable + COFFSymbolSize * fh.NumberOfSymbols;
+  if (static_cast<int64_t>(offset + 4) >= size) {
+    return true;
+  }
   uint32_t l = 0;
-
   if (!ReadAt(&l, sizeof(l), offset, ec)) {
     return false;
   }
   l = bela::fromle(l);
-  if (l <= 4) {
-    return false;
+  if (l <= 4 || static_cast<int64_t>(l + offset) > size) {
+    return true;
   }
   l -= 4;
   if (stringTable.data = reinterpret_cast<uint8_t *>(HeapAlloc(GetProcessHeap(), 0, l)); stringTable.data == nullptr) {
