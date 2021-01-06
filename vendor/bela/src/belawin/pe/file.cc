@@ -118,7 +118,6 @@ bool File::ParseFile(bela::error_code &ec) {
   if (!ReadAt(&dh, sizeof(DosHeader), 0, ec)) {
     return false;
   }
-  constexpr auto x = 0x3c;
 
   int64_t base = 0;
   if (bela::fromle(dh.e_magic) == IMAGE_DOS_SIGNATURE) {
