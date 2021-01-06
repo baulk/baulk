@@ -37,6 +37,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <bit>
 #include "base.hpp"
 
 #ifndef _WINSOCKAPI_
@@ -50,7 +51,6 @@ namespace bela {
 
 class Duration; // Defined below
 class Time;     // Defined below
-class TimeZone; // Defined below
 
 namespace time_internal {
 int64_t IDivDuration(bool satq, Duration num, Duration den, Duration *rem);
@@ -771,7 +771,7 @@ constexpr Time FromTimeT(time_t t) { return time_internal::FromUnixDuration(Seco
 // Now()
 //
 // Returns the current time, expressed as an `absl::Time` absolute time value.
-bela::Time Now();
+Time Now();
 
 // GetCurrentTimeNanos()
 //
@@ -791,13 +791,39 @@ int64_t GetCurrentTimeNanos();
 void SleepFor(bela::Duration duration);
 
 // FromDosDateTime() convert dos time to bela::Time
-bela::Time FromDosDateTime(uint16_t dosDate, uint16_t dosTime);
+Time FromDosDateTime(uint16_t dosDate, uint16_t dosTime);
 
 // GetSystemTimePreciseAsFileTime  FILETIME
-inline bela::Time FromWindowsPreciseTime(uint64_t tick) {
-  constexpr auto tickPerSecond = 10'000'000ll;
+constexpr Time FromWindowsPreciseTime(uint64_t tick) {
   constexpr auto unixTimeStart = 116444736000000000ui64;
-  return bela::FromUnixMicros((tick - unixTimeStart) / 10);
+  return FromUnixMicros(static_cast<int64_t>((tick - unixTimeStart) / 10));
+}
+
+constexpr Time FromFileTime(FILETIME ft) {
+  // Need to bit_cast to fix alignment, then divide by 10 to convert
+  // 100-nanoseconds to microseconds. This only works on little-endian
+  // machines.
+  constexpr auto unixTimeStart = 116444736000000000ui64;
+  auto tick = std::bit_cast<int64_t, FILETIME>(ft);
+  return FromUnixMicros((tick - unixTimeStart) / 10);
+}
+
+struct time_parts {
+  int64_t sec;
+  uint32_t nsec;
+};
+
+constexpr time_parts Split(Time t) {
+  const auto d = time_internal::ToUnixDuration(t);
+  const int64_t rep_hi = time_internal::GetRepHi(d);
+  const uint32_t rep_lo = time_internal::GetRepLo(d);
+  return {rep_hi, static_cast<uint32_t>(rep_lo / time_internal::kTicksPerNanosecond)};
+}
+
+constexpr FILETIME ToFileTime(Time t) {
+  auto parts = bela::Split(t);
+  auto tick = (parts.sec + 11644473600ll) * 10000000 + parts.nsec / 100;
+  return {static_cast<DWORD>(tick), static_cast<DWORD>(tick >> 32)};
 }
 
 } // namespace bela
