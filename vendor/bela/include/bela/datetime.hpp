@@ -5,18 +5,6 @@
 
 namespace bela {
 
-struct time_parts {
-  int64_t sec;
-  uint32_t nsec;
-};
-
-inline constexpr time_parts Split(bela::Time t) {
-  const auto d = time_internal::ToUnixDuration(t);
-  const int64_t rep_hi = time_internal::GetRepHi(d);
-  const uint32_t rep_lo = time_internal::GetRepLo(d);
-  return {rep_hi, static_cast<uint32_t>(rep_lo / time_internal::kTicksPerNanosecond)};
-}
-
 enum Month : std::int_least8_t {
   January = 1, // start as
   February,

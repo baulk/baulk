@@ -35,8 +35,17 @@ int wmain() {
   FILETIME ft = {0};
   GetSystemTimePreciseAsFileTime(&ft);
   bela::FPrintF(stderr, L"now:  %d\n", bela::ToUnixSeconds(now));
+  auto ftn = bela::ToFileTime(now);
+  FILETIME lft;
+  FileTimeToLocalFileTime(&ftn, &lft);
+  SYSTEMTIME st;
+  FileTimeToSystemTime(&lft, &st);
+  bela::FPrintF(stderr, L"Now ToFileTime: %04d-%02d-%02d %02d:%02d:%02d\n", st.wYear, st.wMonth, st.wDay, st.wHour,
+                st.wMinute, st.wSecond);
   auto tickNow = bela::FromWindowsPreciseTime(*reinterpret_cast<int64_t *>(&ft));
   bela::FPrintF(stderr, L"tick: %d\n", bela::ToUnixSeconds(tickNow));
+  auto tickNow2 = bela::FromFileTime(ft);
+  bela::FPrintF(stderr, L"FromFileTime time:  %s\n", bela::FormatTime(tickNow2));
   TIME_ZONE_INFORMATION tz_info;
   GetTimeZoneInformation(&tz_info);
 
