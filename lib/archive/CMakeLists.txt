@@ -128,6 +128,13 @@ endif()
 
 add_library(zlib STATIC ${ZLIB_SOURCES})
 
+add_library(deflate64 STATIC
+    deflate64/infback9.c
+    deflate64/inftree9.c
+)
+
+target_include_directories(deflate64 PRIVATE ${ZLIB_INC})
+
 set(ZSTD_COMMON_SOURCES
     zstd/common/debug.c
     zstd/common/entropy_common.c
@@ -218,10 +225,6 @@ target_link_libraries(
 add_subdirectory(ced)
 add_subdirectory(ppmd)
 
-add_library(inflate STATIC
-    inflate/inflate.cc
-)
-
 # Brotli
 set(BROTLI_SOURCES
     brotli/common/constants.c
@@ -262,8 +265,8 @@ add_library(
   zip/Crc32.cpp
   zip/decompress.cc
   zip/deflate.cc
+  zip/deflate64.cc
   zip/filemode.cc
-  zip/inflate64.cc
   zip/path.cc
   zip/ppmd.cc
   zip/xz.cc
@@ -283,4 +286,4 @@ target_include_directories(baulkarchive PRIVATE brotli/include)
 target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
 target_include_directories(baulkarchive PRIVATE ced)
 target_compile_definitions(baulkarchive PRIVATE ${LZMA_DEF})
-target_link_libraries(baulkarchive belawin minizip Ppmd ced)
+target_link_libraries(baulkarchive belawin deflate64 minizip Ppmd ced)

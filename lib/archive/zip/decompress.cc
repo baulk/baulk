@@ -38,8 +38,8 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, int64_t &dec
   } break;
   case ZIP_DEFLATE:
     return decompressDeflate(file, receiver, decompressed, ec);
-  // case ZIP_DEFLATE64:
-  //  return decompressDeflate64(file, receiver, decompressed, ec);
+  case ZIP_DEFLATE64:
+    return decompressDeflate64(file, receiver, decompressed, ec);
   case 20:
     [[fallthrough]];
   case ZIP_ZSTD:
