@@ -257,13 +257,13 @@ add_library(
   zip/bzlib.cc
   zip/Crc32.cpp
   zip/decompress.cc
+  zip/deflate.cc
   zip/filemode.cc
   zip/inflate64.cc
   zip/path.cc
   zip/ppmd.cc
   zip/xz.cc
   zip/zip.cc
-  zip/zlib.cc
   zip/zstd.cc
   oldzip.cc
   bzip2/blocksort.c

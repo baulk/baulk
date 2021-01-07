@@ -86,7 +86,7 @@ public:
     return *this;
   }
   ~FD() { Free(); }
-  bool SetFileTime(bela::Time t, bela::error_code &ec);
+  bool SetTime(bela::Time t, bela::error_code &ec);
   // Discard file changes
   bool Discard();
   bool Write(const void *data, size_t bytes, bela::error_code &ec);

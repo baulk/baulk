@@ -41,7 +41,7 @@ void Buffer::grow(size_t n) {
 }
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime
-bool FD::SetFileTime(bela::Time t, bela::error_code &ec) {
+bool FD::SetTime(bela::Time t, bela::error_code &ec) {
   auto ft = bela::ToFileTime(t);
   if (::SetFileTime(fd, &ft, &ft, &ft) != TRUE) {
     ec = bela::make_system_error_code(L"SetFileTime ");

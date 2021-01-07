@@ -33,7 +33,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
     do {
       zs.avail_out = static_cast<int>(outsize);
       zs.next_out = out.data();
-      ret = inflate(&zs, Z_NO_FLUSH);
+      ret = ::inflate(&zs, Z_NO_FLUSH);
       switch (ret) {
       case Z_NEED_DICT:
         ret = Z_DATA_ERROR;

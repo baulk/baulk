@@ -113,8 +113,8 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec.message);
     return false;
   }
-  if (!fd->SetFileTime(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetFileTime %s error: %s\n", *dest, ec.message);
+  if (!fd->SetTime(file.time, ec)) {
+    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec.message);
     return false;
   }
   bela::error_code ec2;
