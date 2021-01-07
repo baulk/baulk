@@ -215,6 +215,13 @@ target_link_libraries(
   zstd
   advapi32)
 
+add_subdirectory(ced)
+add_subdirectory(ppmd)
+
+add_library(inflate STATIC
+    inflate/inflate.cc
+)
+
 # Brotli
 set(BROTLI_SOURCES
     brotli/common/constants.c
@@ -246,9 +253,6 @@ set(BROTLI_SOURCES
     brotli/enc/metablock.c
     brotli/enc/static_dict.c
     brotli/enc/utf8_util.c)
-
-add_subdirectory(ced)
-add_subdirectory(ppmd)
 
 add_library(
   baulkarchive STATIC

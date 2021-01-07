@@ -3,8 +3,12 @@
 #define BAULK_ARCHIVE_INFLATE_HPP
 #include <cstdint>
 #include <type_traits>
+#include <cassert>
+#include <cstring>
+#include "inflateinternal.hpp"
 
 namespace baulk::archive::inflate {
+using byte = unsigned char;
 enum class BlockType : uint8_t {
   Uncompressed = 0,
   Static = 1,
@@ -47,6 +51,14 @@ enum class InflaterState : uint8_t {
 
 enum class MatchState : uint8_t { HasSymbol = 1, HasMatch = 2, HasSymbolAndMatch = 3 };
 
+// Inflater only support deflate64 -> inflate
+class Inflater {
+public:
+  constexpr static int DefaultBufferSize = 8192;
+
+private:
+  uint8_t buffer[DefaultBufferSize];
+};
 } // namespace baulk::archive::inflate
 
 #endif
