@@ -48,12 +48,16 @@ constexpr auto uint32max = (std::numeric_limits<uint32_t>::max)();
 // have been invented. Pervasive use effectively makes them "official".
 //
 // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField
-constexpr int zip64ExtraID = 0x0001;       // Zip64 extended information
-constexpr int ntfsExtraID = 0x000a;        // NTFS
-constexpr int unixExtraID = 0x000d;        // UNIX
-constexpr int extTimeExtraID = 0x5455;     // Extended timestamp
-constexpr int infoZipUnixExtraID = 0x5855; // Info-ZIP Unix extension
-constexpr int winzipAesExtraID = 0x9901;   // winzip AES Extra Field
+constexpr int zip64ExtraID = 0x0001;         // Zip64 extended information
+constexpr int ntfsExtraID = 0x000a;          // NTFS
+constexpr int unixExtraID = 0x000d;          // UNIX
+constexpr int extTimeExtraID = 0x5455;       // Extended timestamp
+constexpr int infoZipUnixExtraID = 0x5855;   // Info-ZIP Unix extension
+constexpr int experimentalXlID = 0x6c78;     // Experimental 'xl' field
+constexpr int infoZipUnicodePathID = 0x7075; // Info-ZIP Unicode Path Extra Field.
+constexpr int infoZipUnixExtra2ID = 0x7855;  // Info-ZIP Unix Extra Field (type 2) "Ux". *
+constexpr int infoZipUnixExtra3ID = 0x7875;  // Info-Zip Unix Extra Field (type 3) "ux". *
+constexpr int winzipAesExtraID = 0x9901;     // winzip AES Extra Field
 
 constexpr auto s_IFMT = 0xf000;
 constexpr auto s_IFSOCK = 0xc000;
@@ -76,7 +80,7 @@ inline bool IsSuperficialPath(std::string_view sv) {
 }
 constexpr size_t outsize = 64 * 1024;
 constexpr size_t insize = 16 * 1024;
-FileMode resolveFileMode(const File& file, uint32_t externalAttrs);
+FileMode resolveFileMode(const File &file, uint32_t externalAttrs);
 } // namespace baulk::archive::zip
 
 #endif
