@@ -1,47 +1,187 @@
 ///
 #include <bela/types.hpp>
+#include <bela/endian.hpp>
 #include "zipinternal.hpp"
 #include "../ppmd/Ppmd8.h"
 
 namespace baulk::archive::zip {
 using bela::ssize_t;
+constexpr auto BufferSize = static_cast<size_t>(1) << 20;
 class SectionReader {
 public:
-  SectionReader() = default;
+  SectionReader(HANDLE fd_, int64_t len) : fd(fd_), size(len) { cacheb.grow(32 * 1024); }
   SectionReader(const SectionReader &) = delete;
   SectionReader &operator=(const SectionReader &) = delete;
-  bool OpenReader(HANDLE fd_, int64_t pos, int64_t sz, bela::error_code &ec);
+  ssize_t Buffered() const { return w - r; }
+  int64_t AvailableBytes() const { return size - offset; }
+  ssize_t Read(void *buffer, ssize_t len) {
+    if (buffer == nullptr || len == 0) {
+      ec = bela::make_error_code(L"short read");
+      return -1;
+    }
+    if (r == w) {
+      if (static_cast<size_t>(len) > cacheb.capacity()) {
+        // Large read, empty buffer.
+        // Read directly into p to avoid copy.
+        ssize_t rlen = 0;
+        if (!fsread(buffer, len, rlen, ec)) {
+          return -1;
+        }
+        return rlen;
+      }
+      w = 0;
+      r = 0;
+      // section EOF support
+      DWORD dwRead = static_cast<DWORD>((std::min)(cacheb.capacity(), static_cast<size_t>(size - offset)));
+      if (dwRead == 0) {
+        ec = bela::make_error_code(ERROR_HANDLE_EOF, L"unexpected EOF");
+        return -1;
+      }
+      if (!fsread(cacheb.data(), dwRead, w, ec)) {
+        return -1;
+      }
+      if (w == 0) {
+        ec = bela::make_error_code(ERROR_HANDLE_EOF, L"unexpected EOF");
+        return -1;
+      }
+    }
+    auto n = (std::min)(w - r, len);
+    memcpy(buffer, cacheb.data() + r, n);
+    r += n;
+    return n;
+  }
+  ssize_t ReadFull(void *buffer, ssize_t len) {
+    auto p = reinterpret_cast<uint8_t *>(buffer);
+    ssize_t n = 0;
+    for (; n < len;) {
+      auto nn = Read(p + n, len - n);
+      if (nn == -1) {
+        return -1;
+      }
+      n += nn;
+    }
+    if (n < len) {
+      ec = bela::make_error_code(ERROR_HANDLE_EOF, L"unexpected EOF");
+      return -1;
+    }
+    return n;
+  }
+  const auto &ErrorCode() { return ec; }
 
 private:
   // reference please don't close it
-  Buffer buffer;
+  Buffer cacheb;
   HANDLE fd{INVALID_HANDLE_VALUE};
   int64_t size{0};
   int64_t offset{0};
   ssize_t w{0};
   ssize_t r{0};
+  bela::error_code ec;
+  bool fsread(void *b, ssize_t len, ssize_t &rlen, bela::error_code &ec) {
+    DWORD dwSize = {0};
+    if (ReadFile(fd, b, static_cast<DWORD>(len), &dwSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"ReadFile: ");
+      return false;
+    }
+    rlen = static_cast<ssize_t>(len);
+    offset += len;
+    return true;
+  }
 };
 
-bool SectionReader::OpenReader(HANDLE fd_, int64_t pos, int64_t sz, bela::error_code &ec) {
-  fd = fd_;
-  auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
-  LARGE_INTEGER oli{0};
-  if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
-    ec = bela::make_system_error_code(L"SetFilePointerEx: ");
-    return false;
+Byte ppmd_read(const IByteIn *in) {
+  if (in == nullptr) {
+    return 0;
   }
-  size = sz;
-  buffer.grow(32 * 1024);
-  return true;
+  auto sr = reinterpret_cast<SectionReader *>(in->playload);
+  if (sr == 0) {
+    return 0;
+  }
+  Byte buf[8] = {0};
+  if (sr->ReadFull(buf, 1) != 1) {
+    return 0;
+  }
+  return buf[0];
 }
+static void *SzBigAlloc(ISzAllocPtr p, size_t size) {
+  auto N = size + sizeof(size);
+  auto address = baulk::archive::archive_internal::Allocate<uint8_t>(N);
+  memcpy(address, &N, sizeof(size_t));
+  return address + sizeof(size_t);
+}
+static void SzBigFree(ISzAllocPtr p, void *address) {
+  if (address == nullptr) {
+    return;
+  }
+  auto raddr = reinterpret_cast<uint8_t *>(address) - sizeof(size_t);
+  size_t N = 0;
+  memcpy(&N, raddr, sizeof(size_t));
+  return baulk::archive::archive_internal::Deallocate(raddr, N);
+}
+
+const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};
 
 bool Reader::decompressPpmd(const File &file, const Receiver &receiver, int64_t &decompressed,
                             bela::error_code &ec) const {
-  ///
-  CPpmd8 pd;
-  memset(&pd, 0, sizeof(CPpmd8));
-  Ppmd8_Construct(&pd);
-
-  return false;
+  SectionReader sr(fd, file.compressedSize);
+  IByteIn bi{&sr, ppmd_read};
+  CPpmd8 _ppmd = {0};
+  _ppmd.Stream.In = &bi;
+  Ppmd8_Construct(&_ppmd);
+  auto closer = bela::finally([&] { Ppmd8_Free(&_ppmd, &g_BigAlloc); });
+  uint8_t buf[8];
+  if (sr.ReadFull(buf, 2) != 2) {
+    ec = sr.ErrorCode();
+    return false;
+  }
+  uint32_t val = bela::cast_fromle<uint16_t>(buf);
+  uint32_t order = (val & 0xF) + 1;
+  uint32_t mem = ((val >> 4) & 0xFF) + 1;
+  uint32_t restor = (val >> 12);
+  if (order < 2 || restor > 2) {
+    ec = bela::make_error_code(L"PPMd compressed data corrupted");
+    return false;
+  }
+  if (!Ppmd8_Alloc(&_ppmd, mem << 20, &g_BigAlloc)) {
+    ec = bela::make_error_code(L"Allocate Memory Failed");
+    return false;
+  }
+  if (!Ppmd8_RangeDec_Init(&_ppmd)) {
+    ec = bela::make_error_code(L"Ppmd8_RangeDec_Init");
+    return false;
+  }
+  Ppmd8_Init(&_ppmd, order, restor);
+  Buffer out(BufferSize);
+  uint32_t crc32val = 0;
+  for (;;) {
+    auto ob = out.data();
+    auto size = BufferSize;
+    size_t i = 0;
+    do {
+      auto sym = Ppmd8_DecodeSymbol(&_ppmd);
+      if (sym < 0) {
+        break;
+      }
+      ob[i] = static_cast<uint8_t>(sym);
+      i++;
+    } while (i != size);
+    if (i == 0) {
+      break;
+    }
+    decompressed += i;
+    crc32val = crc32_fast(ob, i, crc32val);
+    if (!receiver(ob, i)) {
+      ec = bela::make_error_code(ErrCanceled, L"canceled");
+      return false;
+    }
+    if (sr.AvailableBytes() == 0 && sr.Buffered() == 0) {
+      break;
+    }
+  }
+  if (crc32val != file.crc32sum) {
+    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+    return false;
+  }
+  return true;
 }
 } // namespace baulk::archive::zip

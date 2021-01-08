@@ -153,6 +153,7 @@ typedef int BoolInt;
 typedef struct IByteIn IByteIn;
 struct IByteIn
 {
+  void* playload;
   Byte (*Read)(const IByteIn *p); /* reads one byte, returns 0 in case of EOF or error */
 };
 #define IByteIn_Read(p) (p)->Read(p)
