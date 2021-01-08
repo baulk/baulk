@@ -65,6 +65,16 @@ int64_t Reader::findDirectory64End(int64_t directoryEndOffset, bela::error_code 
   return static_cast<int64_t>(p);
 }
 
+inline std::string cleanupName(const void *data, size_t N) {
+  auto p = reinterpret_cast<const char *>(data);
+  auto pos = memchr(data, 0, N);
+  if (pos == nullptr) {
+    return std::string(p, N);
+  }
+  N = p - reinterpret_cast<const char *>(pos);
+  return std::string(p, N);
+}
+
 // github.com\klauspost\compress@v1.11.3\zip\reader.go
 bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   bela::Buffer buffer(16 * 1024);
@@ -161,8 +171,10 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   if (br.ReadFull(buffer.data(), totallen, ec) != totallen) {
     return false;
   }
-  file.name.assign(reinterpret_cast<const char *>(buffer.data()), filenameLen);
-  file.comment.assign(reinterpret_cast<const char *>(buffer.data() + filenameLen + extraLen), commentLen);
+  file.name = cleanupName(buffer.data(), filenameLen);
+  if (commentLen != 0) {
+    file.comment = cleanupName(buffer.data() + filenameLen + extraLen, commentLen);
+  }
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
   auto needOffset = file.position == OffsetMin;
@@ -232,10 +244,40 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       continue;
     }
     if (fieldTag == extTimeExtraID) {
-      if (fb.Size() < 5 || (fb.Pick() & 1) == 0) {
+      if (fb.Size() < 5) {
         continue;
       }
-      modified = bela::FromUnixSeconds(static_cast<int64_t>(fb.Read<uint32_t>()));
+      auto flags = fb.Pick();
+      if ((flags & 0x1) != 0) {
+        modified = bela::FromUnixSeconds(static_cast<int64_t>(fb.Read<uint32_t>()));
+        continue;
+      }
+      if ((flags & 0x2) != 0) {
+        // atime: access time
+        continue;
+      }
+      if ((flags & 0x4) != 0) {
+        // ctime: create time
+        continue;
+      }
+      continue;
+    }
+    if (fieldTag == infoZipUnicodePathID) {
+      /*
+       (UPath) 0x7075        Short       tag for this extra block type ("up")
+         TSize         Short       total data size for this block
+         Version       1 byte      version of this extra field, currently 1
+         NameCRC32     4 bytes     File Name Field CRC32 Checksum
+         UnicodeName   Variable    UTF-8 version of the entry File Name
+      */
+      if (fb.Size() < 7 || (file.flags & 0x800) != 0) {
+        continue;
+      }
+      auto size = fb.Read<uint16_t>();
+      auto ver = fb.Pick();
+      auto crc32val = fb.Read<uint32_t>();
+      file.flags |= 0x800;
+      file.name = cleanupName(fb.Data<char>(), fb.Size());
       continue;
     }
     // https://www.winzip.com/win/en/aes_info.html

@@ -5,7 +5,7 @@
 #include <hazel/hazel.hpp>
 #include <bela/os.hpp>
 
-namespace hazel::zip{
+namespace hazel::zip {
 // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 // https://en.wikipedia.org/wiki/ZIP_(file_format)
 // https://en.wikipedia.org/wiki/Comparison_of_file_archivers
@@ -48,12 +48,16 @@ constexpr auto uint32max = (std::numeric_limits<uint32_t>::max)();
 // have been invented. Pervasive use effectively makes them "official".
 //
 // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField
-constexpr int zip64ExtraID = 0x0001;       // Zip64 extended information
-constexpr int ntfsExtraID = 0x000a;        // NTFS
-constexpr int unixExtraID = 0x000d;        // UNIX
-constexpr int extTimeExtraID = 0x5455;     // Extended timestamp
-constexpr int infoZipUnixExtraID = 0x5855; // Info-ZIP Unix extension
-constexpr int winzipAesExtraID = 0x9901;   // winzip AES Extra Field
+constexpr int zip64ExtraID = 0x0001;         // Zip64 extended information
+constexpr int ntfsExtraID = 0x000a;          // NTFS
+constexpr int unixExtraID = 0x000d;          // UNIX
+constexpr int extTimeExtraID = 0x5455;       // Extended timestamp
+constexpr int infoZipUnixExtraID = 0x5855;   // Info-ZIP Unix extension
+constexpr int experimentalXlID = 0x6c78;     // Experimental 'xl' field
+constexpr int infoZipUnicodePathID = 0x7075; // Info-ZIP Unicode Path Extra Field.
+constexpr int infoZipUnixExtra2ID = 0x7855;  // Info-ZIP Unix Extra Field (type 2) "Ux". *
+constexpr int infoZipUnixExtra3ID = 0x7875;  // Info-Zip Unix Extra Field (type 3) "ux". *
+constexpr int winzipAesExtraID = 0x9901;     // winzip AES Extra Field
 
 inline bool IsSuperficialPath(std::string_view sv) {
   auto pv = bela::SplitPath(sv);
@@ -75,8 +79,8 @@ constexpr auto s_ISVTX = 0x200;
 constexpr auto msdosDir = 0x10;
 constexpr auto msdosReadOnly = 0x01;
 
-bela::os::FileMode resolveFileMode(const File& file, uint32_t externalAttrs);
+bela::os::FileMode resolveFileMode(const File &file, uint32_t externalAttrs);
 
-}
+} // namespace hazel::zip
 
 #endif
