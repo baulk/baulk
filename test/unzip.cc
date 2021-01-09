@@ -27,6 +27,7 @@ private:
   Reader reader;
   std::wstring destination;
   int64_t decompressed{0};
+  size_t destsize{0};
   bool owfile{false};
   bool extractFile(const File &file, bela::error_code &ec);
   bool extractDir(const File &file, std::wstring_view dir, bela::error_code &ec);
@@ -55,6 +56,7 @@ bool Extractor::OpenReader(std::wstring_view path, bela::error_code &ec) {
 }
 
 bool Extractor::Extract(bela::error_code &ec) {
+  destsize = destination.size() + 1;
   for (const auto &file : reader.Files()) {
     if (!extractFile(file, ec)) {
       return false;
@@ -101,7 +103,8 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
-  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", *dest);
+  auto showName = std::wstring_view(dest->data() + destsize, dest->size() - destsize);
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", showName);
   if (file.IsSymlink()) {
     return extractSymlink(file, *dest, ec);
   }

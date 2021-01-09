@@ -204,7 +204,7 @@ inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code
 }
 
 // root must be the cleaned path
-std::optional<std::wstring> PathCat(std::wstring_view root, const File &file);
+std::optional<std::wstring> PathCat(std::wstring_view root, const File &file, bool autocvt = true);
 
 //
 } // namespace baulk::archive::zip
