@@ -1,7 +1,7 @@
 # New Tar
 
 +   FileReader --> Reader
-+   FileReader --> GzReader   --> Reader
-+   FileReader --> XzReader   --> Reader
-+   FileReader --> BzReader   --> Reader
-+   FileReader --> ZstdReader --> Reader
++   FileReader --> gzip::Reader   --> Reader
++   FileReader --> xz::Reader   --> Reader
++   FileReader --> bzip::Reader   --> Reader
++   FileReader --> zstd::Reader --> Reader
