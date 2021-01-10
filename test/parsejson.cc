@@ -64,7 +64,7 @@ struct VisualStudioInstance {
     try {
       auto j0 = nlohmann::json::parse(result, nullptr, true, true);
       if (!j0.is_array() || j0.empty()) {
-        ec = bela::make_error_code(1, L"empty visual studio instance");
+        ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
         return false;
       }
       auto &j = j0[0];
@@ -87,7 +87,7 @@ struct VisualStudioInstance {
         isPrerelease = it->get<bool>();
       }
     } catch (const std::exception &e) {
-      ec = bela::make_error_code(1, bela::ToWide(e.what()));
+      ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
       return false;
     }
     return true;

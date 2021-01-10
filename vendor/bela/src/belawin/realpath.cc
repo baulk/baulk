@@ -209,7 +209,7 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &
     if (AppExecTarget target; DecodeAppLink(p, target)) {
       return std::make_optional(std::move(target.target));
     }
-    ec = bela::make_error_code(1, L"BAD: unable decode AppLinkExec");
+    ec = bela::make_error_code(ErrGeneral, L"BAD: unable decode AppLinkExec");
     return std::nullopt;
   case IO_REPARSE_TAG_SYMLINK:
     if (auto target = bela::RealPath(src, ec); target) {
@@ -220,7 +220,7 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &
     if (std::wstring target; DecodeSymbolicLink(p, target)) {
       return std::make_optional(std::move(target));
     }
-    ec = bela::make_error_code(1, L"BAD: unable decode Global SymbolicLink");
+    ec = bela::make_error_code(ErrGeneral, L"BAD: unable decode Global SymbolicLink");
     return std::nullopt;
   default:
     break;

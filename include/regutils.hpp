@@ -32,7 +32,7 @@ inline std::optional<std::wstring> GitForWindowsInstallPath(bela::error_code &ec
     return std::nullopt;
   }
   if (regtype != REG_SZ) {
-    ec = bela::make_error_code(1, L"InstallPath not REG_SZ: ", regtype);
+    ec = bela::make_error_code(bela::ErrGeneral, L"InstallPath not REG_SZ: ", regtype);
     return std::nullopt;
   }
   return std::make_optional<std::wstring>(buffer);
@@ -57,7 +57,7 @@ inline std::optional<WindowsSDK> LookupWindowsSDK(bela::error_code &ec) {
     return std::nullopt;
   }
   if (regtype != REG_SZ) {
-    ec = bela::make_error_code(1, L"InstallationFolder not REG_SZ: ", regtype);
+    ec = bela::make_error_code(bela::ErrGeneral, L"InstallationFolder not REG_SZ: ", regtype);
     return std::nullopt;
   }
   winsdk.InstallationFolder.assign(buffer);
@@ -70,7 +70,7 @@ inline std::optional<WindowsSDK> LookupWindowsSDK(bela::error_code &ec) {
     return std::nullopt;
   }
   if (regtype != REG_SZ) {
-    ec = bela::make_error_code(1, L"ProductVersion not REG_SIZE: ", regtype);
+    ec = bela::make_error_code(bela::ErrGeneral, L"ProductVersion not REG_SIZE: ", regtype);
     return std::nullopt;
   }
   winsdk.ProductVersion.assign(buffer);

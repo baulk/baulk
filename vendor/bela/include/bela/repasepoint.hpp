@@ -233,7 +233,7 @@
 #endif
 
 #ifndef IO_REPARSE_TAG_DATALESS_CIM
-#define IO_REPARSE_TAG_DATALESS_CIM             (0xA0000028L)
+#define IO_REPARSE_TAG_DATALESS_CIM (0xA0000028L)
 #endif
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
 
@@ -440,7 +440,7 @@ namespace bela {
 
 inline bool LookupReparsePoint(std::wstring_view file, bela::Buffer &b, bela::error_code &ec) {
   if (b.capacity() < MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
-    ec = bela::make_error_code(1, L"buffer capacity ", b.capacity(), L" too small");
+    ec = bela::make_error_code(ErrGeneral, L"buffer capacity ", b.capacity(), L" too small");
     return false;
   }
   HANDLE fd{INVALID_HANDLE_VALUE};

@@ -90,11 +90,11 @@ bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::e
     if (QueryContext.QueryResults != nullptr) {
       FreeAddrInfoExW(QueryContext.QueryResults);
     }
-    ec = bela::make_error_code(1, L"GetAddrInfoEx() timeout");
+    ec = bela::make_error_code(bela::ErrGeneral, L"GetAddrInfoEx() timeout");
     return false;
   }
   if (QueryContext.QueryResults == nullptr) {
-    ec = bela::make_error_code(1, L"GetAddrInfoEx() failed");
+    ec = bela::make_error_code(bela::ErrGeneral, L"GetAddrInfoEx() failed");
     return false;
   }
   *rhints = reinterpret_cast<PADDRINFOEX4>(QueryContext.QueryResults);
@@ -210,7 +210,7 @@ std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port,
 
   if (sock == BAULK_INVALID_SOCKET) {
     if (!ec) {
-      ec = bela::make_error_code(1, L"connect to ", address, L" timeout");
+      ec = bela::make_error_code(bela::ErrGeneral, L"connect to ", address, L" timeout");
     }
     FreeAddrInfoExW(reinterpret_cast<ADDRINFOEXW *>(rhints)); /// Release
     return std::nullopt;

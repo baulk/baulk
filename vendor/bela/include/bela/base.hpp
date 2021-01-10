@@ -20,33 +20,34 @@
 #include "str_cat.hpp"
 
 namespace bela {
-// error code index
-enum error_code_index : long {
-  None = 0, // None error
-  SkipParse = 0x4001,
-  ParseBroken = 0x4002,
-  FileSizeTooSmall = 0x4003,
-};
-
+constexpr long ErrNone = 0;
+constexpr long ErrGeneral = 0x4001;
+constexpr long ErrSkipParse = 0x4002;
+constexpr long ErrParseBroken = 0x4003;
+constexpr long ErrFileTooSmall = 0x4004;
+constexpr long ErrEnded = 654320;
+constexpr long ErrCanceled = 654321;
 // bela::error_code
 struct error_code {
   std::wstring message;
-  long code{None};
+  long code{ErrNone};
   const wchar_t *data() const { return message.data(); }
-  explicit operator bool() const noexcept { return code != None; }
+  explicit operator bool() const noexcept { return code != ErrNone; }
   error_code &assgin(error_code &&o) {
     message.assign(std::move(o.message));
     code = o.code;
-    o.code = None;
+    o.code = ErrNone;
     return *this;
   }
   void clear() {
-    code = None;
+    code = ErrNone;
     message.clear();
   }
 };
 
-inline bela::error_code make_error_code(const AlphaNum &a) { return bela::error_code{std::wstring(a.Piece()), 1}; }
+inline bela::error_code make_error_code(const AlphaNum &a) {
+  return bela::error_code{std::wstring(a.Piece()), ErrGeneral};
+}
 inline bela::error_code make_error_code(long code, const AlphaNum &a) {
   return bela::error_code{std::wstring(a.Piece()), code};
 }

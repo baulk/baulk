@@ -72,14 +72,14 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
     auto metadata = bela::ToWide(links.at(bela::ToNarrow(launcher)).get<std::string>());
     std::vector<std::wstring_view> tv = bela::StrSplit(metadata, bela::ByChar('@'), bela::SkipEmpty());
     if (tv.size() < 2) {
-      ec = bela::make_error_code(1, L"baulk launcher: '", launcher, L"' invaild metadata: ", metadata);
+      ec = bela::make_error_code(bela::ErrGeneral, L"baulk launcher: '", launcher, L"' invaild metadata: ", metadata);
       return std::nullopt;
     }
     auto baulkroot = bela::DirName(parent);
     auto target = bela::StringCat(baulkroot, L"\\pkgs\\", tv[0], L"\\", tv[1]);
     return std::make_optional(std::move(target));
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, L"baulk.links.json exception: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"baulk.links.json exception: ", bela::ToWide(e.what()));
   }
   return std::nullopt;
 }

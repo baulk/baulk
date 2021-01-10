@@ -94,7 +94,7 @@ std::optional<std::wstring> FileHash(std::wstring_view file, hash_t method, bela
   default:
     break;
   }
-  ec = bela::make_error_code(1, L"unkown hash method: ", static_cast<int>(method));
+  ec = bela::make_error_code(bela::ErrGeneral, L"unkown hash method: ", static_cast<int>(method));
   return std::nullopt;
 }
 
@@ -130,7 +130,7 @@ bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_
       return false;
     };
     if (!fn()) {
-      ec = bela::make_error_code(1, L"unsupported hash method '", prefix, L"'");
+      ec = bela::make_error_code(bela::ErrGeneral, L"unsupported hash method '", prefix, L"'");
       return false;
     }
   }
@@ -139,7 +139,7 @@ bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_
     return false;
   }
   if (!bela::EndsWithIgnoreCase(*ha, value)) {
-    ec = bela::make_error_code(1, L"checksum mismatch expected ", value, L" actual ", *ha);
+    ec = bela::make_error_code(bela::ErrGeneral, L"checksum mismatch expected ", value, L" actual ", *ha);
     return false;
   }
   return true;

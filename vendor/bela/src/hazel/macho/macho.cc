@@ -100,7 +100,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
     fh.Flags = endian_cast(mh.flags);
     return true;
   }
-  ec = bela::make_error_code(1, L"macho: bad magic number ['", static_cast<int>(ident[0]), L"', '",
+  ec = bela::make_error_code(ErrGeneral, L"macho: bad magic number ['", static_cast<int>(ident[0]), L"', '",
                              static_cast<int>(ident[1]), L"', '", static_cast<int>(ident[2]), L"', '",
                              static_cast<int>(ident[3]), L"']");
   return false;

@@ -223,7 +223,7 @@ std::optional<BaulkCloser> BaulkCloser::BaulkMakeLocker(bela::error_code &ec) {
   if (auto line = bela::io::ReadLine(file, ec); line) {
     DWORD pid = 0;
     if (bela::SimpleAtoi(*line, &pid) && BaulkIsRunning(pid)) {
-      ec = bela::make_error_code(1, L"baulk is running. pid= ", pid);
+      ec = bela::make_error_code(bela::ErrGeneral, L"baulk is running. pid= ", pid);
       return std::nullopt;
     }
   }

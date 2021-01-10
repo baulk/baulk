@@ -49,7 +49,7 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
   case ZIP_BZIP2:
     break;
   default:
-    ec = bela::make_error_code(1, L"support zip method ", file.method);
+    ec = bela::make_error_code(ErrGeneral, L"support zip method ", file.method);
     return false;
   }
   return true;

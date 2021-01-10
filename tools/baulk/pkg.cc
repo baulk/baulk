@@ -52,7 +52,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
     return bela::io::WriteTextAtomic(j.dump(4), file, ec);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
   }
   return false;
 }
@@ -131,7 +131,7 @@ inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela
   if (bela::PathExists(target)) {
     bela::fs::RemoveAll(target, ec);
   }
-  DbgPrint(L"lpExistingFileName %s lpNewFileName %s",source,target);
+  DbgPrint(L"lpExistingFileName %s lpNewFileName %s", source, target);
   if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
     ec = bela::make_system_error_code();
     return false;

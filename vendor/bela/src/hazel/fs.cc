@@ -58,7 +58,7 @@ inline bool DecodeSymbolicLink(const REPARSE_DATA_BUFFER *buffer, FileReparsePoi
               (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR));
   auto wlen = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
   if (wlen >= MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
-    ec = bela::make_error_code(1, L"symbolic link: SubstituteNameLength ",
+    ec = bela::make_error_code(bela::ErrGeneral, L"symbolic link: SubstituteNameLength ",
                                buffer->SymbolicLinkReparseBuffer.SubstituteNameLength, L" > ",
                                MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
     return false;
@@ -98,7 +98,7 @@ static bool DecodeMountPoint(const REPARSE_DATA_BUFFER *p, FileReparsePoint &frp
   if (!(wlen >= 6 && wstr[0] == L'\\' && wstr[1] == L'?' && wstr[2] == L'?' && wstr[3] == L'\\' &&
         ((wstr[4] >= L'A' && wstr[4] <= L'Z') || (wstr[4] >= L'a' && wstr[4] <= L'z')) && wstr[5] == L':' &&
         (wlen == 6 || wstr[6] == L'\\'))) {
-    ec = bela::make_error_code(1, L"Unresolved reparse point MountPoint'");
+    ec = bela::make_error_code(bela::ErrGeneral, L"Unresolved reparse point MountPoint'");
     return false;
   }
 
@@ -111,7 +111,7 @@ static bool DecodeMountPoint(const REPARSE_DATA_BUFFER *p, FileReparsePoint &frp
 
 static bool DecodeAppTargetLink(const REPARSE_DATA_BUFFER *p, FileReparsePoint &frp, bela::error_code &ec) {
   if (p->AppExecLinkReparseBuffer.StringCount < 3) {
-    ec = bela::make_error_code(1, L"Unresolved reparse point AppExecLink. StringCount=",
+    ec = bela::make_error_code(bela::ErrGeneral, L"Unresolved reparse point AppExecLink. StringCount=",
                                p->AppExecLinkReparseBuffer.StringCount);
     return false;
   }

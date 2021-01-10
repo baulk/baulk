@@ -52,7 +52,7 @@ private:
 // ---------> parse internal
 inline bool ParseArgv::Execute(const invoke_t &v, bela::error_code &ec) {
   if (argc_ == 0 || argv_ == nullptr) {
-    ec = bela::make_error_code(ParseBroken, L"argv is empty.");
+    ec = bela::make_error_code(ErrParseBroken, L"argv is empty.");
     return false;
   }
   index = 1;
@@ -86,7 +86,7 @@ inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t 
   // -x XXX
   // -x; BOOL
   if (a[0] == '=') {
-    ec = bela::make_error_code(ParseBroken, L"unexpected argument '-", a,
+    ec = bela::make_error_code(ErrParseBroken, L"unexpected argument '-", a,
                                L"'"); // -=*
     return false;
   }
@@ -99,7 +99,7 @@ inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t 
     }
   }
   if (ch == -1) {
-    ec = bela::make_error_code(ParseBroken, L"unregistered option '-", a, L"'");
+    ec = bela::make_error_code(ErrParseBroken, L"unregistered option '-", a, L"'");
     return false;
   }
   // a.size()==1 'L' short value
@@ -107,19 +107,19 @@ inline bool ParseArgv::parse_internal_short(std::wstring_view a, const invoke_t 
     oa = (a[1] == L'=') ? (a.data() + 2) : (a.data() + 1);
   }
   if (oa != nullptr && ha == no_argument) {
-    ec = bela::make_error_code(ParseBroken, L"option '-", a.substr(0, 1), L"' unexpected parameter: ", oa);
+    ec = bela::make_error_code(ErrParseBroken, L"option '-", a.substr(0, 1), L"' unexpected parameter: ", oa);
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
     if (index + 1 >= argc_) {
-      ec = bela::make_error_code(ParseBroken, L"option '-", a, L"' missing parameter");
+      ec = bela::make_error_code(ErrParseBroken, L"option '-", a, L"' missing parameter");
       return false;
     }
     oa = argv_[index + 1];
     index++;
   }
   if (!v(ch, oa, a.data())) {
-    ec = bela::make_error_code(SkipParse, L"skip parse");
+    ec = bela::make_error_code(ErrSkipParse, L"skip parse");
     return false;
   }
   return true;
@@ -136,7 +136,7 @@ inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &
   auto pos = a.find(L'=');
   if (pos != std::string_view::npos) {
     if (pos + 1 >= a.size()) {
-      ec = bela::make_error_code(ParseBroken, L"unexpected argument '--", a, L"'");
+      ec = bela::make_error_code(ErrParseBroken, L"unexpected argument '--", a, L"'");
       return false;
     }
     oa = a.data() + pos + 1;
@@ -150,23 +150,23 @@ inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &
     }
   }
   if (ch == -1) {
-    ec = bela::make_error_code(ParseBroken, L"unregistered option '--", a, L"'");
+    ec = bela::make_error_code(ErrParseBroken, L"unregistered option '--", a, L"'");
     return false;
   }
   if (oa != nullptr && ha == no_argument) {
-    ec = bela::make_error_code(ParseBroken, L"option '--", a, L"' unexpected parameter: ", oa);
+    ec = bela::make_error_code(ErrParseBroken, L"option '--", a, L"' unexpected parameter: ", oa);
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
     if (index + 1 >= argc_) {
-      ec = bela::make_error_code(ParseBroken, L"option '--", a, L"' missing parameter");
+      ec = bela::make_error_code(ErrParseBroken, L"option '--", a, L"' missing parameter");
       return false;
     }
     oa = argv_[index + 1];
     index++;
   }
   if (!v(ch, oa, a.data())) {
-    ec = bela::make_error_code(SkipParse, L"skip parse");
+    ec = bela::make_error_code(ErrSkipParse, L"skip parse");
     return false;
   }
   return true;
@@ -174,7 +174,7 @@ inline bool ParseArgv::parse_internal_long(std::wstring_view a, const invoke_t &
 
 inline bool ParseArgv::parse_internal(std::wstring_view a, const invoke_t &v, bela::error_code &ec) {
   if (a.size() == 1) {
-    ec = bela::make_error_code(ParseBroken, L"unexpected argument '-'");
+    ec = bela::make_error_code(ErrParseBroken, L"unexpected argument '-'");
     return false;
   }
   if (a[1] == '-') {

@@ -10,7 +10,7 @@
 #include "types.hpp"
 
 namespace hazel {
-
+using bela::ErrGeneral;
 // https://en.cppreference.com/w/cpp/utility/variant/visit
 // https://en.cppreference.com/w/cpp/utility/variant
 

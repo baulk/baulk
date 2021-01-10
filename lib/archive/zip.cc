@@ -41,11 +41,11 @@ bool ZipExtract(std::wstring_view file, std::wstring_view dest, bela::error_code
     }
   }
   if (err = mz_zip_reader_open_file(reader, path.data()); err != MZ_OK) {
-    ec = bela::make_error_code(1, L"unable open file, minizip result: ", err);
+    ec = bela::make_error_code(bela::ErrGeneral, L"unable open file, minizip result: ", err);
     return false;
   }
   if (err = mz_zip_reader_save_all(reader, destination.data()); err != MZ_OK && err != MZ_END_OF_LIST) {
-    ec = bela::make_error_code(1, L"decompress result: ", err);
+    ec = bela::make_error_code(bela::ErrGeneral, L"decompress result: ", err);
     return false;
   }
   return err_close == MZ_OK;

@@ -123,7 +123,7 @@ inline bool MapView::MappingView(std::wstring_view file, bela::error_code &ec, s
   }
   LARGE_INTEGER li;
   if (GetFileSizeEx(FileHandle, &li) != TRUE || (std::size_t)li.QuadPart < minsize) {
-    ec = bela::make_error_code(bela::FileSizeTooSmall, L"File size too smal, size: ", li.QuadPart);
+    ec = bela::make_error_code(ErrFileTooSmall, L"File size too smal, size: ", li.QuadPart);
     return false;
   }
   if ((FileMap = CreateFileMappingW(FileHandle, nullptr, PAGE_READONLY, 0, 0, nullptr)) == INVALID_HANDLE_VALUE) {

@@ -54,7 +54,7 @@ private:
       }
       baulkroot = bela::DirName(baulkroot);
     }
-    ec = bela::make_error_code(1, L"unable found baulk.exe");
+    ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
     return std::nullopt;
   }
 };

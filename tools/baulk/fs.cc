@@ -127,7 +127,7 @@ std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
     }
     tmpdir.resize(len);
   }
-  ec = bela::make_error_code(1, L"cannot create tempdir");
+  ec = bela::make_error_code(bela::ErrGeneral, L"cannot create tempdir");
   return std::nullopt;
 }
 

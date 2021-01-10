@@ -24,7 +24,7 @@ bool VisualStudioResultEncode(const std::string_view result, std::vector<VisualS
   try {
     auto j0 = nlohmann::json::parse(result, nullptr, true, true);
     if (!j0.is_array() || j0.empty()) {
-      ec = bela::make_error_code(1, L"empty visual studio instance");
+      ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
       return false;
     }
     for (auto &i : j0) {
@@ -39,7 +39,7 @@ bool VisualStudioResultEncode(const std::string_view result, std::vector<VisualS
       vsis.emplace_back(std::move(vsi));
     }
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
     return false;
   }
   return true;
@@ -155,7 +155,7 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   }
   std::wstring sdkversion;
   if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion)) {
-    ec = bela::make_error_code(1, L"invalid sdk version");
+    ec = bela::make_error_code(bela::ErrGeneral, L"invalid sdk version");
     return false;
   }
   constexpr std::wstring_view incs[] = {L"\\um", L"\\ucrt", L"\\km", L"\\cppwinrt", L"\\shared", L"\\winrt"};
@@ -293,7 +293,7 @@ std::optional<std::wstring> SearchBaulkRoot(bela::error_code &ec) {
     }
     baulkroot = bela::DirName(baulkroot);
   }
-  ec = bela::make_error_code(1, L"unable found baulk.exe");
+  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
   return std::nullopt;
 }
 
