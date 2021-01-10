@@ -171,7 +171,7 @@ inline bool File::Open(std::wstring_view file, DWORD dwDesiredAccess, DWORD dwSh
   return true;
 }
 
-inline bool ReadAt(HANDLE fd, void *buffer, size_t len, uint64_t pos, size_t &outlen, bela::error_code &ec) {
+inline bool ReadAt(HANDLE fd, void *buffer, size_t len, int64_t pos, size_t &outlen, bela::error_code &ec) {
   auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
   LARGE_INTEGER oli{0};
   if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {

@@ -296,7 +296,7 @@ using symbols_map_t = bela::flat_hash_map<std::string, std::vector<Function>>;
 class File {
 private:
   bool ParseFile(bela::error_code &ec);
-  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+  bool PositionAt(int64_t pos, bela::error_code &ec) const {
     LARGE_INTEGER oli{0};
     if (SetFilePointerEx(fd, *reinterpret_cast<LARGE_INTEGER *>(&pos), &oli, SEEK_SET) != TRUE) {
       ec = bela::make_system_error_code(L"SetFilePointerEx: ");
@@ -331,7 +331,7 @@ private:
     return true;
   }
   // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
+  bool ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) const {
     if (!PositionAt(pos, ec)) {
       return false;
     }
