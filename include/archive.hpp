@@ -51,8 +51,10 @@ public:
   [[nodiscard]] size_t size() const { return size_; }
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }
+  [[nodiscard]] size_t pos() const { return pos_; }
+  [[nodiscard]] size_t &pos() { return pos_; }
   void grow(size_t n);
-  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }
@@ -62,6 +64,7 @@ private:
   uint8_t *data_{nullptr};
   size_t size_{0};
   size_t capacity_{0};
+  size_t pos_{0};
 };
 
 class FD {

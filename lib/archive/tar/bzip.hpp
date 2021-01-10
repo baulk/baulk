@@ -17,6 +17,8 @@ public:
 private:
   bela::io::Reader *r{nullptr};
   bz_stream *bzs{nullptr};
+  Buffer in;
+  Buffer out;
 };
 } // namespace baulk::archive::tar::bzip
 

@@ -15,11 +15,20 @@ bool Reader::Initialize(bela::error_code &ec) {
     ec = bela::make_error_code(ret, L"BZ2_bzDecompressInit error");
     return false;
   }
+  out.grow(outsize);
+  in.grow(insize);
   return true;
 }
 
 ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  //
+  //if (out.size() != 0) {
+  //  auto minsize = (std::min)(len, out.size());
+  //  memcpy(buffer, out.data(), minsize);
+  //  out.size() -= minsize;
+  //  return minsize;
+  //}
+  if (bzs->avail_out == 0) {
+  }
   return -1;
 }
 } // namespace baulk::archive::tar::bzip

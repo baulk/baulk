@@ -1,9 +1,9 @@
 ///
-#ifndef BAULK_ARCHIVE_TAR_GZIP_HPP
-#define BAULK_ARCHIVE_TAR_GZIP_HPP
+#ifndef BAULK_ARCHIVE_TAR_BROTLI_HPP
+#define BAULK_ARCHIVE_TAR_BROTLI_HPP
 #include "tarinternal.hpp"
 
-namespace baulk::archive::tar::gzip {
+namespace baulk::archive::tar::brotli {
 class Reader : public bela::io::Reader {
 public:
   Reader(bela::io::Reader *lr) : r(lr) {}
@@ -16,6 +16,6 @@ public:
 private:
   bela::io::Reader *r{nullptr};
 };
-} // namespace baulk::archive::tar::gzip
+} // namespace baulk::archive::tar::xz
 
 #endif
