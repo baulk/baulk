@@ -3,6 +3,7 @@
 #define BAULK_TAR_HPP
 #include "archive.hpp"
 #include <bela/io.hpp>
+#include <memory>
 
 namespace baulk::archive::tar {
 using bela::ssize_t;
@@ -19,10 +20,13 @@ public:
   FileReader(HANDLE fd_) : fd(fd_) {}
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
+  bool PositionAt(uint64_t pos, bela::error_code &ec) const;
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
+
+std::shared_ptr<bela::io::Reader> MakeReader(FileReader *fd, bela::error_code &ec);
 
 class Reader {
 public:
