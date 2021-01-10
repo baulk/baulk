@@ -105,7 +105,7 @@ std::optional<std::wstring> SearchBaulkExec(bela::error_code &ec) {
     }
     bela::PathStripName(bkroot);
   }
-  ec = bela::make_error_code(1, L"unable found baulk.exe");
+  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
   return std::nullopt;
 }
 

@@ -127,7 +127,7 @@ bool File::ParseFile(bela::error_code &ec) {
       return false;
     }
     if (!(sign[0] == 'P' && sign[1] == 'E' && sign[2] == 0 && sign[3] == 0)) {
-      ec = bela::make_error_code(1, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','", int(sign[1]), L"','",
+      ec = bela::make_error_code(ErrGeneral, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','", int(sign[1]), L"','",
                                  int(sign[2]), L"','", int(sign[3]), L"']");
       return false;
     }
@@ -150,7 +150,7 @@ bool File::ParseFile(bela::error_code &ec) {
     fromle(&oh);
   } else {
     if (!ReadAt(&oh, sizeof(OptionalHeader32), base + sizeof(FileHeader), ec)) {
-      ec = bela::make_error_code(1, L"pe: not a valid pe file ", ec.message);
+      ec = bela::make_error_code(ErrGeneral, L"pe: not a valid pe file ", ec.message);
       return false;
     }
     fromle(reinterpret_cast<OptionalHeader32 *>(&oh));

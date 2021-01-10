@@ -52,7 +52,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, 
     obj["updated"] = baulk::time::TimeNow();
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
     return false;
   }
   if (newjson.empty()) {
@@ -106,7 +106,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     obj["links"] = newlinkobj;
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
     return false;
   }
   if (newjson.empty()) {
@@ -298,7 +298,7 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
 bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
   auto baulklnk = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\baulk-lnk.exe");
   if (!bela::PathExists(baulklnk)) {
-    ec = bela::make_error_code(1, L"baulk-lnk not exists. cannot create simulated launcher");
+    ec = bela::make_error_code(bela::ErrGeneral, L"baulk-lnk not exists. cannot create simulated launcher");
     return false;
   }
   auto pkgroot = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);

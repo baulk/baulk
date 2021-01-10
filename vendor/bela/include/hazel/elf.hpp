@@ -227,7 +227,7 @@ public:
       return std::nullopt;
     }
     if (so.empty()) {
-      ec = bela::make_error_code(1, L"DynString: 0x", bela::AlphaNum(bela::Hex(tag)), L" not exists");
+      ec = bela::make_error_code(ErrGeneral, L"DynString: 0x", bela::AlphaNum(bela::Hex(tag)), L" not exists");
       return std::nullopt;
     }
     return std::make_optional(std::move(so.front()));

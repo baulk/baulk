@@ -121,7 +121,7 @@ bool EnvDependentChain::LoadLocalEnv(std::wstring_view pkgname, BaulkVirtualEnv 
     jea.array("replace", replaceDependencies);
     ReplaceDependencies(venv, replaceDependencies);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, pkgname, L".local.json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, pkgname, L".local.json: ", bela::ToWide(e.what()));
     return false;
   }
   return true;
@@ -147,7 +147,7 @@ bool EnvDependentChain::LoadEnvImpl(std::wstring_view pkgname, BaulkVirtualEnv &
       jea.array("dependencies", venv.dependencies);
     }
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"parse package ", pkgname, L" json: ", bela::ToWide(e.what()));
     searcher.DbgPrint(L"decode '%s.json': %s", pkgname, ec.message);
     return false;
   }

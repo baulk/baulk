@@ -17,12 +17,12 @@ StringTable::~StringTable() { HeapFree(GetProcessHeap(), 0, data); }
 
 std::string StringTable::String(uint32_t start, bela::error_code &ec) const {
   if (start < 4) {
-    ec = bela::make_error_code(1, L"offset ", start, L" is before the start of string table");
+    ec = bela::make_error_code(ErrGeneral, L"offset ", start, L" is before the start of string table");
     return "";
   }
   start -= 4;
   if (static_cast<size_t>(start) > length) {
-    ec = bela::make_error_code(1, L"offset ", start, L" is beyond the end of string table");
+    ec = bela::make_error_code(ErrGeneral, L"offset ", start, L" is beyond the end of string table");
     return "";
   }
   return std::string(cstring_view(data + start, length - start));
@@ -55,7 +55,7 @@ bool File::readStringTable(bela::error_code &ec) {
     return false;
   }
   if (!ReadFull(stringTable.data, l, ec)) {
-    ec = bela::make_error_code(1, L"fail to read string table: ", ec.message);
+    ec = bela::make_error_code(ErrGeneral, L"fail to read string table: ", ec.message);
     return false;
   }
   stringTable.length = l;

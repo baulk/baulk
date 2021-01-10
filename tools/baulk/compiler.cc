@@ -28,7 +28,7 @@ struct VisualStudioInstance {
     try {
       auto j0 = nlohmann::json::parse(result, nullptr, true, true);
       if (!j0.is_array() || j0.empty()) {
-        ec = bela::make_error_code(1, L"empty visual studio instance");
+        ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
         return false;
       }
       baulk::json::JsonAssignor ja(j0[0]);
@@ -39,7 +39,7 @@ struct VisualStudioInstance {
       isLaunchable = ja.boolean("isLaunchable");
       isPrerelease = ja.boolean("isPrerelease");
     } catch (const std::exception &e) {
-      ec = bela::make_error_code(1, bela::ToWide(e.what()));
+      ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
       return false;
     }
     return true;
@@ -144,7 +144,7 @@ bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
   }
   std::wstring sdkversion;
   if (!SDKSearchVersion(winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion)) {
-    ec = bela::make_error_code(1, L"invalid sdk version");
+    ec = bela::make_error_code(bela::ErrGeneral, L"invalid sdk version");
     return false;
   }
   baulk::DbgPrint(L"Windows SDK %s InstallationFolder: %s", winsdk->ProductVersion, winsdk->InstallationFolder);

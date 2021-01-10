@@ -42,7 +42,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
       ec = bela::make_error_code(ErrNotFat, L"not a fat Mach-O file");
       return false;
     }
-    ec = bela::make_error_code(1, L"macho: bad magic number ['", static_cast<int>(ident[0]), L"', '",
+    ec = bela::make_error_code(ErrGeneral, L"macho: bad magic number ['", static_cast<int>(ident[0]), L"', '",
                                static_cast<int>(ident[1]), L"', '", static_cast<int>(ident[2]), L"', '",
                                static_cast<int>(ident[3]), L"']");
     return false;
@@ -80,7 +80,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
     }
     auto seenArch = (static_cast<uint64_t>(fa.cputype) << 32) | static_cast<uint64_t>(fa.cpusubtype);
     if (auto it = seenArches.find(seenArch); it != seenArches.end()) {
-      ec = bela::make_error_code(1, L"duplicate architecture cpu=", fa.cputype, L", subcpu=#",
+      ec = bela::make_error_code(ErrGeneral, L"duplicate architecture cpu=", fa.cputype, L", subcpu=#",
                                  bela::AlphaNum(bela::Hex(fa.cpusubtype)));
       return false;
     }
@@ -91,7 +91,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
       continue;
     }
     if (machoType != mt) {
-      ec = bela::make_error_code(1, L"Mach-O type for architecture #", i, L" (type=#",
+      ec = bela::make_error_code(ErrGeneral, L"Mach-O type for architecture #", i, L" (type=#",
                                  bela::AlphaNum(bela::Hex(machoType)), L") does not match first (type=#",
                                  bela::AlphaNum(bela::Hex(mt)), L")");
       return false;

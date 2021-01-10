@@ -316,7 +316,7 @@ bool Reader::Initialize(bela::error_code &ec) {
     return false;
   }
   if (d.directoryRecords > static_cast<uint64_t>(size) / fileHeaderLen) {
-    ec = bela::make_error_code(1, L"zip: TOC declares impossible ", d.directoryRecords, L" files in ", size,
+    ec = bela::make_error_code(ErrGeneral, L"zip: TOC declares impossible ", d.directoryRecords, L" files in ", size,
                                L" byte zip");
     return false;
   }

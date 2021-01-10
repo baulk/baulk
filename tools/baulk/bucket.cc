@@ -22,15 +22,15 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::erro
   if (!doc) {
     return std::nullopt;
   }
-   std::string_view title{doc->child("feed").child("title").text().as_string()};
-   baulk::DbgPrint(L"bucket commits: %s",title);
+  std::string_view title{doc->child("feed").child("title").text().as_string()};
+  baulk::DbgPrint(L"bucket commits: %s", title);
   // first entry child
   auto entry = doc->child("feed").child("entry");
   std::string_view id{entry.child("id").text().as_string()};
   if (auto pos = id.find('/'); pos != std::string_view::npos) {
     return std::make_optional(bela::ToWide(id.substr(pos + 1)));
   }
-  ec = bela::make_error_code(1, L"bucket invaild id: ", bela::ToWide(id));
+  ec = bela::make_error_code(bela::ErrGeneral, L"bucket invaild id: ", bela::ToWide(id));
   return std::nullopt;
 }
 
@@ -96,7 +96,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     } else if (ja.get("url", pkg.urls)) {
       pkg.checksum = ja.get("url.hash");
     } else {
-      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
     if (!ja.patharray("links64", pkg.links)) {
@@ -112,7 +112,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     } else if (ja.get("url", pkg.urls)) {
       pkg.checksum = ja.get("url.hash");
     } else {
-      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
     if (!ja.patharray("linksarm64", pkg.links)) {
@@ -125,7 +125,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     if (ja.get("url", pkg.urls)) {
       pkg.checksum = ja.get("url.hash");
     } else {
-      ec = bela::make_error_code(1, pkgmeta, L" not yet ported.");
+      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
       return std::nullopt;
     }
     ja.patharray("links", pkg.links);
@@ -143,7 +143,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
       jea.array("mkdir", pkg.venv.mkdirs);
     }
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, L"parse package meta json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"parse package meta json: ", bela::ToWide(e.what()));
     return std::nullopt;
   }
   return std::make_optional(std::move(pkg));
@@ -174,7 +174,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::
     // must get bucket name
     pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(1, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
     return std::nullopt;
   }
   return std::make_optional(std::move(pkg));
@@ -239,7 +239,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::err
     }
   }
   if (pkgsame == 0) {
-    ec = bela::make_error_code(1, L"'", pkgname, L"' not yet ported.");
+    ec = bela::make_error_code(bela::ErrGeneral, L"'", pkgname, L"' not yet ported.");
     return std::nullopt;
   }
   return std::make_optional(std::move(pkg));

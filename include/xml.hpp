@@ -11,7 +11,7 @@ inline std::optional<document> parse_string(const std::string_view buffer, bela:
   baulk::xml::document doc;
   auto result = doc.load_buffer(buffer.data(), buffer.size());
   if (!result) {
-    ec = bela::make_error_code(1, bela::ToWide(result.description()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(result.description()));
     return std::nullopt;
   }
   return std::make_optional(std::move(doc));

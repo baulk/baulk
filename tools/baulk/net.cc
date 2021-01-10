@@ -458,7 +458,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
     return std::nullopt;
   }
   if (statusCode < 200 || statusCode >= 300) {
-    ec = bela::make_error_code(1, L"Response status code ", statusCode);
+    ec = bela::make_error_code(bela::ErrGeneral, L"Response status code ", statusCode);
     wchar_t statusBuffer[64] = {0};
     DWORD statusSize = sizeof(statusBuffer) * 2;
     if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_TEXT, nullptr, &statusBuffer, &statusSize, nullptr) ==
@@ -519,7 +519,7 @@ std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view work
   if (blen != 0 && total_downloaded_size < blen) {
     bar.MarkFault();
     bar.MarkCompleted();
-    ec = bela::make_error_code(1, L"connection has been disconnected");
+    ec = bela::make_error_code(bela::ErrGeneral, L"connection has been disconnected");
     return std::nullopt;
   }
   file->Finish();

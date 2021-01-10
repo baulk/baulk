@@ -14,9 +14,7 @@
 #include <pwsh.hpp>
 
 namespace baulk::dock {
-constexpr const wchar_t *string_nullable(std::wstring_view str) {
-  return str.empty() ? nullptr : str.data();
-}
+constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
 std::optional<std::wstring> FindWindowsTerminal() {
@@ -46,7 +44,7 @@ bool SearchBaulk(std::wstring &baulkroot, bela::error_code &ec) {
     }
     bela::PathStripName(bkroot);
   }
-  ec = bela::make_error_code(1, L"unable found baulk.exe");
+  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
   return false;
 }
 
@@ -106,8 +104,7 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, Env
       return true;
     }
   } catch (const std::exception &e) {
-    ec =
-        bela::make_error_code(1, L"parse package '", lockfile, L"' json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"parse package '", lockfile, L"' json: ", bela::ToWide(e.what()));
     return false;
   }
   return false;
@@ -234,8 +231,7 @@ LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL 
       index >= 0 && static_cast<size_t>(index) < tables.Archs.size()) {
     ea.Append(L"--vs").Append(L"-A").Append(tables.Archs[index]);
   }
-  if (auto index = ComboBox_GetCurSel(hvenvbox.hWnd);
-      index >= 0 && static_cast<size_t>(index) < tables.Envs.size()) {
+  if (auto index = ComboBox_GetCurSel(hvenvbox.hWnd); index >= 0 && static_cast<size_t>(index) < tables.Envs.size()) {
     ea.Append(L"-E").Append(tables.Envs[index].Value);
   }
   ea.Append(SearchShell());
@@ -244,11 +240,10 @@ LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL 
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
-                     nullptr, nullptr, &si, &pi) != TRUE) {
+  if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
+                     &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::BelaMessageBox(m_hWnd, L"unable open Windows Terminal", ec.data(), nullptr,
-                         bela::mbs_t::FATAL);
+    bela::BelaMessageBox(m_hWnd, L"unable open Windows Terminal", ec.data(), nullptr, bela::mbs_t::FATAL);
     return -1;
   }
   CloseHandle(pi.hThread);
