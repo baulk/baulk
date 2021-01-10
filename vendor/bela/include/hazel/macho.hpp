@@ -358,7 +358,7 @@ constexpr auto ErrNotFat = static_cast<long>(MagicFat);
 class File {
 private:
   bool ParseFile(bela::error_code &ec);
-  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+  bool PositionAt(int64_t pos, bela::error_code &ec) const {
     LARGE_INTEGER oli{0};
     if (SetFilePointerEx(fd, *reinterpret_cast<LARGE_INTEGER *>(&pos), &oli, SEEK_SET) != TRUE) {
       ec = bela::make_system_error_code(L"SetFilePointerEx: ");
@@ -393,13 +393,13 @@ private:
     return true;
   }
   // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) {
     if (!PositionAt(pos + baseOffset, ec)) {
       return false;
     }
     return ReadFull(buffer, len, ec);
   }
-  bool ReadAt(bela::Buffer &buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(bela::Buffer &buffer, size_t len, int64_t pos, bela::error_code &ec) {
     if (!PositionAt(pos + baseOffset, ec)) {
       return false;
     }
@@ -522,7 +522,7 @@ struct FatArch {
 class FatFile {
 private:
   bool ParseFile(bela::error_code &ec);
-  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+  bool PositionAt(int64_t pos, bela::error_code &ec) const {
     LARGE_INTEGER oli{0};
     if (SetFilePointerEx(fd, *reinterpret_cast<LARGE_INTEGER *>(&pos), &oli, SEEK_SET) != TRUE) {
       ec = bela::make_system_error_code(L"SetFilePointerEx: ");
@@ -557,13 +557,13 @@ private:
     return true;
   }
   // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) {
     if (!PositionAt(pos, ec)) {
       return false;
     }
     return ReadFull(buffer, len, ec);
   }
-  bool ReadAt(bela::Buffer &buffer, size_t len, uint64_t pos, bela::error_code &ec) {
+  bool ReadAt(bela::Buffer &buffer, size_t len, int64_t pos, bela::error_code &ec) {
     if (!PositionAt(pos, ec)) {
       return false;
     }
