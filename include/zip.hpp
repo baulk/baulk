@@ -11,7 +11,6 @@
 
 namespace baulk::archive::zip {
 // https://www.hanshq.net/zip.html
-constexpr long ErrCanceled = 654321;
 // https://github.com/nih-at/libzip/blob/master/lib/zip.h
 typedef enum zip_method_e : uint16_t {
   ZIP_STORE = 0,    /* stored (uncompressed) */

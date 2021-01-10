@@ -11,6 +11,8 @@
 #include <bela/time.hpp>
 
 namespace baulk::archive {
+constexpr long ErrEnded = 654320;
+constexpr long ErrCanceled = 654321;
 namespace archive_internal {
 #ifdef PARALLEL_UNZIP
 extern std::pmr::synchronized_pool_resource pool;

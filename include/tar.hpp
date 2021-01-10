@@ -3,6 +3,9 @@
 #define BAULK_TAR_HPP
 #include <cstdint>
 #include <bela/base.hpp>
+#include <bela/io.hpp>
+#include <bela/os.hpp>
+#include <bela/time.hpp>
 
 namespace baulk::archive::tar {
 // https://www.mkssoftware.com/docs/man4/tar.4.asp
@@ -57,9 +60,21 @@ struct tar_header {   /* byte offset */
                       /* 500 */
 };
 
+struct File {
+  std::string name;
+  bela::Time time;
+  bela::os::FileMode mode;
+};
+
 class Reader {
 public:
+  Reader(bela::io::Reader *r_) : r(r_) {}
+  Reader(const Reader &) = delete;
+  Reader &operator=(const Reader &) = delete;
+  std::optional<File> Next(bela::error_code &ec);
+
 private:
+  bela::io::Reader *r{nullptr};
 };
 } // namespace baulk::archive::tar
 
