@@ -468,6 +468,11 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
     hr.assign(types::bz2, L"BZ2 archive data");
     return Found;
   }
+  auto zstdmagic = bela::cast_fromle<uint32_t>(mv.data());
+  if (zstdmagic == 0xFD2FB528U || (zstdmagic & 0xFFFFFFF0) == 0x184D2A50) {
+    hr.assign(types::zstd, L"ZSTD archive data");
+    return Found;
+  }
 
   // https://wiki.nesdev.com/w/index.php/UNIF
   // UNIF

@@ -52,6 +52,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::rar, L"application/vnd.rar"},
       {types::gz, L"application/gzip"},
       {types::bz2, L"application/x-bzip2"},
+      {types::zstd, L"application/x-zstd"},
       {types::p7z, L"application/x-7z-compressed"},
       {types::xz, L"application/x-xz"},
       {types::pdf, L"application/pdf"},
