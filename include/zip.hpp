@@ -91,7 +91,7 @@ constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
 using Receiver = std::function<bool(const void *data, size_t len)>;
 class Reader {
 private:
-  bool PositionAt(uint64_t pos, bela::error_code &ec) const {
+  bool PositionAt(int64_t pos, bela::error_code &ec) const {
     auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
     LARGE_INTEGER oli{0};
     if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
@@ -118,7 +118,7 @@ private:
     return true;
   }
   // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, uint64_t pos, bela::error_code &ec) const {
+  bool ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) const {
     if (!PositionAt(pos, ec)) {
       return false;
     }

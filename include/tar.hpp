@@ -17,16 +17,20 @@ struct File {
 
 class FileReader : public bela::io::ReaderAt {
 public:
-  FileReader(HANDLE fd_) : fd(fd_) {}
-  ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
-  ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
-  bool PositionAt(uint64_t pos, bela::error_code &ec) const;
+  FileReader(HANDLE fd_, bool nc = false) : fd(fd_), needClosed(nc) {}
+  FileReader(const FileReader &) = delete;
+  FileReader &operator=(const FileReader &) = delete;
+  ~FileReader();
+  ssize_t Read(void *buffer, size_t len, bela::error_code &ec) ;
+  ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) ;
+  bool PositionAt(int64_t pos, bela::error_code &ec) ;
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
+  bool needClosed{false};
 };
-
-std::shared_ptr<bela::io::Reader> MakeReader(FileReader *fd, bela::error_code &ec);
+std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
+std::shared_ptr<bela::io::Reader> MakeReader(FileReader &fd, bela::error_code &ec);
 
 class Reader {
 public:
