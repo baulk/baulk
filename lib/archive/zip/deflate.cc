@@ -10,7 +10,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
   if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
-    ec = bela::make_error_code(1, bela::ToWide(zError(zerr)));
+    ec = bela::make_error_code(ErrGeneral, bela::ToWide(zError(zerr)));
     return false;
   }
   auto closer = bela::finally([&] { inflateEnd(&zs); });
@@ -60,7 +60,7 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
     }
   }
   if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
     return false;
   }
   return true;

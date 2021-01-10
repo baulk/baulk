@@ -98,7 +98,7 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
     }
   }
   if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
     return false;
   }
   return true;

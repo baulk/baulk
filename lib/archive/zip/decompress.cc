@@ -55,7 +55,7 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, int64_t &dec
   case ZIP_BROTLI:
     return decompressBrotli(file, receiver, decompressed, ec);
   default:
-    ec = bela::make_error_code(1, L"unsupport zip method ", file.method);
+    ec = bela::make_error_code(ErrGeneral, L"unsupport zip method ", file.method);
     return false;
   }
   return true;

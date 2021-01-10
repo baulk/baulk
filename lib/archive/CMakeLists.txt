@@ -260,8 +260,15 @@ set(BROTLI_SOURCES
 add_library(
   baulkarchive STATIC
   archive.cc
+  tar/brotli.cc
+  tar/bzip.cc
+  tar/gzip.cc
+  tar/tar.cc
+  tar/xz.cc
+  tar/zstd.cc
+  tar/decompressor.cc
   zip/brotli.cc
-  zip/bzlib.cc
+  zip/bzip.cc
   zip/Crc32.cpp
   zip/decompress.cc
   zip/deflate.cc
@@ -285,5 +292,5 @@ add_library(
 target_include_directories(baulkarchive PRIVATE brotli/include)
 target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
 target_include_directories(baulkarchive PRIVATE ced)
-target_compile_definitions(baulkarchive PRIVATE ${LZMA_DEF})
+target_compile_definitions(baulkarchive PRIVATE ${LZMA_DEF} -DBZ_NO_STDIO)
 target_link_libraries(baulkarchive belawin deflate64 minizip Ppmd ced)

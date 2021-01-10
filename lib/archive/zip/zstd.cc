@@ -29,7 +29,7 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
       ZSTD_outBuffer out{outbuf.data(), boutsize, 0};
       auto result = ZSTD_decompressStream(zds, &out, &in);
       if (ZSTD_isError(result) != 0) {
-        ec = bela::make_error_code(1, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
+        ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
         return false;
       }
       crc32val = crc32_fast(out.dst, out.pos, crc32val);
@@ -42,7 +42,7 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
     csize -= minsize;
   }
   if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
     return false;
   }
   return true;

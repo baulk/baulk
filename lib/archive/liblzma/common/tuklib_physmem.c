@@ -79,7 +79,7 @@ tuklib_physmem(void)
 	uint64_t ret = 0;
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-	if ((GetVersion() & 0xFF) >= 5) {
+	//if ((GetVersion() & 0xFF) >= 5) {
 		// Windows 2000 and later have GlobalMemoryStatusEx() which
 		// supports reporting values greater than 4 GiB. To keep the
 		// code working also on older Windows versions, use
@@ -96,7 +96,7 @@ tuklib_physmem(void)
 					ret = meminfo.ullTotalPhys;
 			}
 		}
-	}
+	//}
 
 	if (ret == 0) {
 		// GlobalMemoryStatus() is supported by Windows 95 and later,

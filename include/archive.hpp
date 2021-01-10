@@ -11,8 +11,9 @@
 #include <bela/time.hpp>
 
 namespace baulk::archive {
-constexpr long ErrEnded = 654320;
-constexpr long ErrCanceled = 654321;
+using bela::ErrCanceled;
+using bela::ErrEnded;
+using bela::ErrGeneral;
 namespace archive_internal {
 #ifdef PARALLEL_UNZIP
 extern std::pmr::synchronized_pool_resource pool;
@@ -51,7 +52,7 @@ public:
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t capacity() const { return capacity_; }
   void grow(size_t n);
-  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I>[[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }

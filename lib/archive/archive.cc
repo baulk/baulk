@@ -100,7 +100,7 @@ std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overw
   std::error_code sec;
   if (std::filesystem::exists(p, sec)) {
     if (!overwrite) {
-      ec = bela::make_error_code(1, L"file '", p.filename().wstring(), L"' exists");
+      ec = bela::make_error_code(ErrGeneral, L"file '", p.filename().wstring(), L"' exists");
       return std::nullopt;
     }
   } else {
@@ -126,7 +126,7 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
   std::error_code sec;
   if (std::filesystem::exists(p, sec)) {
     if (!overwrite) {
-      ec = bela::make_error_code(1, L"file '", p.filename().wstring(), L"' exists");
+      ec = bela::make_error_code(ErrGeneral, L"file '", p.filename().wstring(), L"' exists");
       return false;
     }
     std::filesystem::remove_all(p, sec);

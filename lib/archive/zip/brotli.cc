@@ -45,7 +45,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
         break;
       }
       if (result == BROTLI_DECODER_RESULT_ERROR) {
-        ec = bela::make_error_code(1, L"BrotliDecoderDecompressStream error");
+        ec = bela::make_error_code(ErrGeneral, L"BrotliDecoderDecompressStream error");
         return false;
       }
       if (result == BROTLI_DECODER_RESULT_SUCCESS) {
@@ -58,7 +58,7 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
     }
   }
   if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(1, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
     return false;
   }
   return true;
