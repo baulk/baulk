@@ -11,8 +11,8 @@ Reader::~Reader() {
 bool Reader::Initialize(bela::error_code &ec) {
   bzs = baulk::archive::archive_internal::Allocate<bz_stream>(1);
   memset(bzs, 0, sizeof(bz_stream));
-  if (auto ret = BZ2_bzDecompressInit(bzs, 0, 0); ret != BZ_OK) {
-    ec = bela::make_error_code(ret, L"BZ2_bzDecompressInit error");
+  if (auto bzerr = BZ2_bzDecompressInit(bzs, 0, 0); bzerr != BZ_OK) {
+    ec = bela::make_error_code(bzerr, L"BZ2_bzDecompressInit error");
     return false;
   }
   out.grow(outsize);
@@ -20,15 +20,43 @@ bool Reader::Initialize(bela::error_code &ec) {
   return true;
 }
 
+ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
+  auto minsize = (std::min)(len, out.size() - out.pos());
+  memcpy(buffer, out.data(), minsize);
+  out.pos() += minsize;
+  return minsize;
+}
+
 ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  //if (out.size() != 0) {
-  //  auto minsize = (std::min)(len, out.size());
-  //  memcpy(buffer, out.data(), minsize);
-  //  out.size() -= minsize;
-  //  return minsize;
-  //}
-  if (bzs->avail_out == 0) {
+  if (in.pos() != in.size()) {
+    return CopyBuffer(buffer, len, ec);
   }
-  return -1;
+  if (ret == BZ_STREAM_END) {
+    ec = bela::make_error_code(bela::ErrEnded, L"stream end");
+    return -1;
+  }
+  if (bzs->avail_out != 0) {
+    auto n = r->Read(in.data(), in.capacity(), ec);
+    if (n <= 0) {
+      return n;
+    }
+    bzs->next_in = reinterpret_cast<char *>(in.data());
+    bzs->avail_in = n;
+  }
+  bzs->avail_out = static_cast<int>(out.capacity());
+  bzs->next_out = reinterpret_cast<char *>(out.data());
+  ret = BZ2_bzDecompress(bzs);
+  switch (ret) {
+  case BZ_DATA_ERROR:
+    [[fallthrough]];
+  case BZ_MEM_ERROR:
+    ec = bela::make_error_code(ret, L"bzlib error ", ret);
+    return -1;
+  default:
+    break;
+  }
+  out.size() = outsize - bzs->avail_out;
+  out.pos() = 0;
+  return CopyBuffer(buffer, len, ec);
 }
 } // namespace baulk::archive::tar::bzip

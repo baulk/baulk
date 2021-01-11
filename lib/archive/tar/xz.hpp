@@ -15,7 +15,14 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
 
 private:
+  ssize_t CopyBuffer(void *buffer, size_t len, bela::error_code &ec);
+  bela::ssize_t ReadAtLeast(void *buffer, size_t size, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
+  lzma_stream *lzs{nullptr};
+  Buffer in;
+  Buffer out;
+  lzma_action action{LZMA_RUN};
+  lzma_ret ret{LZMA_OK};
 };
 } // namespace baulk::archive::tar::xz
 

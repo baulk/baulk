@@ -15,10 +15,12 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
 
 private:
+  ssize_t CopyBuffer(void *buffer, size_t len, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   bz_stream *bzs{nullptr};
   Buffer in;
   Buffer out;
+  int ret{ BZ_OK };
 };
 } // namespace baulk::archive::tar::bzip
 

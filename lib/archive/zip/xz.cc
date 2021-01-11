@@ -34,8 +34,7 @@ constexpr uint64_t maximum_compressed_size(uint64_t uncompressed_size) {
 // XZ
 bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &decompressed,
                           bela::error_code &ec) const {
-  lzma_stream zs;
-  memset(&zs, 0, sizeof(zs));
+  lzma_stream zs = LZMA_STREAM_INIT;
   auto ret = lzma_stream_decoder(&zs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
     ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);
@@ -45,21 +44,26 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
   Buffer in(insize);
   auto csize = file.compressedSize;
   lzma_action action = LZMA_RUN; // no C26812
+  zs.next_in = nullptr;
+  zs.avail_in = 0;
   zs.next_out = out.data();
   zs.avail_out = outsize;
   uint32_t crc32val = 0;
-  while (csize != 0) {
-    auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
-    if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
-      return false;
-    }
-    zs.next_in = in.data();
-    zs.avail_in = minsize;
-    if (csize == minsize) {
-      action = LZMA_FINISH;
+  for (;;) {
+    if (zs.avail_in == 0 && csize != 0) {
+      auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
+      if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
+        return false;
+      }
+      zs.next_in = in.data();
+      zs.avail_in = minsize;
+      csize -= minsize;
+      if (csize == 0) {
+        action = LZMA_FINISH;
+      }
     }
     ret = lzma_code(&zs, action);
-    if (zs.avail_out == 0 || ret != LZMA_OK) {
+    if (zs.avail_out == 0 || ret == LZMA_STREAM_END) {
       auto have = outsize - zs.avail_out;
       crc32val = crc32_fast(out.data(), have, crc32val);
       if (!receiver(out.data(), have)) {
@@ -70,7 +74,6 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
       zs.next_out = out.data();
       zs.avail_out = outsize;
     }
-    csize -= minsize;
     if (ret == LZMA_STREAM_END) {
       break;
     }
@@ -108,6 +111,26 @@ bool Reader::decompressLZMA2(const File &file, const Receiver &receiver, int64_t
                              bela::error_code &ec) const {
   lzma_stream zstr;
   memset(&zstr, 0, sizeof(zstr));
+  return false;
+}
+
+bool Reader::decompressLZMA(const File &file, const Receiver &receiver, int64_t &decompressed,
+                            bela::error_code &ec) const {
+  // lzma_filter filters[LZMA_FILTERS_MAX + 1] = {0};
+  lzma_options_lzma opt_lzma = {0};
+  memset(&opt_lzma, 0, sizeof(opt_lzma));
+  lzma_stream lzs;
+  memset(&lzs, 0, sizeof(lzs));
+  uint32_t magic = 0;
+  if (!ReadFull(&magic, 4, ec)) {
+    return false;
+  }
+  if (auto ret = lzma_alone_decoder(&lzs, UINT64_MAX); ret != LZMA_OK) {
+    ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);
+    return false;
+  }
+  Buffer out(outsize);
+  Buffer in(insize);
   return false;
 }
 
