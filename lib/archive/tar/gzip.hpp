@@ -2,6 +2,7 @@
 #ifndef BAULK_ARCHIVE_TAR_GZIP_HPP
 #define BAULK_ARCHIVE_TAR_GZIP_HPP
 #include "tarinternal.hpp"
+#include "zlib.h"
 
 namespace baulk::archive::tar::gzip {
 class Reader : public bela::io::Reader {

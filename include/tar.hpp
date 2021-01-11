@@ -6,6 +6,7 @@
 #include <memory>
 
 namespace baulk::archive::tar {
+constexpr long ErrNoneFilter = 754321;
 using bela::ssize_t;
 struct File {
   std::string name;
@@ -21,9 +22,9 @@ public:
   FileReader(const FileReader &) = delete;
   FileReader &operator=(const FileReader &) = delete;
   ~FileReader();
-  ssize_t Read(void *buffer, size_t len, bela::error_code &ec) ;
-  ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) ;
-  bool PositionAt(int64_t pos, bela::error_code &ec) ;
+  ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
+  ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
+  bool PositionAt(int64_t pos, bela::error_code &ec);
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
