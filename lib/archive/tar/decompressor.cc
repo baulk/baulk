@@ -13,7 +13,7 @@ constexpr const uint8_t gzMagic[] = {0x1F, 0x8B, 0x8};
 constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
 constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
 std::shared_ptr<bela::io::Reader> MakeReader(FileReader &fd, bela::error_code &ec) {
-  uint8_t magic[512];
+  uint8_t magic[8];
   auto n = fd.ReadAt(magic, sizeof(magic), 0, ec);
   if (n < 4) {
     return nullptr;
