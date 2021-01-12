@@ -44,8 +44,8 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, int64_t &dec
     [[fallthrough]];
   case ZIP_ZSTD:
     return decompressZstd(file, receiver, decompressed, ec);
-  case ZIP_LZMA2:
-    return decompressLZMA2(file, receiver, decompressed, ec);
+  case ZIP_LZMA:
+    return decompressLZMA(file, receiver, decompressed, ec);
   case ZIP_XZ:
     return decompressXz(file, receiver, decompressed, ec);
   case ZIP_BZIP2:

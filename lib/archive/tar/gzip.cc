@@ -38,7 +38,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
       return n;
     }
     zs->next_in = in.data();
-    zs->avail_in = n;
+    zs->avail_in = static_cast<uint32_t>(n);
   }
   zs->avail_out = static_cast<int>(out.capacity());
   zs->next_out = out.data();

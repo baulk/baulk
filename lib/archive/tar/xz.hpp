@@ -18,7 +18,7 @@ private:
   ssize_t CopyBuffer(void *buffer, size_t len, bela::error_code &ec);
   bela::ssize_t ReadAtLeast(void *buffer, size_t size, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
-  lzma_stream *lzs{nullptr};
+  lzma_stream *xzs{nullptr};
   Buffer in;
   Buffer out;
   lzma_action action{LZMA_RUN};

@@ -2,21 +2,23 @@
 #include "xz.hpp"
 
 namespace baulk::archive::tar::xz {
+constexpr size_t xzoutsize = 256 * 1024;
+constexpr size_t xzinsize = 128 * 1024;
 Reader::~Reader() {
-  if (lzs != nullptr) {
-    baulk::archive::archive_internal::Deallocate(lzs, 1);
+  if (xzs != nullptr) {
+    baulk::archive::archive_internal::Deallocate(xzs, 1);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  lzs = baulk::archive::archive_internal::Allocate<lzma_stream>(1);
-  memset(lzs, 0, sizeof(lzma_stream));
-  auto ret = lzma_stream_decoder(lzs, UINT64_MAX, LZMA_CONCATENATED);
+  xzs = baulk::archive::archive_internal::Allocate<lzma_stream>(1);
+  memset(xzs, 0, sizeof(lzma_stream));
+  auto ret = lzma_stream_decoder(xzs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
     ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);
     return false;
   }
-  out.grow(outsize);
-  in.grow(insize);
+  out.grow(xzoutsize);
+  in.grow(xzinsize);
   return true;
 }
 
@@ -51,22 +53,22 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   if (ret == LZMA_STREAM_END) {
     return 0;
   }
-  if (lzs->avail_in == 0) {
+  if (xzs->avail_in == 0) {
     auto n = ReadAtLeast(in.data(), in.capacity(), ec);
     if (n <= 0) {
       return n;
     }
-    lzs->next_in = in.data();
-    lzs->avail_in = static_cast<size_t>(n);
+    xzs->next_in = in.data();
+    xzs->avail_in = static_cast<size_t>(n);
     if (n < insize) {
       action = LZMA_FINISH;
     }
   }
-  lzs->next_out = out.data();
-  lzs->avail_out = outsize;
-  ret = lzma_code(lzs, action);
-  if (lzs->avail_out == 0 || ret == LZMA_STREAM_END) {
-    auto have = outsize - lzs->avail_out;
+  xzs->next_out = out.data();
+  xzs->avail_out = xzoutsize;
+  ret = lzma_code(xzs, action);
+  if (xzs->avail_out == 0 || ret == LZMA_STREAM_END) {
+    auto have = xzoutsize - xzs->avail_out;
     out.pos() = 0;
     out.size() = have;
     return CopyBuffer(buffer, len, ec);
