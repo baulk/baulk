@@ -39,28 +39,52 @@ constexpr size_t prefixSize = 155; // Max length of the prefix field in USTAR fo
 constexpr size_t outsize = 64 * 1024;
 constexpr size_t insize = 16 * 1024;
 
-struct tar_header {   /* byte offset */
-  char name[100];     /*   0 */
-  char mode[8];       /* 100 */
-  char uid[8];        /* 108 */
-  char gid[8];        /* 116 */
-  char size[12];      /* 124 */
-  char mtime[12];     /* 136 */
-  char chksum[8];     /* 148 */
-  char typeflag;      /* 156 */
-  char linkname[100]; /* 157 */
-  char magic[6];      /* 257 */
-  char version[2];    /* 263 */
-  char uname[32];     /* 265 */
-  char gname[32];     /* 297 */
-  char devmajor[8];   /* 329 */
-  char devminor[8];   /* 337 */
-  char path[155];     /* 345 */
-                      /* 500 */
-  char padding[12];
+/*
+ * Structure of GNU tar header
+ */
+struct gnu_sparse {
+  char offset[12];
+  char numbytes[12];
 };
 
-// constexpr auto N=sizeof(tar_header);
+struct gnutar_header {
+  char name[100];
+  char mode[8];
+  char uid[8];
+  char gid[8];
+  char size[12];
+  char mtime[12];
+  char checksum[8];
+  char typeflag[1];
+  char linkname[100];
+  char magic[8]; /* "ustar  \0" (note blank/blank/null at end) */
+  char uname[32];
+  char gname[32];
+  char rdevmajor[8];
+  char rdevminor[8];
+  char atime[12];
+  char ctime[12];
+  char offset[12];
+  char longnames[4];
+  char unused[1];
+  gnu_sparse sparse[4];
+  char isextended[1];
+  char realsize[12];
+  /*
+   * Old GNU format doesn't use POSIX 'prefix' field; they use
+   * the 'L' (longname) entry instead.
+   */
+};
+
+enum tar_format {
+  FormatUnknown = 0, // unknown
+  FormatV7 = 1,
+  FormatUSTAR = 2,
+  FormatPAX = 4,
+  FormatGNU = 8,
+  FormatSTAR = 16,
+  FormatMax = 32,
+};
 
 } // namespace baulk::archive::tar
 
