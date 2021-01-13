@@ -67,11 +67,11 @@ int64_t Reader::findDirectory64End(int64_t directoryEndOffset, bela::error_code 
 
 inline std::string cleanupName(const void *data, size_t N) {
   auto p = reinterpret_cast<const char *>(data);
-  auto pos = memchr(data, 0, N);
+  auto pos = memchr(p, 0, N);
   if (pos == nullptr) {
     return std::string(p, N);
   }
-  N = p - reinterpret_cast<const char *>(pos);
+  N = reinterpret_cast<const char *>(pos) - p;
   return std::string(p, N);
 }
 
@@ -364,7 +364,7 @@ bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
   return Initialize(ec);
 }
 
-const wchar_t *Method(uint16_t m) {
+std::wstring Method(uint16_t m) {
   struct method_kv_t {
     hazel::zip::zip_method_t m;
     const wchar_t *name;
@@ -391,13 +391,14 @@ const wchar_t *Method(uint16_t m) {
       {zip_method_t::ZIP_WAVPACK, L"WavPack"},
       {zip_method_t::ZIP_PPMD, L"PPMd"},
       {zip_method_t::ZIP_AES, L"AES"},
+      {zip_method_t::ZIP_BROTLI, L"brotli"},
   };
   for (const auto &i : methods) {
     if (static_cast<uint16_t>(i.m) == m) {
       return i.name;
     }
   }
-  return L"NONE";
+  return std::wstring(bela::AlphaNum(m).Piece());
 }
 
 bool Reader::ContainsSlow(std::span<std::string_view> paths, std::size_t limit) const {

@@ -89,7 +89,7 @@ FileMode resolveFileMode(const File &file, uint32_t externalAttrs) {
   } else if (n == creatorNTFS || n == creatorVFAT || n == creatorFAT) {
     mode = msdosModeToFileMode(externalAttrs);
   }
-  if (file.name.ends_with('/')) {
+  if (file.name.ends_with('/') || file.name.ends_with('\\')) {
     mode = mode | FileMode::ModeDir;
   }
   return mode;
