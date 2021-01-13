@@ -40,6 +40,9 @@ typedef enum zip_method_e : uint16_t {
   ZIP_WAVPACK = 97, /* WavPack compressed data */
   ZIP_PPMD = 98,    /* PPMd version I, Rev 1 */
   ZIP_AES = 99,     /* AE-x encryption marker (see APPENDIX E) */
+
+  // Private magic number
+  ZIP_BROTLI = 121,
 } zip_method_t;
 
 struct directoryEnd {
