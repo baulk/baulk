@@ -27,21 +27,40 @@ namespace baulk::archive::tar {
  *  345   155  Filename prefix
  */
 
-constexpr char TYPE_NORMAL_FILE = '0';
-constexpr char TYPE_HARD_LINK = '1';
-constexpr char TYPE_SYMBOLIC_LINK = '2';
-constexpr char TYPE_CHAR_SPEC = '3';
-constexpr char TYPE_BLOCK_SPEC = '4';
-constexpr char TYPE_DIRECTORY = '5';
-constexpr char TYPE_FIFO = '6';
-constexpr char TYPE_CONT_FILE = '7';
-// global extended header with meta data (POSIX.1-2001)
-constexpr char TYPE_G_EX_HEADER = 'g';
-constexpr char TYPE_G_EX_HEADER2 = 'G';
-// extended header with meta data for the next file in the archive
-// (POSIX.1-2001)
-constexpr char TYPE_EX_HEADER = 'x';
-constexpr char TYPE_EX_HEADER2 = 'X';
+// Type '0' indicates a regular file.
+constexpr char TypeReg = '0';
+constexpr char TypeRegA = '\x00'; // Deprecated: Use TypeReg instead.
+
+// Type '1' to '6' are header-only flags and may not have a data body.
+constexpr char TypeLink = '1';    // Hard link
+constexpr char TypeSymlink = '2'; // Symbolic link
+constexpr char TypeChar = '3';    // Character device node
+constexpr char TypeBlock = '4';   // Block device node
+constexpr char TypeDir = '5';     // Directory
+constexpr char TypeFifo = '6';    // FIFO node
+
+// Type '7' is reserved.
+constexpr char TypeCont = '7';
+
+// Type 'x' is used by the PAX format to store key-value records that
+// are only relevant to the next file.
+// This package transparently handles these types.
+constexpr char TypeXHeader = 'x';
+
+// Type 'g' is used by the PAX format to store key-value records that
+// are relevant to all subsequent files.
+// This package only supports parsing and composing such headers,
+// but does not currently support persisting the global state across files.
+constexpr char TypeXGlobalHeader = 'g';
+
+// Type 'S' indicates a sparse file in the GNU format.
+constexpr char TypeGNUSparse = 'S';
+
+// Types 'L' and 'K' are used by the GNU format for a meta file
+// used to store the path or link name for the next file.
+// This package transparently handles these types.
+constexpr char TypeGNULongName = 'L';
+constexpr char TypeGNULongLink = 'K';
 
 constexpr char magicGNU[] = {'u', 's', 't', 'a', 'r', ' '};
 constexpr char versionGNU[] = {' ', 0x00};

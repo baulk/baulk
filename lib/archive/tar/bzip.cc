@@ -22,7 +22,7 @@ bool Reader::Initialize(bela::error_code &ec) {
 
 ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
   auto minsize = (std::min)(len, out.size() - out.pos());
-  memcpy(buffer, out.data(), minsize);
+  memcpy(buffer, out.data() + out.pos(), minsize);
   out.pos() += minsize;
   return minsize;
 }

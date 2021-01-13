@@ -1,6 +1,7 @@
 ///
 #include <tar.hpp>
 #include <bela/terminal.hpp>
+#include <bela/datetime.hpp>
 
 bool untar(std::wstring_view file) {
   bela::FPrintF(stderr, L"untar %s\n", file);
@@ -22,7 +23,19 @@ bool untar(std::wstring_view file) {
     if (!fh) {
       break;
     }
-    bela::FPrintF(stderr,L"Filename: %s\n", fh->name);
+    bela::FPrintF(stderr, L"Filename: %s %s %d\n", fh->name, bela::FormatTime(fh->time), fh->size);
+    if (fh->size != 0) {
+      auto size = fh->size;
+      char buffer[4096];
+      while (size > 0) {
+        auto msz = (std::min)(size, 4096ll);
+        auto n = tr->Read(buffer, msz, ec);
+        if (n <= 0) {
+          break;
+        }
+        size -= n;
+      }
+    }
   }
   return true;
 }

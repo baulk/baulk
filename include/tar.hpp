@@ -12,7 +12,7 @@ struct File {
   std::string name;
   int64_t size{0};
   bela::Time time;
-  bela::os::FileMode mode;
+  int64_t mode;
   uint32_t chcksum{0};
 };
 
@@ -67,7 +67,7 @@ public:
 private:
   bool discard(bela::error_code &ec);
   bela::io::Reader *r{nullptr};
-  int64_t unconsumedSize{0};
+  int64_t paddingSize{0};
   ustar_header uhdr{0};
 };
 
