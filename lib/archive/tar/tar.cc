@@ -78,7 +78,7 @@ bela::ssize_t Reader::ReadAtLeast(void *buffer, size_t size, bela::error_code &e
 bool Reader::discard(bela::error_code &ec) {
   constexpr int64_t dbsize = 4096;
   uint8_t disbuf[4096];
-  while (unconsumedSize != 0) {
+  while (unconsumedSize > 0) {
     auto minsize = (std::min)(unconsumedSize, dbsize);
     auto n = Read(disbuf, minsize, ec);
     if (n <= 0) {
@@ -86,6 +86,16 @@ bool Reader::discard(bela::error_code &ec) {
     }
   }
   return true;
+}
+
+inline std::string cleanupName(const void *data, size_t N) {
+  auto p = reinterpret_cast<const char *>(data);
+  auto pos = memchr(p, 0, N);
+  if (pos == nullptr) {
+    return std::string(p, N);
+  }
+  N = reinterpret_cast<const char *>(pos) - p;
+  return std::string(p, N);
 }
 
 std::optional<File> Reader::Next(bela::error_code &ec) {
@@ -113,7 +123,9 @@ std::optional<File> Reader::Next(bela::error_code &ec) {
       memcmp(uhdr.version, versionGNU, sizeof(versionGNU)) == 0) {
     // GNU TAR
   }
-  return std::nullopt;
+  File file;
+  file.name = cleanupName(uhdr.name, sizeof(uhdr.name));
+  return std::make_optional(std::move(file));
 }
 
 } // namespace baulk::archive::tar

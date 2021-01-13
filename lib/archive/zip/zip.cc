@@ -161,7 +161,7 @@ inline std::string cleanupName(const void *data, size_t N) {
   if (pos == nullptr) {
     return std::string(p, N);
   }
-  N = p - reinterpret_cast<const char *>(pos);
+  N = reinterpret_cast<const char *>(pos) - p;
   return std::string(p, N);
 }
 

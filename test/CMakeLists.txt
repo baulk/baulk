@@ -44,7 +44,12 @@ add_executable(
 
 target_link_libraries(vsenv_test belawin)
 
-add_executable(unzip_test unzip.cc)
+add_executable(unzip unzip.cc)
 
-target_link_libraries(unzip_test baulkarchive belawin belatime)
-target_include_directories(unzip_test PRIVATE ../lib/archive)
+target_link_libraries(unzip baulkarchive belawin belatime)
+target_include_directories(unzip PRIVATE ../lib/archive)
+
+add_executable(untar untar.cc)
+
+target_link_libraries(untar baulkarchive belawin belatime)
+target_include_directories(untar PRIVATE ../lib/archive)

@@ -15,7 +15,8 @@ public:
 
 private:
   bela::io::Reader *r{nullptr};
+  int64_t pickBytes{0};
 };
-} // namespace baulk::archive::tar::xz
+} // namespace baulk::archive::tar::brotli
 
 #endif

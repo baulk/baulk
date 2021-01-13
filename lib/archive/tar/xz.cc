@@ -53,11 +53,12 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   if (ret == LZMA_STREAM_END) {
     return 0;
   }
-  if (xzs->avail_in == 0) {
+  if (xzs->avail_in == 0 || pickBytes == 0) {
     auto n = ReadAtLeast(in.data(), in.capacity(), ec);
     if (n <= 0) {
       return n;
     }
+    pickBytes += static_cast<int64_t>(n);
     xzs->next_in = in.data();
     xzs->avail_in = static_cast<size_t>(n);
     if (n < insize) {

@@ -21,6 +21,7 @@ private:
   lzma_stream *xzs{nullptr};
   Buffer in;
   Buffer out;
+  int64_t pickBytes{0};
   lzma_action action{LZMA_RUN};
   lzma_ret ret{LZMA_OK};
 };

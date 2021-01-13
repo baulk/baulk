@@ -32,11 +32,12 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   if (in.pos() != in.size()) {
     return CopyBuffer(buffer, len, ec);
   }
-  if (zs->avail_out != 0) {
+  if (zs->avail_out != 0 || pickBytes == 0) {
     auto n = r->Read(in.data(), in.capacity(), ec);
     if (n <= 0) {
       return n;
     }
+    pickBytes += static_cast<int64_t>(n);
     zs->next_in = in.data();
     zs->avail_in = static_cast<uint32_t>(n);
   }

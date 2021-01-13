@@ -54,7 +54,7 @@ constexpr size_t nameSize = 100;   // Max length of the name field in USTAR form
 constexpr size_t prefixSize = 155; // Max length of the prefix field in USTAR format
 
 constexpr size_t outsize = 64 * 1024;
-constexpr size_t insize = 16 * 1024;
+constexpr size_t insize = 32 * 1024;
 
 /*
  * Structure of GNU tar header

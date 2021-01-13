@@ -20,6 +20,7 @@ private:
   bz_stream *bzs{nullptr};
   Buffer in;
   Buffer out;
+  int64_t pickBytes{ 0 };
   int ret{ BZ_OK };
 };
 } // namespace baulk::archive::tar::bzip

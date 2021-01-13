@@ -35,11 +35,12 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
     ec = bela::make_error_code(bela::ErrEnded, L"stream end");
     return -1;
   }
-  if (bzs->avail_out != 0) {
+  if (bzs->avail_out != 0 || pickBytes == 0) {
     auto n = r->Read(in.data(), in.capacity(), ec);
     if (n <= 0) {
       return n;
     }
+    pickBytes += static_cast<int64_t>(n);
     bzs->next_in = reinterpret_cast<char *>(in.data());
     bzs->avail_in = static_cast<uint32_t>(n);
   }

@@ -20,6 +20,7 @@ private:
   z_stream *zs{nullptr};
   Buffer out;
   Buffer in;
+  int64_t pickBytes{0};
 };
 } // namespace baulk::archive::tar::gzip
 
