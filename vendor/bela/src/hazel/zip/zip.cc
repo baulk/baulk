@@ -364,7 +364,7 @@ bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
   return Initialize(ec);
 }
 
-const wchar_t *Method(uint16_t m) {
+std::wstring Method(uint16_t m) {
   struct method_kv_t {
     hazel::zip::zip_method_t m;
     const wchar_t *name;
@@ -398,7 +398,7 @@ const wchar_t *Method(uint16_t m) {
       return i.name;
     }
   }
-  return L"NONE";
+  return std::wstring(bela::AlphaNum(m).Piece());
 }
 
 bool Reader::ContainsSlow(std::span<std::string_view> paths, std::size_t limit) const {

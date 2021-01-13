@@ -208,7 +208,7 @@ private:
   bool ContainsSlow(std::span<std::string_view> paths, std::size_t limit = size_max) const;
 };
 
-const wchar_t *Method(uint16_t m);
+std::wstring Method(uint16_t m);
 } // namespace hazel::zip
 
 #endif
