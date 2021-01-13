@@ -26,6 +26,23 @@ namespace baulk::archive::tar {
  *  337   8    Device minor number
  *  345   155  Filename prefix
  */
+
+constexpr char TYPE_NORMAL_FILE = '0';
+constexpr char TYPE_HARD_LINK = '1';
+constexpr char TYPE_SYMBOLIC_LINK = '2';
+constexpr char TYPE_CHAR_SPEC = '3';
+constexpr char TYPE_BLOCK_SPEC = '4';
+constexpr char TYPE_DIRECTORY = '5';
+constexpr char TYPE_FIFO = '6';
+constexpr char TYPE_CONT_FILE = '7';
+// global extended header with meta data (POSIX.1-2001)
+constexpr char TYPE_G_EX_HEADER = 'g';
+constexpr char TYPE_G_EX_HEADER2 = 'G';
+// extended header with meta data for the next file in the archive
+// (POSIX.1-2001)
+constexpr char TYPE_EX_HEADER = 'x';
+constexpr char TYPE_EX_HEADER2 = 'X';
+
 constexpr char magicGNU[] = {'u', 's', 't', 'a', 'r', ' '};
 constexpr char versionGNU[] = {' ', 0x00};
 constexpr char magicUSTAR[] = {'u', 's', 't', 'a', 'r', 0x00};
