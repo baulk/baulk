@@ -10,8 +10,7 @@ add_library(
   duration.cc
   format.cc
   time.cc
-  timezone.cc
-  unscaledcycleclock.cc)
+  timezone.cc)
 
 target_link_libraries(belatime bela)
 

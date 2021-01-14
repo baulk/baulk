@@ -3,6 +3,7 @@
 #include <bela/terminal.hpp>
 #include <bela/base.hpp>
 #include <bela/datetime.hpp>
+#include <ctime>
 
 inline std::string TimeString(time_t t) {
   if (t < 0) {
@@ -31,6 +32,8 @@ int wmain() {
   for (const auto s : sv) {
     bela::FPrintF(stderr, L"[%s]--[%s]\n", s, trimSuffixZero(s));
   }
+  auto t0 = time(nullptr);
+  bela::FPrintF(stderr, L"time:  %d\n", t0);
   auto now = bela::Now();
   FILETIME ft = {0};
   GetSystemTimePreciseAsFileTime(&ft);
