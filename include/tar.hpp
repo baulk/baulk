@@ -12,7 +12,7 @@ struct File {
   std::string name;
   int64_t size{0};
   bela::Time time;
-  int64_t mode;
+  int64_t mode{0};
   uint32_t chcksum{0};
 };
 
@@ -34,7 +34,7 @@ std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &e
 std::shared_ptr<bela::io::Reader> MakeReader(FileReader &fd, bela::error_code &ec);
 
 // ustar
-struct ustar_header {       /* byte offset */
+struct ustar_header { /* byte offset */
   char name[100];     /*   0 */
   char mode[8];       /* 100 */
   char uid[8];        /* 108 */
@@ -62,12 +62,14 @@ public:
   Reader &operator=(const Reader &) = delete;
   std::optional<File> Next(bela::error_code &ec);
   bela::ssize_t Read(void *buffer, size_t size, bela::error_code &ec);
-  bela::ssize_t ReadAtLeast(void *buffer, size_t size, bela::error_code &ec);
+  bool ReadFull(void *buffer, size_t size, bela::error_code &ec);
 
 private:
-  bool discard(bela::error_code &ec);
+  bool discard(int64_t bytes, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
+  int64_t remainingSize{ 0 };
   int64_t paddingSize{0};
+
   ustar_header uhdr{0};
 };
 

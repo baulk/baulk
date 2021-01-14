@@ -161,32 +161,30 @@ bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
 }
 
 // ReadAtLeast
-bela::ssize_t Reader::ReadAtLeast(void *buffer, size_t size, bela::error_code &ec) {
+bool Reader::ReadFull(void *buffer, size_t size, bela::error_code &ec) {
   size_t rbytes = 0;
   auto p = reinterpret_cast<uint8_t *>(buffer);
   while (rbytes < size) {
     auto sz = Read(p + rbytes, size - rbytes, ec);
-    if (sz < 0) {
-      return -1;
-    }
-    if (sz == 0) {
-      break;
+    if (sz <= 0) {
+      ec = bela::make_error_code(bela::ErrEnded, L"End of file");
+      return false;
     }
     rbytes += sz;
   }
-  return rbytes;
+  return true;
 }
 
-bool Reader::discard(bela::error_code &ec) {
+bool Reader::discard(int64_t bytes, bela::error_code &ec) {
   constexpr int64_t dbsize = 4096;
   uint8_t disbuf[4096];
-  while (paddingSize > 0) {
-    auto minsize = (std::min)(paddingSize, dbsize);
+  while (bytes > 0) {
+    auto minsize = (std::min)(bytes, dbsize);
     auto n = Read(disbuf, minsize, ec);
     if (n <= 0) {
       return false;
     }
-    paddingSize -= n;
+    bytes -= n;
   }
   return true;
 }
@@ -216,15 +214,15 @@ bool isHeaderOnlyType(char flag) {
 }
 
 std::optional<File> Reader::Next(bela::error_code &ec) {
-  if (!discard(ec)) {
-    return std::nullopt;
-  }
+
   for (;;) {
-    auto n = ReadAtLeast(&uhdr, sizeof(uhdr), ec);
-    if (n < 0) {
+    if (!discard(remainingSize, ec)) {
       return std::nullopt;
     }
-    if (n != sizeof(uhdr)) {
+    if (!discard(paddingSize, ec)) {
+      return std::nullopt;
+    }
+    if (!ReadFull(&uhdr, sizeof(uhdr), ec)) {
       ec = bela::make_error_code(L"invalid tar header");
       return std::nullopt;
     }
@@ -249,8 +247,8 @@ std::optional<File> Reader::Next(bela::error_code &ec) {
     // GNU TAR
   }
   auto nb = file.size;
-  if(isHeaderOnlyType(uhdr.typeflag)){
-      nb = 0;
+  if (isHeaderOnlyType(uhdr.typeflag)) {
+    nb = 0;
   }
   paddingSize = blockPadding(nb);
 
