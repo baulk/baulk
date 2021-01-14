@@ -28,36 +28,42 @@ ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
 }
 
 ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (in.pos() != in.size()) {
+  if (out.pos() != out.size()) {
     return CopyBuffer(buffer, len, ec);
   }
   if (ret == BZ_STREAM_END) {
     ec = bela::make_error_code(bela::ErrEnded, L"stream end");
     return -1;
   }
-  if (bzs->avail_out != 0 || pickBytes == 0) {
-    auto n = r->Read(in.data(), in.capacity(), ec);
-    if (n <= 0) {
-      return n;
+  for (;;) {
+    if (bzs->avail_out != 0 || pickBytes == 0) {
+      auto n = r->Read(in.data(), in.capacity(), ec);
+      if (n <= 0) {
+        return n;
+      }
+      pickBytes += static_cast<int64_t>(n);
+      bzs->next_in = reinterpret_cast<char *>(in.data());
+      bzs->avail_in = static_cast<uint32_t>(n);
     }
-    pickBytes += static_cast<int64_t>(n);
-    bzs->next_in = reinterpret_cast<char *>(in.data());
-    bzs->avail_in = static_cast<uint32_t>(n);
+    bzs->avail_out = static_cast<int>(out.capacity());
+    bzs->next_out = reinterpret_cast<char *>(out.data());
+    ret = BZ2_bzDecompress(bzs);
+    switch (ret) {
+    case BZ_DATA_ERROR:
+      [[fallthrough]];
+    case BZ_MEM_ERROR:
+      ec = bela::make_error_code(ret, L"bzlib error ", ret);
+      return -1;
+    default:
+      break;
+    }
+    auto have = outsize - bzs->avail_out;
+    out.size() = have;
+    out.pos() = 0;
+    if (have != 0) {
+      break;
+    }
   }
-  bzs->avail_out = static_cast<int>(out.capacity());
-  bzs->next_out = reinterpret_cast<char *>(out.data());
-  ret = BZ2_bzDecompress(bzs);
-  switch (ret) {
-  case BZ_DATA_ERROR:
-    [[fallthrough]];
-  case BZ_MEM_ERROR:
-    ec = bela::make_error_code(ret, L"bzlib error ", ret);
-    return -1;
-  default:
-    break;
-  }
-  out.size() = outsize - bzs->avail_out;
-  out.pos() = 0;
   return CopyBuffer(buffer, len, ec);
 }
 } // namespace baulk::archive::tar::bzip

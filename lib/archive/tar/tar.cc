@@ -145,7 +145,12 @@ std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &e
     ec = bela::make_system_error_code();
     return nullptr;
   }
-  return std::make_shared<FileReader>(fd, true);
+  LARGE_INTEGER li;
+  if (GetFileSizeEx(fd, &li) != TRUE) {
+    ec = bela::make_system_error_code(L"GetFileSizeEx: ");
+    return nullptr;
+  }
+  return std::make_shared<FileReader>(fd, li.QuadPart, true);
 }
 
 inline bool IsZero(const ustar_header &th) {
@@ -166,7 +171,10 @@ bool Reader::ReadFull(void *buffer, size_t size, bela::error_code &ec) {
   auto p = reinterpret_cast<uint8_t *>(buffer);
   while (rbytes < size) {
     auto sz = Read(p + rbytes, size - rbytes, ec);
-    if (sz <= 0) {
+    if (sz == -1) {
+      return false;
+    }
+    if (sz == 0) {
       ec = bela::make_error_code(bela::ErrEnded, L"End of file");
       return false;
     }
@@ -176,11 +184,11 @@ bool Reader::ReadFull(void *buffer, size_t size, bela::error_code &ec) {
 }
 
 bool Reader::discard(int64_t bytes, bela::error_code &ec) {
-  constexpr int64_t dbsize = 4096;
-  uint8_t disbuf[4096];
+  constexpr int64_t discardSize = 4096;
+  uint8_t discardBuffer[4096];
   while (bytes > 0) {
-    auto minsize = (std::min)(bytes, dbsize);
-    auto n = Read(disbuf, minsize, ec);
+    auto minsize = (std::min)(bytes, discardSize);
+    auto n = Read(discardBuffer, minsize, ec);
     if (n <= 0) {
       return false;
     }
@@ -222,35 +230,53 @@ std::optional<File> Reader::Next(bela::error_code &ec) {
     if (!discard(paddingSize, ec)) {
       return std::nullopt;
     }
-    if (!ReadFull(&uhdr, sizeof(uhdr), ec)) {
-      ec = bela::make_error_code(L"invalid tar header");
+    if (!ReadFull(&hdr, sizeof(hdr), ec)) {
       return std::nullopt;
     }
-    if (uhdr.name[0] != 0 || !IsZero(uhdr)) {
+    if (hdr.name[0] != 0 || !IsZero(hdr)) {
       break;
     }
   }
   File file;
-  file.size = parseNumeric(uhdr.size);
-  file.name = cleanupName(uhdr.name);
-  file.mode = parseNumeric(uhdr.mode);
-  auto lastModeTime = parseNumeric(uhdr.mtime);
+  file.size = parseNumeric(hdr.size);
+  file.name = cleanupName(hdr.name);
+  file.mode = parseNumeric(hdr.mode);
+  auto lastModeTime = parseNumeric(hdr.mtime);
   file.time = bela::FromUnix(lastModeTime, 0);
-  auto checksum = parseNumeric(uhdr.chksum);
-  auto nameLinked = cleanupName(uhdr.linkname);
-  if (memcmp(uhdr.magic, magicUSTAR, sizeof(magicUSTAR)) == 0 &&
-      memcmp(uhdr.version, versionUSTAR, sizeof(versionUSTAR)) == 0) {
+  file.typeflag = hdr.typeflag;
+  auto checksum = parseNumeric(hdr.chksum);
+  auto nameLinked = cleanupName(hdr.linkname);
+  if (memcmp(hdr.magic, magicUSTAR, sizeof(magicUSTAR)) == 0 &&
+      memcmp(hdr.version, versionUSTAR, sizeof(versionUSTAR)) == 0) {
     // USTAR
   }
-  if (memcmp(uhdr.magic, magicGNU, sizeof(magicGNU)) == 0 &&
-      memcmp(uhdr.version, versionGNU, sizeof(versionGNU)) == 0) {
+  if (memcmp(hdr.magic, magicGNU, sizeof(magicGNU)) == 0 && memcmp(hdr.version, versionGNU, sizeof(versionGNU)) == 0) {
     // GNU TAR
   }
   auto nb = file.size;
-  if (isHeaderOnlyType(uhdr.typeflag)) {
+  if (isHeaderOnlyType(hdr.typeflag)) {
     nb = 0;
   }
   paddingSize = blockPadding(nb);
+  switch (hdr.typeflag) {
+  case TypeXHeader:
+    [[fallthrough]];
+  case TypeXGlobalHeader:
+    break;
+  case TypeGNULongName:
+    [[fallthrough]];
+  case TypeGNULongLink: {
+    std::string realName;
+    realName.resize(file.size);
+    if (!ReadFull(realName.data(), file.size, ec)) {
+      return std::nullopt;
+    }
+    file.name = cleanupName(realName.data(), realName.size());
+    file.size = 0;
+  } break;
+  default:
+    break;
+  }
 
   return std::make_optional(std::move(file));
 }

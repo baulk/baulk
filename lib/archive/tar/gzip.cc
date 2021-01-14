@@ -29,35 +29,41 @@ ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
 
 // Read data
 ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (in.pos() != in.size()) {
+  if (out.pos() != out.size()) {
     return CopyBuffer(buffer, len, ec);
   }
-  if (zs->avail_out != 0 || pickBytes == 0) {
-    auto n = r->Read(in.data(), in.capacity(), ec);
-    if (n <= 0) {
-      return n;
+  for (;;) {
+    if (zs->avail_out != 0 || pickBytes == 0) {
+      auto n = r->Read(in.data(), in.capacity(), ec);
+      if (n <= 0) {
+        return n;
+      }
+      pickBytes += static_cast<int64_t>(n);
+      zs->next_in = in.data();
+      zs->avail_in = static_cast<uint32_t>(n);
     }
-    pickBytes += static_cast<int64_t>(n);
-    zs->next_in = in.data();
-    zs->avail_in = static_cast<uint32_t>(n);
+    zs->avail_out = static_cast<int>(outsize);
+    zs->next_out = out.data();
+    auto ret = ::inflate(zs, Z_NO_FLUSH);
+    switch (ret) {
+    case Z_NEED_DICT:
+      ret = Z_DATA_ERROR;
+      [[fallthrough]];
+    case Z_DATA_ERROR:
+      [[fallthrough]];
+    case Z_MEM_ERROR:
+      ec = bela::make_error_code(ret, bela::ToWide(zError(ret)));
+      return -1;
+    default:
+      break;
+    }
+    auto have = outsize - zs->avail_out;
+    out.pos() = 0;
+    out.size() = have;
+    if (have != 0) {
+      break;
+    }
   }
-  zs->avail_out = static_cast<int>(out.capacity());
-  zs->next_out = out.data();
-  auto ret = ::inflate(zs, Z_NO_FLUSH);
-  switch (ret) {
-  case Z_NEED_DICT:
-    ret = Z_DATA_ERROR;
-    [[fallthrough]];
-  case Z_DATA_ERROR:
-    [[fallthrough]];
-  case Z_MEM_ERROR:
-    ec = bela::make_error_code(ret, bela::ToWide(zError(ret)));
-    return -1;
-  default:
-    break;
-  }
-  out.pos() = 0;
-  out.size() = outsize - zs->avail_out;
   return CopyBuffer(buffer, len, ec);
 }
 } // namespace baulk::archive::tar::gzip

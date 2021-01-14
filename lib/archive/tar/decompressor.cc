@@ -28,7 +28,7 @@ std::shared_ptr<bela::io::Reader> MakeReader(FileReader &fd, bela::error_code &e
     return nullptr;
   }
   if (memcmp(xzMagic, magic, sizeof(xzMagic)) == 0) {
-    if (auto r = std::make_shared<xz::Reader>(&fd); r->Initialize(ec)) {
+    if (auto r = std::make_shared<xz::Reader>(&fd); r->Initialize(fd.Size(), ec)) {
       return r;
     }
     return nullptr;

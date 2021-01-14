@@ -14,20 +14,24 @@ struct File {
   bela::Time time;
   int64_t mode{0};
   uint32_t chcksum{0};
+  char typeflag{0};
 };
 
 class FileReader : public bela::io::ReaderAt {
 public:
-  FileReader(HANDLE fd_, bool nc = false) : fd(fd_), needClosed(nc) {}
+  FileReader(HANDLE fd_, int64_t size_ = bela::SizeUnInitialized, bool nc = false)
+      : fd(fd_), size(size_), needClosed(nc) {}
   FileReader(const FileReader &) = delete;
   FileReader &operator=(const FileReader &) = delete;
   ~FileReader();
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
   bool PositionAt(int64_t pos, bela::error_code &ec);
+  int64_t Size() const { return size; }
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
+  int64_t size{bela::SizeUnInitialized};
   bool needClosed{false};
 };
 std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
@@ -67,10 +71,10 @@ public:
 private:
   bool discard(int64_t bytes, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
-  int64_t remainingSize{ 0 };
+  int64_t remainingSize{0};
   int64_t paddingSize{0};
 
-  ustar_header uhdr{0};
+  ustar_header hdr{0};
 };
 
 } // namespace baulk::archive::tar
