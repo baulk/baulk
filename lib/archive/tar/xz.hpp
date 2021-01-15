@@ -11,7 +11,7 @@ public:
   Reader(const Reader &) = delete;
   Reader &operator=(const Reader &) = delete;
   ~Reader();
-  bool Initialize(int64_t sz, bela::error_code &ec);
+  bool Initialize(bela::error_code &ec);
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
 
 private:
@@ -19,11 +19,8 @@ private:
   bela::ssize_t ReadAtLeast(void *buffer, size_t size, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   lzma_stream *xzs{nullptr};
-  int64_t size{0};
-  int64_t pickBytes{0};
   Buffer in;
   Buffer out;
-  lzma_action action{LZMA_RUN};
   lzma_ret ret{LZMA_OK};
 };
 } // namespace baulk::archive::tar::xz

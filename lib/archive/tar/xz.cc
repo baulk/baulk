@@ -9,7 +9,7 @@ Reader::~Reader() {
     baulk::archive::archive_internal::Deallocate(xzs, 1);
   }
 }
-bool Reader::Initialize(int64_t sz, bela::error_code &ec) {
+bool Reader::Initialize(bela::error_code &ec) {
   xzs = baulk::archive::archive_internal::Allocate<lzma_stream>(1);
   memset(xzs, 0, sizeof(lzma_stream));
   auto ret = lzma_stream_decoder(xzs, UINT64_MAX, LZMA_CONCATENATED);
@@ -17,9 +17,10 @@ bool Reader::Initialize(int64_t sz, bela::error_code &ec) {
     ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);
     return false;
   }
-  size = sz;
   out.grow(xzoutsize);
   in.grow(xzinsize);
+  xzs->next_out = out.data();
+  xzs->avail_out = xzoutsize;
   return true;
 }
 
@@ -70,36 +71,31 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
     return CopyBuffer(buffer, len, ec);
   }
   if (ret == LZMA_STREAM_END) {
-    return 0;
+    ec = bela::make_error_code(bela::ErrEnded, L"xz stream end");
+    return -1;
   }
-  if (xzs->avail_in == 0 || pickBytes == 0) {
-    auto n = ReadAtLeast(in.data(), xzinsize, ec);
-    if (n <= 0) {
-      return n;
+  for (;;) {
+    if (xzs->avail_in == 0 || xzs->total_in == 0) {
+      auto n = r->Read(in.data(), xzinsize, ec);
+      if (n < 0) {
+        return n;
+      }
+      xzs->next_in = in.data();
+      xzs->avail_in = static_cast<size_t>(n);
     }
-    pickBytes += static_cast<int64_t>(n);
-    xzs->next_in = in.data();
-    xzs->avail_in = static_cast<size_t>(n);
-    if (pickBytes == size) {
-      action = LZMA_FINISH;
+    ret = lzma_code(xzs, xzs->avail_in == 0 ? LZMA_FINISH : LZMA_RUN);
+    if (xzs->avail_out == 0 || ret == LZMA_STREAM_END) {
+      auto have = xzoutsize - xzs->avail_out;
+      out.pos() = 0;
+      out.size() = have;
+      xzs->next_out = out.data();
+      xzs->avail_out = xzoutsize;
+      return CopyBuffer(buffer, len, ec);
     }
-    fprintf(stderr, "\x1b[34mread: %lld read %lld\x1b[0m\n", pickBytes, n);
-  }
-  xzs->next_out = out.data();
-  xzs->avail_out = xzoutsize;
-  ret = lzma_code(xzs, action);
-  if (xzs->avail_out == 0 || ret == LZMA_STREAM_END) {
-    auto have = xzoutsize - xzs->avail_out;
-    out.pos() = 0;
-    out.size() = have;
-    fprintf(stderr, "have: %zd\n", have);
-    if (have == 0) {
-      ec = bela::make_error_code(L"need input");
+    if (ret != LZMA_OK) {
+      ec = XzErrorCode(ret);
+      return -1;
     }
-    return CopyBuffer(buffer, len, ec);
-  }
-  if (ret != LZMA_OK) {
-    ec = XzErrorCode(ret);
   }
   return -1;
 }

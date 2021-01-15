@@ -11,6 +11,7 @@ bool untar(std::wstring_view file) {
     bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec.message);
     return false;
   }
+  bela::FPrintF(stderr, L"File size: %d\n", fr->Size());
   auto wr = baulk::archive::tar::MakeReader(*fr, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
@@ -24,8 +25,7 @@ bool untar(std::wstring_view file) {
       bela::FPrintF(stderr, L"untar %s\n", ec.message);
       break;
     }
-    // bela::FPrintF(stderr, L"Filename: [%c] %s %s %d\n", fh->typeflag, fh->name, bela::FormatTime(fh->time),
-    // fh->size);
+    bela::FPrintF(stderr, L"Filename: [%c] %s %s %d\n", fh->typeflag, fh->name, bela::FormatTime(fh->time), fh->size);
     if (fh->size != 0) {
       auto size = fh->size;
       char buffer[4096];

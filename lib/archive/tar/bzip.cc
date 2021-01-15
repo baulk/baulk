@@ -32,7 +32,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
     return CopyBuffer(buffer, len, ec);
   }
   if (ret == BZ_STREAM_END) {
-    ec = bela::make_error_code(bela::ErrEnded, L"stream end");
+    ec = bela::make_error_code(bela::ErrEnded, L"bzip stream end");
     return -1;
   }
   for (;;) {
