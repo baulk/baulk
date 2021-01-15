@@ -11,6 +11,8 @@ add_executable(
   commands.list.cc
   commands.search.cc
   commands.uninstall.cc
+  commands.untar.cc
+  commands.unzip.cc
   commands.update.cc
   commands.upgrade.cc
   commands.b3sum.cc

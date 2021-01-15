@@ -22,6 +22,9 @@ int cmd_sha256sum(const argv_t &argv);
 int cmd_cleancache(const argv_t &argv);
 //
 int cmd_bucket(const argv_t &argv);
+// archive
+int cmd_unzip(const argv_t &argv);
+int cmd_untar(const argv_t &argv);
 } // namespace baulk::commands
 
 #endif

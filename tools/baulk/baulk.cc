@@ -58,7 +58,9 @@ Command:
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
-  bucket           add, delete or list buckets
+  bucket           Add, delete or list buckets
+  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
+  unzip            Extract compressed files in a ZIP archive
 
 Alias:
   i  install
@@ -175,6 +177,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       {L"sha256sum", baulk::commands::cmd_sha256sum},   // sha256sum
       {L"cleancache", baulk::commands::cmd_cleancache}, // cleancache
       {L"bucket", baulk::commands::cmd_bucket},         // bucket command
+      {L"untar", baulk::commands::cmd_untar},           // untar
+      {L"unzip", baulk::commands::cmd_unzip},           // unzip
   };
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {
