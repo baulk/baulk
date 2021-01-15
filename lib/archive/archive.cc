@@ -95,6 +95,17 @@ bool FD::Write(const void *data, size_t bytes, bela::error_code &ec) {
   return true;
 }
 
+std::optional<std::wstring> PathCat(std::wstring_view root, std::string_view child) {
+  auto path = bela::PathCat(root, bela::ToWide(child));
+  if (path == L"." || !path.starts_with(root)) {
+    return std::nullopt;
+  }
+  if (!root.ends_with('/') && !bela::IsPathSeparator(path[root.size()])) {
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(path));
+}
+
 std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite) {
   std::filesystem::path p(path);
   std::error_code sec;
