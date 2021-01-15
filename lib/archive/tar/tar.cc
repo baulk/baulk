@@ -221,8 +221,8 @@ bool isHeaderOnlyType(char flag) {
   return false;
 }
 
-std::optional<File> Reader::Next(bela::error_code &ec) {
-
+std::optional<Header> Reader::Next(bela::error_code &ec) {
+  // read next entry
   for (;;) {
     if (!discard(remainingSize, ec)) {
       return std::nullopt;
@@ -237,23 +237,21 @@ std::optional<File> Reader::Next(bela::error_code &ec) {
       break;
     }
   }
-  File file;
-  file.size = parseNumeric(hdr.size);
-  file.name = cleanupName(hdr.name);
-  file.mode = parseNumeric(hdr.mode);
-  auto lastModeTime = parseNumeric(hdr.mtime);
-  file.time = bela::FromUnix(lastModeTime, 0);
-  file.typeflag = hdr.typeflag;
+  Header th;
+  th.Format = FormatUSTAR | FormatPAX | FormatGNU;
+  th.Size = parseNumeric(hdr.size);
+  th.Name = cleanupName(hdr.name);
+  th.Mode = parseNumeric(hdr.mode);
+  th.ModeTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
   auto checksum = parseNumeric(hdr.chksum);
   auto nameLinked = cleanupName(hdr.linkname);
   if (memcmp(hdr.magic, magicUSTAR, sizeof(magicUSTAR)) == 0 &&
       memcmp(hdr.version, versionUSTAR, sizeof(versionUSTAR)) == 0) {
-    // USTAR
   }
   if (memcmp(hdr.magic, magicGNU, sizeof(magicGNU)) == 0 && memcmp(hdr.version, versionGNU, sizeof(versionGNU)) == 0) {
     // GNU TAR
   }
-  auto nb = file.size;
+  auto nb = th.Size;
   if (isHeaderOnlyType(hdr.typeflag)) {
     nb = 0;
   }
@@ -267,18 +265,18 @@ std::optional<File> Reader::Next(bela::error_code &ec) {
     [[fallthrough]];
   case TypeGNULongLink: {
     std::string realName;
-    realName.resize(file.size);
-    if (!ReadFull(realName.data(), file.size, ec)) {
+    realName.resize(th.Size);
+    if (!ReadFull(realName.data(), th.Size, ec)) {
       return std::nullopt;
     }
-    file.name = cleanupName(realName.data(), realName.size());
-    file.size = 0;
+    th.Name = cleanupName(realName.data(), realName.size());
+    th.Size = 0;
   } break;
   default:
     break;
   }
 
-  return std::make_optional(std::move(file));
+  return std::make_optional(std::move(th));
 }
 
 } // namespace baulk::archive::tar

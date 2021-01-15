@@ -25,9 +25,9 @@ bool untar(std::wstring_view file) {
       bela::FPrintF(stderr, L"untar %s\n", ec.message);
       break;
     }
-    bela::FPrintF(stderr, L"Filename: [%c] %s %s %d\n", fh->typeflag, fh->name, bela::FormatTime(fh->time), fh->size);
-    if (fh->size != 0) {
-      auto size = fh->size;
+    bela::FPrintF(stderr, L"Filename: %s %s %d\n", fh->Name, bela::FormatTime(fh->ModeTime), fh->Size);
+    if (fh->Size != 0) {
+      auto size = fh->Size;
       char buffer[4096];
       while (size > 0) {
         auto msz = (std::min)(size, 4096ll);
