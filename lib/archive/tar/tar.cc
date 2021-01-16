@@ -1,6 +1,7 @@
 //
 #include "tarinternal.hpp"
 #include <bela/str_cat_narrow.hpp>
+#include <bela/str_join_narrow.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
@@ -169,11 +170,11 @@ bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code 
   }
   std::string_view sv{reinterpret_cast<const char *>(buf.data()), static_cast<size_t>(paxSize)};
   std::vector<std::string_view> sparseMap;
-  while(!sv.empty()){
-      //
+  while (!sv.empty()) {
+    //
   }
-  if(!sparseMap.empty()){
-      paxHdrs.emplace(paxGNUSparseMap, "");
+  if (!sparseMap.empty()) {
+    paxHdrs.emplace(paxGNUSparseMap, bela::narrow::StrJoin(sparseMap, ","));
   }
   return true;
 }
