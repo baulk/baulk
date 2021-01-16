@@ -20,6 +20,15 @@ enum tar_format_t : int {
   FormatMax = 32,
 };
 
+[[nodiscard]] constexpr tar_format_t operator&(tar_format_t L, tar_format_t R) noexcept {
+  using I = std::underlying_type_t<tar_format_t>;
+  return static_cast<tar_format_t>(static_cast<I>(L) & static_cast<I>(R));
+}
+[[nodiscard]] constexpr tar_format_t operator|(tar_format_t L, tar_format_t R) noexcept {
+  using I = std::underlying_type_t<tar_format_t>;
+  return static_cast<tar_format_t>(static_cast<I>(L) | static_cast<I>(R));
+}
+
 // Type '0' indicates a regular file.
 constexpr char TypeReg = '0';
 constexpr char TypeRegA = '\x00'; // Deprecated: Use TypeReg instead.
@@ -94,7 +103,7 @@ struct ustar_header {
   char gname[32];
   char devmajor[8];
   char devminor[8];
-  char path[155];
+  char prefix[155];
   char padding[12]; // 512 byte aligned padding
 };
 

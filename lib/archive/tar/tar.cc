@@ -1,10 +1,11 @@
 //
 #include "tarinternal.hpp"
+#include <bela/str_cat_narrow.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
 
-inline std::string cleanupName(const void *data, size_t N) {
+inline std::string parseString(const void *data, size_t N) {
   auto p = reinterpret_cast<const char *>(data);
   auto pos = memchr(p, 0, N);
   if (pos == nullptr) {
@@ -14,7 +15,7 @@ inline std::string cleanupName(const void *data, size_t N) {
   return std::string(p, N);
 }
 
-template <size_t N> std::string cleanupName(const char (&aArr)[N]) { return cleanupName(aArr, N); }
+template <size_t N> std::string parseString(const char (&aArr)[N]) { return parseString(aArr, N); }
 
 inline int64_t parseNumeric8(const char *p, size_t char_cnt) {
   int64_t val = 0;
@@ -153,9 +154,9 @@ std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &e
   return std::make_shared<FileReader>(fd, li.QuadPart, true);
 }
 
-inline bool IsZero(const ustar_header &th) {
+inline bool isZeroBlock(const ustar_header &th) {
   static ustar_header zeroth = {0};
-  return memcmp(&th, &zeroth, 0) == 0;
+  return memcmp(&th, &zeroth, sizeof(ustar_header)) == 0;
 }
 
 inline bool IsChecksumEqual(const ustar_header &hdr) {
@@ -187,36 +188,21 @@ inline tar_format_t getFormat(const ustar_header &hdr) {
     if (memcmp(star->trailer, trailerSTAR, sizeof(trailerSTAR)) == 0) {
       return FormatSTAR;
     }
-    return FormatUSTAR;
+    return FormatUSTAR | FormatPAX;
   }
   if (memcmp(hdr.magic, magicGNU, sizeof(magicGNU)) == 0 && memcmp(hdr.version, versionGNU, sizeof(versionGNU)) == 0) {
     return FormatGNU;
   }
-  return FormatUnknown;
+  return FormatV7;
 }
 
 // blockPadding computes the number of bytes needed to pad offset up to the
 // nearest block edge where 0 <= n < blockSize.
-inline int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
+inline constexpr int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
 
-bool isHeaderOnlyType(char flag) {
-  switch (flag) {
-  case TypeLink:
-    [[fallthrough]];
-  case TypeSymlink:
-    [[fallthrough]];
-  case TypeChar:
-    [[fallthrough]];
-  case TypeBlock:
-    [[fallthrough]];
-  case TypeDir:
-    [[fallthrough]];
-  case TypeFifo:
-    return true;
-  default:
-    break;
-  }
-  return false;
+inline constexpr bool isHeaderOnlyType(char flag) {
+  return (flag == TypeLink || flag == TypeSymlink || flag == TypeChar || flag == TypeBlock || flag == TypeDir ||
+          flag == TypeFifo);
 }
 
 bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
@@ -262,11 +248,11 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
   if (!ReadFull(&hdr, sizeof(hdr), ec)) {
     return false;
   }
-  if (IsZero(hdr)) {
+  if (isZeroBlock(hdr)) {
     if (!ReadFull(&hdr, sizeof(hdr), ec)) {
       return false;
     }
-    if (!IsZero(hdr)) {
+    if (isZeroBlock(hdr)) {
       ec = bela::make_error_code(bela::ErrEnded, L"tar stream end");
       return false;
     }
@@ -278,18 +264,43 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
     return false;
   }
   h.Typeflag = hdr.typeflag;
-  h.Name = cleanupName(hdr.name);
-  h.LinkName = cleanupName(hdr.linkname);
+  h.Name = parseString(hdr.name);
+  h.LinkName = parseString(hdr.linkname);
   h.Size = parseNumeric(hdr.size);
   h.UID = static_cast<int>(parseNumeric(hdr.uid));
   h.GID = static_cast<int>(parseNumeric(hdr.gid));
   h.ModTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
   if (h.Format > FormatV7) {
-    h.Uname = cleanupName(hdr.uname);
-    h.Gname = cleanupName(hdr.gname);
+    h.Uname = parseString(hdr.uname);
+    h.Gname = parseString(hdr.gname);
     h.Devmajor = parseNumeric(hdr.devmajor);
     h.Devminor = parseNumeric(hdr.devminor);
+    std::string prefix;
+    if ((h.Format & (FormatUSTAR | FormatPAX)) != 0) {
+      prefix = parseString(hdr.prefix);
+    } else if ((h.Format & FormatSTAR) != 0) {
+      auto star = reinterpret_cast<const star_header *>(&hdr);
+      prefix = parseString(star->prefix);
+      h.AccessTime = bela::FromUnix(parseNumeric(star->atime), 0);
+      h.ChangeTime = bela::FromUnix(parseNumeric(star->ctime), 0);
+    } else if ((h.Format & FormatGNU) != 0) {
+      auto gnu = reinterpret_cast<const gnutar_header *>(&hdr);
+      if (gnu->atime[0] != 0) {
+        h.AccessTime = bela::FromUnix(parseNumeric(gnu->atime), 0);
+      }
+      if (gnu->ctime[0] != 0) {
+        h.ChangeTime = bela::FromUnix(parseNumeric(gnu->ctime), 0);
+      }
+    }
+    if (!prefix.empty()) {
+      h.Name = bela::narrow::StringCat(prefix, "/", h.Name);
+    }
   }
+  auto nb = h.Size;
+  if (isHeaderOnlyType(h.Typeflag)) {
+    nb = 0;
+  }
+  paddingSize = blockPadding(nb);
   return true;
 }
 
@@ -302,57 +313,14 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
     if (!discard(paddingSize, ec)) {
       return std::nullopt;
     }
-    if (!ReadFull(&hdr, sizeof(hdr), ec)) {
+    Header h;
+    if (!readHeader(h, ec)) {
       return std::nullopt;
     }
-    if (hdr.name[0] != 0 || !IsZero(hdr)) {
-      break;
-    }
-  }
-  if (!IsChecksumEqual(hdr)) {
-    ec = bela::make_error_code(L"check sum not equal");
-    return std::nullopt;
-  }
-  Header th;
-  th.Format = FormatUSTAR | FormatPAX | FormatGNU;
-  th.Size = parseNumeric(hdr.size);
-  th.Name = cleanupName(hdr.name);
-  th.Mode = parseNumeric(hdr.mode);
-  th.ModTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
-  auto checksum = parseNumeric(hdr.chksum);
-  auto nameLinked = cleanupName(hdr.linkname);
-  if (memcmp(hdr.magic, magicUSTAR, sizeof(magicUSTAR)) == 0 &&
-      memcmp(hdr.version, versionUSTAR, sizeof(versionUSTAR)) == 0) {
-  }
-  if (memcmp(hdr.magic, magicGNU, sizeof(magicGNU)) == 0 && memcmp(hdr.version, versionGNU, sizeof(versionGNU)) == 0) {
-    // GNU TAR
-  }
-  auto nb = th.Size;
-  if (isHeaderOnlyType(hdr.typeflag)) {
-    nb = 0;
-  }
-  paddingSize = blockPadding(nb);
-  switch (hdr.typeflag) {
-  case TypeXHeader:
-    [[fallthrough]];
-  case TypeXGlobalHeader:
-    break;
-  case TypeGNULongName:
-    [[fallthrough]];
-  case TypeGNULongLink: {
-    std::string realName;
-    realName.resize(th.Size);
-    if (!ReadFull(realName.data(), th.Size, ec)) {
-      return std::nullopt;
-    }
-    th.Name = cleanupName(realName.data(), realName.size());
-    th.Size = 0;
-  } break;
-  default:
-    break;
+    return std::make_optional(std::move(h));
   }
 
-  return std::make_optional(std::move(th));
+  return std::nullopt;
 }
 
 } // namespace baulk::archive::tar
