@@ -245,6 +245,7 @@ bool Reader::discard(int64_t bytes, bela::error_code &ec) {
 }
 
 bool Reader::readHeader(Header &h, bela::error_code &ec) {
+  ustar_header hdr{0};
   if (!ReadFull(&hdr, sizeof(hdr), ec)) {
     return false;
   }
@@ -304,7 +305,120 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
   return true;
 }
 
+bool parsePAXTime(std::string_view p, bela::Time &t, bela::error_code &ec) {
+  auto ss = p;
+  std::string_view sn;
+  if (auto pos = p.find('.'); pos != std::string_view::npos) {
+    ss = p.substr(0, pos);
+    sn = p.substr(pos + 1);
+  }
+  int64_t sec = 0;
+  auto res = std::from_chars(ss.data(), ss.data() + ss.size(), sec);
+  if (res.ec != std::errc{}) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"unable parse number '", bela::ToWide(ss), L"'");
+    return false;
+  }
+  if (sn.empty()) {
+    t = bela::FromUnix(sec, 0);
+    return true;
+  }
+  /* Calculate nanoseconds. */
+  int64_t nsec{0};
+  std::from_chars(ss.data(), ss.data() + ss.size(), sec);
+  t = bela::FromUnix(sec, nsec);
+  return true;
+}
+
+bool Reader::mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec) {
+  for (const auto &[k, v] : paxHdrs) {
+    if (v.empty()) {
+      continue;
+    }
+    if (k == paxPath) {
+      h.Name = v;
+      continue;
+    }
+    if (k == paxLinkpath) {
+      h.LinkName = v;
+      continue;
+    }
+    if (k == paxUname) {
+      h.Uname = v;
+      continue;
+    }
+    if (k == paxGname) {
+      h.Gname = v;
+      continue;
+    }
+    if (k == paxUid) {
+      int64_t id{0};
+      auto res = std::from_chars(v.data(), v.data() + v.size(), id);
+      if (res.ec != std::errc{}) {
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse uid number '", bela::ToWide(v), L"'");
+        return false;
+      }
+      h.UID = static_cast<int>(id);
+      continue;
+    }
+    if (k == paxGid) {
+      int64_t id{0};
+      auto res = std::from_chars(v.data(), v.data() + v.size(), id);
+      if (res.ec != std::errc{}) {
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse gid number '", bela::ToWide(v), L"'");
+        return false;
+      }
+      h.GID = static_cast<int>(id);
+      continue;
+    }
+    if (k == paxAtime) {
+      if (parsePAXTime(v, h.AccessTime, ec)) {
+        return false;
+      }
+      continue;
+    }
+    if (k == paxMtime) {
+      if (parsePAXTime(v, h.ModTime, ec)) {
+        return false;
+      }
+      continue;
+    }
+    if (k == paxCtime) {
+      if (parsePAXTime(v, h.ChangeTime, ec)) {
+        return false;
+      }
+      continue;
+    }
+    if (k == paxSize) {
+      int64_t size{0};
+      auto res = std::from_chars(v.data(), v.data() + v.size(), size);
+      if (res.ec != std::errc{}) {
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse size number '", bela::ToWide(v), L"'");
+        return false;
+      }
+      h.Size = size;
+      continue;
+    }
+    if (k.starts_with(paxSchilyXattr)) {
+      h.Xattrs.emplace(k.substr(paxSchilyXattr.size()), v);
+    }
+  }
+  h.PAXRecords = std::move(paxHdrs);
+  return true;
+}
+
+bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec) {
+  Buffer buf(paxSize);
+  if (!ReadFull(buf.data(), paxSize, ec)) {
+    return false;
+  }
+
+  return true;
+}
+
 std::optional<Header> Reader::Next(bela::error_code &ec) {
+  pax_records_t paxHdrs;
+  std::string gnuLongName;
+  std::string gnuLongLink;
   // read next entry
   for (;;) {
     if (!discard(remainingSize, ec)) {
@@ -316,6 +430,23 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
     Header h;
     if (!readHeader(h, ec)) {
       return std::nullopt;
+    }
+    if (h.Typeflag == TypeXHeader || h.Typeflag == TypeXGlobalHeader) {
+      h.Format &= FormatPAX;
+      if (!parsePAX(h.Size, paxHdrs, ec)) {
+        return std::nullopt;
+      }
+      if (h.Typeflag == TypeXGlobalHeader) {
+        mergePAX(h, paxHdrs, ec);
+        Header nh;
+        nh.Name = h.Name;
+        nh.Typeflag = h.Typeflag;
+        nh.Xattrs = h.Xattrs;
+        nh.PAXRecords = h.PAXRecords;
+        nh.Format = h.Format;
+        return std::make_optional(std::move(nh));
+      }
+      continue;
     }
     return std::make_optional(std::move(h));
   }

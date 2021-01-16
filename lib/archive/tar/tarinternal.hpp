@@ -49,6 +49,34 @@ struct star_header {
   char trailer[4];
 };
 
+constexpr std::string_view paxNone = ""; // Indicates that no PAX key is suitable
+constexpr std::string_view paxPath = "path";
+constexpr std::string_view paxLinkpath = "linkpath";
+constexpr std::string_view paxSize = "size";
+constexpr std::string_view paxUid = "uid";
+constexpr std::string_view paxGid = "gid";
+constexpr std::string_view paxUname = "uname";
+constexpr std::string_view paxGname = "gname";
+constexpr std::string_view paxMtime = "mtime";
+constexpr std::string_view paxAtime = "atime";
+constexpr std::string_view paxCtime = "ctime";     // Removed from later revision of PAX spec, but was valid
+constexpr std::string_view paxCharset = "charset"; // Currently unused
+constexpr std::string_view paxComment = "comment"; // Currently unused
+
+constexpr std::string_view paxSchilyXattr = "SCHILY.xattr.";
+
+// Keywords for GNU sparse files in a PAX extended header.
+constexpr std::string_view paxGNUSparse = "GNU.sparse.";
+constexpr std::string_view paxGNUSparseNumBlocks = "GNU.sparse.numblocks";
+constexpr std::string_view paxGNUSparseOffset = "GNU.sparse.offset";
+constexpr std::string_view paxGNUSparseNumBytes = "GNU.sparse.numbytes";
+constexpr std::string_view paxGNUSparseMap = "GNU.sparse.map";
+constexpr std::string_view paxGNUSparseName = "GNU.sparse.name";
+constexpr std::string_view paxGNUSparseMajor = "GNU.sparse.major";
+constexpr std::string_view paxGNUSparseMinor = "GNU.sparse.minor";
+constexpr std::string_view paxGNUSparseSize = "GNU.sparse.size";
+constexpr std::string_view paxGNUSparseRealSize = "GNU.sparse.realsize";
+
 } // namespace baulk::archive::tar
 
 #endif

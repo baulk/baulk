@@ -145,6 +145,8 @@ struct gnutar_header {
   char padding[17];
 };
 
+using pax_records_t = bela::flat_hash_map<std::string, std::string>;
+
 struct Header {
   std::string Name;
   std::string LinkName;
@@ -157,8 +159,8 @@ struct Header {
   bela::Time ChangeTime;
   int64_t Devmajor{0};
   int64_t Devminor{0};
-  bela::flat_hash_map<std::string, std::string> Xattrs;
-  bela::flat_hash_map<std::string, std::string> PAXRecords;
+  pax_records_t Xattrs;
+  pax_records_t PAXRecords;
   int UID{0};
   int GID{0};
   int Format{0};
@@ -197,10 +199,11 @@ public:
 private:
   bool discard(int64_t bytes, bela::error_code &ec);
   bool readHeader(Header &h, bela::error_code &ec);
+  bool parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec);
+  bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
-  ustar_header hdr{0};
 };
 
 } // namespace baulk::archive::tar
