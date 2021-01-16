@@ -167,7 +167,14 @@ bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code 
   if (!ReadFull(buf.data(), paxSize, ec)) {
     return false;
   }
-
+  std::string_view sv{reinterpret_cast<const char *>(buf.data()), static_cast<size_t>(paxSize)};
+  std::vector<std::string_view> sparseMap;
+  while(!sv.empty()){
+      //
+  }
+  if(!sparseMap.empty()){
+      paxHdrs.emplace(paxGNUSparseMap, "");
+  }
   return true;
 }
 
