@@ -51,6 +51,21 @@ inline bool ConsumeSuffix(std::wstring_view *str, std::wstring_view expected) {
   return true;
 }
 
+inline bool ConsumePrefix(std::string_view *str, std::string_view expected) {
+  if (!bela::StartsWith(*str, expected)) {
+    return false;
+  }
+  str->remove_prefix(expected.size());
+  return true;
+}
+inline bool ConsumeSuffix(std::string_view *str, std::string_view expected) {
+  if (!bela::EndsWith(*str, expected)) {
+    return false;
+  }
+  str->remove_suffix(expected.size());
+  return true;
+}
+
 [[nodiscard]] inline std::wstring_view StripPrefix(std::wstring_view str, std::wstring_view prefix) {
   if (bela::StartsWith(str, prefix)) {
     str.remove_prefix(prefix.size());
@@ -59,6 +74,19 @@ inline bool ConsumeSuffix(std::wstring_view *str, std::wstring_view expected) {
 }
 
 inline std::wstring_view StripSuffix(std::wstring_view str, std::wstring_view suffix) {
+  if (bela::EndsWith(str, suffix)) {
+    str.remove_suffix(suffix.size());
+  }
+  return str;
+}
+[[nodiscard]] inline std::string_view StripPrefix(std::string_view str, std::string_view prefix) {
+  if (bela::StartsWith(str, prefix)) {
+    str.remove_prefix(prefix.size());
+  }
+  return str;
+}
+
+inline std::string_view StripSuffix(std::string_view str, std::string_view suffix) {
   if (bela::EndsWith(str, suffix)) {
     str.remove_suffix(suffix.size());
   }
