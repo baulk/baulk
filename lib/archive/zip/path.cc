@@ -78,10 +78,24 @@ inline std::wstring PathConvert(const File &file, bool autocvt) {
   return fromcodePage(file.name, codePageSearch(e));
 }
 
+constexpr bool IsDangerousPath(std::wstring_view p) {
+  constexpr std::wstring_view dangerousPaths[] = {L":$i30:$bitmap", L"$mft"};
+  for (const auto d : dangerousPaths) {
+    if (p.ends_with(d)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::optional<std::wstring> PathCat(std::wstring_view root, const File &file, bool autocvt) {
   auto filename = PathConvert(file, autocvt);
   auto path = bela::PathCat(root, filename);
-  if (path == L"." || !path.starts_with(root)) {
+  // not allowed path
+  if (IsDangerousPath(path)) {
+    return std::nullopt;
+  }
+  if (!path.starts_with(root)) {
     return std::nullopt;
   }
   if (!root.ends_with('/') && !bela::IsPathSeparator(path[root.size()])) {

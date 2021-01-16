@@ -262,11 +262,12 @@ add_library(
   archive.cc
   tar/brotli.cc
   tar/bzip.cc
+  tar/decompressor.cc
+  tar/format.cc
   tar/gzip.cc
   tar/tar.cc
   tar/xz.cc
   tar/zstd.cc
-  tar/decompressor.cc
   zip/brotli.cc
   zip/bzip.cc
   zip/Crc32.cpp

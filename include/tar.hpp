@@ -200,7 +200,6 @@ private:
   bool discard(int64_t bytes, bela::error_code &ec);
   bool readHeader(Header &h, bela::error_code &ec);
   bool parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec);
-  bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
