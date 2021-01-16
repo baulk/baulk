@@ -143,7 +143,7 @@ struct Header {
   std::string Gname;
   int64_t Size{0};
   int64_t Mode{0};
-  bela::Time ModeTime;
+  bela::Time ModTime;
   bela::Time AccessTime;
   bela::Time ChangeTime;
   int64_t Devmajor{0};
@@ -153,6 +153,7 @@ struct Header {
   int UID{0};
   int GID{0};
   int Format{0};
+  char Typeflag{0};
 };
 
 class FileReader : public bela::io::ReaderAt {
@@ -186,6 +187,7 @@ public:
 
 private:
   bool discard(int64_t bytes, bela::error_code &ec);
+  bool readHeader(Header &h, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};

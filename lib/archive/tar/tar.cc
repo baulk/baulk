@@ -14,7 +14,7 @@ inline std::string cleanupName(const void *data, size_t N) {
   return std::string(p, N);
 }
 
-template <size_t N> std::string cleanupName(char (&aArr)[N]) { return cleanupName(aArr, N); }
+template <size_t N> std::string cleanupName(const char (&aArr)[N]) { return cleanupName(aArr, N); }
 
 inline int64_t parseNumeric8(const char *p, size_t char_cnt) {
   int64_t val = 0;
@@ -107,7 +107,7 @@ inline int64_t parseNumeric(const char *p, size_t char_cnt) {
   return (parseNumeric8(p, char_cnt));
 }
 
-template <size_t N> int64_t parseNumeric(char (&aArr)[N]) { return parseNumeric(aArr, N); }
+template <size_t N> int64_t parseNumeric(const char (&aArr)[N]) { return parseNumeric(aArr, N); }
 
 FileReader::~FileReader() {
   if (fd != INVALID_HANDLE_VALUE && needClosed) {
@@ -158,6 +158,67 @@ inline bool IsZero(const ustar_header &th) {
   return memcmp(&th, &zeroth, 0) == 0;
 }
 
+inline bool IsChecksumEqual(const ustar_header &hdr) {
+  auto p = reinterpret_cast<const uint8_t *>(&hdr);
+  auto value = parseNumeric(hdr.chksum);
+  int64_t check = 0;
+  int64_t scheck = 0;
+  int i;
+  for (i = 0; i < 148; i++) {
+    check += p[i];
+    scheck = static_cast<int8_t>(p[i]);
+  }
+  check += 256;
+  scheck += 256;
+  i = 156;
+  for (; i < 512; i++) {
+    check += p[i];
+    scheck = static_cast<int8_t>(p[i]);
+  }
+  return (check == value || scheck == value);
+}
+
+inline tar_format_t getFormat(const ustar_header &hdr) {
+  if (!IsChecksumEqual(hdr)) {
+    return FormatUnknown;
+  }
+  auto star = reinterpret_cast<const star_header *>(&hdr);
+  if (memcmp(hdr.magic, magicUSTAR, sizeof(hdr.magic)) == 0) {
+    if (memcmp(star->trailer, trailerSTAR, sizeof(trailerSTAR)) == 0) {
+      return FormatSTAR;
+    }
+    return FormatUSTAR;
+  }
+  if (memcmp(hdr.magic, magicGNU, sizeof(magicGNU)) == 0 && memcmp(hdr.version, versionGNU, sizeof(versionGNU)) == 0) {
+    return FormatGNU;
+  }
+  return FormatUnknown;
+}
+
+// blockPadding computes the number of bytes needed to pad offset up to the
+// nearest block edge where 0 <= n < blockSize.
+inline int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
+
+bool isHeaderOnlyType(char flag) {
+  switch (flag) {
+  case TypeLink:
+    [[fallthrough]];
+  case TypeSymlink:
+    [[fallthrough]];
+  case TypeChar:
+    [[fallthrough]];
+  case TypeBlock:
+    [[fallthrough]];
+  case TypeDir:
+    [[fallthrough]];
+  case TypeFifo:
+    return true;
+  default:
+    break;
+  }
+  return false;
+}
+
 bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
   if (r == nullptr) {
     return -1;
@@ -197,28 +258,39 @@ bool Reader::discard(int64_t bytes, bela::error_code &ec) {
   return true;
 }
 
-// blockPadding computes the number of bytes needed to pad offset up to the
-// nearest block edge where 0 <= n < blockSize.
-inline int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
-
-bool isHeaderOnlyType(char flag) {
-  switch (flag) {
-  case TypeLink:
-    [[fallthrough]];
-  case TypeSymlink:
-    [[fallthrough]];
-  case TypeChar:
-    [[fallthrough]];
-  case TypeBlock:
-    [[fallthrough]];
-  case TypeDir:
-    [[fallthrough]];
-  case TypeFifo:
-    return true;
-  default:
-    break;
+bool Reader::readHeader(Header &h, bela::error_code &ec) {
+  if (!ReadFull(&hdr, sizeof(hdr), ec)) {
+    return false;
   }
-  return false;
+  if (IsZero(hdr)) {
+    if (!ReadFull(&hdr, sizeof(hdr), ec)) {
+      return false;
+    }
+    if (!IsZero(hdr)) {
+      ec = bela::make_error_code(bela::ErrEnded, L"tar stream end");
+      return false;
+    }
+    ec = bela::make_error_code(L"invalid tar header");
+    return false;
+  }
+  if (h.Format = getFormat(hdr); h.Format == FormatUnknown) {
+    ec = bela::make_error_code(L"invalid tar header");
+    return false;
+  }
+  h.Typeflag = hdr.typeflag;
+  h.Name = cleanupName(hdr.name);
+  h.LinkName = cleanupName(hdr.linkname);
+  h.Size = parseNumeric(hdr.size);
+  h.UID = static_cast<int>(parseNumeric(hdr.uid));
+  h.GID = static_cast<int>(parseNumeric(hdr.gid));
+  h.ModTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
+  if (h.Format > FormatV7) {
+    h.Uname = cleanupName(hdr.uname);
+    h.Gname = cleanupName(hdr.gname);
+    h.Devmajor = parseNumeric(hdr.devmajor);
+    h.Devminor = parseNumeric(hdr.devminor);
+  }
+  return true;
 }
 
 std::optional<Header> Reader::Next(bela::error_code &ec) {
@@ -237,12 +309,16 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
       break;
     }
   }
+  if (!IsChecksumEqual(hdr)) {
+    ec = bela::make_error_code(L"check sum not equal");
+    return std::nullopt;
+  }
   Header th;
   th.Format = FormatUSTAR | FormatPAX | FormatGNU;
   th.Size = parseNumeric(hdr.size);
   th.Name = cleanupName(hdr.name);
   th.Mode = parseNumeric(hdr.mode);
-  th.ModeTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
+  th.ModTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);
   auto checksum = parseNumeric(hdr.chksum);
   auto nameLinked = cleanupName(hdr.linkname);
   if (memcmp(hdr.magic, magicUSTAR, sizeof(magicUSTAR)) == 0 &&
