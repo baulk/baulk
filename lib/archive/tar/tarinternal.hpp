@@ -79,6 +79,7 @@ constexpr std::string_view paxGNUSparseSize = "GNU.sparse.size";
 constexpr std::string_view paxGNUSparseRealSize = "GNU.sparse.realsize";
 bool parsePAXTime(std::string_view p, bela::Time &t, bela::error_code &ec);
 bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec);
+bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view *v, bela::error_code &ec);
 tar_format_t getFormat(const ustar_header &hdr);
 inline std::string parseString(const void *data, size_t N) {
   auto p = reinterpret_cast<const char *>(data);

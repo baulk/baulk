@@ -63,6 +63,19 @@ inline constexpr bool isHeaderOnlyType(char flag) {
           flag == TypeFifo);
 }
 
+inline bool handleRegularFile(Header &h, int64_t &padding, bela::error_code &ec) {
+  auto nb = h.Size;
+  if (isHeaderOnlyType(h.Typeflag)) {
+    nb = 0;
+  }
+  if (nb < 0) {
+    ec = bela::make_error_code(L"invalid tar header");
+    return false;
+  }
+  padding = blockPadding(nb);
+  return true;
+}
+
 bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
   if (r == nullptr) {
     return -1;
@@ -98,6 +111,36 @@ bool Reader::discard(int64_t bytes, bela::error_code &ec) {
       return false;
     }
     bytes -= n;
+  }
+  return true;
+}
+
+bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec) {
+  Buffer buf(paxSize);
+  if (!ReadFull(buf.data(), paxSize, ec)) {
+    return false;
+  }
+  std::string_view sv{reinterpret_cast<const char *>(buf.data()), static_cast<size_t>(paxSize)};
+  std::vector<std::string_view> sparseMap;
+  while (!sv.empty()) {
+    std::string_view k;
+    std::string_view v;
+    if (!parsePAXRecord(&sv, &k, &v, ec)) {
+      return false;
+    }
+    if (k == paxGNUSparseOffset || k == paxGNUSparseNumBytes) {
+      if ((sparseMap.size() % 2 == 0 && k != paxGNUSparseOffset) ||
+          (sparseMap.size() % 2 == 1 && k != paxGNUSparseNumBytes) || v.find('.') != std::string_view::npos) {
+        ec = bela::make_error_code(L"invalid tar header");
+        return false;
+      }
+      sparseMap.emplace_back(v);
+      continue;
+    }
+    paxHdrs.emplace(k, v);
+  }
+  if (!sparseMap.empty()) {
+    paxHdrs.emplace(paxGNUSparseMap, bela::narrow::StrJoin(sparseMap, ","));
   }
   return true;
 }
@@ -155,27 +198,12 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
       h.Name = bela::narrow::StringCat(prefix, "/", h.Name);
     }
   }
-  auto nb = h.Size;
-  if (isHeaderOnlyType(h.Typeflag)) {
-    nb = 0;
-  }
-  paddingSize = blockPadding(nb);
   return true;
 }
 
-bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec) {
-  Buffer buf(paxSize);
-  if (!ReadFull(buf.data(), paxSize, ec)) {
-    return false;
-  }
-  std::string_view sv{reinterpret_cast<const char *>(buf.data()), static_cast<size_t>(paxSize)};
-  std::vector<std::string_view> sparseMap;
-  while (!sv.empty()) {
-    //
-  }
-  if (!sparseMap.empty()) {
-    paxHdrs.emplace(paxGNUSparseMap, bela::narrow::StrJoin(sparseMap, ","));
-  }
+// handleSparseFile
+bool handleSparseFile(Header &h, const gnutar_header *gh, bela::error_code &ec) {
+  //
   return true;
 }
 
@@ -195,6 +223,9 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
     if (!readHeader(h, ec)) {
       return std::nullopt;
     }
+    if (!handleRegularFile(h, paddingSize, ec)) {
+      return std::nullopt;
+    }
     if (h.Typeflag == TypeXHeader || h.Typeflag == TypeXGlobalHeader) {
       h.Format &= FormatPAX;
       if (!parsePAX(h.Size, paxHdrs, ec)) {
@@ -211,6 +242,37 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
         return std::make_optional(std::move(nh));
       }
       continue;
+    }
+    if (h.Typeflag == TypeGNULongName || h.Typeflag == TypeGNULongLink) {
+      h.Format = FormatGNU;
+      Buffer realname(h.Size);
+      if (!ReadFull(realname.data(), h.Size, ec)) {
+        return std::nullopt;
+      }
+      if (h.Typeflag == TypeGNULongName) {
+        gnuLongName = parseString(realname.data(), h.Size);
+        continue;
+      }
+      gnuLongLink = parseString(realname.data(), h.Size);
+      continue;
+    }
+    if (!mergePAX(h, paxHdrs, ec)) {
+      return std::nullopt;
+    }
+    if (!gnuLongName.empty()) {
+      h.Name = std::move(gnuLongName);
+    }
+    if (!gnuLongLink.empty()) {
+      h.LinkName = std::move(gnuLongLink);
+    }
+    if (h.Typeflag == TypeRegA) {
+      h.Typeflag = h.Name.ends_with('/') ? TypeDir : TypeReg;
+    }
+    if (!handleRegularFile(h, paddingSize, ec)) {
+      return std::nullopt;
+    }
+    if ((h.Format & (FormatUSTAR | FormatPAX)) != 0) {
+      h.Format = FormatUSTAR;
     }
     return std::make_optional(std::move(h));
   }
