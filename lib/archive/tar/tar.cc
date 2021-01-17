@@ -233,13 +233,19 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
       }
       if (h.Typeflag == TypeXGlobalHeader) {
         mergePAX(h, paxHdrs, ec);
-        Header nh;
-        nh.Name = h.Name;
-        nh.Typeflag = h.Typeflag;
-        nh.Xattrs = h.Xattrs;
-        nh.PAXRecords = h.PAXRecords;
-        nh.Format = h.Format;
-        return std::make_optional(std::move(nh));
+        // C++20 designated initializers
+        //  a designator must refer to a non-static direct data member
+        // all the designator used in the initialization expression must follow the order of the declaration of the data
+        // members in the class
+        // not all data members must have a designator, but those that do must follow the rule above
+        // it is not possible to mix designated and non-designated initialization
+        // desginators of the same data member cannot appear multiple times
+        // designators cannot be nested
+        return std::make_optional(Header{.Name = h.Name,
+                                         .Xattrs = h.Xattrs,
+                                         .PAXRecords = h.PAXRecords,
+                                         .Format = h.Format,
+                                         .Typeflag = h.Typeflag});
       }
       continue;
     }
