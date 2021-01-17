@@ -145,6 +145,15 @@ struct gnutar_header {
   char padding[17];
 };
 
+// GNU sparse entry
+struct sparseEntry {
+  int64_t Offset{0};
+  int64_t Length{0};
+  int64_t endOffset() const { return Offset + Length; }
+};
+
+using sparseDatas = std::vector<sparseEntry>;
+
 using pax_records_t = bela::flat_hash_map<std::string, std::string>;
 
 struct Header {
@@ -153,6 +162,7 @@ struct Header {
   std::string Uname;
   std::string Gname;
   int64_t Size{0};
+  int64_t SparseSize{0};
   int64_t Mode{0};
   bela::Time ModTime;
   bela::Time AccessTime;
@@ -197,14 +207,18 @@ public:
   bool ReadFull(void *buffer, size_t size, bela::error_code &ec);
 
 private:
+  bela::ssize_t readInternal(void *buffer, size_t size, bela::error_code &ec);
   bool discard(int64_t bytes, bela::error_code &ec);
   bool readHeader(Header &h, bela::error_code &ec);
   bool parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec);
+  bool handleSparseFile(Header &h, const gnutar_header *th, bela::error_code &ec);
+  bool readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error_code &ec);
+  bool readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
 };
-
+std::wstring_view PathRemoveExtension(std::wstring_view p);
 } // namespace baulk::archive::tar
 
 #endif

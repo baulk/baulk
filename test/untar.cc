@@ -22,20 +22,39 @@ bool untar(std::wstring_view file) {
   for (;;) {
     auto fh = tr->Next(ec);
     if (!fh) {
-      bela::FPrintF(stderr, L"untar %s\n", ec.message);
+      if (ec.code == bela::ErrEnded) {
+        bela::FPrintF(stderr, L"\nsuccess\n");
+        break;
+      }
+      bela::FPrintF(stderr, L"\nuntar error %s\n", ec.message);
       break;
     }
-    bela::FPrintF(stderr, L"Filename: %s %s %d\n", fh->Name, bela::FormatTime(fh->ModTime), fh->Size);
-    if (fh->Size != 0) {
-      auto size = fh->Size;
-      char buffer[4096];
-      while (size > 0) {
-        auto msz = (std::min)(size, 4096ll);
-        auto n = tr->Read(buffer, msz, ec);
-        if (n <= 0) {
-          break;
-        }
-        size -= n;
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", fh->Name);
+    auto dest = baulk::archive::tar::PathRemoveExtension(file);
+    auto out = baulk::archive::PathCat(dest, fh->Name);
+    if (!out) {
+      continue;
+    }
+    if (fh->Size == 0) {
+      continue;
+    }
+    auto fd = baulk::archive::NewFD(*out, ec, true);
+    if (!fd) {
+      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
+      continue;
+    }
+    fd->SetTime(fh->ModTime, ec);
+    auto size = fh->Size;
+    char buffer[4096];
+    while (size > 0) {
+      auto minsize = (std::min)(size, 4096ll);
+      auto n = tr->Read(buffer, minsize, ec);
+      if (n <= 0) {
+        break;
+      }
+      size -= n;
+      if (!fd->Write(buffer, n, ec)) {
+        fd->Discard();
       }
     }
   }

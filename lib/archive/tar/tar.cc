@@ -5,6 +5,7 @@
 #include <charconv>
 
 namespace baulk::archive::tar {
+// tar code
 FileReader::~FileReader() {
   if (fd != INVALID_HANDLE_VALUE && needClosed) {
     CloseHandle(fd);
@@ -76,11 +77,19 @@ inline bool handleRegularFile(Header &h, int64_t &padding, bela::error_code &ec)
   return true;
 }
 
-bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
+bela::ssize_t Reader::readInternal(void *buffer, size_t size, bela::error_code &ec) {
   if (r == nullptr) {
     return -1;
   }
   return r->Read(buffer, size, ec);
+}
+
+bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
+  auto n = readInternal(buffer, size, ec);
+  if (n > 0 && remainingSize > 0) {
+    remainingSize -= n;
+  }
+  return n;
 }
 
 // ReadFull read full data
@@ -88,7 +97,7 @@ bool Reader::ReadFull(void *buffer, size_t size, bela::error_code &ec) {
   size_t rbytes = 0;
   auto p = reinterpret_cast<uint8_t *>(buffer);
   while (rbytes < size) {
-    auto sz = Read(p + rbytes, size - rbytes, ec);
+    auto sz = readInternal(p + rbytes, size - rbytes, ec);
     if (sz == -1) {
       return false;
     }
@@ -106,7 +115,7 @@ bool Reader::discard(int64_t bytes, bela::error_code &ec) {
   uint8_t discardBuffer[4096];
   while (bytes > 0) {
     auto minsize = (std::min)(bytes, discardSize);
-    auto n = Read(discardBuffer, minsize, ec);
+    auto n = readInternal(discardBuffer, minsize, ec);
     if (n <= 0) {
       return false;
     }
@@ -201,9 +210,67 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
   return true;
 }
 
-// handleSparseFile
-bool handleSparseFile(Header &h, const gnutar_header *gh, bela::error_code &ec) {
+bool Reader::readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error_code &ec) {
   //
+  return false;
+}
+
+bool Reader::readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec) {
+  bool is1x0 = false;
+  auto mit = h.PAXRecords.find(paxGNUSparseMajor);
+  if (mit == h.PAXRecords.end()) {
+    return true;
+  }
+  std::string_view major = mit->second;
+  auto it = h.PAXRecords.find(paxGNUSparseMinor);
+  if (it == h.PAXRecords.end()) {
+    return false;
+  }
+  std::string_view minor = it->second;
+  if (major == "0" && (minor == "0" || minor == "1")) {
+    is1x0 = false;
+  } else if (major == "1" && minor == "0") {
+    is1x0 = true;
+  } else if (major.empty() || minor.empty()) {
+    return true;
+  } else if (auto kit = h.PAXRecords.find(paxGNUSparseMap); kit != h.PAXRecords.end() && !kit->second.empty()) {
+    is1x0 = false;
+  } else {
+    return true;
+  }
+  h.Format = FormatPAX;
+  if (auto it = h.PAXRecords.find(paxGNUSparseName); it != h.PAXRecords.end() && !it->second.empty()) {
+    h.Name = it->second;
+  }
+  if (auto it = h.PAXRecords.find(paxGNUSparseSize); it != h.PAXRecords.end() && !it->second.empty()) {
+    int64_t n = 0;
+    if (auto res = std::from_chars(it->second.data(), it->second.data() + it->second.size(), n);
+        res.ec == std::errc{}) {
+      h.SparseSize = n;
+      return false;
+    }
+  }
+  if (is1x0) {
+  }
+  return false;
+}
+
+// handleSparseFile tar support sparse file
+// https://www.gnu.org/software/tar/manual/html_node/sparse.html
+bool Reader::handleSparseFile(Header &h, const gnutar_header *gh, bela::error_code &ec) {
+  std::vector<sparseEntry> spd;
+  bool ret = false;
+  if (h.Typeflag == TypeGNUSparse) {
+    ret = readOldGNUSparseMap(h, gh, ec);
+  } else {
+    ret = readGNUSparsePAXHeaders(h, spd, ec);
+  }
+  if (ret && !spd.empty()) {
+    if (isHeaderOnlyType(h.Typeflag) || !validateSparseEntries(spd, h.Size)) {
+      ec = bela::make_error_code(L"invalid tar header");
+      return false;
+    }
+  }
   return true;
 }
 
@@ -234,7 +301,8 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
       if (h.Typeflag == TypeXGlobalHeader) {
         mergePAX(h, paxHdrs, ec);
         // C++20 designated initializers
-        //  a designator must refer to a non-static direct data member
+        // https://mariusbancila.ro/blog/2020/02/27/c20-designated-initializers/
+        // a designator must refer to a non-static direct data member
         // all the designator used in the initialization expression must follow the order of the declaration of the data
         // members in the class
         // not all data members must have a designator, but those that do must follow the rule above
@@ -277,13 +345,26 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
     if (!handleRegularFile(h, paddingSize, ec)) {
       return std::nullopt;
     }
+    // TODO support tar sparse feature
     if ((h.Format & (FormatUSTAR | FormatPAX)) != 0) {
       h.Format = FormatUSTAR;
     }
+    remainingSize = h.Size;
     return std::make_optional(std::move(h));
   }
 
   return std::nullopt;
+}
+
+std::wstring_view PathRemoveExtension(std::wstring_view p) {
+  constexpr std::wstring_view extensions[] = {L".tgz",     L".tar.gz", L".tbz2", L".tar.bz2", L".tar.xz",  L".txz",
+                                              L".tar.zst", L".tar.br", L".tbr",  L".tlz4",    L".tar.lz4", L".tar"};
+  for (const auto e : extensions) {
+    if (bela::EndsWithIgnoreCase(p, e)) {
+      return p.substr(0, p.size() - e.size());
+    }
+  }
+  return p;
 }
 
 } // namespace baulk::archive::tar

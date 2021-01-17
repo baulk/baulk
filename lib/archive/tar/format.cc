@@ -233,4 +233,27 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
   return true;
 }
 
+bool validateSparseEntries(sparseDatas &spd, int64_t size) {
+  if (size < 0) {
+    return false;
+  }
+  sparseEntry pre;
+  for (const auto &cur : spd) {
+    if (cur.Offset < 0 || cur.Length < 0) {
+      return false;
+    }
+    if (cur.Offset > (std::numeric_limits<int64_t>::max)() - cur.Length) {
+      return false;
+    }
+    if (cur.endOffset() > size) {
+      return false;
+    }
+    if (pre.endOffset() > cur.Offset) {
+      return false;
+    }
+    pre = cur;
+  }
+  return true;
+}
+
 } // namespace baulk::archive::tar
