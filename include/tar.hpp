@@ -7,7 +7,8 @@
 #include <memory>
 
 namespace baulk::archive::tar {
-constexpr long ErrNoneFilter = 754321;
+constexpr long ErrNotTarFile = 754320;
+constexpr long ErrNoFilter = 754321;
 using bela::ssize_t;
 
 enum tar_format_t : int {
@@ -188,6 +189,7 @@ public:
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
   bool PositionAt(int64_t pos, bela::error_code &ec);
   int64_t Size() const { return size; }
+  HANDLE FD() const { return fd; }
 
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};

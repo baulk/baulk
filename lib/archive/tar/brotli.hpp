@@ -2,6 +2,7 @@
 #ifndef BAULK_ARCHIVE_TAR_BROTLI_HPP
 #define BAULK_ARCHIVE_TAR_BROTLI_HPP
 #include "tarinternal.hpp"
+#include <brotli/decode.h>
 
 namespace baulk::archive::tar::brotli {
 class Reader : public bela::io::Reader {
@@ -14,8 +15,16 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
 
 private:
+  ssize_t CopyBuffer(void *buffer, size_t len, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
+  BrotliDecoderState *state{nullptr};
+  Buffer in;
+  Buffer out;
   int64_t pickBytes{0};
+  const unsigned char *inptr{nullptr};
+  size_t avail_in{0};
+  size_t totalout{ 0 };
+  BrotliDecoderResult result{};
 };
 } // namespace baulk::archive::tar::brotli
 

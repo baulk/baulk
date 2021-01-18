@@ -16,8 +16,11 @@ bool untar(std::wstring_view file) {
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
     tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
-  } else {
+  } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
     tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
+  } else {
+    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", file, ec.message);
+    return false;
   }
   for (;;) {
     auto fh = tr->Next(ec);
