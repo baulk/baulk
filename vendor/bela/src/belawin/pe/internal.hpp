@@ -4,6 +4,22 @@
 #include <bela/pe.hpp>
 
 namespace bela::pe {
+constexpr int DataDirExportTable = 0;            // Export table.
+constexpr int DataDirImportTable = 1;            // Import table.
+constexpr int DataDirResourceTable = 2;          // Resource table.
+constexpr int DataDirExceptionTable = 3;         // Exception table.
+constexpr int DataDirCertificateTable = 4;       // Certificate table.
+constexpr int DataDirBaseRelocationTable = 5;    // Base relocation table.
+constexpr int DataDirDebug = 6;                  // Debugging information.
+constexpr int DataDirArchitecture = 7;           // Architecture-specific data.
+constexpr int DataDirGlobalPtr = 8;              // Global pointer register.
+constexpr int DataDirTLSTable = 9;               // Thread local storage (TLS) table.
+constexpr int DataDirLoadConfigTable = 10;       // Load configuration table.
+constexpr int DataDirBoundImport = 11;           // Bound import table.
+constexpr int DataDirIAT = 12;                   // Import address table.
+constexpr int DataDirDelayImportDescriptor = 13; // Delay import descriptor.
+constexpr int DataDirCLRHeader = 14;             // CLR header.
+constexpr int DataDirReserved = 15;              // Reserved.
 
 inline std::string_view cstring_view(const char *data, size_t len) {
   std::string_view sv{data, len};

@@ -127,8 +127,8 @@ bool File::ParseFile(bela::error_code &ec) {
       return false;
     }
     if (!(sign[0] == 'P' && sign[1] == 'E' && sign[2] == 0 && sign[3] == 0)) {
-      ec = bela::make_error_code(ErrGeneral, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','", int(sign[1]), L"','",
-                                 int(sign[2]), L"','", int(sign[3]), L"']");
+      ec = bela::make_error_code(ErrGeneral, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','",
+                                 int(sign[1]), L"','", int(sign[2]), L"','", int(sign[3]), L"']");
       return false;
     }
     base = signoff + 4;
@@ -173,6 +173,9 @@ bool File::ParseFile(bela::error_code &ec) {
     sec.Header.NumberOfRelocations = sh.NumberOfRelocations;
     sec.Header.NumberOfLineNumbers = sh.NumberOfLineNumbers;
     sec.Header.Characteristics = sh.Characteristics;
+    if (auto sectionEnd = static_cast<int64_t>(sec.Header.Offset + sec.Header.Size); sectionEnd > overlayOffset) {
+      overlayOffset = sectionEnd;
+    }
     sections.emplace_back(std::move(sec));
   }
   for (auto &sec : sections) {

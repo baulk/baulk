@@ -8,6 +8,7 @@ add_library(
   path.cc
   pe/clr.cc
   pe/file.cc
+  pe/overlay.cc
   pe/resource.cc
   pe/rva.cc
   pe/searcher.cc

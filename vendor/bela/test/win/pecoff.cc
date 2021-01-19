@@ -77,5 +77,11 @@ int wmain(int argc, wchar_t **argv) {
   if (file.LookupClrVersion(ver, ec) && !ver.empty()) {
     bela::FPrintF(stdout, L"CRL: %s\n", ver);
   }
+  std::vector<char> overlay;
+  if (!file.LookupOverlay(overlay, ec) && ec.code != bela::pe::ErrNoOverlay) {
+    bela::FPrintF(stderr, L"Overlay: %s\n", ec.message);
+    return 1;
+  }
+  bela::FPrintF(stderr, L"Overlay: %s\n", std::string_view{overlay.data(), overlay.size()});
   return 0;
 }
