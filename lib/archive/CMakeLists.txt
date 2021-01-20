@@ -1,5 +1,7 @@
 # archive libs
 
+add_subdirectory(chromium_zlib)
+
 # liblzma
 add_library(
   lzma STATIC
@@ -92,48 +94,8 @@ list(APPEND LZMA_DEF -DLZMA_API_STATIC)
 target_include_directories(lzma PRIVATE ${LZMA_INC})
 target_compile_definitions(lzma PRIVATE ${LZMA_DEF})
 
-# zlib
-set(ZLIB_INC)
-if("${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x86" OR "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" STREQUAL "x64")
-  set(ZLIB_SOURCES
-      zlib-intel/adler32.c
-      zlib-intel/compress.c
-      zlib-intel/crc_folding.c
-      zlib-intel/crc32.c
-      zlib-intel/deflate_medium.c
-      zlib-intel/deflate_quick.c
-      zlib-intel/deflate.c
-      zlib-intel/inffast.c
-      zlib-intel/inflate.c
-      zlib-intel/inftrees.c
-      zlib-intel/match.c
-      zlib-intel/slide_sse.c
-      zlib-intel/trees.c
-      zlib-intel/x86.c
-      zlib-intel/zutil.c)
-  set(ZLIB_INC zlib-intel)
-else()
-  set(ZLIB_SOURCES
-      zlib/adler32.c
-      zlib/compress.c
-      zlib/crc32.c
-      zlib/deflate.c
-      zlib/inffast.c
-      zlib/inflate.c
-      zlib/inftrees.c
-      zlib/trees.c
-      zlib/zutil.c)
-  set(ZLIB_INC zlib)
-endif()
-
-add_library(zlib STATIC ${ZLIB_SOURCES})
-
-add_library(deflate64 STATIC
-    deflate64/infback9.c
-    deflate64/inftree9.c
-)
-
-target_include_directories(deflate64 PRIVATE ${ZLIB_INC})
+add_library(deflate64 STATIC deflate64/infback9.c deflate64/inftree9.c)
+target_include_directories(deflate64 PRIVATE chromium_zlib)
 
 set(ZSTD_COMMON_SOURCES
     zstd/common/debug.c
@@ -207,9 +169,8 @@ list(APPEND MINIZIP_DEF -DHAVE_STDDEF_H)
 list(APPEND MINIZIP_DEF -DHAVE_STDINT_H)
 list(APPEND MINIZIP_DEF -DHAVE_STRING_H)
 list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
-
 list(APPEND MINIZIP_INC bzip2)
-list(APPEND MINIZIP_INC ${ZLIB_INC})
+list(APPEND MINIZIP_INC chromium_zlib)
 list(APPEND MINIZIP_INC liblzma/api)
 list(APPEND MINIZIP_INC zstd)
 
@@ -293,5 +254,11 @@ add_library(
 target_include_directories(baulkarchive PRIVATE brotli/include)
 target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
 target_include_directories(baulkarchive PRIVATE ced)
-target_compile_definitions(baulkarchive PRIVATE ${LZMA_DEF} -DBZ_NO_STDIO)
-target_link_libraries(baulkarchive belawin deflate64 minizip Ppmd ced)
+target_compile_options(baulkarchive PRIVATE ${LZMA_DEF} -DBZ_NO_STDIO)
+target_link_libraries(
+  baulkarchive
+  belawin
+  deflate64
+  minizip
+  Ppmd
+  ced)

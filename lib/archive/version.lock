@@ -1,4 +1,3 @@
-zlib/zlib-intel https://github.com/dotnet/runtime/tree/8c863fe9163aa8ce64d9f4cc62b38feeb7e453b4/src/libraries/Native/Windows/System.IO.Compression.Native
 brotli 1.0.9
 liblzma: https://tukaani.org/xz/ 5.2.5
 minizip: https://github.com/nmoinvaz/minizip/commit/123c49e94edd144d6ec2d1fc29fc2f4ee8de6a07
