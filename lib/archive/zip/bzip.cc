@@ -5,8 +5,7 @@
 namespace baulk::archive::zip {
 
 // bzip2
-bool Reader::decompressBz2(const File &file, const Receiver &receiver, int64_t &decompressed,
-                           bela::error_code &ec) const {
+bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &ec) const {
   bz_stream bzs{};
   if (auto ret = BZ2_bzDecompressInit(&bzs, 0, 0); ret != BZ_OK) {
     ec = bela::make_error_code(ret, L"BZ2_bzDecompressInit error");
@@ -41,11 +40,10 @@ bool Reader::decompressBz2(const File &file, const Receiver &receiver, int64_t &
       }
       auto have = outsize - bzs.avail_out;
       crc32val = crc32_fast(out.data(), have, crc32val);
-      if (!receiver(out.data(), have)) {
+      if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
       }
-      decompressed += have;
     } while (bzs.avail_out == 0);
     csize -= minsize;
     if (ret == BZ_STREAM_END) {

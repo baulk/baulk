@@ -6,8 +6,7 @@ namespace baulk::archive::zip {
 
 // https://github.com/google/brotli/blob/master/c/tools/brotli.c#L884
 // Brotli
-bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_t &decompressed,
-                              bela::error_code &ec) const {
+bool Reader::decompressBrotli(const File &file, const Writer &w, bela::error_code &ec) const {
   auto state = BrotliDecoderCreateInstance(0, 0, 0);
   if (state == nullptr) {
     ec = bela::make_error_code(L"BrotliDecoderCreateInstance failed");
@@ -35,11 +34,10 @@ bool Reader::decompressBrotli(const File &file, const Receiver &receiver, int64_
       if (outptr != out.data()) {
         auto have = outptr - out.data();
         crc32val = crc32_fast(out.data(), have, crc32val);
-        if (!receiver(out.data(), have)) {
+        if (!w(out.data(), have)) {
           ec = bela::make_error_code(ErrCanceled, L"canceled");
           return false;
         }
-        decompressed += have;
       }
       if (result == BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT) {
         break;

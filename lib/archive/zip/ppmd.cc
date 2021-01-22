@@ -121,8 +121,7 @@ static void SzBigFree(ISzAllocPtr p, void *address) {
 
 const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};
 
-bool Reader::decompressPpmd(const File &file, const Receiver &receiver, int64_t &decompressed,
-                            bela::error_code &ec) const {
+bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code &ec) const {
   SectionReader sr(fd, file.compressedSize);
   IByteIn bi{&sr, ppmd_read};
   CPpmd8 _ppmd = {0};
@@ -168,9 +167,8 @@ bool Reader::decompressPpmd(const File &file, const Receiver &receiver, int64_t 
     if (i == 0) {
       break;
     }
-    decompressed += i;
     crc32val = crc32_fast(ob, i, crc32val);
-    if (!receiver(ob, i)) {
+    if (!w(ob, i)) {
       ec = bela::make_error_code(ErrCanceled, L"canceled");
       return false;
     }

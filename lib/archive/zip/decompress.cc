@@ -4,7 +4,7 @@
 
 namespace baulk::archive::zip {
 
-bool Reader::Decompress(const File &file, const Receiver &receiver, int64_t &decompressed, bela::error_code &ec) const {
+bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
   if (!ReadAt(buf, fileHeaderLen, file.position, ec)) {
     return false;
@@ -30,30 +30,30 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, int64_t &dec
       if (!ReadFull(buffer, static_cast<size_t>(minsize), ec)) {
         return false;
       }
-      if (!receiver(buffer, static_cast<size_t>(minsize))) {
+      if (!w(buffer, static_cast<size_t>(minsize))) {
         return false;
       }
       csize -= minsize;
     }
   } break;
   case ZIP_DEFLATE:
-    return decompressDeflate(file, receiver, decompressed, ec);
+    return decompressDeflate(file, w, ec);
   case ZIP_DEFLATE64:
-    return decompressDeflate64(file, receiver, decompressed, ec);
+    return decompressDeflate64(file, w, ec);
   case 20:
     [[fallthrough]];
   case ZIP_ZSTD:
-    return decompressZstd(file, receiver, decompressed, ec);
+    return decompressZstd(file, w, ec);
   case ZIP_LZMA:
-    return decompressLZMA(file, receiver, decompressed, ec);
+    return decompressLZMA(file, w, ec);
   case ZIP_XZ:
-    return decompressXz(file, receiver, decompressed, ec);
+    return decompressXz(file, w, ec);
   case ZIP_BZIP2:
-    return decompressBz2(file, receiver, decompressed, ec);
+    return decompressBz2(file, w, ec);
   case ZIP_PPMD:
-    return decompressPpmd(file, receiver, decompressed, ec);
+    return decompressPpmd(file, w, ec);
   case ZIP_BROTLI:
-    return decompressBrotli(file, receiver, decompressed, ec);
+    return decompressBrotli(file, w, ec);
   default:
     ec = bela::make_error_code(ErrGeneral, L"unsupport zip method ", file.method);
     return false;

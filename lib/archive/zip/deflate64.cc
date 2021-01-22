@@ -7,24 +7,24 @@
 
 namespace baulk::archive::zip {
 constexpr DWORD CHUNK = 131072;
-struct writer {
-  const Receiver &receiver;
+struct inflate64Writer {
+  const Writer &w;
   uint32_t crc32val{0};
   uint64_t count{0};
   bool canceled{false};
 };
 int put(void *out_desc, unsigned char *buf, unsigned len) {
-  auto w = reinterpret_cast<writer *>(out_desc);
+  auto w = reinterpret_cast<inflate64Writer *>(out_desc);
   w->crc32val = crc32_fast(buf, len, w->crc32val);
   w->count += len;
-  if (!w->receiver(buf, len)) {
+  if (!w->w(buf, len)) {
     w->canceled = true;
     return 1;
   }
   return 0;
 }
 
-struct reader {
+struct inflate64Reader {
   HANDLE fd{INVALID_HANDLE_VALUE};
   uint8_t *buf{nullptr};
   int64_t count{0};
@@ -33,7 +33,7 @@ struct reader {
 };
 
 unsigned get(void *in_desc, unsigned char **buf) {
-  auto r = reinterpret_cast<reader *>(in_desc);
+  auto r = reinterpret_cast<inflate64Reader *>(in_desc);
   auto next = r->buf;
   if (buf != nullptr) {
     *buf = next;
@@ -60,8 +60,7 @@ unsigned get(void *in_desc, unsigned char **buf) {
 }
 
 // DEFLATE64
-bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, int64_t &decompressed,
-                                 bela::error_code &ec) const {
+bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_code &ec) const {
   baulk::archive::Buffer window(65536);
   baulk::archive::Buffer chunk(CHUNK);
   z_stream zs;
@@ -72,10 +71,10 @@ bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, int
     return false;
   }
   auto closer = bela::finally([&] { inflateBack9End(&zs); });
-  writer w{receiver, 0, 0, false};
-  reader r{fd, chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
-  ret = inflateBack9(&zs, get, &r, put, &w);
-  if (w.canceled) {
+  inflate64Writer iw{w, 0, 0, false};
+  inflate64Reader r{fd, chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
+  ret = inflateBack9(&zs, get, &r, put, &iw);
+  if (iw.canceled) {
     ec = bela::make_error_code(ErrCanceled, L"canceled");
     return false;
   }
@@ -83,8 +82,8 @@ bool Reader::decompressDeflate64(const File &file, const Receiver &receiver, int
     ec = bela::make_error_code(L"deflate64 compressed data corrupted");
     return false;
   }
-  if (w.crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", w.crc32val, L" not match");
+  if (iw.crc32val != file.crc32sum) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", iw.crc32val, L" not match");
     return false;
   }
   return true;

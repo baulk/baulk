@@ -6,8 +6,7 @@ namespace baulk::archive::zip {
 constexpr size_t xzoutsize = 256 * 1024;
 constexpr size_t xzinsize = 128 * 1024;
 // XZ
-bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &decompressed,
-                          bela::error_code &ec) const {
+bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &ec) const {
   lzma_stream zs = LZMA_STREAM_INIT;
   auto ret = lzma_stream_decoder(&zs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
@@ -40,11 +39,10 @@ bool Reader::decompressXz(const File &file, const Receiver &receiver, int64_t &d
     if (zs.avail_out == 0 || ret == LZMA_STREAM_END) {
       auto have = xzoutsize - zs.avail_out;
       crc32val = crc32_fast(out.data(), have, crc32val);
-      if (!receiver(out.data(), have)) {
+      if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
       }
-      decompressed += have;
       zs.next_out = out.data();
       zs.avail_out = xzoutsize;
     }
@@ -90,8 +88,7 @@ struct alone_header {
 #pragma pack(pop)
 
 // LZMA
-bool Reader::decompressLZMA(const File &file, const Receiver &receiver, int64_t &decompressed,
-                            bela::error_code &ec) const {
+bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code &ec) const {
   lzma_stream zs;
   memset(&zs, 0, sizeof(zs));
   if (auto ret = lzma_alone_decoder(&zs, UINT64_MAX); ret != LZMA_OK) {
@@ -146,11 +143,10 @@ bool Reader::decompressLZMA(const File &file, const Receiver &receiver, int64_t 
     if (zs.avail_out == 0 || ret == LZMA_STREAM_END) {
       auto have = xzoutsize - zs.avail_out;
       crc32val = crc32_fast(out.data(), have, crc32val);
-      if (!receiver(out.data(), have)) {
+      if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
       }
-      decompressed += have;
       zs.next_out = out.data();
       zs.avail_out = xzoutsize;
     }

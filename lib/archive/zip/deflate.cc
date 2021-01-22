@@ -5,8 +5,7 @@
 namespace baulk::archive::zip {
 // DEFLATE
 // https://github.com/madler/zlib/blob/master/examples/zpipe.c#L92
-bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64_t &decompressed,
-                               bela::error_code &ec) const {
+bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_code &ec) const {
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
   if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
@@ -48,11 +47,10 @@ bool Reader::decompressDeflate(const File &file, const Receiver &receiver, int64
       }
       auto have = outsize - zs.avail_out;
       crc32val = crc32_fast(out.data(), have, crc32val);
-      if (!receiver(out.data(), have)) {
+      if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
       }
-      decompressed += have;
     } while (zs.avail_out == 0);
     csize -= minsize;
     if (ret == Z_STREAM_END) {

@@ -73,7 +73,7 @@ bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bel
         linkname.append(reinterpret_cast<const char *>(data), len);
         return true;
       },
-      decompressed, ec);
+      ec);
   if (!ret) {
     return false;
   }
@@ -127,7 +127,7 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
         //
         return fd->Write(data, len, ec2);
       },
-      decompressed, ec);
+      ec);
   if (!ret) {
     bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
     return false;

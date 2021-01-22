@@ -5,8 +5,7 @@
 namespace baulk::archive::zip {
 // zstd
 // https://github.com/facebook/zstd/blob/dev/examples/streaming_decompression.c
-bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t &decompressed,
-                            bela::error_code &ec) const {
+bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code &ec) const {
   const auto boutsize = ZSTD_DStreamOutSize();
   const auto binsize = ZSTD_DStreamInSize();
   Buffer outbuf(boutsize);
@@ -33,11 +32,10 @@ bool Reader::decompressZstd(const File &file, const Receiver &receiver, int64_t 
         return false;
       }
       crc32val = crc32_fast(out.dst, out.pos, crc32val);
-      if (!receiver(out.dst, out.pos)) {
+      if (!w(out.dst, out.pos)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
       }
-      decompressed += out.pos;
     }
     csize -= minsize;
   }
