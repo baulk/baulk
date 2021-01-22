@@ -158,16 +158,16 @@ using sparseDatas = std::vector<sparseEntry>;
 using pax_records_t = bela::flat_hash_map<std::string, std::string>;
 
 namespace slice {
-// The extract_view class is used to save the extracted data. The data is the same as the life cycle of the Reader. If
+// The buffer_view class is used to save the extracted data. The data is the same as the life cycle of the Reader. If
 // the life cycle of the Reader ends, it should not be used.
-struct extract_view {
-  const void *dst{nullptr}; /**< start of output buffer */
-  size_t size{0};           /**< size of output buffer */
-  template <typename T = char> const T *data() { return reinterpret_cast<const T *>(dst); }
+struct buffer_view {
+  void *dst{nullptr}; /**< start of output buffer */
+  size_t size{0};     /**< size of output buffer if size ==0. buffer_view is a references*/
+  template <typename T = char> const T *memcast() { return reinterpret_cast<T>(dst); }
 };
 
 struct Reader {
-  virtual bool Read(extract_view &es, size_t len, bela::error_code &ec) = 0;
+  virtual ssize_t Read(buffer_view &bv, size_t len, bela::error_code &ec) = 0;
 };
 } // namespace slice
 
