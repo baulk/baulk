@@ -48,7 +48,7 @@
 #define BELA_PREDICT_TRUE(x) (x)
 #endif
 
-#if __has_attribute
+#if defined(__has_attribute)
 // BELA_HAVE_ATTRIBUTE
 //
 // A function-like feature checking macro that is a wrapper around
