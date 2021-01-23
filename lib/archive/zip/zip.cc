@@ -164,7 +164,7 @@ constexpr uint64_t OffsetMin = 0xFFFFFFFFull;
 
 */
 
-bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela::error_code &ec) {
+bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::error_code &ec) {
   uint8_t buf[directoryHeaderLen];
   if (br.ReadFull(buf, sizeof(buf), ec) != sizeof(buf)) {
     return false;
@@ -350,7 +350,8 @@ bool Reader::Initialize(bela::error_code &ec) {
   if (!PositionAt(d.directoryOffset, ec)) {
     return false;
   }
-  bela::Buffer buffer(16 * 1024);
+  // 64K avoid group
+  Buffer buffer(64 * 1024);
   bufioReader br(fd);
   for (uint64_t i = 0; i < d.directoryRecords; i++) {
     File file;

@@ -4,6 +4,7 @@
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
+#include <bela/env.hpp>
 #include <filesystem>
 
 using baulk::archive::zip::File;
@@ -142,6 +143,7 @@ int unzip(std::wstring_view path) {
   } else {
     extractor.Destination() = bela::StringCat(path, L".out");
   }
+
   extractor.OverwriteFile(true);
   bela::error_code ec;
   if (!extractor.OpenReader(path, ec)) {

@@ -154,10 +154,6 @@ public:
   ~Reader() { Free(); }
   bool OpenReader(std::wstring_view file, bela::error_code &ec);
   bool OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec);
-  Reader &Credential(std::string_view password) {
-    passwd.assign(password);
-    return *this;
-  }
   std::string_view Comment() const { return comment; }
   const auto &Files() const { return files; }
   int64_t CompressedSize() const { return compressedSize; }
@@ -165,7 +161,6 @@ public:
   bool Decompress(const File &file, const Writer &w, bela::error_code &ec) const;
 
 private:
-  std::string passwd;
   std::string comment;
   std::vector<File> files;
   HANDLE fd{INVALID_HANDLE_VALUE};

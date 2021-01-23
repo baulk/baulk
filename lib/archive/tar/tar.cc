@@ -215,6 +215,15 @@ bool Reader::readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error
   return false;
 }
 
+bool readGNUSparseMap0x1(pax_records_t &phdr, sparseDatas &spd, bela::error_code &ec) {
+  auto it = phdr.find(paxGNUSparseNumBlocks);
+  if (it == phdr.end()) {
+    ec = bela::make_error_code(L"tar: pax sparse missing num blocks");
+    return false;
+  }
+  return true;
+}
+
 bool Reader::readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec) {
   bool is1x0 = false;
   auto mit = h.PAXRecords.find(paxGNUSparseMajor);
