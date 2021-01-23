@@ -3,7 +3,7 @@
 #include <bela/endian.hpp>
 
 namespace hazel::zip {
-bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const {
+bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
   if (!ReadAt(buf, fileHeaderLen, file.position, ec)) {
     return false;
@@ -29,7 +29,7 @@ bool Reader::Decompress(const File &file, const Receiver &receiver, bela::error_
       if (!ReadFull(buffer, static_cast<size_t>(minsize), ec)) {
         return false;
       }
-      if (!receiver(buffer, static_cast<size_t>(minsize))) {
+      if (!w(buffer, static_cast<size_t>(minsize))) {
         return false;
       }
       cSize -= minsize;

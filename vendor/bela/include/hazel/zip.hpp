@@ -100,7 +100,7 @@ struct File {
 std::string String(bela::os::FileMode m);
 
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
-using Receiver = std::function<bool(const void *data, size_t len)>;
+using Writer = std::function<bool(const void *data, size_t len)>;
 enum mszipconatiner_t : int {
   OfficeNone, // None
   OfficeDocx,
@@ -182,7 +182,7 @@ public:
   int64_t UncompressedSize() const { return uncompressedSize; }
   bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
   bool Contains(std::string_view p, std::size_t limit = size_max) const;
-  bool Decompress(const File &file, const Receiver &receiver, bela::error_code &ec) const;
+  bool Decompress(const File &file, const Writer &w, bela::error_code &ec) const;
   mszipconatiner_t LooksLikeMsZipContainer() const;
   bool LooksLikePptx() const { return LooksLikeMsZipContainer() == OfficePptx; }
   bool LooksLikeDocx() const { return LooksLikeMsZipContainer() == OfficeDocx; }
