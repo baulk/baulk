@@ -2,6 +2,7 @@
 #include "tarinternal.hpp"
 #include <bela/str_cat_narrow.hpp>
 #include <bela/str_join_narrow.hpp>
+#include <bela/str_split_narrow.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
@@ -221,6 +222,86 @@ bool readGNUSparseMap0x1(pax_records_t &phdr, sparseDatas &spd, bela::error_code
     ec = bela::make_error_code(L"tar: pax sparse missing num blocks");
     return false;
   }
+  int64_t numEntries{0};
+  if (!bela::SimpleAtoi(it->second, &numEntries) || numEntries < 0 ||
+      static_cast<int>(numEntries * 2) < static_cast<int>(numEntries)) {
+    ec = bela::make_error_code(L"tar: pax sparse invalid num blocks");
+    return false;
+  }
+  auto iter = phdr.find(paxGNUSparseMap);
+  if (iter == phdr.end()) {
+    ec = bela::make_error_code(L"tar: pax sparse missing sparse map");
+    return false;
+  }
+  std::vector<std::string_view> sparseMap = bela::narrow::StrSplit(iter->second, bela::narrow::ByChar(','));
+  if (sparseMap.size() == 1 && sparseMap[0] == "") {
+    sparseMap.clear();
+  }
+  if (sparseMap.size() != static_cast<size_t>(2 * numEntries)) {
+    ec = bela::make_error_code(L"tar: pax sparse  invalid sparse map size");
+    return false;
+  }
+  spd.resize(numEntries);
+  for (int64_t i = 0; i < numEntries; i++) {
+    // 0,0,1 1,2,3 2,4,5 3,6,7 4,8,9
+    if (!bela::SimpleAtoi(sparseMap[2 * i], &spd[i].Offset) ||
+        !bela::SimpleAtoi(sparseMap[2 * i + 1], &spd[i].Length)) {
+      ec = bela::make_error_code(L"tar: pax sparse  invalid sparse offset or length");
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Reader::readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec) {
+  int64_t cntNewline{0};
+  char block[512];
+  std::string buf;
+  std::string::size_type offset{0};
+  auto feedTokens = [&](int64_t n, bela::error_code &e) -> bool {
+    while (cntNewline < n) {
+      if (!ReadFull(block, sizeof(block), ec)) {
+        return false;
+      }
+      buf.append(block, sizeof(block));
+      for (auto c : block) {
+        if (c == '\n') {
+          cntNewline++;
+        }
+      }
+    }
+    return true;
+  };
+  auto nextToken = [&]() -> std::string_view {
+    cntNewline--;
+    auto pos = buf.find('\n', offset);
+    if (pos != std::string::npos) {
+      std::string_view sv{buf.data() + offset, pos};
+      offset = pos + 1;
+      return sv;
+    }
+    return std::string_view{buf.data() + offset, buf.size() - offset};
+  };
+  if (!feedTokens(1, ec)) {
+    return false;
+  }
+  auto nextTokenStr = nextToken();
+  int64_t numEntries{0};
+  if (!bela::SimpleAtoi(nextTokenStr, &numEntries) || numEntries < 0 ||
+      static_cast<int>(numEntries * 2) < static_cast<int>(numEntries)) {
+    ec = bela::make_error_code(L"tar: pax sparse invalid num blocks");
+    return false;
+  }
+  if (!feedTokens(2 * numEntries, ec)) {
+    return false;
+  }
+  spd.resize(numEntries);
+  for (int64_t i = 0; i < numEntries; i++) {
+    if (!bela::SimpleAtoi(nextToken(), &spd[i].Offset) || !bela::SimpleAtoi(nextToken(), &spd[i].Length)) {
+      ec = bela::make_error_code(L"tar: pax sparse  invalid sparse offset or length");
+      return false;
+    }
+  }
   return true;
 }
 
@@ -260,8 +341,9 @@ bool Reader::readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_co
     }
   }
   if (is1x0) {
+    return readGNUSparseMap1x0(spd, ec);
   }
-  return false;
+  return readGNUSparseMap0x1(h.PAXRecords, spd, ec);
 }
 
 // handleSparseFile tar support sparse file

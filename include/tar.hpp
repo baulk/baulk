@@ -230,6 +230,7 @@ private:
   bool handleSparseFile(Header &h, const gnutar_header *th, bela::error_code &ec);
   bool readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error_code &ec);
   bool readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec);
+  bool readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec);
   bela::io::Reader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
