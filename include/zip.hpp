@@ -53,8 +53,6 @@ struct directoryEnd {
   uint64_t directoryRecords{0};
   uint64_t directorySize{0};
   uint64_t directoryOffset{0}; // relative to file
-  uint16_t commentLen;
-  std::string comment;
 };
 
 using bela::os::FileMode;
@@ -164,13 +162,6 @@ public:
   const auto &Files() const { return files; }
   int64_t CompressedSize() const { return compressedSize; }
   int64_t UncompressedSize() const { return uncompressedSize; }
-  static std::optional<Reader> NewReader(HANDLE fd, int64_t sz, bela::error_code &ec) {
-    Reader r;
-    if (!r.OpenReader(fd, sz, ec)) {
-      return std::nullopt;
-    }
-    return std::make_optional(std::move(r));
-  }
   bool Decompress(const File &file, const Writer &w, bela::error_code &ec) const;
 
 private:
@@ -198,7 +189,11 @@ private:
 
 // NewReader
 inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
-  return Reader::NewReader(fd, size, ec);
+  Reader r;
+  if (!r.OpenReader(fd, size, ec)) {
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(r));
 }
 
 // root must be the cleaned path

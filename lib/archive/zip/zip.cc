@@ -8,7 +8,16 @@
 #include "zipinternal.hpp"
 
 namespace baulk::archive::zip {
-
+// string cleaned avoid zip string contains 'NUL'
+inline std::string stringCleaned(const void *data, size_t N) {
+  auto p = reinterpret_cast<const char *>(data);
+  auto pos = memchr(data, 0, N);
+  if (pos == nullptr) {
+    return std::string(p, N);
+  }
+  N = reinterpret_cast<const char *>(pos) - p;
+  return std::string(p, N);
+}
 int findSignatureInBlock(const bela::Buffer &b) {
   for (auto i = static_cast<int>(b.size()) - directoryEndLen; i >= 0; i--) {
     if (b[i] == 'P' && b[i + 1] == 'K' && b[i + 2] == 0x05 && b[i + 3] == 0x06) {
@@ -101,12 +110,12 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   d.directoryRecords = b.Read<uint16_t>();
   d.directorySize = b.Read<uint32_t>();
   d.directoryOffset = b.Read<uint32_t>();
-  d.commentLen = b.Read<uint16_t>();
-  if (static_cast<size_t>(d.commentLen) > b.Size()) {
+  auto commentLen = b.Read<uint16_t>();
+  if (static_cast<size_t>(commentLen) > b.Size()) {
     ec = bela::make_error_code(L"zip: invalid comment length");
     return false;
   }
-  d.comment.assign(b.Data(), d.commentLen);
+  comment = stringCleaned(b.Data(), commentLen);
   if (d.directoryRecords == 0xFFFF || d.directorySize == 0xFFFF || d.directoryOffset == 0xFFFFFFFF) {
     ec.clear();
     auto p = findDirectory64End(directoryEndOffset, ec);
@@ -155,16 +164,6 @@ constexpr uint64_t OffsetMin = 0xFFFFFFFFull;
 
 */
 
-inline std::string cleanupName(const void *data, size_t N) {
-  auto p = reinterpret_cast<const char *>(data);
-  auto pos = memchr(data, 0, N);
-  if (pos == nullptr) {
-    return std::string(p, N);
-  }
-  N = reinterpret_cast<const char *>(pos) - p;
-  return std::string(p, N);
-}
-
 bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela::error_code &ec) {
   uint8_t buf[directoryHeaderLen];
   if (br.ReadFull(buf, sizeof(buf), ec) != sizeof(buf)) {
@@ -199,9 +198,9 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   if (br.ReadFull(buffer.data(), totallen, ec) != totallen) {
     return false;
   }
-  file.name = cleanupName(buffer.data(), filenameLen);
+  file.name = stringCleaned(buffer.data(), filenameLen);
   if (commentLen != 0) {
-    file.comment = cleanupName(buffer.data() + filenameLen + extraLen, commentLen);
+    file.comment = stringCleaned(buffer.data() + filenameLen + extraLen, commentLen);
   }
   file.mode = resolveFileMode(file, externalAttrs);
   auto needUSize = file.uncompressedSize == SizeMin;
@@ -304,7 +303,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       auto ver = fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
       file.flags |= 0x800;
-      file.name = cleanupName(fb.Data<char>(), fb.Size());
+      file.name = stringCleaned(fb.Data<char>(), fb.Size());
       continue;
     }
     // https://www.winzip.com/win/en/aes_info.html
@@ -347,7 +346,6 @@ bool Reader::Initialize(bela::error_code &ec) {
                                L" byte zip");
     return false;
   }
-  comment.assign(std::move(d.comment));
   files.reserve(d.directoryRecords);
   if (!PositionAt(d.directoryOffset, ec)) {
     return false;

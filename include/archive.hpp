@@ -2,6 +2,7 @@
 #ifndef BAULK_ARCHIVE_HPP
 #define BAULK_ARCHIVE_HPP
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <span>
 #include <memory>
@@ -101,7 +102,6 @@ private:
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
 std::optional<std::wstring> PathCat(std::wstring_view root, std::string_view sub);
-
 std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite = false);
 bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite = false);
 } // namespace baulk::archive
