@@ -211,8 +211,8 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
   return true;
 }
 
-bool Reader::readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error_code &ec) {
-  //
+bool Reader::readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec) {
+ec = bela::make_error_code(L"tar: GNU old sparse file extraction is not implemented");
   return false;
 }
 
@@ -352,7 +352,7 @@ bool Reader::handleSparseFile(Header &h, const gnutar_header *gh, bela::error_co
   std::vector<sparseEntry> spd;
   bool ret = false;
   if (h.Typeflag == TypeGNUSparse) {
-    ret = readOldGNUSparseMap(h, gh, ec);
+    ret = readOldGNUSparseMap(h, spd, gh, ec);
   } else {
     ret = readGNUSparsePAXHeaders(h, spd, ec);
   }

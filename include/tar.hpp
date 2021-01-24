@@ -228,7 +228,7 @@ private:
   bool readHeader(Header &h, bela::error_code &ec);
   bool parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec);
   bool handleSparseFile(Header &h, const gnutar_header *th, bela::error_code &ec);
-  bool readOldGNUSparseMap(Header &h, const gnutar_header *th, bela::error_code &ec);
+  bool readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec);
   bool readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec);
   bool readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec);
   bela::io::Reader *r{nullptr};

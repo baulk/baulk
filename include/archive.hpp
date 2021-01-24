@@ -15,6 +15,8 @@ namespace baulk::archive {
 using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
+constexpr long ErrUnimplemented = 786404;
+
 namespace archive_internal {
 #ifdef PARALLEL_UNZIP
 extern std::pmr::synchronized_pool_resource pool;
