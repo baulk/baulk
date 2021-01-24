@@ -27,6 +27,7 @@ constexpr long ErrParseBroken = 0x4003;
 constexpr long ErrFileTooSmall = 0x4004;
 constexpr long ErrEnded = 654320;
 constexpr long ErrCanceled = 654321;
+constexpr long ErrUnimplemented = 654322; // feature not implemented
 // bela::error_code
 struct error_code {
   std::wstring message;
