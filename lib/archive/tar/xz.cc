@@ -24,13 +24,6 @@ bool Reader::Initialize(bela::error_code &ec) {
   return true;
 }
 
-ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
-  auto minsize = (std::min)(len, out.size() - out.pos());
-  memcpy(buffer, out.data() + out.pos(), minsize);
-  out.pos() += minsize;
-  return minsize;
-}
-
 // ReadAtLeast
 bela::ssize_t Reader::ReadAtLeast(void *buffer, size_t size, bela::error_code &ec) {
   size_t rbytes = 0;
@@ -66,13 +59,10 @@ inline bela::error_code XzErrorCode(lzma_ret ret) {
   return bela::make_error_code(bela::ErrGeneral, L"Internal error (bug) ret=", ret);
 }
 
-ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (out.pos() != out.size()) {
-    return CopyBuffer(buffer, len, ec);
-  }
+bool Reader::decompress(bela::error_code &ec) {
   if (ret == LZMA_STREAM_END) {
     ec = bela::make_error_code(bela::ErrEnded, L"xz stream end");
-    return -1;
+    return false;
   }
   for (;;) {
     if (xzs->avail_in == 0 || xzs->total_in == 0) {
@@ -90,13 +80,45 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
       out.size() = have;
       xzs->next_out = out.data();
       xzs->avail_out = xzoutsize;
-      return CopyBuffer(buffer, len, ec);
+      return true;
     }
     if (ret != LZMA_OK) {
       ec = XzErrorCode(ret);
+      return false;
+    }
+  }
+  return false;
+}
+
+ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
+  if (out.pos() == out.size()) {
+    if (!decompress(ec)) {
       return -1;
     }
   }
-  return -1;
+  auto minsize = (std::min)(len, out.size() - out.pos());
+  memcpy(buffer, out.data() + out.pos(), minsize);
+  out.pos() += minsize;
+  return minsize;
 }
+
+// Avoid multiple memory copies
+bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  while (filesize > 0) {
+    if (out.pos() == out.size()) {
+      if (!decompress(ec)) {
+        return false;
+      }
+    }
+    auto minsize = (std::min)(static_cast<size_t>(filesize), out.size() - out.pos());
+    auto p = out.data() + out.pos();
+    out.pos() += minsize;
+    filesize -= minsize;
+    if (!w(p, minsize, ec)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace baulk::archive::tar::xz

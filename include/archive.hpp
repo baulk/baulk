@@ -15,7 +15,7 @@ namespace baulk::archive {
 using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
-constexpr long ErrUnimplemented = 786404;
+using bela::ErrUnimplemented;
 
 namespace archive_internal {
 #ifdef PARALLEL_UNZIP

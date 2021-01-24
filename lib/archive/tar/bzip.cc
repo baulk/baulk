@@ -20,26 +20,16 @@ bool Reader::Initialize(bela::error_code &ec) {
   return true;
 }
 
-ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
-  auto minsize = (std::min)(len, out.size() - out.pos());
-  memcpy(buffer, out.data() + out.pos(), minsize);
-  out.pos() += minsize;
-  return minsize;
-}
-
-ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (out.pos() != out.size()) {
-    return CopyBuffer(buffer, len, ec);
-  }
+bool Reader::decompress(bela::error_code &ec) {
   if (ret == BZ_STREAM_END) {
     ec = bela::make_error_code(bela::ErrEnded, L"bzip stream end");
-    return -1;
+    return false;
   }
   for (;;) {
     if (bzs->avail_out != 0 || pickBytes == 0) {
       auto n = r->Read(in.data(), in.capacity(), ec);
       if (n <= 0) {
-        return n;
+        return false;
       }
       pickBytes += static_cast<int64_t>(n);
       bzs->next_in = reinterpret_cast<char *>(in.data());
@@ -53,7 +43,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
       [[fallthrough]];
     case BZ_MEM_ERROR:
       ec = bela::make_error_code(ret, L"bzlib error ", ret);
-      return -1;
+      return false;
     default:
       break;
     }
@@ -64,6 +54,38 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
       break;
     }
   }
-  return CopyBuffer(buffer, len, ec);
+  return true;
 }
+
+ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
+  if (out.pos() == out.size()) {
+    if (!decompress(ec)) {
+      return -1;
+    }
+  }
+  auto minsize = (std::min)(len, out.size() - out.pos());
+  memcpy(buffer, out.data() + out.pos(), minsize);
+  out.pos() += minsize;
+  return minsize;
+}
+
+// Avoid multiple memory copies
+bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  while (filesize > 0) {
+    if (out.pos() == out.size()) {
+      if (!decompress(ec)) {
+        return false;
+      }
+    }
+    auto minsize = (std::min)(static_cast<size_t>(filesize), out.size() - out.pos());
+    auto p = out.data() + out.pos();
+    out.pos() += minsize;
+    filesize -= minsize;
+    if (!w(p, minsize, ec)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace baulk::archive::tar::bzip

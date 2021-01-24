@@ -20,23 +20,13 @@ bool Reader::Initialize(bela::error_code &ec) {
   inb.grow(binsize);
   return true;
 }
-ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
-  auto minsize = (std::min)(len, outb.size() - outb.pos());
-  memcpy(buffer, outb.data() + outb.pos(), minsize);
-  outb.pos() += minsize;
-  return minsize;
-}
 
-ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (outb.pos() != outb.size()) {
-    return CopyBuffer(buffer, len, ec);
-  }
-  //
+bool Reader::decompress(bela::error_code &ec) {
   for (;;) {
     if (in.pos == in.size) {
       auto n = r->Read(inb.data(), inb.capacity(), ec);
       if (n <= 0) {
-        return n;
+        return false;
       }
       in.src = inb.data();
       in.size = n;
@@ -46,7 +36,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
     auto result = ZSTD_decompressStream(zds, &out, &in);
     if (ZSTD_isError(result) != 0) {
       ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
-      return -1;
+      return false;
     }
     outb.pos() = 0;
     outb.size() = out.pos;
@@ -55,6 +45,38 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
     }
     // Need more data
   }
-  return CopyBuffer(buffer, len, ec);
+  return true;
 }
+
+ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
+  if (outb.pos() == outb.size()) {
+    if (!decompress(ec)) {
+      return -1;
+    }
+  }
+  auto minsize = (std::min)(len, outb.size() - outb.pos());
+  memcpy(buffer, outb.data() + outb.pos(), minsize);
+  outb.pos() += minsize;
+  return minsize;
+}
+
+// Avoid multiple memory copies
+bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  while (filesize > 0) {
+    if (outb.pos() == outb.size()) {
+      if (!decompress(ec)) {
+        return false;
+      }
+    }
+    auto minsize = (std::min)(static_cast<size_t>(filesize), outb.size() - outb.pos());
+    auto p = outb.data() + outb.pos();
+    outb.pos() += minsize;
+    filesize -= minsize;
+    if (!w(p, minsize, ec)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace baulk::archive::tar::zstd

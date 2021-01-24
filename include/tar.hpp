@@ -154,22 +154,7 @@ struct sparseEntry {
 };
 
 using sparseDatas = std::vector<sparseEntry>;
-
 using pax_records_t = bela::flat_hash_map<std::string, std::string>;
-
-namespace slice {
-// The buffer_view class is used to save the extracted data. The data is the same as the life cycle of the Reader. If
-// the life cycle of the Reader ends, it should not be used.
-struct buffer_view {
-  void *dst{nullptr}; /**< start of output buffer */
-  size_t size{0};     /**< size of output buffer if size ==0. buffer_view is a references*/
-  template <typename T = char> const T *memcast() { return reinterpret_cast<T>(dst); }
-};
-
-struct Reader {
-  virtual ssize_t Read(buffer_view &bv, size_t len, bela::error_code &ec) = 0;
-};
-} // namespace slice
 
 struct Header {
   std::string Name;
@@ -191,8 +176,14 @@ struct Header {
   int Format{0};
   char Typeflag{0};
 };
+using Writer = std::function<bool(const void *data, size_t len, bela::error_code &ec)>;
+struct ExtractReader {
+  virtual ssize_t Read(void *buffer, size_t len, bela::error_code &ec) = 0;
+  // Avoid multiple memory copies
+  virtual bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) = 0;
+};
 
-class FileReader : public bela::io::ReaderAt {
+class FileReader : public ExtractReader {
 public:
   FileReader(HANDLE fd_, int64_t size_ = bela::SizeUnInitialized, bool nc = false)
       : fd(fd_), size(size_), needClosed(nc) {}
@@ -202,6 +193,7 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
   bool PositionAt(int64_t pos, bela::error_code &ec);
+  bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec);
   int64_t Size() const { return size; }
   HANDLE FD() const { return fd; }
 
@@ -211,16 +203,17 @@ private:
   bool needClosed{false};
 };
 std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
-std::shared_ptr<bela::io::Reader> MakeReader(FileReader &fd, bela::error_code &ec);
+std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, bela::error_code &ec);
 
 class Reader {
 public:
-  Reader(bela::io::Reader *r_) : r(r_) {}
+  Reader(ExtractReader *r_) : r(r_) {}
   Reader(const Reader &) = delete;
   Reader &operator=(const Reader &) = delete;
   std::optional<Header> Next(bela::error_code &ec);
   bela::ssize_t Read(void *buffer, size_t size, bela::error_code &ec);
   bool ReadFull(void *buffer, size_t size, bela::error_code &ec);
+  bool WriteTo(const Writer& w, int64_t filesize, bela::error_code& ec);
 
 private:
   bela::ssize_t readInternal(void *buffer, size_t size, bela::error_code &ec);
@@ -231,7 +224,7 @@ private:
   bool readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec);
   bool readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec);
   bool readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec);
-  bela::io::Reader *r{nullptr};
+  ExtractReader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
 };

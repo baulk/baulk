@@ -47,18 +47,26 @@ bool untar(std::wstring_view file) {
       continue;
     }
     fd->SetTime(fh->ModTime, ec);
-    auto size = fh->Size;
-    char buffer[4096];
-    while (size > 0) {
-      auto minsize = (std::min)(size, 4096ll);
-      auto n = tr->Read(buffer, minsize, ec);
-      if (n <= 0) {
-        break;
-      }
-      size -= n;
-      if (!fd->Write(buffer, n, ec)) {
-        fd->Discard();
-      }
+    //auto size = fh->Size;
+    //char buffer[4096];
+    //while (size > 0) {
+    //  auto minsize = (std::min)(size, 4096ll);
+    //  auto n = tr->Read(buffer, minsize, ec);
+    //  if (n <= 0) {
+    //    break;
+    //  }
+    //  size -= n;
+    //  if (!fd->Write(buffer, n, ec)) {
+    //    fd->Discard();
+    //  }
+    //}
+    if (!tr->WriteTo(
+            [&](const void *data, size_t len, bela::error_code &ec) -> bool {
+              //
+              return fd->Write(data, len, ec);
+            },
+            fh->Size, ec)) {
+      fd->Discard();
     }
   }
   return true;

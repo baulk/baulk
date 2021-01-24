@@ -27,19 +27,16 @@ ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
   return minsize;
 }
 
-ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
-  if (out.pos() != out.size()) {
-    return CopyBuffer(buffer, len, ec);
-  }
+bool Reader::decompress(bela::error_code &ec) {
   if (result == BROTLI_DECODER_RESULT_ERROR) {
     ec = bela::make_error_code(ErrGeneral, L"BrotliDecoderDecompressStream error");
-    return -1;
+    return false;
   }
   for (;;) {
     if (result == BROTLI_DECODER_NEEDS_MORE_INPUT || pickBytes == 0) {
       auto n = r->Read(in.data(), in.capacity(), ec);
       if (n <= 0) {
-        return n;
+        return false;
       }
       pickBytes += static_cast<int64_t>(n);
       avail_in = static_cast<size_t>(n);
@@ -52,9 +49,41 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
       auto have = outptr - out.data();
       out.pos() = 0;
       out.size() = have;
-       return CopyBuffer(buffer, len, ec);
+      return true;
     }
   }
-  return -1;
+  return false;
 }
+
+ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
+  if (out.pos() == out.size()) {
+    return CopyBuffer(buffer, len, ec);
+    if (!decompress(ec)) {
+      return -1;
+    }
+  }
+  auto minsize = (std::min)(len, out.size() - out.pos());
+  memcpy(buffer, out.data() + out.pos(), minsize);
+  out.pos() += minsize;
+  return minsize;
+}
+
+// Avoid multiple memory copies
+bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  while (filesize > 0) {
+    if (out.pos() == out.size()) {
+      if (!decompress(ec)) {
+        return false;
+      }
+    }
+    auto minsize = (std::min)(static_cast<size_t>(filesize), out.size() - out.pos());
+    auto p = out.data() + out.pos();
+    out.pos() += minsize;
+    if (!w(p, minsize, ec)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace baulk::archive::tar::brotli

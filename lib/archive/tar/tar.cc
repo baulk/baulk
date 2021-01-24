@@ -12,6 +12,7 @@ FileReader::~FileReader() {
     CloseHandle(fd);
   }
 }
+
 ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
   DWORD drSize = {0};
   if (::ReadFile(fd, buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
@@ -32,6 +33,24 @@ bool FileReader::PositionAt(int64_t pos, bela::error_code &ec) {
   if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
     ec = bela::make_system_error_code(L"SetFilePointerEx: ");
     return false;
+  }
+  return true;
+}
+
+bool FileReader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  constexpr int64_t bufferSize = 8192;
+  char buffer[bufferSize];
+  while (filesize > 0) {
+    auto minsize = (std::min)(bufferSize, filesize);
+    DWORD drSize = {0};
+    if (::ReadFile(fd, buffer, static_cast<DWORD>(minsize), &drSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"ReadFile: ");
+      return false;
+    }
+    filesize -= drSize;
+    if (!w(buffer, drSize, ec)) {
+      return false;
+    }
   }
   return true;
 }
@@ -212,13 +231,13 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
 }
 
 bool Reader::readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec) {
-ec = bela::make_error_code(L"tar: GNU old sparse file extraction is not implemented");
+  ec = bela::make_error_code(L"tar: GNU old sparse file extraction is not implemented");
   return false;
 }
 
-bool readGNUSparseMap0x1(pax_records_t &phdr, sparseDatas &spd, bela::error_code &ec) {
-  auto it = phdr.find(paxGNUSparseNumBlocks);
-  if (it == phdr.end()) {
+bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_code &ec) {
+  auto it = paxrs.find(paxGNUSparseNumBlocks);
+  if (it == paxrs.end()) {
     ec = bela::make_error_code(L"tar: pax sparse missing num blocks");
     return false;
   }
@@ -228,8 +247,8 @@ bool readGNUSparseMap0x1(pax_records_t &phdr, sparseDatas &spd, bela::error_code
     ec = bela::make_error_code(L"tar: pax sparse invalid num blocks");
     return false;
   }
-  auto iter = phdr.find(paxGNUSparseMap);
-  if (iter == phdr.end()) {
+  auto iter = paxrs.find(paxGNUSparseMap);
+  if (iter == paxrs.end()) {
     ec = bela::make_error_code(L"tar: pax sparse missing sparse map");
     return false;
   }
@@ -447,9 +466,21 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
   return std::nullopt;
 }
 
+bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+  ec.clear();
+  if (!r->WriteTo(w, filesize, ec)) {
+    return false;
+  }
+  if (remainingSize > 0) {
+    remainingSize -= filesize;
+  }
+  return true;
+}
+
 std::wstring_view PathRemoveExtension(std::wstring_view p) {
-  constexpr std::wstring_view extensions[] = {L".tgz",     L".tar.gz", L".tbz2", L".tar.bz2", L".tar.xz",  L".txz",
-                                              L".tar.zst", L".tar.br", L".tbr",  L".tlz4",    L".tar.lz4", L".tar"};
+  constexpr std::wstring_view extensions[] = {L".tgz",  L".tar.gz",  L".tbz2",     L".tar.bz2", L".tar.xz",
+                                              L".txz",  L".tar.zst", L".tar.zstd", L".tar.br",  L".tbr",
+                                              L".tlz4", L".tar.lz4", L".tar"};
   for (const auto e : extensions) {
     if (bela::EndsWithIgnoreCase(p, e)) {
       return p.substr(0, p.size() - e.size());
