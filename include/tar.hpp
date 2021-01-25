@@ -180,7 +180,7 @@ using Writer = std::function<bool(const void *data, size_t len, bela::error_code
 struct ExtractReader {
   virtual ssize_t Read(void *buffer, size_t len, bela::error_code &ec) = 0;
   // Avoid multiple memory copies
-  virtual bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) = 0;
+  virtual bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) = 0;
 };
 
 class FileReader : public ExtractReader {
@@ -193,7 +193,7 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
   bool PositionAt(int64_t pos, bela::error_code &ec);
-  bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec);
+  bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
   int64_t Size() const { return size; }
   HANDLE FD() const { return fd; }
 
@@ -213,7 +213,7 @@ public:
   std::optional<Header> Next(bela::error_code &ec);
   bela::ssize_t Read(void *buffer, size_t size, bela::error_code &ec);
   bool ReadFull(void *buffer, size_t size, bela::error_code &ec);
-  bool WriteTo(const Writer& w, int64_t filesize, bela::error_code& ec);
+  bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec);
 
 private:
   bela::ssize_t readInternal(void *buffer, size_t size, bela::error_code &ec);

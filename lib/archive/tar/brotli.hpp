@@ -13,10 +13,9 @@ public:
   ~Reader();
   bool Initialize(bela::error_code &ec);
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
-  bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec);
+  bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
 
 private:
-  ssize_t CopyBuffer(void *buffer, size_t len, bela::error_code &ec);
   bool decompress(bela::error_code &ec);
   ExtractReader *r{nullptr};
   BrotliDecoderState *state{nullptr};

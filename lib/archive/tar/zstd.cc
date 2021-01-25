@@ -61,7 +61,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
 }
 
 // Avoid multiple memory copies
-bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+bool Reader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) {
   while (filesize > 0) {
     if (outb.pos() == outb.size()) {
       if (!decompress(ec)) {
@@ -72,6 +72,7 @@ bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
     auto p = outb.data() + outb.pos();
     outb.pos() += minsize;
     filesize -= minsize;
+    extracted += minsize;
     if (!w(p, minsize, ec)) {
       return false;
     }

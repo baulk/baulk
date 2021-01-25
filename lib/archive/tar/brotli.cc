@@ -3,11 +3,13 @@
 #include "brotli.hpp"
 
 namespace baulk::archive::tar::brotli {
+// tar support brotli
 Reader::~Reader() {
   if (state != nullptr) {
     BrotliDecoderDestroyInstance(state);
   }
 }
+
 bool Reader::Initialize(bela::error_code &ec) {
   state = BrotliDecoderCreateInstance(0, 0, 0);
   if (state == nullptr) {
@@ -18,13 +20,6 @@ bool Reader::Initialize(bela::error_code &ec) {
   out.grow(outsize);
   in.grow(insize);
   return true;
-}
-
-ssize_t Reader::CopyBuffer(void *buffer, size_t len, bela::error_code &ec) {
-  auto minsize = (std::min)(len, out.size() - out.pos());
-  memcpy(buffer, out.data() + out.pos(), minsize);
-  out.pos() += minsize;
-  return minsize;
 }
 
 bool Reader::decompress(bela::error_code &ec) {
@@ -57,7 +52,6 @@ bool Reader::decompress(bela::error_code &ec) {
 
 ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   if (out.pos() == out.size()) {
-    return CopyBuffer(buffer, len, ec);
     if (!decompress(ec)) {
       return -1;
     }
@@ -69,7 +63,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
 }
 
 // Avoid multiple memory copies
-bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+bool Reader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) {
   while (filesize > 0) {
     if (out.pos() == out.size()) {
       if (!decompress(ec)) {
@@ -79,6 +73,7 @@ bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
     auto minsize = (std::min)(static_cast<size_t>(filesize), out.size() - out.pos());
     auto p = out.data() + out.pos();
     out.pos() += minsize;
+    extracted += minsize;
     if (!w(p, minsize, ec)) {
       return false;
     }

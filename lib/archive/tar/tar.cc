@@ -37,7 +37,7 @@ bool FileReader::PositionAt(int64_t pos, bela::error_code &ec) {
   return true;
 }
 
-bool FileReader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
+bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) {
   constexpr int64_t bufferSize = 8192;
   char buffer[bufferSize];
   while (filesize > 0) {
@@ -48,6 +48,7 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec
       return false;
     }
     filesize -= drSize;
+    extracted += drSize;
     if (!w(buffer, drSize, ec)) {
       return false;
     }
@@ -462,19 +463,17 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
     remainingSize = h.Size;
     return std::make_optional(std::move(h));
   }
-
   return std::nullopt;
 }
 
 bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
   ec.clear();
-  if (!r->WriteTo(w, filesize, ec)) {
-    return false;
-  }
+  int64_t extracted{0};
+  auto ret = r->WriteTo(w, filesize, extracted, ec);
   if (remainingSize > 0) {
-    remainingSize -= filesize;
+    remainingSize -= extracted;
   }
-  return true;
+  return ret;
 }
 
 std::wstring_view PathRemoveExtension(std::wstring_view p) {
