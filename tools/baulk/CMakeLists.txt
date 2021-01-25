@@ -49,6 +49,7 @@ target_link_libraries(
   baulkarchive
   belahash
   belawin
+  belatime
   winhttp
   ws2_32
   Msi)
@@ -57,6 +58,7 @@ target_link_libraries(
   baulk-update
   baulkarchive
   belawin
+  belatime
   winhttp
   ws2_32)
 
