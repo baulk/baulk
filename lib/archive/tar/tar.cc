@@ -37,6 +37,16 @@ bool FileReader::PositionAt(int64_t pos, bela::error_code &ec) {
   return true;
 }
 
+bool FileReader::Discard(int64_t len, bela::error_code &ec) {
+  auto li = *reinterpret_cast<LARGE_INTEGER *>(&len);
+  LARGE_INTEGER oli{0};
+  if (SetFilePointerEx(fd, li, &oli, SEEK_CUR) != TRUE) {
+    ec = bela::make_system_error_code(L"SetFilePointerEx: ");
+    return false;
+  }
+  return true;
+}
+
 bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) {
   constexpr int64_t bufferSize = 8192;
   char buffer[bufferSize];
@@ -100,9 +110,18 @@ inline bool handleRegularFile(Header &h, int64_t &padding, bela::error_code &ec)
 
 bela::ssize_t Reader::readInternal(void *buffer, size_t size, bela::error_code &ec) {
   if (r == nullptr) {
+    ec = bela::make_error_code(L"underlying reader is null");
     return -1;
   }
   return r->Read(buffer, size, ec);
+}
+
+bool Reader::discard(int64_t bytes, bela::error_code &ec) {
+  if (r == nullptr) {
+    ec = bela::make_error_code(L"underlying reader is null");
+    return false;
+  }
+  return r->Discard(bytes, ec);
 }
 
 bela::ssize_t Reader::Read(void *buffer, size_t size, bela::error_code &ec) {
@@ -127,20 +146,6 @@ bool Reader::ReadFull(void *buffer, size_t size, bela::error_code &ec) {
       return false;
     }
     rbytes += sz;
-  }
-  return true;
-}
-
-bool Reader::discard(int64_t bytes, bela::error_code &ec) {
-  constexpr int64_t discardSize = 4096;
-  uint8_t discardBuffer[4096];
-  while (bytes > 0) {
-    auto minsize = (std::min)(bytes, discardSize);
-    auto n = readInternal(discardBuffer, minsize, ec);
-    if (n <= 0) {
-      return false;
-    }
-    bytes -= n;
   }
   return true;
 }

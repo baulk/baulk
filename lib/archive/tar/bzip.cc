@@ -69,6 +69,21 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   return minsize;
 }
 
+bool Reader::Discard(int64_t len, bela::error_code &ec) {
+  while (len > 0) {
+    if (out.pos() == out.size()) {
+      if (!decompress(ec)) {
+        return false;
+      }
+    }
+    // seek position
+    auto minsize = (std::min)(static_cast<size_t>(len), out.size() - out.pos());
+    out.pos() += minsize;
+    len -= minsize;
+  }
+  return true;
+}
+
 // Avoid multiple memory copies
 bool Reader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec) {
   while (filesize > 0) {

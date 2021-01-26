@@ -13,6 +13,7 @@ public:
   ~Reader();
   bool Initialize(bela::error_code &ec);
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
+  bool Discard(int64_t len, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize,int64_t &extracted,  bela::error_code &ec);
 
 private:
