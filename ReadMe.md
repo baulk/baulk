@@ -46,10 +46,14 @@ Usage: baulk [option] command pkg ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
+  -Q|--quiet       Make the operation more quiet
   -F|--force       Turn on force mode. such as force update frozen package
   -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
+  -k|--insecure    Allow insecure server connections when using SSL
+  -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+  --force-delete   When uninstalling the package, forcefully delete the related directories
 
 
 Command:
@@ -64,6 +68,9 @@ Command:
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
+  bucket           Add, delete or list buckets
+  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental)
+  unzip            Extract compressed files in a ZIP archive (experimental)
 
 Alias:
   i  install
@@ -84,8 +91,10 @@ Alias:
 |unfreeze|Unfreeze the package|N/A|
 |b3sum|Calculate the BLAKE3 hash of the file|N/A|
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
-|cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag|
-|bucket|add, delete or list buckets|
+|cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag||
+|bucket|add, delete or list buckets|N/A|
+|untar|Experimental native tar file extraction support |support tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
+|unzip|Experimental native zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
 
 Example:
 

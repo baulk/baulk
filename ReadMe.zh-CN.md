@@ -47,10 +47,14 @@ Usage: baulk [option] command pkg ...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
+  -Q|--quiet       Make the operation more quiet
   -F|--force       Turn on force mode. such as force update frozen package
   -P|--profile     Set profile path. default: $0\config\baulk.json
   -A|--user-agent  Send User-Agent <name> to server
+  -k|--insecure    Allow insecure server connections when using SSL
+  -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+  --force-delete   When uninstalling the package, forcefully delete the related directories
 
 
 Command:
@@ -65,12 +69,14 @@ Command:
   b3sum            Calculate the BLAKE3 checksum of a file
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
+  bucket           Add, delete or list buckets
+  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental)
+  unzip            Extract compressed files in a ZIP archive (experimental)
 
 Alias:
   i  install
   r  uninstall
   u  update and upgrade
-
 ```
 
 |命令|描述|备注|
@@ -86,7 +92,9 @@ Alias:
 |b3sum|计算文件的 BLAKE3 哈希|N/A|
 |sha256sum|计算文件的 SHA256 哈希|N/A|
 |cleancache|删除下载缓存|过期时间为 30 天，--force 模式将删除所有下载缓存|
-|bucket|添加，删除，列出 buckets|
+|bucket|添加，删除，列出 buckets||
+|untar|tar 文件提取原生支持 |支持格式有： tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
+|unzip|zip 文件提取原生支持|zip 压缩方法支持 deflate/deflate64/bzip2/lzma/zstd<br>支持文件名编码检测避免解压缩时文件名乱码|
 
 ### Baulk 配置文件
 
