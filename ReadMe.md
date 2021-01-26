@@ -94,7 +94,7 @@ Alias:
 |cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag||
 |bucket|add, delete or list buckets|N/A|
 |untar|Experimental native tar file extraction support |support tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
-|unzip|Experimental native zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
+|unzip|Experimental native zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd/ppmd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
 
 Example:
 
