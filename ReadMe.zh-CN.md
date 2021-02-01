@@ -4,6 +4,7 @@
 [![Master Branch Status](https://github.com/baulk/baulk/workflows/CI/badge.svg)](https://github.com/baulk/baulk/actions)
 [![Latest Release Downloads](https://img.shields.io/github/downloads/baulk/baulk/latest/total.svg)](https://github.com/baulk/baulk/releases/latest)
 [![Total Downloads](https://img.shields.io/github/downloads/baulk/baulk/total.svg)](https://github.com/baulk/baulk/releases)
+[![Version](https://img.shields.io/github/v/release/baulk/baulk)](https://github.com/baulk/baulk/releases/latest)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
 
