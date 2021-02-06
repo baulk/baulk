@@ -3142,8 +3142,8 @@ public:
     static const size_type npos = ~(size_type(0));
 
     constexpr Span() noexcept : Span(nullptr, 0) {}
-    constexpr Span(pointer array, size_type length) noexcept
-        : ptr_(array), len_(length) {}
+    constexpr Span(pointer array, size_type lgth) noexcept
+        : ptr_(array), len_(lgth) {}
 
     // Implicit conversion constructors
     template <size_t N>
@@ -5156,9 +5156,9 @@ public:
         using UniqueLocks     = typename Base::WriteLocks;
         using UpgradeToUnique = typename Base::DoNothing;  // we already have unique ownership
     };
-#endif
+#endif // PHMAP_HAVE_SHARED_MUTEX
 
-#endif // PHMAP_HAS_BOOST_THREAD_MUTEXES
+#endif // BOOST_THREAD_SHARED_MUTEX_HPP
 
 
 }  // phmap
