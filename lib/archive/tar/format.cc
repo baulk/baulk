@@ -204,7 +204,7 @@ bool validPAXRecord(std::string_view k, std::string_view v) {
 bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view *v, bela::error_code &ec) {
   auto pos = sv->find(' ');
   if (pos == std::string_view::npos) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(L"invalid pax record");
     return false;
   }
   int n = 0;
@@ -214,22 +214,22 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
   }
   auto rec = sv->substr(pos + 1, n - pos - 1);
   if (!rec.ends_with('\n')) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(L"invalid pax record");
     return false;
   }
   rec.remove_suffix(1);
   pos = rec.find('=');
   if (pos == std::string_view::npos) {
-    ec = bela::make_error_code(L"invalid tar header");
-    return false;
-  }
-  if (!validPAXRecord(*k, *v)) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(L"invalid pax record");
     return false;
   }
   *k = rec.substr(0, pos);
   *v = rec.substr(pos + 1);
   sv->remove_prefix(n);
+  if (!validPAXRecord(*k, *v)) {
+    ec = bela::make_error_code(L"invalid tar pax record");
+    return false;
+  }
   return true;
 }
 
