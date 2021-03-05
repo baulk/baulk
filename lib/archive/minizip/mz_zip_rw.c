@@ -1,8 +1,8 @@
 /* mz_zip_rw.c -- Zip reader/writer
-   part of the MiniZip project
+   part of the minizip-ng project
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-     https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+     https://github.com/zlib-ng/minizip-ng
 
    This program is distributed under the terms of the same license as zlib.
    See the accompanying LICENSE file for the full text of the license.
@@ -247,7 +247,7 @@ int32_t mz_zip_reader_unzip_cd(void *handle) {
     mz_stream_mem_create(&file_extra_stream);
     mz_stream_mem_set_buffer(file_extra_stream, (void *)cd_info->extrafield, cd_info->extrafield_size);
 
-    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_CDCD, NULL);
+    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_CDCD, INT32_MAX, NULL);
     if (err == MZ_OK)
         err = mz_stream_read_uint64(file_extra_stream, &number_entry);
 
@@ -382,7 +382,7 @@ int32_t mz_zip_reader_entry_open(void *handle) {
     }
 
     err = mz_zip_entry_read_open(reader->zip_handle, reader->raw, password);
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     if (err != MZ_OK)
         return err;
 
@@ -418,7 +418,7 @@ int32_t mz_zip_reader_entry_close(void *handle) {
     mz_zip_reader *reader = (mz_zip_reader *)handle;
     int32_t err = MZ_OK;
     int32_t err_close = MZ_OK;
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     int32_t err_hash = MZ_OK;
     uint8_t computed_hash[MZ_HASH_MAX_SIZE];
     uint8_t expected_hash[MZ_HASH_MAX_SIZE];
@@ -448,7 +448,7 @@ int32_t mz_zip_reader_entry_read(void *handle, void *buf, int32_t len) {
     mz_zip_reader *reader = (mz_zip_reader *)handle;
     int32_t read = 0;
     read = mz_zip_entry_read(reader->zip_handle, buf, len);
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     if ((read > 0) && (reader->hash != NULL))
         mz_crypt_sha_update(reader->hash, buf, read);
 #endif
@@ -465,7 +465,7 @@ int32_t mz_zip_reader_entry_has_sign(void *handle) {
         reader->file_info->extrafield_size, MZ_ZIP_EXTENSION_SIGN, NULL);
 }
 
-#if !defined(MZ_ZIP_NO_ENCRYPTION) && defined(MZ_ZIP_SIGNING)
+#if !defined(MZ_ZIP_NO_CRYPTO) && defined(MZ_ZIP_SIGNING)
 int32_t mz_zip_reader_entry_sign_verify(void *handle) {
     mz_zip_reader *reader = (mz_zip_reader *)handle;
     void *file_extra_stream = NULL;
@@ -481,7 +481,7 @@ int32_t mz_zip_reader_entry_sign_verify(void *handle) {
     mz_stream_mem_set_buffer(file_extra_stream, (void *)reader->file_info->extrafield,
         reader->file_info->extrafield_size);
 
-    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_SIGN, &signature_size);
+    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_SIGN, INT32_MAX, &signature_size);
     if ((err == MZ_OK) && (signature_size > 0)) {
         signature = (uint8_t *)MZ_ALLOC(signature_size);
         if (mz_stream_read(file_extra_stream, signature, signature_size) != signature_size)
@@ -520,7 +520,7 @@ int32_t mz_zip_reader_entry_get_hash(void *handle, uint16_t algorithm, uint8_t *
         reader->file_info->extrafield_size);
 
     do {
-        err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_HASH, NULL);
+        err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_HASH, INT32_MAX, NULL);
         if (err != MZ_OK)
             break;
 
@@ -557,7 +557,7 @@ int32_t mz_zip_reader_entry_get_first_hash(void *handle, uint16_t *algorithm, ui
     mz_stream_mem_set_buffer(file_extra_stream, (void *)reader->file_info->extrafield,
         reader->file_info->extrafield_size);
 
-    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_HASH, NULL);
+    err = mz_zip_extrafield_find(file_extra_stream, MZ_ZIP_EXTENSION_HASH, INT32_MAX, NULL);
     if (err == MZ_OK)
         err = mz_stream_read_uint16(file_extra_stream, &cur_algorithm);
     if (err == MZ_OK)
@@ -817,9 +817,9 @@ int32_t mz_zip_reader_save_all(void *handle, const char *destination_dir) {
     mz_zip_reader *reader = (mz_zip_reader *)handle;
     int32_t err = MZ_OK;
     uint8_t *utf8_string = NULL;
-    char path[4096];
-    char utf8_name[2048];
-    char resolved_name[2048];
+    char path[8192];
+    char utf8_name[4096];
+    char resolved_name[4096];
 
     err = mz_zip_reader_goto_first_entry(handle);
 
@@ -1116,8 +1116,16 @@ static int32_t mz_zip_writer_open_int(void *handle, void *stream, int32_t mode) 
     return MZ_OK;
 }
 
-int32_t mz_zip_writer_open(void *handle, void *stream) {
-    return mz_zip_writer_open_int(handle, stream, MZ_OPEN_MODE_WRITE);
+int32_t mz_zip_writer_open(void *handle, void *stream, uint8_t append) {
+    int32_t mode = MZ_OPEN_MODE_WRITE;
+
+    if (append) {
+        mode |= MZ_OPEN_MODE_APPEND;
+    } else {
+        mode |= MZ_OPEN_MODE_CREATE;
+    }
+
+    return mz_zip_writer_open_int(handle, stream, mode);
 }
 
 int32_t mz_zip_writer_open_file(void *handle, const char *path, int64_t disk_size, uint8_t append) {
@@ -1213,7 +1221,7 @@ int32_t mz_zip_writer_open_file_in_memory(void *handle, const char *path) {
     mz_stream_os_delete(&file_stream);
 
     if (err == MZ_OK)
-        err = mz_zip_writer_open(handle, writer->mem_stream);
+        err = mz_zip_writer_open(handle, writer->mem_stream, 1);
     if (err != MZ_OK)
         mz_zip_writer_close(handle);
 
@@ -1279,7 +1287,7 @@ int32_t mz_zip_writer_entry_open(void *handle, mz_zip_file *file_info) {
         password = password_buf;
     }
 
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     if (mz_zip_attrib_is_dir(writer->file_info.external_fa, writer->file_info.version_madeby) != MZ_OK) {
         /* Start calculating sha256 */
         mz_crypt_sha_create(&writer->sha256);
@@ -1295,7 +1303,7 @@ int32_t mz_zip_writer_entry_open(void *handle, mz_zip_file *file_info) {
     return err;
 }
 
-#if !defined(MZ_ZIP_NO_ENCRYPTION) && defined(MZ_ZIP_SIGNING)
+#if !defined(MZ_ZIP_NO_CRYPTO) && defined(MZ_ZIP_SIGNING)
 int32_t mz_zip_writer_entry_sign(void *handle, uint8_t *message, int32_t message_size,
     uint8_t *cert_data, int32_t cert_data_size, const char *cert_pwd) {
     mz_zip_writer *writer = (mz_zip_writer *)handle;
@@ -1333,7 +1341,7 @@ int32_t mz_zip_writer_entry_sign(void *handle, uint8_t *message, int32_t message
 int32_t mz_zip_writer_entry_close(void *handle) {
     mz_zip_writer *writer = (mz_zip_writer *)handle;
     int32_t err = MZ_OK;
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     const uint8_t *extrafield = NULL;
     int32_t extrafield_size = 0;
     int16_t field_length_hash = 0;
@@ -1400,7 +1408,7 @@ int32_t mz_zip_writer_entry_write(void *handle, const void *buf, int32_t len) {
     mz_zip_writer *writer = (mz_zip_writer *)handle;
     int32_t written = 0;
     written = mz_zip_entry_write(writer->zip_handle, buf, len);
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#ifndef MZ_ZIP_NO_CRYPTO
     if ((written > 0) && (writer->sha256 != NULL))
         mz_crypt_sha_update(writer->sha256, buf, written);
 #endif

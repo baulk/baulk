@@ -1,4 +1,4 @@
 brotli 1.0.9
 liblzma: https://tukaani.org/xz/ 5.2.5
-minizip: https://github.com/nmoinvaz/minizip/commit/123c49e94edd144d6ec2d1fc29fc2f4ee8de6a07
+minizip: https://github.com/zlib-ng/minizip-ng/commit/1593060ecf093411f1f20f655e50992913c6d5b9
 zstd: https://github.com/facebook/zstd/releases/download/v1.4.9/zstd-1.4.9.tar.gz#lib

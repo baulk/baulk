@@ -1,8 +1,8 @@
 /* mz_crypt.c -- Crypto/hash functions
-   part of the MiniZip project
+   part of the minizip-ng project
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-     https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+     https://github.com/zlib-ng/minizip-ng
 
    This program is distributed under the terms of the same license as zlib.
    See the accompanying LICENSE file for the full text of the license.
@@ -10,6 +10,7 @@
 
 
 #include "mz.h"
+#include "mz_os.h"
 #include "mz_crypt.h"
 
 #if defined(HAVE_ZLIB)
@@ -39,6 +40,12 @@
 #endif
 
 /***************************************************************************/
+
+#if defined(MZ_ZIP_NO_CRYPTO)
+int32_t mz_crypt_rand(uint8_t *buf, int32_t size) {
+    return mz_os_rand(buf, size);
+}
+#endif
 
 uint32_t mz_crypt_crc32_update(uint32_t value, const uint8_t *buf, int32_t size) {
 #if defined(HAVE_ZLIB)
@@ -104,7 +111,7 @@ uint32_t mz_crypt_crc32_update(uint32_t value, const uint8_t *buf, int32_t size)
 #endif
 }
 
-#ifndef MZ_ZIP_NO_ENCRYPTION
+#if defined(HAVE_WZAES)
 int32_t  mz_crypt_pbkdf2(uint8_t *password, int32_t password_length, uint8_t *salt,
     int32_t salt_length, int32_t iteration_count, uint8_t *key, int32_t key_length) {
     void *hmac1 = NULL;

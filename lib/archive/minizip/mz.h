@@ -1,8 +1,8 @@
 /* mz.h -- Errors codes, zip flags and magic
-   part of the MiniZip project
+   part of the minizip-ng project
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-     https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+     https://github.com/zlib-ng/minizip-ng
 
    This program is distributed under the terms of the same license as zlib.
    See the accompanying LICENSE file for the full text of the license.
@@ -14,8 +14,8 @@
 /***************************************************************************/
 
 /* MZ_VERSION */
-#define MZ_VERSION                      ("2.10.5")
-#define MZ_VERSION_BUILD                (21005)
+#define MZ_VERSION                      ("3.0.1")
+#define MZ_VERSION_BUILD                (030001)
 
 /* MZ_ERROR */
 #define MZ_OK                           (0)  /* zlib */

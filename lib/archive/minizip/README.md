@@ -1,12 +1,11 @@
-# minizip 2.10.5
+# minizip-ng 3.0.1
 
-minizip is a zip manipulation library written in C that is supported on Windows, macOS, and Linux.
+minizip-ng is a zip manipulation library written in C that is supported on Windows, macOS, and Linux.
 
-[![Master Branch Status](https://github.com/nmoinvaz/minizip/workflows/CI/badge.svg)](https://github.com/nmoinvaz/minizip/actions)
+[![Master Branch Status](https://github.com/zlib-ng/minizip-ng/workflows/CI/badge.svg)](https://github.com/zlib-ng/minizip-ng/actions)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/minizip.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:minizip)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/53d48ca8fec549f4a8b39cf95cba6ad6)](https://www.codacy.com/manual/nmoinvaz/minizip?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nmoinvaz/minizip&amp;utm_campaign=Badge_Grade)
-[![CodeFactor](https://www.codefactor.io/repository/github/nmoinvaz/minizip/badge)](https://www.codefactor.io/repository/github/nmoinvaz/minizip)
-[![License: Zlib](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://github.com/nmoinvaz/minizip/blob/master/LICENSE)
+[![License: Zlib](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://github.com/zlib-ng/minizip-ng/blob/master/LICENSE)
 [![codecov.io](https://codecov.io/github/nmoinvaz/minizip/coverage.svg?branch=dev)](https://codecov.io/github/nmoinvaz/minizip/)
 
 Developed and maintained by Nathan Moinvaziri.
@@ -15,20 +14,17 @@ Developed and maintained by Nathan Moinvaziri.
 
 |Name|Description|
 |:-|:-|
-|[master](https://github.com/nmoinvaz/minizip/tree/master)|Modern rewrite that includes more advanced features, improvements in code maintainability and readability, and the reduction of duplicate code. Compatibility layer provided for older versions.|
-|[dev](https://github.com/nmoinvaz/minizip/tree/dev)|Latest development code|
-|[1.2](https://github.com/nmoinvaz/minizip/tree/1.2)|Drop-in replacement for zlib's minizip that includes WinZip AES encryption, disk splitting, I/O buffering and some additional fixes.|
-|[1.1](https://github.com/nmoinvaz/minizip/tree/1.1)|Original minizip as of zlib 1.2.11.|
+|[master](https://github.com/zlib-ng/minizip-ng/tree/master)|Most recent release.|
+|[dev](https://github.com/zlib-ng/minizip-ng/tree/dev)|Latest development code.|
+|[1.2](https://github.com/zlib-ng/minizip-ng/tree/1.2)|Old changes to original minizip that includes WinZip AES encryption, disk splitting, I/O buffering and some additional fixes. Not ABI compatible with original minizip.|
+|[1.1](https://github.com/zlib-ng/minizip-ng/tree/1.1)|Original minizip as of zlib 1.2.11.|
 
 ## History
 
 Minizip was originally developed by [Gilles Vollant](https://www.winimage.com/zLibDll/minizip.html) in 1998. It was first included in the zlib distribution as an additional code contribution starting in zlib 1.1.2. Since that time, it has been continually improved upon and contributed to by many people. The original [project](https://github.com/madler/zlib/tree/master/contrib/minizip) can still be found in the zlib distribution that is maintained by Mark Adler.
 
-My work with the minizip library started in 2006 when I fixed a few bugs I found and submitted them to
-Gilles Vollant. In 2010, I implemented WinZip AES encryption, disk splitting, and
-I/O buffering that were necessary for another project I was working on. Shortly after, I created this public repository
-so I could share my improvements with the community. In early 2017, I began the work to refactor and rewrite
-the library as version 2 because it had become difficult to maintain and code readability suffered over the years.
+The motivation behind this repository has been the need for new features and bug fixes to the original library which had
+not been maintained for a long period of time. The code has been largely refactored and rewritten in order to help improve maintainability and readability. A compatibility layer has been provided for consumers of the original minizip library.
 
 ## Features
 
@@ -76,37 +72,34 @@ cmake --build .
 | MZ_BZIP2            | Enables BZIP2 compression                           |      ON       |
 | MZ_LZMA             | Enables LZMA & XZ compression                       |      ON       |
 | MZ_ZSTD             | Enables ZSTD compression                            |      ON       |
-| MZ_FETCH_LIBS       | Enables fetching third-party libraries if not found |      ON       |
+| MZ_LIBCOMP          | Enables Apple compression                           |     APPLE     |
+| MZ_FETCH_LIBS       | Enables fetching third-party libraries if not found |     WIN32     |
 | MZ_FORCE_FETCH_LIBS | Enables fetching third-party libraries always       |      OFF      |
 | MZ_PKCRYPT          | Enables PKWARE traditional encryption               |      ON       |
 | MZ_WZAES            | Enables WinZIP AES encryption                       |      ON       |
-| MZ_LIBCOMP          | Enables Apple compression                           |      OFF      |
-| MZ_OPENSSL          | Enables OpenSSL encryption                          |      OFF      |
-| MZ_LIBBSD           | Builds with libbsd crypto random                    |      ON       |
-| MZ_BRG              | Enables Brian Gladman's library                     |      OFF      |
-| MZ_ICONV            | Enables iconv encoding conversion                   |      ON       |
+| MZ_OPENSSL          | Enables OpenSSL encryption                          |     UNIX      |
+| MZ_LIBBSD           | Builds with libbsd crypto random                    |     UNIX      |
 | MZ_SIGNING          | Enables zip signing support                         |      ON       |
+| MZ_ICONV            | Enables iconv encoding conversion                   |      ON       |
 | MZ_COMPRESS_ONLY    | Only support compression                            |      OFF      |
 | MZ_DECOMPRESS_ONLY  | Only support decompression                          |      OFF      |
-| MZ_BUILD_TEST       | Builds minizip test executable                      |      OFF      |
-| MZ_BUILD_UNIT_TEST  | Builds minizip unit test project                    |      OFF      |
-| MZ_BUILD_FUZZ_TEST  | Builds minizip fuzz executables                     |      OFF      |
+| MZ_FILE32_API       | Builds using posix 32-bit file api                  |      OFF      |
+| MZ_BUILD_TESTS      | Builds minizip test executable                      |      OFF      |
+| MZ_BUILD_UNIT_TESTS | Builds minizip unit test project                    |      OFF      |
+| MZ_BUILD_FUZZ_TESTS | Builds minizip fuzz executables                     |      OFF      |
 | MZ_CODE_COVERAGE    | Build with code coverage flags                      |      OFF      |
 | MZ_PROJECT_SUFFIX   | Project name suffix for packaging                   |               |
-| MZ_FILE32_API       | Builds using posix 32-bit file api                  |      OFF      |
 
 ## Third-Party Libraries
 
 Third-party libraries may be required based on the CMake options selected. If the system already has the library
-installed then it will be used, otherwise CMake will retrieve the source code for the library from its official git repository and compile it in.
+installed then it will be used, otherwise CMake will retrieve the source code for the library from its official git repository and compile it in when the `MZ_FETCH_LIBS` option is enabled.
 
 |Project|License|CMake Option|Comments|
 |-|-|-|-|
-|[aes](https://github.com/BrianGladman/aes)|[license](https://github.com/BrianGladman/aes/blob/master/license.txt)|`MZ_BRG`|Written by Brian Gladman.|
-[bzip2](https://www.sourceware.org/bzip2/)|[license](https://github.com/nmoinvaz/minizip/blob/dev/lib/bzip2/LICENSE)|`MZ_BZIP2`|Written by Julian Seward.|
+[bzip2](https://www.sourceware.org/bzip2/)|[license](https://github.com/zlib-ng/minizip-ng/blob/dev/lib/bzip2/LICENSE)|`MZ_BZIP2`|Written by Julian Seward.|
 |[liblzma](https://tukaani.org/xz/)|Public domain|`MZ_LZMA`|Written by Igor Pavlov and Lasse Collin.|
-|[sha](https://github.com/BrianGladman/sha)|[license](https://github.com/BrianGladman/aes/blob/master/license.txt)|`MZ_BRG`|Written by Brian Gladman.|
-|[zlib](https://zlib.net/)|zlib|`MZ_ZLIB`|Written by Mark Adler and Jean-loup Gailly. Or alternatively, [zlib-ng](https://github.com/Dead2/zlib-ng) by Hans Kristian Rosbach.|
+|[zlib](https://zlib.net/)|zlib|`MZ_ZLIB`|Written by Mark Adler and Jean-loup Gailly. Or alternatively, [zlib-ng](https://github.com/zlib-ng/zlib-ng) by Hans Kristian Rosbach.|
 |[zstd](https://github.com/facebook/zstd)|[BSD](https://github.com/facebook/zstd/blob/dev/LICENSE)|`MZ_ZSTD`|Written by Facebook.|
 
 This project uses the zlib [license](LICENSE).
@@ -117,4 +110,4 @@ Thanks go out to all the people who have taken the time to contribute code revie
 
 Thanks to [Gilles Vollant](https://www.winimage.com/zLibDll/minizip.html) on which this work is originally based on.
 
-The [ZIP format](https://github.com/nmoinvaz/minizip/blob/master/doc/zip/appnote.txt) was defined by Phil Katz of PKWARE.
+The [ZIP format](https://github.com/zlib-ng/minizip-ng/blob/master/doc/zip/appnote.txt) was defined by Phil Katz of PKWARE.

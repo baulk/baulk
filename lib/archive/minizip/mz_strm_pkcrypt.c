@@ -1,8 +1,8 @@
 /* mz_strm_pkcrypt.c -- Code for traditional PKWARE encryption
-   part of the MiniZip project
+   part of the minizip-ng project
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-      https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+      https://github.com/zlib-ng/minizip-ng
    Copyright (C) 1998-2005 Gilles Vollant
       Modifications for Info-ZIP crypting
       https://www.winimage.com/zLibDll/minizip.html
@@ -138,12 +138,6 @@ int32_t mz_stream_pkcrypt_open(void *stream, const char *path, int32_t mode) {
     mz_stream_pkcrypt_init_keys(stream, password);
 
     if (mode & MZ_OPEN_MODE_WRITE) {
-#ifdef MZ_ZIP_NO_COMPRESSION
-        MZ_UNUSED(t);
-        MZ_UNUSED(i);
-
-        return MZ_SUPPORT_ERROR;
-#else
         /* First generate RAND_HEAD_LEN - 2 random bytes. */
         mz_crypt_rand(header, MZ_PKCRYPT_HEADER_SIZE - 2);
 
@@ -158,16 +152,7 @@ int32_t mz_stream_pkcrypt_open(void *stream, const char *path, int32_t mode) {
             return MZ_WRITE_ERROR;
 
         pkcrypt->total_out += MZ_PKCRYPT_HEADER_SIZE;
-#endif
     } else if (mode & MZ_OPEN_MODE_READ) {
-#ifdef MZ_ZIP_NO_DECOMPRESSION
-        MZ_UNUSED(t);
-        MZ_UNUSED(i);
-        MZ_UNUSED(verify1);
-        MZ_UNUSED(verify2);
-
-        return MZ_SUPPORT_ERROR;
-#else
         if (mz_stream_read(pkcrypt->stream.base, header, sizeof(header)) != sizeof(header))
             return MZ_READ_ERROR;
 
@@ -183,7 +168,6 @@ int32_t mz_stream_pkcrypt_open(void *stream, const char *path, int32_t mode) {
             return MZ_PASSWORD_ERROR;
 
         pkcrypt->total_in += MZ_PKCRYPT_HEADER_SIZE;
-#endif
     }
 
     pkcrypt->initialized = 1;

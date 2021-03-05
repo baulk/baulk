@@ -1,10 +1,10 @@
 /* mz_strm_buf.c -- Stream for buffering reads/writes
-   part of the MiniZip project
+   part of the minizip-ng project
 
    This version of ioapi is designed to buffer IO.
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-      https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+      https://github.com/zlib-ng/minizip-ng
 
    This program is distributed under the terms of the same license as zlib.
    See the accompanying LICENSE file for the full text of the license.
@@ -123,12 +123,17 @@ int32_t mz_stream_buffered_read(void *stream, void *buf, int32_t size) {
     int32_t bytes_to_copy = 0;
     int32_t bytes_left_to_read = size;
     int32_t bytes_read = 0;
+    int32_t bytes_flushed = 0;
 
     mz_stream_buffered_print("Buffered - Read (size %" PRId32 " pos %" PRId64 ")\n", size, buffered->position);
 
     if (buffered->writebuf_len > 0) {
-        mz_stream_buffered_print("Buffered - Switch from write to read, not yet supported (pos %" PRId64 ")\n",
-            buffered->position);
+        int64_t position  = buffered->position + buffered->writebuf_pos
+
+        mz_stream_buffered_print("Buffered - Switch from write to read, flushing (pos %" PRId64 ")\n", position);
+
+        mz_stream_buffered_flush(stream, &bytes_flushed);
+        mz_stream_buffered_seek(stream, position, MZ_SEEK_SET);
     }
 
     while (bytes_left_to_read > 0) {
@@ -264,17 +269,16 @@ int32_t mz_stream_buffered_seek(void *stream, int64_t offset, int32_t origin) {
     switch (origin) {
     case MZ_SEEK_SET:
 
+        if ((buffered->readbuf_len > 0) && (offset < buffered->position) &&
+            (offset >= buffered->position - buffered->readbuf_len)) {
+            buffered->readbuf_pos = (int32_t)(offset - (buffered->position - buffered->readbuf_len));
+            return MZ_OK;
+        }
         if (buffered->writebuf_len > 0) {
             if ((offset >= buffered->position) && (offset <= buffered->position + buffered->writebuf_len)) {
                 buffered->writebuf_pos = (int32_t)(offset - buffered->position);
                 return MZ_OK;
             }
-        }
-
-        if ((buffered->readbuf_len > 0) && (offset < buffered->position) &&
-            (offset >= buffered->position - buffered->readbuf_len)) {
-            buffered->readbuf_pos = (int32_t)(offset - (buffered->position - buffered->readbuf_len));
-            return MZ_OK;
         }
 
         err = mz_stream_buffered_flush(stream, &bytes_flushed);

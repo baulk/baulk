@@ -1,8 +1,8 @@
 /* mz_os_posix.c -- System functions for posix
-   part of the MiniZip project
+   part of the minizip-ng project
 
-   Copyright (C) 2010-2020 Nathan Moinvaziri
-     https://github.com/nmoinvaz/minizip
+   Copyright (C) 2010-2021 Nathan Moinvaziri
+     https://github.com/zlib-ng/minizip-ng
 
    This program is distributed under the terms of the same license as zlib.
    See the accompanying LICENSE file for the full text of the license.
@@ -28,6 +28,17 @@
 #if defined(__APPLE__)
 #  include <mach/clock.h>
 #  include <mach/mach.h>
+#endif
+
+#if defined(HAVE_GETRANDOM)
+#  include <sys/random.h>
+#endif
+#if defined(HAVE_LIBBSD)
+#  include <sys/types.h>
+#  ifndef __u_char_defined
+     typedef unsigned char  u_char;
+#  endif
+#  include <bsd/stdlib.h> /* arc4random_buf */
 #endif
 
 /***************************************************************************/
@@ -106,6 +117,44 @@ void mz_os_utf8_string_delete(uint8_t **string) {
 
 /***************************************************************************/
 
+#if defined(HAVE_ARC4RANDOM_BUF)
+int32_t mz_os_rand(uint8_t *buf, int32_t size) {
+    if (size < 0)
+        return 0;
+    arc4random_buf(buf, (uint32_t)size);
+    return size;
+}
+#elif defined(HAVE_ARC4RANDOM)
+int32_t mz_os_rand(uint8_t *buf, int32_t size) {
+    int32_t left = size;
+    for (; left > 2; left -= 3, buf += 3) {
+        uint32_t val = arc4random();
+
+        buf[0] = (val) & 0xFF;
+        buf[1] = (val >> 8) & 0xFF;
+        buf[2] = (val >> 16) & 0xFF;
+    }
+    for (; left > 0; left--, buf++) {
+        *buf = arc4random() & 0xFF;
+    }
+    return size - left;
+}
+#elif defined(HAVE_GETRANDOM)
+int32_t mz_os_rand(uint8_t *buf, int32_t size) {
+    int32_t left = size;
+    int32_t written = 0;
+
+    while (left > 0) {
+        written = getrandom(buf, left, 0);
+        if (written < 0)
+            return MZ_INTERNAL_ERROR;
+
+        buf += written;
+        left -= written;
+    }
+    return size - left;
+}
+#else
 int32_t mz_os_rand(uint8_t *buf, int32_t size) {
     static unsigned calls = 0;
     int32_t i = 0;
@@ -121,6 +170,7 @@ int32_t mz_os_rand(uint8_t *buf, int32_t size) {
 
     return size;
 }
+#endif
 
 int32_t mz_os_rename(const char *source_path, const char *target_path) {
     if (rename(source_path, target_path) == -1)
