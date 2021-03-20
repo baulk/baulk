@@ -2337,7 +2337,7 @@ void Demangler::dumpBackReferences() {
     std::printf("\n");
 }
 
-char *llvm::microsoftDemangle(std::string_view MangledName, size_t *NMangled,
+char *llvm::microsoftDemangle(const std::string_view MangledName, size_t *NMangled,
                               char *Buf, size_t *N,
                               int *Status, MSDemangleFlags Flags) {
   Demangler D;

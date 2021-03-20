@@ -29,7 +29,7 @@ enum : int {
   demangle_success = 0,
 };
 
-char *itaniumDemangle(std::string_view mangled_name, char *buf, size_t *n,
+char *itaniumDemangle(const std::string_view mangled_name, char *buf, size_t *n,
                       int *status);
 
 
@@ -54,7 +54,7 @@ enum MSDemangleFlags {
 /// receives the size of the demangled string on output if n_buf is not nullptr.
 /// status receives one of the demangle_ enum entries above if it's not nullptr.
 /// Flags controls various details of the demangled representation.
-char *microsoftDemangle(std::string_view mangled_name, size_t *n_read,
+char *microsoftDemangle(const std::string_view mangled_name, size_t *n_read,
                         char *buf, size_t *n_buf,
                         int *status, MSDemangleFlags Flags = MSDF_None);
 
@@ -63,7 +63,7 @@ char *microsoftDemangle(std::string_view mangled_name, size_t *n_read,
 /// \param MangledName - reference to string to demangle.
 /// \returns - the demangled string, or a copy of the input string if no
 /// demangling occurred.
-std::string demangle(std::string_view MangledName);
+std::string demangle(const std::string_view MangledName);
 
 /// "Partial" demangler. This supports demangling a string into an AST
 /// (typically an intermediate stage in itaniumDemangle) and querying certain

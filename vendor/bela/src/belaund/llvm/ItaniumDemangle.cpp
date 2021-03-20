@@ -323,7 +323,7 @@ public:
 
 using Demangler = itanium_demangle::ManglingParser<DefaultAllocator>;
 
-char *llvm::itaniumDemangle(std::string_view MangledName, char *Buf,
+char *llvm::itaniumDemangle(const std::string_view MangledName, char *Buf,
                             size_t *N, int *Status) {
   if (MangledName.empty() || (Buf != nullptr && N == nullptr)) {
     if (Status)
