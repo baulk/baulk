@@ -265,8 +265,8 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
   exports.resize(ied.NumberOfNames);
   if (ied.AddressOfNameOrdinals > ds->Header.VirtualAddress &&
       ied.AddressOfNameOrdinals < ds->Header.VirtualAddress + ds->Header.VirtualSize) {
-    auto N = ied.AddressOfNameOrdinals - ds->Header.VirtualAddress;
-    auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
+    auto L = ied.AddressOfNameOrdinals - ds->Header.VirtualAddress;
+    auto sv = std::string_view{sdata.data() + L, sdata.size() - L};
     if (sv.size() > exports.size() * 2) {
       for (size_t i = 0; i < exports.size(); i++) {
         exports[i].Ordinal = bela::cast_fromle<uint16_t>(sv.data() + i * 2) + ordinalBase;
@@ -287,9 +287,9 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
   }
   if (ied.AddressOfFunctions > ds->Header.VirtualAddress &&
       ied.AddressOfFunctions < ds->Header.VirtualAddress + ds->Header.VirtualSize) {
-    auto N = ied.AddressOfFunctions - ds->Header.VirtualAddress;
+    auto L = ied.AddressOfFunctions - ds->Header.VirtualAddress;
     for (size_t i = 0; i < exports.size(); i++) {
-      auto sv = std::string_view{sdata.data() + N, sdata.size() - N};
+      auto sv = std::string_view{sdata.data() + L, sdata.size() - L};
       if (sv.size() > static_cast<size_t>(exports[i].Ordinal * 4 + 4)) {
         exports[i].Address =
             bela::cast_fromle<uint32_t>(sv.data() + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
@@ -363,9 +363,9 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
         dt.ImportNameTableRVA > ds->Header.VirtualAddress + ds->Header.VirtualSize) {
       break;
     }
-    uint32_t N = dt.ImportNameTableRVA - ds->Header.VirtualAddress;
+    uint32_t L = dt.ImportNameTableRVA - ds->Header.VirtualAddress;
 
-    std::string_view d{sdata.data() + N, sdata.size() - N};
+    std::string_view d{sdata.data() + L, sdata.size() - L};
     std::vector<Function> functions;
     while (d.size() >= ptrsize) {
       if (is64bit) {
