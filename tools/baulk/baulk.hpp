@@ -16,7 +16,7 @@ extern bool IsInsecureMode;
 constexpr size_t UerAgentMaximumLength = 64;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 // DbgPrint added newline
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -41,7 +41,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
-template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, const Args &... args) {
+template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -67,18 +67,25 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
 
 /// defines
 [[maybe_unused]] constexpr std::wstring_view BucketsDirName = L"buckets";
+enum BucketObserveMode : int {
+  GithubZIP = 0, // ZIP
+  Git = 1
+};
 struct Bucket {
   Bucket() = default;
-  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99) {
+  Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99,
+         BucketObserveMode mode_ = BucketObserveMode::GithubZIP) {
     description = desc;
     name = n;
     url = u;
     weights = weights_;
+    mode = mode_;
   }
   std::wstring description;
   std::wstring name;
   std::wstring url;
   int weights{99};
+  BucketObserveMode mode{BucketObserveMode::GithubZIP};
 };
 
 using Buckets = std::vector<Bucket>;
