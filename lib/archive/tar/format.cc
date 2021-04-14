@@ -212,6 +212,10 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
     ec = bela::make_error_code(bela::ErrGeneral, L"invalid number '", bela::ToWide(sv->substr(0, pos)), L"'");
     return false;
   }
+  if (pos >= n) {
+    ec = bela::make_error_code(L"invalid pax record");
+    return false;
+  }
   auto rec = sv->substr(pos + 1, n - pos - 1);
   if (!rec.ends_with('\n')) {
     ec = bela::make_error_code(L"invalid pax record");
