@@ -421,12 +421,6 @@ bool IsSwf(const uint8_t *buf, size_t size) {
 
 /// Magic only
 status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
-  // MSI // 0x4d434923
-  constexpr const uint8_t msiMagic[] = {0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1};
-  if (mv.StartsWith(msiMagic)) {
-    hr.assign(types::msi, L"Windows Installer packages");
-    return Found;
-  }
   // DEB
   constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A, 0x64, 0x65, 0x62,
                                         0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};
