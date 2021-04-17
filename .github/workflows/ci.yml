@@ -68,11 +68,6 @@ jobs:
           $hashtext=$obj.Algorithm+":"+$obj.Hash.ToLower()
           $hashtext|Out-File -Encoding utf8 -FilePath "$baseName.sum"
           Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: baulk-${{matrix.baulk_target}}.zip
-          path: ${{ matrix.build_dir}}/Baulk-*.zip
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')
