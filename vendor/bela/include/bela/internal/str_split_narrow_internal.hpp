@@ -36,7 +36,7 @@
 #include <array>
 #include <initializer_list>
 #include <iterator>
-#include <map>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -53,7 +53,7 @@ public:
   ConvertibleToStringView(const char *s) // NOLINT(runtime/explicit)
       : value_(s) {}
   ConvertibleToStringView(char *s) : value_(s) {} // NOLINT(runtime/explicit)
-  ConvertibleToStringView(std::string_view s)       // NOLINT(runtime/explicit)
+  ConvertibleToStringView(std::string_view s)     // NOLINT(runtime/explicit)
       : value_(s) {}
   ConvertibleToStringView(const std::string &s) // NOLINT(runtime/explicit)
       : value_(s) {}
@@ -161,6 +161,9 @@ template <typename T> struct HasValueType<T, std::void_t<typename T::value_type>
 template <typename T, typename = void> struct HasConstIterator : std::false_type {};
 template <typename T> struct HasConstIterator<T, std::void_t<typename T::const_iterator>> : std::true_type {};
 
+// HasEmplace<T>::value is true iff there exists a method T::emplace().
+template <typename T, typename = void> struct HasEmplace : std::false_type {};
+template <typename T> struct HasEmplace<T, std::void_t<decltype(std::declval<T>().emplace())>> : std::true_type {};
 // IsInitializerList<T>::value is true iff T is an std::initializer_list. More
 // details below in Splitter<> where this is used.
 std::false_type IsInitializerListDispatch(...); // default: No
@@ -181,8 +184,7 @@ template <typename C, bool has_value_type, bool has_mapped_type>
 struct SplitterIsConvertibleToImpl : std::false_type {};
 
 template <typename C>
-struct SplitterIsConvertibleToImpl<C, true, false> : std::is_constructible<typename C::value_type, std::string_view> {
-};
+struct SplitterIsConvertibleToImpl<C, true, false> : std::is_constructible<typename C::value_type, std::string_view> {};
 
 template <typename C>
 struct SplitterIsConvertibleToImpl<C, true, true>
@@ -200,7 +202,7 @@ struct SplitterIsConvertibleTo
                                   HasMappedType<C>::value> {
 };
 
-// This class implements the range that is returned by absl::StrSplit(). This
+// This class implements the range that is returned by bela::StrSplit(). This
 // class has templated conversion operators that allow it to be implicitly
 // converted to a variety of types that the caller may have specified on the
 // left-hand side of an assignment.
@@ -330,44 +332,37 @@ private:
   // value.
   template <typename Container, typename First, typename Second>
   struct ConvertToContainer<Container, std::pair<const First, Second>, true> {
+    using iterator = typename Container::iterator;
     Container operator()(const Splitter &splitter) const {
       Container m;
       typename Container::iterator it;
       bool insert = true;
-      for (const auto &sp : splitter) {
+      for (const std::string_view sv : splitter) {
         if (insert) {
-          it = Inserter<Container>::Insert(&m, First(sp), Second());
+          it = InsertOrEmplace(&m, sv);
         } else {
-          it->second = Second(sp);
+          it->second = Second(sv);
         }
         insert = !insert;
       }
       return m;
     }
 
-    // Inserts the key and value into the given map, returning an iterator to
-    // the inserted item. Specialized for std::map and std::multimap to use
-    // emplace() and adapt emplace()'s return value.
-    template <typename Map> struct Inserter {
-      using M = Map;
-      template <typename... Args> static typename M::iterator Insert(M *m, Args &&... args) {
-        return m->insert(std::make_pair(std::forward<Args>(args)...)).first;
-      }
-    };
+    // Inserts the key and an empty value into the map, returning an iterator to
+    // the inserted item. We use emplace() if available, otherwise insert().
+    template <typename M>
+    static std::enable_if_t<HasEmplace<M>::value, iterator> InsertOrEmplace(M *m, std::string_view key) {
+      // Use piecewise_construct to support old versions of gcc in which pair
+      // constructor can't otherwise construct string from string_view.
+      return ToIter(m->emplace(std::piecewise_construct, std::make_tuple(key), std::tuple<>()));
+    }
+    template <typename M>
+    static std::enable_if_t<!HasEmplace<M>::value, iterator> InsertOrEmplace(M *m, std::string_view key) {
+      return ToIter(m->insert(std::make_pair(First(key), Second(""))));
+    }
 
-    template <typename... Ts> struct Inserter<std::map<Ts...>> {
-      using M = std::map<Ts...>;
-      template <typename... Args> static typename M::iterator Insert(M *m, Args &&... args) {
-        return m->emplace(std::make_pair(std::forward<Args>(args)...)).first;
-      }
-    };
-
-    template <typename... Ts> struct Inserter<std::multimap<Ts...>> {
-      using M = std::multimap<Ts...>;
-      template <typename... Args> static typename M::iterator Insert(M *m, Args &&... args) {
-        return m->emplace(std::make_pair(std::forward<Args>(args)...));
-      }
-    };
+    static iterator ToIter(std::pair<iterator, bool> pair) { return pair.first; }
+    static iterator ToIter(iterator iter) { return iter; }
   };
 
   StringType text_;
@@ -376,6 +371,6 @@ private:
 };
 
 } // namespace strings_internal
-} // namespace bela
+} // namespace bela::narrow
 
 #endif
