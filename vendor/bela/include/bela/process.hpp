@@ -9,8 +9,8 @@ namespace bela::process {
 constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
-enum CaptureMode {
-  CAPTURE_OUT = 0,
+enum CaptureMode : DWORD {
+  CAPTURE_OUT = 0, // default
   CAPTURE_ERR = 0x1,
   CAPTURE_USEIN = 0x2,
   CAPTURE_USEERR = 0x4,

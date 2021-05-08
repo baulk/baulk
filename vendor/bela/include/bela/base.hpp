@@ -169,6 +169,7 @@ template <class F> inline final_act<F> finally(F &&f) noexcept { return final_ac
 
 constexpr int64_t SizeUnInitialized{-1};
 
+template <typename T, typename K> constexpr bool FlagIsTrue(T a, K b) { return (a & static_cast<T>(b)) != 0; }
 } // namespace bela
 
 #endif

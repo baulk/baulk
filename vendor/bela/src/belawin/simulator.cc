@@ -152,7 +152,10 @@ constexpr std::wstring_view env_wstrings[] = {
     L"CUDA_PATH_V9_1",
     L"CUDA_PATH_V10_0",
     L"CUDA_PATH_V10_1",
-    L"CUDA_TOOLKIT_ROOT_DIR",
+    L"CUDA_PATH_V10_2",
+    L"CUDA_PATH_V11_0",
+    L"CUDA_PATH_V11_1",
+    L"CUDA_PATH_V11_2",
     // Environmental variable generated automatically by CUDA after installation
     L"NVCUDASAMPLES_ROOT",
     // Enables find_package(Vulkan) in CMake. Environmental variable generated

@@ -1,5 +1,6 @@
 //
 #include <bela/process.hpp>
+#include <bela/terminal.hpp>
 
 namespace bela::process {
 // run a new process and wait
@@ -41,7 +42,9 @@ void Free(HANDLE fd) {
 }
 
 // thanks:
-// https://github.com/microsoft/vcpkg/blob/master/toolsrc/src/vcpkg/base/system.process.cpp
+// https://github.com/microsoft/vcpkg-tool/blob/main/src/vcpkg/base/system.process.cpp
+// https://devblogs.microsoft.com/oldnewthing/20111216-00/?p=8873
+// https://github.com/rust-lang/rust/issues/73281
 struct process_capture_helper {
   process_capture_helper() : pi{} {}
   PROCESS_INFORMATION pi;
@@ -52,7 +55,6 @@ struct process_capture_helper {
     memset(&si, 0, sizeof(STARTUPINFOW));
     si.cb = sizeof(STARTUPINFOW);
     si.dwFlags |= STARTF_USESTDHANDLES;
-
     SECURITY_ATTRIBUTES saAttr;
     memset(&saAttr, 0, sizeof(SECURITY_ATTRIBUTES));
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -70,18 +72,17 @@ struct process_capture_helper {
       Free(si.hStdOutput);
       return false;
     }
-    if ((flags & CAPTURE_ERR) != 0) {
+    if (FlagIsTrue(flags, CAPTURE_ERR)) {
       si.hStdError = si.hStdOutput;
-    } else if ((flags & CAPTURE_USEERR) != 0) {
+    }
+    if (FlagIsTrue(flags, CAPTURE_USEERR)) {
       si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
-    if ((flags & CAPTURE_USEIN) != 0) {
+    if (FlagIsTrue(flags, CAPTURE_USEIN)) {
       si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     }
-    si.hStdError = si.hStdOutput;
-    if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, TRUE,
-                       IDLE_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, string_nullable(env),
-                       string_nullable(cwd), &si, &pi) != TRUE) {
+    if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, TRUE, CREATE_UNICODE_ENVIRONMENT,
+                       string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
       ec = bela::make_system_error_code();
       Free(fdout);
       Free(si.hStdOutput);
