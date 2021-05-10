@@ -85,6 +85,15 @@ void Version() {
                 BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
+int cmd_usage(const baulk::commands::argv_t &) {
+  Usage();
+  return 0;
+}
+int cmd_version(const baulk::commands::argv_t &) {
+  Version();
+  return 0;
+}
+
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   baulk::cli::BaulkArgv ba(argc, argv);
   std::wstring_view profile;
@@ -162,6 +171,8 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   auto subcmd = ba.Argv().front();
   cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
   constexpr command_map_t cmdmaps[] = {
+      {L"help", cmd_usage},
+      {L"version", cmd_version},
       {L"install", baulk::commands::cmd_install},       // install
       {L"i", baulk::commands::cmd_install},             // install
       {L"list", baulk::commands::cmd_list},             // list installed
