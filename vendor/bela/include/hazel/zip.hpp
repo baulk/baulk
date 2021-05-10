@@ -86,7 +86,9 @@ struct File {
   uint16_t method{0};
   uint16_t aesVersion{0};
   uint8_t aesStrength{0};
+  bool commentUTF8{false};
   bool IsFileNameUTF8() const { return (flags & 0x800) != 0; }
+  bool IsCommentUTF8() const { return ((flags & 0x800) != 0 || commentUTF8); }
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
   bool IsDir() const { return (mode & FileMode::ModeDir) != 0; }
   bool IsSymlink() const { return (mode & FileMode::ModeSymlink) != 0; }

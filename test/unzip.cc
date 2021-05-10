@@ -105,7 +105,8 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
     return true;
   }
   auto showName = std::wstring_view(dest->data() + destsize, dest->size() - destsize);
-  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", showName);
+  bela::FPrintF(stderr,L" x %s\n",file.name);
+  //bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", showName);
   if (file.IsSymlink()) {
     return extractSymlink(file, *dest, ec);
   }
