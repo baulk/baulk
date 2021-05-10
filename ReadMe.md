@@ -39,7 +39,7 @@ You can right-click to run `script/installmenu.bat` with administrator privilege
 
 ## Baulk Usage and Details
 
-The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the args following the command. Of course, specific orders and specific analyses cannot be rigidly understood.
+The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the args following the command. 
 
 ```txt
 baulk - Minimal Package Manager for Windows

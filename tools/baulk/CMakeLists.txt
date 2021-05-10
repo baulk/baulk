@@ -7,6 +7,7 @@ add_executable(
   baulkenv.cc
   bucket.cc
   commands.freeze.cc
+  commands.help.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc

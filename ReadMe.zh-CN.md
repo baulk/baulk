@@ -40,7 +40,7 @@ baulk uninstall wget
 
 ## 命令行参数
 
-baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随命令后参数。当然具体命令具体分析，不能僵硬的理解。
+baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随子命令后的参数。不同的命令参数根据实际情况选择合适的参数。
 
 ```txt
 baulk - Minimal Package Manager for Windows
