@@ -32,7 +32,7 @@ struct command_map_t {
 
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk - Minimal Package Manager for Windows
-Usage: baulk [option] command pkg ...
+Usage: baulk [option] <command> [<args>]
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
@@ -47,6 +47,8 @@ Usage: baulk [option] command pkg ...
 
 
 Command:
+  help             Show usage text and quit
+  version          Show version number and quit
   list             List all installed packages
   search           Search for available packages, or specific package details
   install          Install specific packages. upgrade if already installed. (alias: i)

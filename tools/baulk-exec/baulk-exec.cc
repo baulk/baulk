@@ -16,7 +16,7 @@ bool IsDebugMode = false;
 
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
-Usage: baulk-exec [option] command args ...
+Usage: baulk-exec [option] <command> [<args>] ...
   -h|--help            Show usage text and quit
   -v|--version         Show version number and quit
   -V|--verbose         Make the operation more talkative

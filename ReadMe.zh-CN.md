@@ -40,11 +40,11 @@ baulk uninstall wget
 
 ## 命令行参数
 
-baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随命令后的包名。当然具体命令具体分析，不能僵硬的理解。
+baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随命令后参数。当然具体命令具体分析，不能僵硬的理解。
 
 ```txt
 baulk - Minimal Package Manager for Windows
-Usage: baulk [option] command pkg ...
+Usage: baulk [option] <command> [<args>]
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
@@ -59,6 +59,8 @@ Usage: baulk [option] command pkg ...
 
 
 Command:
+  help             Show usage text and quit
+  version          Show version number and quit
   list             List all installed packages
   search           Search for available packages, or specific package details
   install          Install specific packages. upgrade if already installed. (alias: i)
@@ -78,6 +80,7 @@ Alias:
   i  install
   r  uninstall
   u  update and upgrade
+
 ```
 
 |命令|描述|备注|
@@ -268,6 +271,8 @@ Usage: baulkterminal [option] ...
                Choose to load one/more specific package virtual environment
   --vs
                Load Visual Studio related environment variables
+  --vs-preview
+               Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -283,7 +288,7 @@ baulk-exec usage:
 
 ```txt
 baulk-exec - Baulk extend executor
-Usage: baulk-exec [option] command args ...
+Usage: baulk-exec [option] <command> [<args>] ...
   -h|--help            Show usage text and quit
   -v|--version         Show version number and quit
   -V|--verbose         Make the operation more talkative
@@ -292,11 +297,13 @@ Usage: baulk-exec [option] command args ...
   -A|--arch            Select a specific arch, use native architecture by default
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
+  --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --unchanged-title    Keep the terminal title unchanged
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
 
 ```
 

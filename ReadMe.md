@@ -39,11 +39,11 @@ You can right-click to run `script/installmenu.bat` with administrator privilege
 
 ## Baulk Usage and Details
 
-The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the package name following the command. Of course, specific orders and specific analyses cannot be rigidly understood.
+The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the args following the command. Of course, specific orders and specific analyses cannot be rigidly understood.
 
 ```txt
 baulk - Minimal Package Manager for Windows
-Usage: baulk [option] command pkg ...
+Usage: baulk [option] <command> [<args>]
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit
   -V|--verbose     Make the operation more talkative
@@ -58,6 +58,8 @@ Usage: baulk [option] command pkg ...
 
 
 Command:
+  help             Show usage text and quit
+  version          Show version number and quit
   list             List all installed packages
   search           Search for available packages, or specific package details
   install          Install specific packages. upgrade if already installed. (alias: i)
@@ -279,6 +281,8 @@ Usage: baulkterminal [option] ...
                Choose to load one/more specific package virtual environment
   --vs
                Load Visual Studio related environment variables
+  --vs-preview
+               Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
   --clang
@@ -294,7 +298,7 @@ baulk-exec usage:
 
 ```txt
 baulk-exec - Baulk extend executor
-Usage: baulk-exec [option] command args ...
+Usage: baulk-exec [option] <command> [<args>] ...
   -h|--help            Show usage text and quit
   -v|--version         Show version number and quit
   -V|--verbose         Make the operation more talkative
@@ -303,11 +307,13 @@ Usage: baulk-exec [option] command args ...
   -A|--arch            Select a specific arch, use native architecture by default
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
+  --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --unchanged-title    Keep the terminal title unchanged
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
 ```
 
 ## Baulk Dock
