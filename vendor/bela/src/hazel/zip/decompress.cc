@@ -44,6 +44,8 @@ bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec)
     break;
   case ZIP_LZMA2:
     break;
+  case ZIP_PPMD:
+    break;
   case ZIP_XZ:
     break;
   case ZIP_BZIP2:
