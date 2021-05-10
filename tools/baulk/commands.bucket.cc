@@ -157,6 +157,27 @@ int DeleteBucket(const argv_t &argv) {
   return 0;
 }
 
+void usage_bucket(){
+  bela::FPrintF(stderr, LR"(Usage: baulk bucket <option> [bucket]...
+Add, delete or list buckets.
+
+Option:
+  list add delete
+
+Example:
+  baulk bucket list
+  baulk bucket list BucketName
+
+  baulk bucket add URL
+  baulk bucket add BucketName URL
+  baulk bucket add BucketName URL Weights
+  baulk bucket add BucketName URL Weights Description
+
+  baulk bucket delete BucketName
+
+)");
+}
+
 int cmd_bucket(const argv_t &argv) {
   if (argv.empty()) {
     return ListBucket();

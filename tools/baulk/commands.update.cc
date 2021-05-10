@@ -157,6 +157,13 @@ bool PackageScanUpdatable() {
   return true;
 }
 
+void usage_update() {
+  bela::FPrintF(stderr, LR"(Usage: baulk update
+Update bucket metadata.
+
+)");
+}
+
 int cmd_update(const argv_t &argv) {
   bela::error_code ec;
   auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);

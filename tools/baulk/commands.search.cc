@@ -74,9 +74,21 @@ private:
   std::vector<std::wstring> argv;
 };
 
+void usage_search() {
+  bela::FPrintF(stderr, LR"(Usage: baulk search [package]...
+Search in package descriptions.
+
+Example:
+  baulk search wget
+  baulk search win*
+  baulk search *
+
+)");
+}
+
 int cmd_search(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk search package(or pattern)\n");
+    usage_search();
     return 1;
   }
   Searcher searcher(argv);
@@ -87,4 +99,5 @@ int cmd_search(const argv_t &argv) {
   }
   return 0;
 }
+
 } // namespace baulk::commands

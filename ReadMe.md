@@ -58,13 +58,12 @@ Usage: baulk [option] <command> [<args>]
 
 
 Command:
-  help             Show usage text and quit
   version          Show version number and quit
-  list             List all installed packages
-  search           Search for available packages, or specific package details
+  list             List installed packages based on package names
+  search           Search in package descriptions
   install          Install specific packages. upgrade if already installed. (alias: i)
   uninstall        Uninstall specific packages. (alias: r)
-  update           Update ports metadata
+  update           Update bucket metadata
   upgrade          Upgrade all upgradeable packages
   freeze           Freeze specific package
   unfreeze         UnFreeze specific package
@@ -79,6 +78,8 @@ Alias:
   i  install
   r  uninstall
   u  update and upgrade
+
+See 'baulk help <command>' to read usage a specific subcommand.
 
 ```
 
@@ -110,6 +111,7 @@ baulk update
 baulk upgrade
 ```
 
+See `baulk help <command>` to read usage a specific subcommand.
 
 ### Baulk configuration file
 

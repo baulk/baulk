@@ -6,7 +6,6 @@
 
 namespace baulk::commands {
 using argv_t = std::vector<std::wstring_view>;
-void Usage();
 int cmd_help(const argv_t &argv);
 //
 int cmd_install(const argv_t &argv);
@@ -28,6 +27,24 @@ int cmd_bucket(const argv_t &argv);
 // archive
 int cmd_unzip(const argv_t &argv);
 int cmd_untar(const argv_t &argv);
+
+// USAGE:
+void usage_baulk();
+void usage_install();
+void usage_list();
+void usage_search();
+void usage_uninstall();
+void usage_update();
+void usage_upgrade();
+void usage_update_and_upgrade();
+void usage_freeze();
+void usage_unfreeze();
+void usage_sha256sum();
+void usage_b3sum();
+void usage_cleancache();
+void usage_bucket();
+void usage_untar();
+void usage_unzip();
 } // namespace baulk::commands
 
 #endif

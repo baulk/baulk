@@ -58,7 +58,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
-          baulk::commands::Usage();
+          baulk::commands::usage_baulk();
           exit(0);
         case 'v':
           Version();

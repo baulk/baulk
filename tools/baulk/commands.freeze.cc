@@ -9,6 +9,26 @@
 
 namespace baulk::commands {
 
+void usage_freeze() {
+  bela::FPrintF(stderr, LR"(Usage: baulk freeze [package]...
+Freeze specific package
+
+Example:
+  baulk freeze wget
+
+)");
+}
+
+void usage_unfreeze() {
+  bela::FPrintF(stderr, LR"(Usage: baulk unfreeze [package]...
+Undo freeze specific package
+
+Example:
+  baulk unfreeze wget
+
+)");
+}
+
 inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   FILE *fd = nullptr;
   if (auto eo = _wfopen_s(&fd, baulk::BaulkProfile().data(), L"rb"); eo != 0) {
@@ -31,7 +51,7 @@ inline bool BaulkStore(std::string_view jsontext, bela::error_code &ec) {
 
 int cmd_freeze(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk freeze package ...\n");
+    usage_freeze();
     return 1;
   }
   bela::error_code ec;
@@ -84,7 +104,7 @@ int cmd_freeze(const argv_t &argv) {
 
 int cmd_unfreeze(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk unfreeze package ...\n");
+    usage_unfreeze();
     return 1;
   }
   bela::error_code ec;

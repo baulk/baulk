@@ -51,6 +51,17 @@ int cmd_list_all() {
   return 0;
 }
 
+void usage_list() {
+  bela::FPrintF(stderr, LR"(Usage: baulk search [package]...
+List installed packages based on package names.
+
+Example:
+  baulk list
+  baulk list curl
+
+)");
+}
+
 int cmd_list(const argv_t &argv) {
   if (argv.empty()) {
     return cmd_list_all();

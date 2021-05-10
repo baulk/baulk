@@ -31,6 +31,17 @@ bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
   return diffInMillis > expires;
 }
 
+void usage_cleancache() {
+  bela::FPrintF(stderr, LR"(Usage: baulk cleancache [<args>]
+Cleanup download cache
+
+Example:
+  baulk cleancache
+  baulk cleancache --force
+
+)");
+}
+
 int cmd_cleancache(const argv_t &argv) {
   auto pkgtemp = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
   bela::error_code ec;

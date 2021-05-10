@@ -35,6 +35,17 @@ int uninstallone(std::wstring_view pkgname) {
   return 0;
 }
 
+void usage_uninstall(){
+    bela::FPrintF(stderr, LR"(Usage: baulk uninstall [package]...
+Uninstall specific packages. (alias: r)
+
+Example:
+  baulk uninstall wget
+  baulk r wget
+
+)");
+}
+
 int cmd_uninstall(const argv_t &argv) {
   if (argv.empty()) {
     bela::FPrintF(stderr, L"usage: baulk uninstall package\n");

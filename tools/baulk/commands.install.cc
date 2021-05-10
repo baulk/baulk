@@ -36,10 +36,20 @@ int install_pkg(std::wstring_view name) {
   return baulk::package::BaulkInstall(*pkg);
 }
 
+void usage_install() {
+    bela::FPrintF(stderr, LR"(Usage: baulk install [package]...
+Install specific packages. upgrade if already installed. (alias: i)
+
+Example:
+  baulk install wget
+  baulk i wget
+
+)");
+}
+
 int cmd_install(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk install package\nInstall specific packages. "
-                          L"upgrade or repair installation if already installed\n");
+    usage_install();
     return 1;
   }
   bela::error_code ec;

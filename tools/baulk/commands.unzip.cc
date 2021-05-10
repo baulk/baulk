@@ -127,9 +127,20 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
   return true;
 }
 
+void usage_unzip() {
+  bela::FPrintF(stderr, LR"(Usage: baulk unzip zipfile destination
+Extract compressed files in a ZIP archive (experimental).
+
+Example:
+  baulk untar curl-7.76.0.zip
+  baulk untar curl-7.76.0.zip curl-dest
+
+)");
+}
+
 int cmd_unzip(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk unzip zipfile dest\n");
+    usage_unzip();
     return 1;
   }
   bela::error_code ec;

@@ -11,6 +11,28 @@
 #include "pkg.hpp"
 
 namespace baulk::commands {
+void usage_upgrade() {
+  bela::FPrintF(stderr, LR"(Usage: baulk upgrade [<args>]
+Upgrade all upgradeable packages.
+
+Example:
+  baulk upgrade
+  baulk upgrade --force
+
+)");
+}
+
+void usage_update_and_upgrade() {
+  bela::FPrintF(stderr, LR"(Usage: baulk u [<args>]
+Update bucket metadata and upgrade all upgradeable packages.
+
+Example:
+  baulk u
+  baulk u --force
+
+)");
+}
+
 int cmd_upgrade(const argv_t &argv) {
   bela::error_code ec;
   auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);

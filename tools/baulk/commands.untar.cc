@@ -4,6 +4,16 @@
 #include "tar.hpp"
 
 namespace baulk::commands {
+void usage_untar() {
+  bela::FPrintF(stderr, LR"(Usage: baulk untar tarfile destination
+Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental).
+
+Example:
+  baulk untar curl-7.76.0.tar.gz
+  baulk untar curl-7.76.0.tar.gz curl-dest
+
+)");
+}
 inline std::wstring resolveDestination(const argv_t &argv, std::wstring_view tarfile) {
   if (argv.size() > 1) {
     return bela::PathAbsolute(argv[1]);
@@ -16,7 +26,7 @@ inline std::wstring resolveDestination(const argv_t &argv, std::wstring_view tar
 
 int cmd_untar(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk untar tarfile dest\n");
+    usage_untar();
     return 1;
   }
   auto file = bela::PathAbsolute(argv[0]);

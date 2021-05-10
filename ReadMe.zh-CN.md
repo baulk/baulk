@@ -59,13 +59,12 @@ Usage: baulk [option] <command> [<args>]
 
 
 Command:
-  help             Show usage text and quit
   version          Show version number and quit
-  list             List all installed packages
-  search           Search for available packages, or specific package details
+  list             List installed packages based on package names
+  search           Search in package descriptions
   install          Install specific packages. upgrade if already installed. (alias: i)
   uninstall        Uninstall specific packages. (alias: r)
-  update           Update ports metadata
+  update           Update bucket metadata
   upgrade          Upgrade all upgradeable packages
   freeze           Freeze specific package
   unfreeze         UnFreeze specific package
@@ -81,6 +80,7 @@ Alias:
   r  uninstall
   u  update and upgrade
 
+See 'baulk help <command>' to read usage a specific subcommand.
 ```
 
 |命令|描述|备注|
@@ -99,6 +99,19 @@ Alias:
 |bucket|添加，删除，列出 buckets||
 |untar|tar 文件提取原生支持 |支持格式有： tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
 |unzip|zip 文件提取原生支持|zip 压缩方法支持 deflate/deflate64/bzip2/lzma/zstd/ppmd<br>支持文件名编码检测避免解压缩时文件名乱码|
+
+例子:
+
+```powershell
+baulk list
+baulk search *w
+baulk freeze python
+baulk unfreeze python
+baulk update
+baulk upgrade
+```
+
+查看具体命令的用法可以使用 `baulk help <command>`
 
 ### Baulk 配置文件
 

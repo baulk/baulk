@@ -5,9 +5,20 @@
 #include "fs.hpp"
 
 namespace baulk::commands {
+
+void usage_b3sum() {
+  bela::FPrintF(stderr, LR"(Usage: baulk b3sum [file] ...
+Print BLAKE3 (256-bit) checksums.
+
+Example:
+  baulk b3sum baulk.zip
+
+)");
+}
+
 int cmd_b3sum(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk b3sum file ...\n");
+    usage_b3sum();
     return 1;
   }
   bela::error_code ec;
