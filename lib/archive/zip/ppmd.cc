@@ -16,7 +16,7 @@ public:
   int64_t AvailableBytes() const { return size - offset; }
   ssize_t Read(void *buffer, ssize_t len) {
     if (buffer == nullptr || len == 0) {
-      ec = bela::make_error_code(L"short read");
+      ec = bela::make_error_code(L"buffer is nil");
       return -1;
     }
     if (r == w) {
@@ -89,16 +89,21 @@ private:
   }
 };
 
-Byte ppmd_read(const IByteIn *in) {
-  if (in == nullptr) {
+struct CByteInToLook {
+  IByteIn vt;
+  SectionReader *sr{nullptr};
+};
+
+Byte ppmd_read(const IByteIn *pp) {
+  if (pp == nullptr) {
     return 0;
   }
-  auto sr = reinterpret_cast<SectionReader *>(in->playload);
-  if (sr == 0) {
+  CByteInToLook *p = CONTAINER_FROM_VTBL(pp, CByteInToLook, vt);
+  if (p->sr == nullptr) {
     return 0;
   }
   Byte buf[8] = {0};
-  if (sr->ReadFull(buf, 1) != 1) {
+  if (p->sr->ReadFull(buf, 1) != 1) {
     return 0;
   }
   return buf[0];
@@ -123,9 +128,11 @@ const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};
 
 bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code &ec) const {
   SectionReader sr(fd, file.compressedSize);
-  IByteIn bi{&sr, ppmd_read};
+  CByteInToLook s;
+  s.vt.Read = ppmd_read;
+  s.sr = &sr;
   CPpmd8 _ppmd = {0};
-  _ppmd.Stream.In = &bi;
+  _ppmd.Stream.In = reinterpret_cast<IByteIn *>(&s);
   Ppmd8_Construct(&_ppmd);
   auto closer = bela::finally([&] { Ppmd8_Free(&_ppmd, &g_BigAlloc); });
   uint8_t buf[8];
@@ -145,7 +152,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
     ec = bela::make_error_code(L"Allocate Memory Failed");
     return false;
   }
-  if (!Ppmd8_RangeDec_Init(&_ppmd)) {
+  if (!Ppmd8_Init_RangeDec(&_ppmd)) {
     ec = bela::make_error_code(L"Ppmd8_RangeDec_Init");
     return false;
   }
