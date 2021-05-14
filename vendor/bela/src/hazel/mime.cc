@@ -120,7 +120,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::gitpack, L"application/x-git-pack"},
       {types::gitpkindex, L"application/x-git-pack-index"},
       {types::gitmidx, L"application/x-git-pack-multi-index"},
-      {types::shelllink, L"application/vnd.microsoft.shelllink"}, // Windows shelllink
+      {types::lnk, L"application/x-ms-shortcut"}, // .lnk application/x-ms-shortcut
       {types::iso, L"application/x-iso9660-image"},
   };
   //

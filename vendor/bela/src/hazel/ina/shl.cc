@@ -243,7 +243,7 @@ status_t LookupShellLink(bela::MemView mv, hazel_result &hr) {
     offset += l + 2;
   }
 
-  hr.assign(types::shelllink, L"Windows Shortcut");
+  hr.assign(types::lnk, L"Windows Shortcut");
   std::vector<std::wstring> av;
   shl::FlagsToArray(flag, av);
   hr.append(L"Attribute", std::move(av));
