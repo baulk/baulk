@@ -286,6 +286,8 @@ void MainWindow::OnResize(UINT width, UINT height) {
 HRESULT MainWindow::InitializeControl() {
 #ifdef _M_X64
   tables.Archs = {L"x64", L"arm64", L"x86", L"arm"};
+#elif defined(_M_ARM64)
+  tables.Archs = {L"arm64", L"x86", L"x64", L"arm"};
 #else
   tables.Archs = {L"x86", L"x64", L"arm64", L"arm"};
 #endif
