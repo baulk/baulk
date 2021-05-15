@@ -25,14 +25,14 @@ inline std::optional<std::wstring> GitForWindowsInstallPath(bela::error_code &ec
   }
   auto closer = bela::finally([&] { RegCloseKey(hkey); });
   wchar_t buffer[4096];
-  DWORD regtype = 0;
+  DWORD type = 0;
   DWORD bufsize = sizeof(buffer);
-  if (RegQueryValueExW(hkey, L"InstallPath", nullptr, &regtype, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ok) {
+  if (RegQueryValueExW(hkey, L"InstallPath", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ok) {
     ec = bela::make_system_error_code();
     return std::nullopt;
   }
-  if (regtype != REG_SZ) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"InstallPath not REG_SZ: ", regtype);
+  if (type != REG_SZ) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"InstallPath not REG_SZ: ", type);
     return std::nullopt;
   }
   return std::make_optional<std::wstring>(buffer);

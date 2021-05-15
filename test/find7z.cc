@@ -1,11 +1,10 @@
-//
+#include <bela/base.hpp>
 #include <bela/path.hpp>
-#include <bela/process.hpp>
+#include <bela/terminal.hpp>
 #include <bela/simulator.hpp>
 #include <bela/strip.hpp>
-#include "fs.hpp"
 
-namespace baulk::sevenzip {
+namespace baulk::s7z {
 constexpr auto ok = ERROR_SUCCESS;
 inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
   HKEY hkey = nullptr;
@@ -63,18 +62,12 @@ inline std::optional<std::wstring> lookup_sevenzip() {
   }
   return std::nullopt;
 }
+} // namespace baulk::s7z
 
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
-  auto s7z = lookup_sevenzip();
-  if (!s7z) {
-    ec = bela::make_error_code(ERROR_NOT_FOUND, L"7z not install");
-    return false;
+int wmain() {
+  if (auto sz = baulk::s7z::lookup_sevenzip(); sz) {
+    bela::FPrintF(stderr, L"Find 7z %s\n", *sz);
   }
-  bela::process::Process process;
-  if (process.Execute(*s7z, L"e", L"-spf", L"-y", src, bela::StringCat(L"-o", outdir)) != 0) {
-    ec = process.ErrorCode();
-    return false;
-  }
-  return true;
+
+  return 0;
 }
-} // namespace baulk::sevenzip
