@@ -8,22 +8,22 @@ namespace standard {
 bool Regularize(std::wstring_view path);
 }
 namespace exe {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
 bool Regularize(std::wstring_view path);
 } // namespace exe
 namespace msi {
 
-bool Decompress(std::wstring_view msi, std::wstring_view outdir, bela::error_code &ec);
+bool Decompress(std::wstring_view msi, std::wstring_view dest, bela::error_code &ec);
 bool Regularize(std::wstring_view path);
 } // namespace msi
 namespace zip {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
 } // namespace zip
 namespace sevenzip {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
 } // namespace sevenzip
 namespace tar {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
 }
 
 struct decompress_handler_t {

@@ -14,12 +14,12 @@ bool Regularize(std::wstring_view path) {
 } // namespace standard
 
 namespace exe {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
-  if (!baulk::fs::MakeDir(outdir, ec)) {
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+  if (!baulk::fs::MakeDir(dest, ec)) {
     return false;
   }
   auto fn = baulk::fs::FileName(src);
-  auto newfile = bela::StringCat(outdir, L"\\", fn);
+  auto newfile = bela::StringCat(dest, L"\\", fn);
   auto newfileold = bela::StringCat(newfile, L".old");
   if (bela::PathExists(newfile)) {
     if (MoveFileW(newfile.data(), newfileold.data()) != TRUE) {

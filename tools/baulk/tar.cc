@@ -1,77 +1,116 @@
 /// ----- support tar.*
 #include <string_view>
 #include <bela/path.hpp>
-#include <bela/process.hpp>
-#include <bela/simulator.hpp>
 #include <regutils.hpp>
+#include <tar.hpp>
+#include "baulk.hpp"
 #include "decompress.hpp"
 #include "fs.hpp"
+#include "indicators.hpp"
 
 namespace baulk::tar {
 
-inline bool initialize_baulktar(std::wstring &tar) {
-  bela::error_code ec;
-  auto parent = bela::ExecutableParent(ec);
-  if (!parent) {
-    return false;
+std::string_view BaseName(std::string_view name) {
+  if (name.empty()) {
+    return ".";
   }
-  // rethink tar
-  if (tar = bela::StringCat(*parent, L"\\links\\baulktar.exe"); bela::PathExists(tar)) {
-    return true;
+  if (name.size() == 2 && name[1] == ':') {
+    return ".";
   }
-  // // Full UTF-8 support
-  // if (tar = bela::StringCat(*parent, L"\\links\\wintar.exe");
-  //     bela::PathExists(tar)) {
-  //   return true;
-  // }
-  // libarchive bsdtar, baulk build
-  if (tar = bela::StringCat(*parent, L"\\links\\bsdtar.exe"); bela::PathExists(tar)) {
-    return true;
+  if (name.size() > 2 && name[1] == ':') {
+    name.remove_prefix(2);
   }
-  return false;
+  auto i = name.size() - 1;
+  for (; i != 0 && bela::IsPathSeparator(name[i]); i--) {
+    name.remove_suffix(1);
+  }
+  if (name.size() == 1 && bela::IsPathSeparator(name[0])) {
+    return ".";
+  }
+  for (; i != 0 && !bela::IsPathSeparator(name[i - 1]); i--) {
+  }
+  return name.substr(i);
 }
 
-inline bool initialize_msys2tar(std::wstring &tar, bela::env::Simulator &simulator) {
-  bela::error_code ec;
-  auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
-  if (!installPath) {
-    return false;
+void showProgress(const bela::terminal::terminal_size &termsz, std::string_view filename) {
+  auto suglen = static_cast<size_t>(termsz.columns) - 8;
+  if (auto n = bela::StringWidth(filename); n <= suglen) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
+    return;
   }
-  bela::StrAppend(&tar, *installPath, L"\\user\\bin\\tar.exe");
-  if (!bela::PathExists(tar)) {
-    return false;
+  auto basename = BaseName(filename);
+  auto n = bela::StringWidth(basename);
+  if (n <= suglen) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", basename);
+    return;
   }
-  // tar.xz support
-#ifdef _M_X64
-  auto xz64 = bela::StringCat(*installPath, L"\\mingw64\\bin\\xz.exe");
-  if (bela::PathExists(xz64)) {
-    simulator.PathAppend(bela::StringCat(*installPath, L"\\mingw64\\bin"));
-    return true;
-  }
-#endif
-  auto xz = bela::StringCat(*installPath, L"\\mingw32\\bin\\xz.exe");
-  if (bela::PathExists(xz)) {
-    simulator.PathAppend(bela::StringCat(*installPath, L"\\mingw64\\bin"));
-  }
-  return true;
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...%s\x1b[0m", basename.substr(n - suglen));
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
-  if (!baulk::fs::MakeDir(outdir, ec)) {
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+  if (!baulk::fs::MakeDir(dest, ec)) {
     return false;
   }
-  bela::env::Simulator simulator;
-  simulator.InitializeEnv();
-  std::wstring tar;
-  if (!initialize_baulktar(tar) && !initialize_msys2tar(tar, simulator) && !simulator.LookPath(L"tar.exe", tar)) {
-    ec = bela::make_error_code(ERROR_NOT_FOUND, L"tar not install");
-    return false;
+  bela::terminal::terminal_size termsz{0};
+  if (!baulk::IsQuietMode) {
+    if (bela::terminal::IsSameTerminal(stderr)) {
+      if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
+        CygwinTerminalSize(termsz);
+      } else {
+        bela::terminal::TerminalSize(stderr, termsz);
+      }
+    }
   }
-  bela::process::Process process(&simulator);
-  process.Chdir(outdir);
-  if (process.Execute(tar, L"-xvf", src) != 0) {
-    ec = process.ErrorCode();
-    return false;
+  DbgPrint(L"destination %s", dest);
+  auto fr = baulk::archive::tar::OpenFile(src, ec);
+  if (fr == nullptr) {
+    bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec.message);
+    return 1;
+  }
+  auto wr = baulk::archive::tar::MakeReader(*fr, ec);
+  std::shared_ptr<baulk::archive::tar::Reader> tr;
+  if (wr != nullptr) {
+    tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
+  } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
+    tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
+  } else {
+    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec.message);
+    return 1;
+  }
+  for (;;) {
+    auto fh = tr->Next(ec);
+    if (!fh) {
+      if (ec.code == bela::ErrEnded) {
+        break;
+      }
+      bela::FPrintF(stderr, L"\nuntar error %s\n", ec.message);
+      break;
+    }
+    showProgress(termsz, fh->Name);
+    auto out = baulk::archive::PathCat(dest, fh->Name);
+    if (!out) {
+      continue;
+    }
+    if (fh->Size == 0) {
+      continue;
+    }
+    auto fd = baulk::archive::NewFD(*out, ec, true);
+    if (!fd) {
+      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
+      continue;
+    }
+    fd->SetTime(fh->ModTime, ec);
+    if (!tr->WriteTo(
+            [&](const void *data, size_t len, bela::error_code &ec) -> bool {
+              //
+              return fd->Write(data, len, ec);
+            },
+            fh->Size, ec)) {
+      fd->Discard();
+    }
+  }
+  if (!baulk::IsQuietMode) {
+    bela::FPrintF(stderr, L"\n");
   }
   return true;
 }

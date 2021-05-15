@@ -199,9 +199,9 @@ INT WINAPI msi_ui_callback(LPVOID ctx, UINT iMessageType, LPCWSTR szMessage) {
   return pg->Invoke(iMessageType, szMessage);
 }
 
-bool Decompress(std::wstring_view msi, std::wstring_view outdir, bela::error_code &ec) {
+bool Decompress(std::wstring_view msi, std::wstring_view dest, bela::error_code &ec) {
   Progressor pg(msi);
-  auto cmd = bela::StringCat(L"ACTION=ADMIN TARGETDIR=\"", outdir, L"\"");
+  auto cmd = bela::StringCat(L"ACTION=ADMIN TARGETDIR=\"", dest, L"\"");
   MsiSetInternalUI(INSTALLUILEVEL(INSTALLUILEVEL_NONE | INSTALLUILEVEL_SOURCERESONLY), nullptr);
   // https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluiw
   MsiSetExternalUIW(msi_ui_callback,
