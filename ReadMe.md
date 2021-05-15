@@ -221,7 +221,7 @@ In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk execu
 |`exe`|-|-|
 |`zip`|Built-in|Support deflate/bzip2/zstd/deflate64/xz/ppmd, Not support encryption|
 |`msi`|Built-in, based on MSI API|-|
-|`7z`|Priority:</br>baulk7z-Baulk distribution</br>7z-installed using baulk install</br>7z-environment variables in the format of `tar.*` cannot be decompressed once Completed, so it is recommended to use `tar` to decompress `tar.*` compressed package|
+|`7z`|Priority:</br>baulk7z - Baulk distribution</br>7z - installed by baulk</br>7z - find in `PATH`|decompress format support by 7-zip|
 |`tar`|Built-in|Support gzip/xz/zstd/bzip/brotli|
 
 In the manifest file, there may also be `links/launchers`, and baulk will create symbolic links for specific files according to the settings of `links`. With Visual Studio installed, baulk will create a launcher based on the `launchers` setting, if If Visual Studio is not installed, it will use `baulk-lnk` to create an analog launcher. If baulk runs on Windows x64 or ARM64 architecture, there will be some small differences, that is, the platform-related URL/Launchers/Links is preferred, as follows:
