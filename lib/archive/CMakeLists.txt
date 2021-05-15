@@ -130,59 +130,6 @@ target_compile_definitions(zstd PRIVATE XXH_PRIVATE_API)
 target_compile_definitions(zstd PRIVATE ZSTD_MULTITHREAD)
 target_include_directories(zstd PRIVATE zstd zstd/common zstd/legacy)
 
-# minizip
-add_library(
-  minizip STATIC
-  minizip/mz_crypt_win32.c
-  minizip/mz_crypt.c
-  minizip/mz_os.c
-  minizip/mz_os_win32.c
-  minizip/mz_strm.c
-  minizip/mz_strm_buf.c
-  minizip/mz_strm_bzip.c
-  minizip/mz_strm_lzma.c
-  minizip/mz_strm_mem.c
-  minizip/mz_strm_os_win32.c
-  minizip/mz_strm_split.c
-  minizip/mz_strm_wzaes.c
-  minizip/mz_strm_lzma.c
-  minizip/mz_strm_zlib.c
-  minizip/mz_strm_zstd.c
-  minizip/mz_zip.c
-  minizip/mz_zip_rw.c)
-
-set(MINIZIP_DEF)
-set(MINIZIP_INC)
-list(APPEND MINIZIP_DEF -DHAVE_BZIP2)
-list(APPEND MINIZIP_DEF -D_CRT_SECURE_NO_DEPRECATE)
-list(APPEND MINIZIP_DEF -DHAVE_WZAES)
-list(APPEND MINIZIP_DEF -DHAVE_ZLIB)
-list(APPEND MINIZIP_DEF -DHAVE_LZMA)
-list(APPEND MINIZIP_DEF -DHAVE_ZSTD)
-list(APPEND MINIZIP_DEF -DLZMA_API_STATIC)
-list(APPEND MINIZIP_DEF -DHAVE_IMMINTRIN_H)
-list(APPEND MINIZIP_DEF -DHAVE_INTTYPES_H)
-list(APPEND MINIZIP_DEF -DHAVE_LIMITS_H)
-list(APPEND MINIZIP_DEF -DHAVE_MEMORY_H)
-list(APPEND MINIZIP_DEF -DHAVE_STDBOOL_H)
-list(APPEND MINIZIP_DEF -DHAVE_STDDEF_H)
-list(APPEND MINIZIP_DEF -DHAVE_STDINT_H)
-list(APPEND MINIZIP_DEF -DHAVE_STRING_H)
-list(APPEND MINIZIP_DEF -DHAVE_SYS_TYPES_H)
-list(APPEND MINIZIP_INC bzip2)
-list(APPEND MINIZIP_INC chromium_zlib)
-list(APPEND MINIZIP_INC liblzma/api)
-list(APPEND MINIZIP_INC zstd)
-
-target_compile_definitions(minizip PRIVATE ${MINIZIP_DEF})
-target_include_directories(minizip PRIVATE ${MINIZIP_INC})
-target_link_libraries(
-  minizip
-  lzma
-  zlib
-  zstd
-  advapi32)
-
 add_subdirectory(ced)
 add_subdirectory(ppmd)
 
@@ -241,7 +188,6 @@ add_library(
   zip/xz.cc
   zip/zip.cc
   zip/zstd.cc
-  oldzip.cc
   bzip2/blocksort.c
   bzip2/bzlib.c
   bzip2/compress.c
@@ -251,14 +197,23 @@ add_library(
   bzip2/randtable.c
   ${BROTLI_SOURCES})
 
-target_include_directories(baulkarchive PRIVATE brotli/include)
-target_include_directories(baulkarchive PRIVATE ${MINIZIP_INC})
-target_include_directories(baulkarchive PRIVATE ced)
-target_compile_options(baulkarchive PRIVATE ${LZMA_DEF} -DBZ_NO_STDIO)
+set(BAULK_ZIP_INC)
+list(APPEND BAULK_ZIP_INC bzip2)
+list(APPEND BAULK_ZIP_INC chromium_zlib)
+list(APPEND BAULK_ZIP_INC liblzma/api)
+list(APPEND BAULK_ZIP_INC zstd)
+list(APPEND BAULK_ZIP_INC brotli/include)
+list(APPEND BAULK_ZIP_INC ced)
+
+target_include_directories(baulkarchive PRIVATE ${BAULK_ZIP_INC})
+target_compile_options(baulkarchive PRIVATE ${LZMA_DEF})
 target_link_libraries(
   baulkarchive
   belawin
   deflate64
-  minizip
+  lzma
+  zlib
+  zstd
   Ppmd
-  ced)
+  ced
+  advapi32)

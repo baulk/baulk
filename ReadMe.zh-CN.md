@@ -221,7 +221,7 @@ baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的
 |扩展|解压程序|限制|
 |---|---|---|
 |`exe`|-|-|
-|`zip`|内置，基于 minizip|支持 deflate/bzip2/zstd，不支持加密和 deflate64（deflate64 可以使用 `7z`）|
+|`zip`|内置|支持 deflate/bzip2/zstd，不支持加密和 deflate64（deflate64 可以使用 `7z`）|
 |`msi`|内置，基于 MSI API|-|
 |`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
 |`tar`|优先级：</br>baulktar - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 deflate64|

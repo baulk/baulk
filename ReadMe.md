@@ -219,7 +219,7 @@ In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk execu
 |Extended|Unzip Program|Limited|
 |---|---|---|
 |`exe`|-|-|
-|`zip`|Built-in, based on minizip|Support deflate/bzip2/zstd, Not support encryption abd deflate64 (deflate64 can use `7z`)|
+|`zip`|Built-in|Support deflate/bzip2/zstd, Not support encryption abd deflate64 (deflate64 can use `7z`)|
 |`msi`|Built-in, based on MSI API|-|
 |`7z`|Priority:</br>baulk7z-Baulk distribution</br>7z-installed using baulk install</br>7z-environment variables in the format of `tar.*` cannot be decompressed once Completed, so it is recommended to use `tar` to decompress `tar.*` compressed package|
 |`tar`|Priority:</br>baulktar-modern reconstruction of BaulkTar bsdtar</br>bsdtar-Baulk build</br>MSYS2 tar-carried by Git for Windows</br>Windows tar|Windows built-in Tar does not support xz (based on libarchive bsdtar), but bsdtar built by baulk does not support deflate64 when decompressing zip|

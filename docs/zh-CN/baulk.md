@@ -88,7 +88,7 @@ baulk 提供了 baulk-exec 在命令行中执行 baulk-exec 可以初始化 baul
 |扩展|解压程序|限制|
 |---|---|---|
 |`exe`|-|-|
-|`zip`|内置，基于 minizip|支持 deflate/bzip2/zstd，不支持加密和 deflate64（deflate64 可以使用 `7z`）|
+|`zip`|内置|支持 deflate/bzip2/zstd，不支持加密和 deflate64（deflate64 可以使用 `7z`）|
 |`msi`|内置，基于 MSI API|此方式仅作解压，和在资源管理器点击安装不同|
 |`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
 |`tar`|优先级：</br>baulktar - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 deflate64|
@@ -104,7 +104,7 @@ baulk-exec cmake --version
 
 baulk 使用 WinHTTP 实现 HTTP 下载功能，能够很好的处理代理的情况，另外，baulk 还会解析 `HTTPS_PROXY` 环境变量，还支持 `--https-proxy` 设置代理，但是，我们建议应该优先使用支持设置 Windows 系统代理的工具。
 
-baulk 基于 minizip 内置了 zip 提取能力，支持使用 ZSTD 压缩算法的 ZIP 文件，这比市面上很多压缩软件要快一步。baulk 还内置了 `bela::hash` 支持 SHA2(SHA224, SHA256, SHA384, SHA512) SHA3(SHA3-224, SHA3-256, SHA3-384, SHA3-512)，以及 BLAKE3。由于安全问题不支持 MD5 和 SHA1，因此在 bucket 存储包哈希时应该选择使用这里列出的哈希算法，哈希字符串使用前缀匹配，默认即无前缀时为 SHA256。
+baulk 内置了 zip 提取能力，支持使用 ZSTD 压缩算法的 ZIP 文件，这比市面上很多压缩软件要快一步。baulk 还内置了 `bela::hash` 支持 SHA2(SHA224, SHA256, SHA384, SHA512) SHA3(SHA3-224, SHA3-256, SHA3-384, SHA3-512)，以及 BLAKE3。由于安全问题不支持 MD5 和 SHA1，因此在 bucket 存储包哈希时应该选择使用这里列出的哈希算法，哈希字符串使用前缀匹配，默认即无前缀时为 SHA256。
 
 ```c++
   constexpr HashPrefix hnmaps[] = {
