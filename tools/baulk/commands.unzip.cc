@@ -31,7 +31,7 @@ private:
   bool extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec);
 };
 
-inline std::wstring resolveDestination(const argv_t &argv, std::wstring_view zipfile) {
+inline std::wstring resolveZipDestination(const argv_t &argv, std::wstring_view zipfile) {
   if (argv.size() > 1) {
     return bela::PathAbsolute(argv[1]);
   }
@@ -43,7 +43,7 @@ inline std::wstring resolveDestination(const argv_t &argv, std::wstring_view zip
 
 bool Extractor::OpenReader(const argv_t &argv, bela::error_code &ec) {
   auto zipfile = bela::PathAbsolute(argv[0]);
-  destination = resolveDestination(argv, zipfile);
+  destination = resolveZipDestination(argv, zipfile);
   return reader.OpenReader(zipfile, ec);
 }
 
@@ -132,8 +132,8 @@ void usage_unzip() {
 Extract compressed files in a ZIP archive (experimental).
 
 Example:
-  baulk untar curl-7.76.0.zip
-  baulk untar curl-7.76.0.zip curl-dest
+  baulk unzip curl-7.76.0.zip
+  baulk unzip curl-7.76.0.zip curl-dest
 
 )");
 }

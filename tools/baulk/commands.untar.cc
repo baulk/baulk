@@ -14,7 +14,7 @@ Example:
 
 )");
 }
-inline std::wstring resolveDestination(const argv_t &argv, std::wstring_view tarfile) {
+inline std::wstring resolveTarDestination(const argv_t &argv, std::wstring_view tarfile) {
   if (argv.size() > 1) {
     return bela::PathAbsolute(argv[1]);
   }
@@ -30,7 +30,7 @@ int cmd_untar(const argv_t &argv) {
     return 1;
   }
   auto file = bela::PathAbsolute(argv[0]);
-  auto root = resolveDestination(argv, file);
+  auto root = resolveTarDestination(argv, file);
   DbgPrint(L"destination %s", root);
   bela::error_code ec;
   auto fr = baulk::archive::tar::OpenFile(file, ec);
