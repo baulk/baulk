@@ -42,8 +42,8 @@
 
 #ifndef _WINSOCKAPI_
 struct timeval {
-  long tv_sec;  /* seconds */
-  long tv_usec; /* and microseconds */
+  long tv_sec{0};  /* seconds */
+  long tv_usec{0}; /* and microseconds */
 };
 #endif
 
@@ -647,12 +647,14 @@ template <std::intmax_t N> constexpr Duration FromInt64(int64_t v, std::ratio<1,
 constexpr Duration FromInt64(int64_t v, std::ratio<60>) {
   return (v <= (std::numeric_limits<int64_t>::max)() / 60 && v >= (std::numeric_limits<int64_t>::min)() / 60)
              ? MakeDuration(v * 60)
-             : v > 0 ? InfiniteDuration() : -InfiniteDuration();
+         : v > 0 ? InfiniteDuration()
+                 : -InfiniteDuration();
 }
 constexpr Duration FromInt64(int64_t v, std::ratio<3600>) {
   return (v <= (std::numeric_limits<int64_t>::max)() / 3600 && v >= (std::numeric_limits<int64_t>::min)() / 3600)
              ? MakeDuration(v * 3600)
-             : v > 0 ? InfiniteDuration() : -InfiniteDuration();
+         : v > 0 ? InfiniteDuration()
+                 : -InfiniteDuration();
 }
 
 // IsValidRep64<T>(0) is true if the expression `int64_t{std::declval<T>()}` is
@@ -709,9 +711,9 @@ constexpr Duration Hours(int64_t n) { return time_internal::FromInt64(n, std::ra
 constexpr bool operator<(Duration lhs, Duration rhs) {
   return time_internal::GetRepHi(lhs) != time_internal::GetRepHi(rhs)
              ? time_internal::GetRepHi(lhs) < time_internal::GetRepHi(rhs)
-             : time_internal::GetRepHi(lhs) == (std::numeric_limits<int64_t>::min)()
-                   ? time_internal::GetRepLo(lhs) + 1 < time_internal::GetRepLo(rhs) + 1
-                   : time_internal::GetRepLo(lhs) < time_internal::GetRepLo(rhs);
+         : time_internal::GetRepHi(lhs) == (std::numeric_limits<int64_t>::min)()
+             ? time_internal::GetRepLo(lhs) + 1 < time_internal::GetRepLo(rhs) + 1
+             : time_internal::GetRepLo(lhs) < time_internal::GetRepLo(rhs);
 }
 
 constexpr bool operator==(Duration lhs, Duration rhs) {
@@ -731,14 +733,13 @@ constexpr Duration operator-(Duration d) {
   // Finally we're in the case where rep_lo_ is non-zero, and we can borrow
   // a second's worth of ticks and avoid overflow (as negating int64_t-min + 1
   // is safe).
-  return time_internal::GetRepLo(d) == 0
-             ? time_internal::GetRepHi(d) == (std::numeric_limits<int64_t>::min)()
-                   ? InfiniteDuration()
-                   : time_internal::MakeDuration(-time_internal::GetRepHi(d))
-             : time_internal::IsInfiniteDuration(d)
-                   ? time_internal::OppositeInfinity(d)
-                   : time_internal::MakeDuration(time_internal::NegateAndSubtractOne(time_internal::GetRepHi(d)),
-                                                 time_internal::kTicksPerSecond - time_internal::GetRepLo(d));
+  return time_internal::GetRepLo(d) == 0 ? time_internal::GetRepHi(d) == (std::numeric_limits<int64_t>::min)()
+                                               ? InfiniteDuration()
+                                               : time_internal::MakeDuration(-time_internal::GetRepHi(d))
+         : time_internal::IsInfiniteDuration(d)
+             ? time_internal::OppositeInfinity(d)
+             : time_internal::MakeDuration(time_internal::NegateAndSubtractOne(time_internal::GetRepHi(d)),
+                                           time_internal::kTicksPerSecond - time_internal::GetRepLo(d));
 }
 
 constexpr Duration InfiniteDuration() {
@@ -809,8 +810,8 @@ constexpr Time FromFileTime(FILETIME ft) {
 }
 
 struct time_parts {
-  int64_t sec;
-  uint32_t nsec;
+  int64_t sec{0};
+  uint32_t nsec{0};
 };
 
 constexpr time_parts Split(Time t) {

@@ -87,12 +87,10 @@ func eastasian(out io.Writer, in io.Reader) error {
 				hi: r2,
 			})
 		case "Na":
-			if r1 > 0xFF {
-				na = append(na, rrange{
-					lo: r1,
-					hi: r2,
-				})
-			}
+			na = append(na, rrange{
+				lo: r1,
+				hi: r2,
+			})
 		case "N":
 			nu = append(nu, rrange{
 				lo: r1,
@@ -172,8 +170,8 @@ func emoji(out io.Writer, in io.Reader) error {
 const header = `// ------------ codegen by ucwidth.go ------------
 namespace bela::runewidth {
 struct interval {
-	char32_t first;
-	char32_t last;
+  char32_t first;
+  char32_t last;
 };
 
 `
