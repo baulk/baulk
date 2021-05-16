@@ -85,18 +85,18 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     }
     nlohmann::json newlinkobj;
     auto linksobj = it.value();
-    for (auto it = linksobj.begin(); it != linksobj.end(); ++it) {
-      auto raw = it.value().get<std::string>();
+    for (auto oit = linksobj.begin(); oit != linksobj.end(); ++oit) {
+      auto raw = oit.value().get<std::string>();
       auto value = bela::ToWide(raw);
       std::vector<std::wstring_view> mv = bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
       if (mv.size() < 2) {
         continue;
       }
       if (mv[0] != pkg) {
-        newlinkobj[it.key()] = raw;
+        newlinkobj[oit.key()] = raw;
         continue;
       }
-      auto file = bela::StringCat(linkbindir, L"\\", bela::ToWide(it.key()));
+      auto file = bela::StringCat(linkbindir, L"\\", bela::ToWide(oit.key()));
       if (!std::filesystem::remove(file, e)) {
         auto ec = bela::from_std_error_code(e);
         baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, ec.message);

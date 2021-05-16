@@ -263,7 +263,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
     sparseMap.clear();
   }
   if (sparseMap.size() != static_cast<size_t>(2 * numEntries)) {
-    ec = bela::make_error_code(L"tar: pax sparse  invalid sparse map size");
+    ec = bela::make_error_code(L"tar: pax sparse invalid sparse map size");
     return false;
   }
   spd.resize(numEntries);
@@ -271,7 +271,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
     // 0,0,1 1,2,3 2,4,5 3,6,7 4,8,9
     if (!bela::SimpleAtoi(sparseMap[2 * i], &spd[i].Offset) ||
         !bela::SimpleAtoi(sparseMap[2 * i + 1], &spd[i].Length)) {
-      ec = bela::make_error_code(L"tar: pax sparse  invalid sparse offset or length");
+      ec = bela::make_error_code(L"tar: pax sparse invalid sparse offset or length");
       return false;
     }
   }
@@ -323,7 +323,7 @@ bool Reader::readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec) {
   spd.resize(numEntries);
   for (int64_t i = 0; i < numEntries; i++) {
     if (!bela::SimpleAtoi(nextToken(), &spd[i].Offset) || !bela::SimpleAtoi(nextToken(), &spd[i].Length)) {
-      ec = bela::make_error_code(L"tar: pax sparse  invalid sparse offset or length");
+      ec = bela::make_error_code(L"tar: pax sparse invalid sparse offset or length");
       return false;
     }
   }

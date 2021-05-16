@@ -202,7 +202,7 @@ bool Searcher::InitializeVisualStudioEnv(bela::error_code &ec) {
 
 // $installationPath/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt
 
-bool Executor::Initialize(bela::error_code &ec) {
+bool Executor::Initialize() {
   simulator.InitializeCleanupEnv();
   Searcher searcher;
   if (!searcher.InitializeVisualStudioEnv(ec)) {

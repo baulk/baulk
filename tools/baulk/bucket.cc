@@ -219,7 +219,6 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::err
   size_t pkgsame = 0;
   for (const auto &bk : baulk::BaulkBuckets()) {
     auto pkgmeta = bela::StringCat(bucketsdir, L"\\", bk.name, L"\\bucket\\", pkgname, L".json");
-    bela::error_code ec;
     auto pkgN = PackageMeta(pkgmeta, pkgname, bk.name, ec);
     if (!pkgN) {
       if (ec) {

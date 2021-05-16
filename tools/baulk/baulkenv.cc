@@ -33,7 +33,13 @@ public:
   }
   std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
-  bool InitializeExecutor(bela::error_code &ec) { return executor.Initialize(ec); }
+  bool InitializeExecutor(bela::error_code &ec) {
+    if (!executor.Initialize()) {
+      ec = executor.LastErrorCode();
+      return false;
+    }
+    return true;
+  }
   bool IsFrozen(std::wstring_view pkg) const {
     for (const auto &p : freezepkgs) {
       if (pkg == p) {
