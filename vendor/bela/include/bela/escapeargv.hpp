@@ -19,7 +19,7 @@ public:
   static constexpr std::wstring_view Empty = L"\"\"";
 #else
   // libstdc++ call wcslen is bad
-  static constexpr std::wstring_view Empty{L"\"\"", sizeof(L"\"\"") - sizeof(wchar_t)};
+  static constexpr std::wstring_view Empty{L"\"\"", sizeof("\"\"")};
 #endif
 };
 template <> class Literal<char16_t> {

@@ -199,7 +199,7 @@ inline size_t char32tochar16(char32_t rune, char16_t *dest) {
 
 template <typename T = char16_t, typename Allocator>
 inline size_t char32tochar16(char32_t rune, std::basic_string<T, std::char_traits<T>, Allocator> &dest) {
-  static_assert(sizeof(T) == 2, "Only supports one-byte character basic types");
+  static_assert(sizeof(T) == 2, "Only supports two-byte character basic types");
   if (rune <= 0xFFFF) {
     dest.push_back(issurrogate(rune) ? 0xFFFD : static_cast<T>(rune));
     return 1;
