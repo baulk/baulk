@@ -4,6 +4,7 @@
 #include <bela/process.hpp>
 #include <bela/subsitute.hpp>
 #include <bela/strip.hpp>
+#include <bela/time.hpp>
 #include <bela/pe.hpp>
 #include <baulkenv.hpp>
 #include <baulkrev.hpp>
@@ -28,6 +29,7 @@ Usage: baulk-exec [option] <command> [<args>] ...
   --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --unchanged-title    Keep the terminal title unchanged
+  --time               Summarize command system resource usage
 
 example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
@@ -76,6 +78,43 @@ private:
   std::wstring title;
 };
 
+inline bela::Duration FromKernelTick(FILETIME ft) {
+  auto tick = std::bit_cast<int64_t, FILETIME>(ft);
+  return bela::Microseconds(tick / 10);
+}
+
+struct Summarizer {
+  bela::Time startTime;
+  bela::Time endTime;
+  bela::Time creationTime;
+  bela::Time exitTime;
+  bela::Duration kernelTime;
+  bela::Duration userTime;
+  void SummarizeTime(HANDLE hProcess) {
+    FILETIME creation_time{0};
+    FILETIME exit_time{0};
+    FILETIME kernel_time{0};
+    FILETIME user_time{0};
+    if (GetProcessTimes(hProcess, &creation_time, &exit_time, &kernel_time, &user_time) != TRUE) {
+      auto ec = bela::make_system_error_code(L"GetProcessTimes() ");
+      bela::FPrintF(stderr, L"summarize time: %s\n", ec.message);
+      return;
+    }
+    bela::Time zeroTime;
+    creationTime = bela::FromFileTime(creation_time);
+    exitTime = bela::FromFileTime(exit_time);
+    kernelTime = FromKernelTick(kernel_time);
+    userTime = FromKernelTick(user_time);
+  }
+  void PrintTime() {
+    bela::FPrintF(stderr, L"Creation: %s\n", bela::FormatDuration(creationTime - startTime));
+    bela::FPrintF(stderr, L"Kernel:   %s\n", bela::FormatDuration(kernelTime));
+    bela::FPrintF(stderr, L"User:     %s\n", bela::FormatDuration(userTime));
+    bela::FPrintF(stderr, L"Exit:     %s\n", bela::FormatDuration(exitTime - startTime));
+    bela::FPrintF(stderr, L"Wall:     %s\n", bela::FormatDuration(endTime - startTime));
+  }
+};
+
 class Executor {
 public:
   Executor() = default;
@@ -90,6 +129,8 @@ private:
   std::wstring cwd;
   bool cleanup{false};
   bool console{true};
+  bool summarizeTime{false};
+  Summarizer summarizer;
   bool LookPath(std::wstring_view exe, std::wstring &file);
 };
 
@@ -149,6 +190,9 @@ int Executor::Exec() {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
+  if (summarizeTime) {
+    summarizer.startTime = bela::Now();
+  }
   if (CreateProcessW(string_nullable(target), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                      string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
@@ -165,6 +209,12 @@ int Executor::Exec() {
     return 0;
   }
   WaitForSingleObject(pi.hProcess, INFINITE);
+  if (summarizeTime) {
+    summarizer.endTime = bela::Now();
+    summarizer.SummarizeTime(pi.hProcess);
+    bela::FPrintF(stderr, L"run command '\x1b[34m%s\x1b[0m' use time: \n", ea.sv());
+    summarizer.PrintTime();
+  }
   DWORD exitCode;
   GetExitCodeProcess(pi.hProcess, &exitCode);
   return exitCode;
@@ -183,7 +233,8 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       .Add(L"vs", bela::no_argument, 1000) // load visual studio environment
       .Add(L"vs-preview", bela::no_argument, 1001)
       .Add(L"clang", bela::no_argument, 1002)
-      .Add(L"unchanged-title", bela::no_argument, 1003);
+      .Add(L"unchanged-title", bela::no_argument, 1003)
+      .Add(L"time", bela::no_argument, 1004);
   bool usevs = false;
   bool usevspreview = false;
   bool clang = false;
@@ -235,6 +286,9 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
           break;
         case 1003:
           unchangedTitle = true;
+          break;
+        case 1004:
+          summarizeTime = true;
           break;
         default:
           break;

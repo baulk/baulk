@@ -681,12 +681,13 @@ BELA_CONST_INIT const DisplayUnit kDisplayMin = {L"m", -1, 0.0};  // prec ignore
 BELA_CONST_INIT const DisplayUnit kDisplayHour = {L"h", -1, 0.0}; // prec ignored
 
 void AppendNumberUnit(std::wstring *out, int64_t n, DisplayUnit unit) {
-  wchar_t buf[sizeof("2562047788015216")]; // hours in max duration
-  wchar_t *const ep = buf + sizeof(buf);
+  constexpr auto kBufferSize = sizeof("2562047788015216");
+  wchar_t buf[kBufferSize]; // hours in max duration
+  wchar_t *const ep = buf + kBufferSize;
   wchar_t *bp = Format64(ep, 0, n);
   if (*bp != L'0' || bp + 1 != ep) {
     out->append(bp, ep - bp);
-    out->append(unit.abbr.data(), unit.abbr.size());
+    out->append(unit.abbr);
   }
 }
 
@@ -696,7 +697,7 @@ void AppendNumberUnit(std::wstring *out, double n, DisplayUnit unit) {
   constexpr int kBufferSize = std::numeric_limits<double>::digits10;
   const int prec = (std::min)(kBufferSize, unit.prec);
   wchar_t buf[kBufferSize]; // also large enough to hold integer part
-  wchar_t *ep = buf + sizeof(buf);
+  wchar_t *ep = buf + kBufferSize;
   double d = 0;
   int64_t frac_part = static_cast<int64_t>(Round(std::modf(n, &d) * unit.pow10));
   int64_t int_part = static_cast<int64_t>(d);
@@ -711,7 +712,7 @@ void AppendNumberUnit(std::wstring *out, double n, DisplayUnit unit) {
       }
       out->append(bp, ep - bp);
     }
-    out->append(unit.abbr.data(), unit.abbr.size());
+    out->append(unit.abbr);
   }
 }
 
