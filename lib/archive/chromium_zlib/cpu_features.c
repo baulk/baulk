@@ -84,7 +84,7 @@ void ZLIB_INTERNAL cpu_check_features(void)
 }
 #endif
 
-#if (defined(__ARM_NEON__) || defined(__ARM_NEON))
+#if (defined(__ARM_NEON__) || defined(__ARM_NEON))|| defined(ARMV8_OS_WINDOWS))
 /*
  * iOS@ARM is a special case where we always have NEON but don't check
  * for crypto extensions.
