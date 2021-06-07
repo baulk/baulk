@@ -35,10 +35,10 @@ AppSupportURL=https://github.com/baulk/baulk
 LicenseFile=..\LICENSE
 WizardStyle=modern
 DefaultGroupName=baulk
-UninstallDisplayIcon={app}\baulk.exe
 Compression=lzma2
 SolidCompression=yes
 OutputDir=..\build
+SetupIconFile=baulk-setup.ico
 ChangesEnvironment=true
 OutputBaseFilename={#BAULK_BASENAME}
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
@@ -60,6 +60,8 @@ PrivilegesRequired=lowest
 #else
 DefaultDirName={pf}\baulk
 #endif
+
+UninstallDisplayIcon={app}\bin\baulk.exe
 
 [Files]
 Source: "..\build\bin\baulk.exe"; DestDir: "{app}\bin"; DestName: "baulk.exe"
