@@ -1,20 +1,20 @@
 name: CI
-on: 
+on:
   push:
     paths-ignore:
       # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
       - "docs/**"
-      - '**.md'
-      - '**.txt'
-      - '!CMakeLists.txt'
-      - 'LICENSE'
+      - "**.md"
+      - "**.txt"
+      - "!CMakeLists.txt"
+      - "LICENSE"
   pull_request:
     paths-ignore:
       - "docs/**"
-      - '**.md'
-      - '**.txt'
-      - '!CMakeLists.txt'
-      - 'LICENSE'
+      - "**.md"
+      - "**.txt"
+      - "!CMakeLists.txt"
+      - "LICENSE"
 jobs:
   build:
     name: Build
@@ -26,13 +26,10 @@ jobs:
         include:
           - baulk_target: baulk-win64
             msvc_arch: amd64
-            build_dir: build
           - baulk_target: baulk-win32
             msvc_arch: amd64_x86
-            build_dir: build.win32
           - baulk_target: baulk-arm64
             msvc_arch: amd64_arm64
-            build_dir: build.arm64
     steps:
       - uses: actions/checkout@v2
         with:
@@ -40,40 +37,39 @@ jobs:
       - name: compile-baulk
         shell: cmd
         env:
-          vc_arch: ${{ matrix.msvc_arch }}
-          workdir: ${{ matrix.build_dir }}
+          msvc_arch: ${{ matrix.msvc_arch }}
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %msvc_arch%
           set BAULK_REFNAME=${{ github.ref }}
-          mkdir %workdir%
-          cd %workdir%
+          mkdir build
+          cd build
           set CC=cl
           set CXX=cl
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
           ninja all
 
-      - name: Package release
+      - name: Package Release
         if: startsWith(github.ref, 'refs/tags/')
-        shell: pwsh
+        shell: cmd
+        env:
+          msvc_arch: ${{ matrix.msvc_arch }}
         # create package and show sha256 hash
-        run: |
-          Set-Location ${{ matrix.build_dir }}
-          # cleanup zip files
-          Remove-Item -Force *.zip
-          cpack -G ZIP
-          $item=Get-Item Baulk*.zip
-          $obj=Get-FileHash -Algorithm SHA256 $item.FullName
-          $baseName=Split-Path -Leaf $item.FullName
-          $env:BAULK_ASSET_NAME="$baseName"
-          $hashtext=$obj.Algorithm+":"+$obj.Hash.ToLower()
-          $hashtext|Out-File -Encoding utf8 -FilePath "$baseName.sum"
-          Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
-      - name: Upload release
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/package.ps1"
+      - name: Upload Release
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           file_glob: true
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.build_dir}}/Baulk-*.zip
+          file: build/Baulk-*.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload Setup
+        uses: svenstaro/upload-release-action@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          file_glob: true
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/BaulkSetu*.exe
           tag: ${{ github.ref }}
           overwrite: true
