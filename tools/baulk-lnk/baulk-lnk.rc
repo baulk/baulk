@@ -20,7 +20,7 @@ BLOCK "StringFileInfo"
 BEGIN
 BLOCK "000904b0"
 BEGIN
-VALUE "CompanyName", L"Force Charlie"
+VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk-lnk - Baulk extended launcher"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-cli.exe"

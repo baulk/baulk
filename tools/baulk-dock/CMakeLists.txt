@@ -1,4 +1,4 @@
-# Author: Force Charlie Copyright (C) 2020. Force Charlie. All Rights Reserved.
+# Author: Baulk contributors Copyright (C) 2020. Baulk contributors. All Rights Reserved.
 
 add_executable(
   baulk-dock WIN32
