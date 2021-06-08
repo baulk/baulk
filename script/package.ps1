@@ -23,7 +23,7 @@ switch ($MSVC_ARCH) {
         break
     }
     "amd64" {
-        $BaulkSetup = "BaulkSetupx64"
+        $BaulkSetup = "BaulkSetupX64"
         $ArchitecturesAllowed = "x64"
         $ArchitecturesInstallIn64BitMode = "x64"
         break
