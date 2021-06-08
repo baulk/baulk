@@ -13,7 +13,11 @@ A minimalist Windows package manager, installation-free, without modifying syste
 
 ## Get Started
 
-Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), then unzip it to any directory, click `baulkterminal.exe` to run and open the Windows Terminal.
+Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), You can choose to download the installation program corresponding to the Windows platform. The installation program provided by Baulk can be run without administrator rights. You can install it to any directory with non-administrator rights. You can check to create a desktop shortcut: 
+
+![](./docs/images/setup.png)
+
+Or you can download the compressed package and unzip it to any directory, click on `baulkterminal.exe` to run Windows Terminal. 
 
 ![](./docs/images/getstarted.png)
 
@@ -39,7 +43,7 @@ You can right-click to run `script/installmenu.bat` with administrator privilege
 
 ## Baulk Usage and Details
 
-The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the args following the command. 
+The baulk command is the core of the Baulk package manager, which implements functions such as installation, upgrade, and uninstallation of various reports. The command line parameters of baulk are roughly divided into three parts. The first part is `option`, which is used to specify or set some variables; the second part is `command`, which is the baulk subcommand, including installation and uninstallation, upgrade, update, freeze, unfreeze, etc. Command; the third part is the args following the command. 
 
 ```txt
 baulk - Minimal Package Manager for Windows
@@ -256,6 +260,33 @@ Baulk provides sha256sum b3sum two commands to help users calculate file hashes.
 
 In order to install different versions of the same software at the same time, baulk implements a virtual environment mechanism. By specifying `-Exxx` in baulkterminal or baulk-exec to load a specific package environment, for example, `-Eopenjdk15` loads openjdk15, `-Eopenjdk14` can load Openjdk14, these packages need to be configured in the bucket warehouse. In addition, baulk-dock can be switched graphically. Unlike baulk-exec, baulk-exec can load multiple VENVs at the same time, while baulk-dock only supports one.
 
+## Baulk executor
+
+baulk provides the `baulk-exec` command, which is a special launcher. Through this command, we can initialize the isolated baulk environment variable context and start a new process. The new process inherits the baulk isolated environment variable context. The tool enables baulk to install multiple versions of the same software in parallel, and releases provided by different manufacturers do not need to take into account environmental variables to interfere with each other. The advantage of using baulk-exec is that there is no need to modify the system environment variables, the environment variable context is temporary, and the process is destroyed when it exits. At present, the Baulk Terminal we run is also implemented by baulk-exec, and baulk-exec can also be widely used in various CI pipelines. 
+
+baulk-exec usage:
+
+```txt
+baulk-exec - Baulk extend executor
+Usage: baulk-exec [option] <command> [<args>] ...
+  -h|--help            Show usage text and quit
+  -v|--version         Show version number and quit
+  -V|--verbose         Make the operation more talkative
+  -C|--cleanup         Create clean environment variables to avoid interference
+  -W|--cwd             Set the command startup directory
+  -A|--arch            Select a specific arch, use native architecture by default
+  -E|--venv            Choose to load a specific package virtual environment
+  --vs                 Load Visual Studio related environment variables
+  --vs-preview         Load Visual Studio (Preview) related environment variables
+  --clang              Add Visual Studio's built-in clang to the PATH environment variable
+  --unchanged-title    Keep the terminal title unchanged
+  --time               Summarize command system resource usage
+
+example:
+  baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
+```
+
 ## Baulk Windows Terminal integration
 
 Baulk also provides the `baulkterminal.exe` program, which is highly integrated with Windows Terminal and can start Windows Terminal after setting the Baulk environment variable, which solves the problem of avoiding conflicts caused by tool modification of system environment variables and anytime, anywhere Contradictions of loading related environment variables, in the compressed package distributed by Baulk, we added `script/installmenu.bat` `script/installmenu.ps1` script, you can modify the registry, add a right-click menu to open Windows Terminal anytime, anywhere.
@@ -292,30 +323,10 @@ Usage: baulkterminal [option] ...
 
 ```
 
-## Baulk executor
+In addition to starting Windows Terminal through baulktermainl, you can also modify the command line of the default terminal of Windows Terminal and use baulk-exec to start the shell, so that the newly created shell has the environment variable context of baulk. For example, change the command line of Powershell Core to: 
 
-baulk provides the `baulk-exec` command, through which we can execute some commands with the baulk environment as the background. For example, `baulk-exec pwsh` can load the baulk environment and then start pwsh. This actually has the same effect as baulkterminal, but baulk-exec can solve scenarios where Windows Terminal cannot be used, such as in a container, when performing CI/CD.
-
-baulk-exec usage:
-
-```txt
-baulk-exec - Baulk extend executor
-Usage: baulk-exec [option] <command> [<args>] ...
-  -h|--help            Show usage text and quit
-  -v|--version         Show version number and quit
-  -V|--verbose         Make the operation more talkative
-  -C|--cleanup         Create clean environment variables to avoid interference
-  -W|--cwd             Set the command startup directory
-  -A|--arch            Select a specific arch, use native architecture by default
-  -E|--venv            Choose to load a specific package virtual environment
-  --vs                 Load Visual Studio related environment variables
-  --vs-preview         Load Visual Studio (Preview) related environment variables
-  --clang              Add Visual Studio's built-in clang to the PATH environment variable
-  --unchanged-title    Keep the terminal title unchanged
-
-example:
-  baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
-
+```
+C:\Dev\baulk\bin\baulk-exec.exe --vs --clang pwsh
 ```
 
 ## Baulk Dock

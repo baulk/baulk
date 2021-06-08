@@ -12,7 +12,12 @@ Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环�
 
 ## 开始使用 
 
-下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 然后将其解压到任意目录, 点击 `baulkterminal.exe` 后即可运行 Windows Terminal。
+下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 你可以选择下载对应 Windows 平台的安装程序，Baulk 提供的安装程序无需管理员权限即可运行，你可以将其安装到任意非管理员权限目录，你可以勾选创建桌面快捷方式：
+
+![](./docs/images/setup.png)
+
+
+或者你可以下载压缩包然后将其解压到任意目录, 点击 `baulkterminal.exe` 后即可运行 Windows Terminal。
 
 ![](./docs/images/getstarted.png)
 
@@ -40,7 +45,7 @@ baulk uninstall wget
 
 ## 命令行参数
 
-baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随子命令后的参数。不同的命令参数根据实际情况选择合适的参数。
+baulk 命令是 Baulk 包管理器的核心，实现各种报的安装，升级，和卸载等功能。baulk 的命令行参数大致分三部分，第一部分是 `option`，用于指定或者设置一些变量；第二部分是 `command` 即 baulk 子命令，包括安装卸载，升级，更新，冻结，解除冻结等命令；第三部分则是跟随子命令后的参数。不同的命令参数根据实际情况选择合适的参数。
 
 ```txt
 baulk - Minimal Package Manager for Windows
@@ -257,6 +262,33 @@ Baulk 提供了 sha256sum b3sum 两个命令帮助用户计算文件哈希值。
 
 为了支持同时安装同一软件的不同版本，baulk 实现了虚拟环境机制，通过在 baulkterminal 或者 baulk-exec 中指定 `-Exxx` 加载特定包的环境，比如 `-Eopenjdk15` 加载 openjdk15，`-Eopenjdk14` 则可以加载 openjdk14，这些包需要在 bucket 仓库中配置好。另外 baulk-dock 可以图形切换，与 baulk-exec 不同，baulk-exec 可以同时加载多个 VENV，而 baulk-dock 仅支持一种。
 
+## Baulk 执行器
+
+baulk 提供了 `baulk-exec` 命令，该命令是一个特殊的启动器，通过此命令我们可以初始化隔离的 baulk 环境变量上下文并启动新的进程，新的进程继承了 baulk 隔离的环境变量上下文，该工具使得 baulk 能够并行安装同一个软件的多个版本，不同的产商提供的发行版本而不用顾及环境变量互相干扰。使用 baulk-exec 的好处还在于不用修改系统环境变量，环境变量上下文是临时的，进程退出便销毁了。目前我们运行的 Baulk Terminal 也是依赖 baulk-exec 实现的，另外 baulk-exec 还可以被广泛的使用到各种 CI 流水线中。
+
+baulk-exec 帮助信息:
+
+```txt
+baulk-exec - Baulk extend executor
+Usage: baulk-exec [option] <command> [<args>] ...
+  -h|--help            Show usage text and quit
+  -v|--version         Show version number and quit
+  -V|--verbose         Make the operation more talkative
+  -C|--cleanup         Create clean environment variables to avoid interference
+  -W|--cwd             Set the command startup directory
+  -A|--arch            Select a specific arch, use native architecture by default
+  -E|--venv            Choose to load a specific package virtual environment
+  --vs                 Load Visual Studio related environment variables
+  --vs-preview         Load Visual Studio (Preview) related environment variables
+  --clang              Add Visual Studio's built-in clang to the PATH environment variable
+  --unchanged-title    Keep the terminal title unchanged
+  --time               Summarize command system resource usage
+
+example:
+  baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
+```
+
 ## Baulk Windows Terminal 集成
 
 Baulk 还提供了 `baulkterminal.exe` 程序，此程序与 Windows Terminal 高度集成，能够在设置好 Baulk 环境变量后启动 Windows Terminal，这样就解决了既要避免工具修改系统环境变量造成冲突，又要随时随地的加载相关环境变量的矛盾，在 Baulk 分发的压缩包中，我们添加了 `script/installmenu.bat` `script/installmenu.ps1` 脚本，可以修改注册表，添加右键菜单以随时随地打开 Windows Terminal。
@@ -293,31 +325,10 @@ Usage: baulkterminal [option] ...
 
 ```
 
-## Baulk 执行器
+除了通过 baulktermainl 启动 Windows Terminal，你还可以修改 Windows Terminal 默认终端的命令行，使用 baulk-exec 启动 shell，从而是新建的 shell 具备有 baulk 的环境变量上下文，比如将 Powershell Core 的命令行改为：
 
-baulk 提供了 `baulk-exec` 命令，通过此命令我们可以以 baulk 环境为背景执行一些命令，如 `baulk-exec pwsh` 就能够加载 baulk 环境然后启动 pwsh。这实际上和 baulkterminal 具有相同的作用，但 baulk-exec 可以解决无法使用 Windows Terminal 的场景，比如容器内，执行 CI/CD 时。
-
-baulk-exec usage:
-
-```txt
-baulk-exec - Baulk extend executor
-Usage: baulk-exec [option] <command> [<args>] ...
-  -h|--help            Show usage text and quit
-  -v|--version         Show version number and quit
-  -V|--verbose         Make the operation more talkative
-  -C|--cleanup         Create clean environment variables to avoid interference
-  -W|--cwd             Set the command startup directory
-  -A|--arch            Select a specific arch, use native architecture by default
-  -E|--venv            Choose to load a specific package virtual environment
-  --vs                 Load Visual Studio related environment variables
-  --vs-preview         Load Visual Studio (Preview) related environment variables
-  --clang              Add Visual Studio's built-in clang to the PATH environment variable
-  --unchanged-title    Keep the terminal title unchanged
-
-example:
-  baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
-
-
+```
+C:\Dev\baulk\bin\baulk-exec.exe --vs --clang pwsh
 ```
 
 ## Baulk Dock
