@@ -63,6 +63,13 @@ DefaultDirName={pf}\baulk
 
 UninstallDisplayIcon={app}\bin\baulk.exe
 
+[Components]
+Name: windowsterminal; Description: "(NEW!) Add a Baulk Profile to Windows Terminal"; MinVersion: 10.0.18362
+
+[Dirs]
+Name: "{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: IsAdminLoggedOn
+Name: "{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: not IsAdminLoggedOn
+
 [Files]
 Source: "..\build\bin\baulk.exe"; DestDir: "{app}\bin"; DestName: "baulk.exe"
 Source: "..\build\bin\baulk-dock.exe"; DestDir: "{app}\bin"; DestName: "baulk-dock.exe"
@@ -72,6 +79,12 @@ Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-
 Source: "..\build\bin\ssh-askpass-baulk.exe"; DestDir: "{app}\bin"; DestName: "ssh-askpass-baulk.exe"
 Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterminal.exe"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
+Source: "..\res\screw-driver.ico"; DestDir: "{app}\share\baulk"; DestName: "baulk.ico"
+
+[UninstallDelete]
+; Delete Windows Terminal profile fragments
+Type: files; Name: {commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json
+Type: files; Name: {localappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
@@ -81,3 +94,39 @@ Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescri
 Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; AppUserModelID: "{#AppUserId}"
 Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
+
+[Code]
+
+procedure InstallWindowsTerminalFragment;
+var
+    AppPath,JSONPath:String;
+begin
+    if IsAdminInstallMode() then
+        JSONPath:=ExpandConstant('{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json')
+    else
+        JSONPath:=ExpandConstant('{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json');
+    AppPath:=ExpandConstant('{app}');
+    StringChangeEx(AppPath, '\', '/', True);
+    SaveStringToFile(JSONPath,
+        '{'+
+        '    "profiles": ['+
+        '      {'+
+        '        "name": "Baulk",'+
+        '        "commandline": "'+AppPath+'/bin/baulk-exec.exe --vs --clang winsh",'+
+        '        "icon": "'+AppPath+'/share/baulk/baulk.ico",'+
+        '        "startingDirectory": "%USERPROFILE%"'+
+        '      }'+
+        '    ]'+
+        '  }',False);
+    end;
+end;
+
+procedure CurStepChanged(CurStep:TSetupStep);
+begin
+    {
+        Create the Windows Terminal integration
+    }
+
+    if IsComponentSelected('windowsterminal') then
+        InstallWindowsTerminalFragment();
+end;

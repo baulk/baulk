@@ -31,8 +31,13 @@ Usage: baulk-exec [option] <command> [<args>] ...
   --unchanged-title    Keep the terminal title unchanged
   --time               Summarize command system resource usage
 
-example:
+Example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+
+Built-in alias:
+  winsh          A fake shell. It may be pwsh or powershell and cmd.
+  pwsh           PowerShell Core
+  pwsh-preview   PowerShell Core Preview
 
 )";
   bela::terminal::WriteAuto(stderr, usage);
@@ -150,6 +155,26 @@ bool Executor::LookPath(std::wstring_view cmd, std::wstring &file) {
   return true;
 }
 
+inline bool IsWindowsShell(std::wstring_view arg0, std::wstring &target) {
+  if (!bela::EqualsIgnoreCase(arg0, L"winsh")) {
+    return false;
+  }
+  if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
+    target.assign(std::move(pwshcore));
+    DbgPrint(L"Found installed pwsh %s", target);
+    return true;
+  }
+  if (bela::env::LookPath(L"powershell", target, true)) {
+    DbgPrint(L"Found powershell %s", target);
+    return true;
+  }
+  if (bela::env::LookPath(L"cmd", target, true)) {
+    DbgPrint(L"Found cmd %s", target);
+    return true;
+  }
+  return false;
+}
+
 inline bool IsPwshTarget(std::wstring_view arg0, std::wstring &target) {
   if (NameEquals(arg0, L"pwsh")) {
     if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
@@ -171,11 +196,13 @@ inline bool IsPwshTarget(std::wstring_view arg0, std::wstring &target) {
 int Executor::Exec() {
   std::wstring target;
   std::wstring_view arg0(argv[0]);
-  if (!cleanup || !IsPwshTarget(arg0, target)) {
-    if (!LookPath(arg0, target)) {
-      bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
-                    bela::StrJoin(simulator.Paths(), L"\n"));
-      return 1;
+  if (!IsWindowsShell(arg0, target)) {
+    if (!cleanup || !IsPwshTarget(arg0, target)) {
+      if (!LookPath(arg0, target)) {
+        bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
+                      bela::StrJoin(simulator.Paths(), L"\n"));
+        return 1;
+      }
     }
   }
   DbgPrint(L"target %s subsystem is console: %b", target, console);
