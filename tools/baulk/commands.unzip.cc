@@ -18,7 +18,7 @@ inline std::wstring resolveZipDestination(const argv_t &argv, std::wstring_view 
 
 void usage_unzip() {
   bela::FPrintF(stderr, LR"(Usage: baulk unzip zipfile destination
-Extract compressed files in a ZIP archive (experimental).
+Extract compressed files in a ZIP archive.
 
 Example:
   baulk unzip curl-7.76.0.zip

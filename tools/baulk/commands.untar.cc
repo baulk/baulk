@@ -17,7 +17,7 @@ inline std::wstring resolveTarDestination(const argv_t &argv, std::wstring_view 
 
 void usage_untar() {
   bela::FPrintF(stderr, LR"(Usage: baulk untar tarfile destination
-Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental).
+Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd.
 
 Example:
   baulk untar curl-7.76.0.tar.gz

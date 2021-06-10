@@ -101,8 +101,8 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |sha256sum|Calculate the SHA256 hash of the file|N/A|
 |cleancache|cleanup download cache|30 days expired, all cached download file will remove when add `--force` flag||
 |bucket|add, delete or list buckets|N/A|
-|untar|Experimental native tar file extraction support |support tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
-|unzip|Experimental native zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd/ppmd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
+|untar|built-in tar file extraction support |support tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
+|unzip|built-in zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd/ppmd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
 
 Example:
 

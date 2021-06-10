@@ -39,8 +39,8 @@ Command:
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
   bucket           Add, delete or list buckets
-  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental)
-  unzip            Extract compressed files in a ZIP archive (experimental)
+  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
+  unzip            Extract compressed files in a ZIP archive
 
 Alias:
   i  install

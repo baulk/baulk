@@ -102,8 +102,8 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |sha256sum|计算文件的 SHA256 哈希|N/A|
 |cleancache|删除下载缓存|过期时间为 30 天，--force 模式将删除所有下载缓存|
 |bucket|添加，删除，列出 buckets||
-|untar|tar 文件提取原生支持 |支持格式有： tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
-|unzip|zip 文件提取原生支持|zip 压缩方法支持 deflate/deflate64/bzip2/lzma/zstd/ppmd<br>支持文件名编码检测避免解压缩时文件名乱码|
+|untar|内置的 tar 文件提取原生支持 |支持格式有： tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
+|unzip|内置的 zip 文件提取原生支持|zip 压缩方法支持 deflate/deflate64/bzip2/lzma/zstd/ppmd<br>支持文件名编码检测避免解压缩时文件名乱码|
 
 例子:
 
