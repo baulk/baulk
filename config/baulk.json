@@ -7,8 +7,6 @@
             "weights": 100
         }
     ],
-    "freeze": [
-        "python3"
-    ],
+    "freeze": [],
     "channel": "insider"
 }
