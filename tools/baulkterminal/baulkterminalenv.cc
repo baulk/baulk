@@ -119,6 +119,8 @@ void ApplyBaulkNewExec(std::wstring_view baulkexec) {
       DbgPrint(L"Apply new baulk-exec error: %s", ec.message);
     }
   }
+  auto baulkexecdel = bela::StringCat(dir, L"\\baulk-exec.del");
+  DeleteFileW(baulkexecdel.data());
 }
 
 bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {

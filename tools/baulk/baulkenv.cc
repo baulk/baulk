@@ -153,8 +153,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
       }
       BucketObserveMode mode{BucketObserveMode::Github};
       if (auto it = b.find("mode"); it != b.end()) {
-        auto mode_ = it.value().get<int>();
-        if (mode_ == 1) {
+        if (auto mode_ = it.value().get<int>(); mode_ == 1) {
           mode = BucketObserveMode::Git;
         }
       }

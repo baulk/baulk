@@ -13,8 +13,7 @@
 
 namespace baulk::exec {
 bool IsDebugMode = false;
-//
-
+// Usage
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
 Usage: baulk-exec [option] <command> [<args>] ...

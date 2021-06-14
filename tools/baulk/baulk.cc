@@ -40,7 +40,7 @@ int cmd_version(const baulk::commands::argv_t &) {
 }
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
-  baulk::cli::BaulkArgv ba(argc, argv);
+  baulk::cli::BaulkArgv ba(argc - 1, argv + 1);
   std::wstring_view profile;
   ba.Add(L"help", baulk::cli::no_argument, 'h')
       .Add(L"version", baulk::cli::no_argument, 'v')
@@ -49,10 +49,14 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"force", baulk::cli::no_argument, L'F')
       .Add(L"profile", baulk::cli::required_argument, 'P')
       .Add(L"user-agent", baulk::cli::required_argument, 'A')
+      .Add(L"insecure", baulk::cli::no_argument, 'k')
       .Add(L"https-proxy", baulk::cli::required_argument, 1001) // option
       .Add(L"force-delete", baulk::cli::no_argument, 1002)
       .Add(L"trace", baulk::cli::no_argument, 'T')
-      .Add(L"exec"); // subcommand
+      .Add(L"bucket")
+      .Add(L"unzip")
+      .Add(L"untar");
+
   bela::error_code ec;
   auto result = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
@@ -63,7 +67,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
         case 'v':
           Version();
           exit(0);
-        case 'c':
+        case 'P':
           profile = oa;
           break;
         case 'V':

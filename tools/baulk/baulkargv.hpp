@@ -38,7 +38,21 @@ using invoke_t = std::function<bool(int, const wchar_t *, const wchar_t *)>;
 class BaulkArgv {
 public:
   using StringArray = std::vector<std::wstring_view>;
-  BaulkArgv(int argc, wchar_t *const *argv) : argc_(argc), argv_(argv) {}
+  using Iter = std::vector<std::wstring_view>::iterator;
+  BaulkArgv(int argc, wchar_t *const *argv) {
+    rawargv.reserve(argc);
+    for (int i = 0; i < argc; i++) {
+      rawargv.emplace_back(argv[i]);
+    }
+  }
+  BaulkArgv(const StringArray &argv) {
+    // argv
+    rawargv.assign(argv.begin(), argv.end());
+  }
+  BaulkArgv(const Iter begin, const Iter end) {
+    // iter
+    rawargv.assign(begin, end);
+  }
   BaulkArgv(const BaulkArgv &) = delete;
   BaulkArgv &operator=(const BaulkArgv &) = delete;
   BaulkArgv &Add(std::wstring_view name, HasArgs a, int val) {
@@ -53,9 +67,8 @@ public:
   const StringArray &Argv() const { return argv; }
 
 private:
-  const int argc_;
-  const wchar_t *const *argv_;
-  int index{0};
+  std::vector<std::wstring_view> rawargv;
+  size_t index{0};
   StringArray argv;
   std::vector<option> options_;
   subcommands subcmds_;
@@ -66,17 +79,13 @@ private:
 
 // ---------> parse internal
 inline bool BaulkArgv::Execute(const invoke_t &v, bela::error_code &ec) {
-  if (argc_ == 0 || argv_ == nullptr) {
-    ec = bela::make_error_code(bela::ErrParseBroken, L"argv is empty.");
-    return false;
-  }
-  index = 1;
-  for (; index < argc_; index++) {
-    std::wstring_view a = argv_[index];
+  const auto argc = rawargv.size();
+  for (; index < argc; index++) {
+    std::wstring_view a = rawargv[index];
     if (a.empty() || a.front() != '-') {
       if (subcmds_.Contains(a)) {
-        for (int i = index; i < argc_; i++) {
-          argv.emplace_back(argv_[i]);
+        for (size_t i = index; i < argc; i++) {
+          argv.emplace_back(rawargv[i]);
         }
         return true;
       }
@@ -125,11 +134,11 @@ inline bool BaulkArgv::parse_internal_short(std::wstring_view a, const invoke_t 
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
-    if (index + 1 >= argc_) {
+    if (index + 1 >= rawargv.size()) {
       ec = bela::make_error_code(bela::ErrParseBroken, L"option '-", a, L"' missing parameter");
       return false;
     }
-    oa = argv_[index + 1];
+    oa = rawargv[index + 1].data();
     index++;
   }
   if (!v(ch, oa, a.data())) {
@@ -172,11 +181,11 @@ inline bool BaulkArgv::parse_internal_long(std::wstring_view a, const invoke_t &
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
-    if (index + 1 >= argc_) {
+    if (index + 1 >= rawargv.size()) {
       ec = bela::make_error_code(bela::ErrParseBroken, L"option '--", a, L"' missing parameter");
       return false;
     }
-    oa = argv_[index + 1];
+    oa = rawargv[index + 1].data();
     index++;
   }
   if (!v(ch, oa, a.data())) {
