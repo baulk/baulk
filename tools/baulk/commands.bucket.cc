@@ -263,7 +263,8 @@ Example:
 int cmd_bucket(const argv_t &argv) {
   BucketModifier bm;
   if (!bm.Initialize()) {
-    bela::FPrintF(stderr, L"baulk bucket: load bucket meta error %s\n", bm.ErrorCode().message);
+    bela::FPrintF(stderr, L"baulk bucket: load %s error: \x1b[31m%s\x1b[0m\n", baulk::BaulkProfile(),
+                  bm.ErrorCode().message);
     return 1;
   }
   if (argv.empty()) {
