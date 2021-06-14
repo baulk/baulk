@@ -30,12 +30,19 @@ switch ($MSVC_ARCH) {
     }
     Default {
         $BaulkSetup = "BaulkSetup"
-        $ArchitecturesAllowed = "x86"
+        $ArchitecturesAllowed = ''
         $ArchitecturesInstallIn64BitMode = ''
     }
 }
 Write-Host "build $BaulkSetup.exe arch: $ArchitecturesAllowed install mode: $ArchitecturesInstallIn64BitMode"
-$InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
+$InnoCli = Get-Command -ErrorAction SilentlyContinue -CommandType Application "iscc.exe"
+if ($null -ne $InnoCli) {
+    $InnoSetup = $InnoCli.Path
+}
+else {
+    $InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
+}
+
 &$InnoSetup "$BaulkIss" "/dBAULK_BASENAME=$BaulkSetup" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode"
 $BaulkSetupFile = "$BaulkSetup.exe"
 if (!(Test-Path "$BaulkSetupFile")) {

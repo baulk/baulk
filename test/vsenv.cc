@@ -7,9 +7,8 @@ bool IsDebugMode = true;
 
 int wmain() {
   baulk::compiler::Executor executor;
-  bela::error_code ec;
-  if (!executor.Initialize(ec)) {
-    bela::FPrintF(stderr, L"compiler env initialize error: %s\n", ec.message);
+  if (!executor.Initialize()) {
+    bela::FPrintF(stderr, L"compiler env initialize error: %s\n", executor.LastErrorCode().message);
     return 1;
   }
   auto exitcode = executor.Execute(L"", L"pwsh");

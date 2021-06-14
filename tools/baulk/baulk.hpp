@@ -68,13 +68,26 @@ inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
 /// defines
 [[maybe_unused]] constexpr std::wstring_view BucketsDirName = L"buckets";
 enum BucketObserveMode : int {
-  GithubZIP = 0, // ZIP
+  Github = 0, // ZIP
   Git = 1
 };
+
+inline const std::wstring_view BucketObserveModeName(BucketObserveMode m) {
+  switch (m) {
+  case BucketObserveMode::Github:
+    break;
+  case BucketObserveMode::Git:
+    return L"Git";
+  default:
+    break;
+  }
+  return L"Github";
+}
+
 struct Bucket {
   Bucket() = default;
   Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99,
-         BucketObserveMode mode_ = BucketObserveMode::GithubZIP) {
+         BucketObserveMode mode_ = BucketObserveMode::Github) {
     description = desc;
     name = n;
     url = u;
@@ -85,7 +98,7 @@ struct Bucket {
   std::wstring name;
   std::wstring url;
   int weights{99};
-  BucketObserveMode mode{BucketObserveMode::GithubZIP};
+  BucketObserveMode mode{BucketObserveMode::Github};
 };
 
 using Buckets = std::vector<Bucket>;

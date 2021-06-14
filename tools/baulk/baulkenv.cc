@@ -119,18 +119,6 @@ inline std::wstring BaulkRootPath() {
   return L".";
 }
 
-inline const std::wstring_view BucketObserveModeName(BucketObserveMode m) {
-  switch (m) {
-  case BucketObserveMode::GithubZIP:
-    break;
-  case BucketObserveMode::Git:
-    return L"Git";
-  default:
-    break;
-  }
-  return L"GithubZIP";
-}
-
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
   locale = BaulkLocaleName();
   baulk::DbgPrint(L"Baulk locale name %s\n", locale);
@@ -163,7 +151,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
       }
-      BucketObserveMode mode{BucketObserveMode::GithubZIP};
+      BucketObserveMode mode{BucketObserveMode::Github};
       if (auto it = b.find("mode"); it != b.end()) {
         auto mode_ = it.value().get<int>();
         if (mode_ == 1) {

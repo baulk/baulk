@@ -1,5 +1,7 @@
 //
 #include <bela/path.hpp>
+#include <bela/process.hpp>
+#include <bela/str_split_narrow.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
 #include <version.hpp>
@@ -10,7 +12,7 @@
 #include "decompress.hpp"
 
 namespace baulk::bucket {
-std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::error_code &ec) {
+std::optional<std::wstring> BucketNewestWithGithub(std::wstring_view bucketurl, bela::error_code &ec) {
   // default branch atom
   auto rss = bela::StringCat(bucketurl, L"/commits.atom");
   baulk::DbgPrint(L"Fetch RSS %s", rss);
@@ -33,10 +35,68 @@ std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::erro
   ec = bela::make_error_code(bela::ErrGeneral, L"bucket invaild id: ", bela::ToWide(id));
   return std::nullopt;
 }
+// git ls-remote filter HEAD
+std::optional<std::wstring> BucketRepoNewest(std::wstring_view giturl, bela::error_code &ec) {
+  bela::process::Process process;
+  if (process.Capture(L"git", L"ls-remote", giturl, L"HEAD") != 0) {
+    if (ec = process.ErrorCode(); !ec) {
+      ec = bela::make_error_code(process.ExitCode(), L"git exit with: ", process.ExitCode());
+    }
+    return std::nullopt;
+  }
+  constexpr std::string_view head = "HEAD";
+  std::vector<std::string_view> lines =
+      bela::narrow::StrSplit(process.Out(), bela::narrow::ByChar('\n'), bela::narrow::SkipEmpty());
+  for (auto line : lines) {
+    std::vector<std::string_view> kv =
+        bela::narrow::StrSplit(line, bela::narrow::ByAnyChar("\t "), bela::narrow::SkipEmpty());
+    if (kv.size() == 2 && kv[1] == head) {
+      return std::make_optional(bela::ToWide(kv[0]));
+    }
+  }
+  ec = bela::make_error_code(bela::ErrGeneral, L"not found HEAD: ", giturl);
+  return std::nullopt;
+}
 
-bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstring_view id, bela::error_code &ec) {
+//
+std::optional<std::wstring> BucketNewest(const baulk::Bucket &bucket, bela::error_code &ec) {
+  if (bucket.mode == baulk::BucketObserveMode::Github) {
+    return BucketNewestWithGithub(bucket.url, ec);
+  }
+  if (bucket.mode != baulk::BucketObserveMode::Git) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"Unsupported bucket mode: ", static_cast<int>(bucket.mode));
+    return std::nullopt;
+  }
+  return BucketRepoNewest(bucket.url, ec);
+}
+
+bool BucketRepoUpdate(const baulk::Bucket &bucket, bela::error_code &ec) {
+  auto bucketDir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
+  bela::process::Process process;
+  if (bela::PathExists(bucketDir)) {
+    process.Chdir(bucketDir);
+    // Force update
+    if (process.Execute(L"git", L"pull", L"--force", bucket.url) != 0) {
+      return false;
+    }
+    return true;
+  }
+  if (process.Execute(L"git", L"clone", L"--depth=1", bucket.url, bucketDir) != 0) {
+    return false;
+  }
+  return true;
+}
+
+bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error_code &ec) {
+  if (bucket.mode == baulk::BucketObserveMode::Git) {
+    return BucketRepoUpdate(bucket, ec);
+  }
+  if (bucket.mode != baulk::BucketObserveMode::Github) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"Unsupported bucket mode: ", static_cast<int>(bucket.mode));
+    return false;
+  }
   // https://github.com/baulk/bucket/archive/master.zip
-  auto master = bela::StringCat(bucketurl, L"/archive/", id, L".zip");
+  auto master = bela::StringCat(bucket.url, L"/archive/", id, L".zip");
   auto outdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\temp");
   if (!bela::PathExists(outdir) && !baulk::fs::MakeDir(outdir, ec)) {
     return false;
@@ -49,12 +109,12 @@ bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstr
     bela::error_code ec_;
     bela::fs::Remove(*outfile, ec_);
   });
-  auto decompressdir = bela::StringCat(outdir, L"\\", name);
+  auto decompressdir = bela::StringCat(outdir, L"\\", bucket.name);
   if (!baulk::zip::Decompress(*outfile, decompressdir, ec)) {
     return false;
   }
   baulk::standard::Regularize(decompressdir);
-  auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", name);
+  auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
   if (bela::PathExists(bucketdir)) {
     bela::fs::RemoveAll(bucketdir, ec);
   }

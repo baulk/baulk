@@ -67,8 +67,8 @@ UninstallDisplayIcon={app}\bin\baulk.exe
 Name: windowsterminal; Description: "(NEW!) Add a Baulk Profile to Windows Terminal"; MinVersion: 10.0.18362
 
 [Dirs]
-Name: "{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: IsAdminLoggedOn
-Name: "{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: not IsAdminLoggedOn
+Name: "{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: IsAdminInstallMode
+Name: "{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk"; Components: windowsterminal; Check: not IsAdminInstallMode
 
 [Files]
 Source: "..\build\bin\baulk.exe"; DestDir: "{app}\bin"; DestName: "baulk.exe"
@@ -118,7 +118,6 @@ begin
         '      }'+
         '    ]'+
         '  }',False);
-    end;
 end;
 
 procedure CurStepChanged(CurStep:TSetupStep);
@@ -127,6 +126,6 @@ begin
         Create the Windows Terminal integration
     }
 
-    if IsComponentSelected('windowsterminal') then
+    if WizardIsComponentSelected('windowsterminal') then
         InstallWindowsTerminalFragment();
 end;

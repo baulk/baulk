@@ -51,3 +51,7 @@ target_include_directories(untar PRIVATE ../lib/archive)
 add_executable(parsepax_test parsepax.cc)
 
 target_link_libraries(parsepax_test belawin belatime)
+
+add_executable(repols_test repols.cc)
+
+target_link_libraries(repols_test belawin belatime)

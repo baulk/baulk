@@ -34,8 +34,9 @@ inline bool BaulkStore(std::string_view jsontext, bela::error_code &ec) {
 int ListBucket() {
   bela::FPrintF(stderr, L"Baulk found \x1b[32m%d\x1b[0m buckets\n", baulk::BaulkBuckets().size());
   for (const auto &bk : baulk::BaulkBuckets()) {
-    bela::FPrintF(stderr, L"\x1b[34m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%d\x1b[0m\n",
-                  bk.name, bk.description, bk.url, bk.weights);
+    bela::FPrintF(stderr,
+                  L"\x1b[34m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%s (%s)\x1b[0m\n    \x1b[36m%d\x1b[0m\n",
+                  bk.name, bk.description, bk.url, baulk::BucketObserveModeName(bk.mode), bk.weights);
   }
   return 0;
 }
@@ -157,7 +158,7 @@ int DeleteBucket(const argv_t &argv) {
   return 0;
 }
 
-void usage_bucket(){
+void usage_bucket() {
   bela::FPrintF(stderr, LR"(Usage: baulk bucket <option> [bucket]...
 Add, delete or list buckets.
 

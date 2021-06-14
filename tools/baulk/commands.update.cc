@@ -94,7 +94,7 @@ bool BucketUpdater::Immobilized() {
 
 bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   bela::error_code ec;
-  auto latest = baulk::bucket::BucketNewest(bucket.url, ec);
+  auto latest = baulk::bucket::BucketNewest(bucket, ec);
   if (!latest) {
     bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
     return false;
@@ -105,7 +105,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
     return true;
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
-  if (!baulk::bucket::BucketUpdate(bucket.url, bucket.name, *latest, ec)) {
+  if (!baulk::bucket::BucketUpdate(bucket, *latest, ec)) {
     bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
     return false;
   }

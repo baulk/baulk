@@ -7,8 +7,8 @@
 #include "baulk.hpp"
 
 namespace baulk::bucket {
-std::optional<std::wstring> BucketNewest(std::wstring_view bucketurl, bela::error_code &ec);
-bool BucketUpdate(std::wstring_view bucketurl, std::wstring_view name, std::wstring_view id, bela::error_code &ec);
+std::optional<std::wstring> BucketNewest(const baulk::Bucket &bucket, bela::error_code &ec);
+bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error_code &ec);
 // PackageMeta from file
 std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstring_view pkgname,
                                           std::wstring_view bucket, bela::error_code &ec);
