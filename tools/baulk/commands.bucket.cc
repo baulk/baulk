@@ -244,9 +244,9 @@ Add, delete or list buckets.
   -R|--replace        replace bucket with new attributes ('bucket add' support only)
 
 Option:
-  list add delete
+  list, add, delete
 
-Example:
+Command Usage:
   baulk bucket list
   baulk bucket list BucketName
 
@@ -256,6 +256,10 @@ Example:
   baulk bucket add BucketName URL Weights Description
 
   baulk bucket delete BucketName
+
+Example:
+  baulk bucket add baulk git@github.com:baulk/bucket.git
+  baulk bucket add baulk-mirror https://gitee.com/baulk/bucket.git -MGit -W102
 
 )");
 }
