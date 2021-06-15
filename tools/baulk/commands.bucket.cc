@@ -22,7 +22,7 @@ public:
   bool GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket);
   int List(std::wstring_view bucketName = L"");
   int Add(const baulk::Bucket &bucket, bool replace);
-  int Del(const baulk::Bucket &bucket);
+  int Del(const baulk::Bucket &bucket, bool forcemode);
   const bela::error_code &ErrorCode() const { return ec; }
 
 private:
@@ -86,7 +86,7 @@ int BucketModifier::List(std::wstring_view bucketName) {
   if (!bucketName.empty()) {
     baulk::Bucket bk;
     if (!GetBucket(bucketName, bk)) {
-      bela::FPrintF(stderr, L"baulk bucket list: bucket -> '\x1b[31m%s\x1b[0m' not found\n", bucketName);
+      bela::FPrintF(stderr, L"baulk bucket: bucket -> '\x1b[31m%s\x1b[0m' not found\n", bucketName);
       return 1;
     }
     bela::FPrintF(stderr,
@@ -141,8 +141,8 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
   if (GetBucket(nbk.name, obk)) {
     if (!replace) {
       bela::FPrintF(stderr,
-                    L"baulk bucket add: bucket '\x1b[31m%s\x1b[0m' exists\nYou can use the '\x1b[33m--replace\x1b[0m' "
-                    L"parameter to replace it\n",
+                    L"baulk bucket: add bucket '\x1b[31m%s\x1b[0m' but it already exists\nYou can use the "
+                    L"'\x1b[33m--replace\x1b[0m' parameter to replace it\n",
                     nbk.name);
       return 1;
     }
@@ -157,7 +157,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     }
   }
   if (bucket.url.empty()) {
-    bela::FPrintF(stderr, L"baulk bucket add: bucket url is blank\n");
+    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' url is blank\n", nbk.name);
     return 1;
   }
   if (nbk.description.empty()) {
@@ -190,16 +190,59 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     buckets.emplace_back(std::move(jbk));
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket add: apply add '%s' error %s\n", nbk.name, ec.message);
+      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec.message);
       return 1;
     }
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"baulk bucket add: %s\n", e.what());
+    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' error %s\n", nbk.name, e.what());
   }
   bela::FPrintF(stderr, L"baulk bucket '%s' added\n", nbk.name);
   return 0;
 }
-int BucketModifier::Del(const baulk::Bucket &bucket) {
+
+bool PruneBucket(const baulk::Bucket &bucket) {
+  auto bucketslock = bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
+  nlohmann::json newjson = nlohmann::json::array();
+  [&]() -> bool {
+    FILE *fd = nullptr;
+    if (auto en = _wfopen_s(&fd, bucketslock.data(), L"rb"); en != 0) {
+      if (en == ENOENT) {
+        return true;
+      }
+      auto ec = bela::make_stdc_error_code(en);
+      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec.message);
+      return false;
+    }
+    auto closer = bela::finally([&] { fclose(fd); });
+    try {
+      auto j = nlohmann::json::parse(fd, nullptr, true, true);
+      for (const auto &a : j) {
+        if (!a.is_object()) {
+          newjson.push_back(a);
+          continue;
+        }
+        auto name = a["name"].get<std::string_view>();
+        if (!bela::EqualsIgnoreCase(bucket.name, bela::ToWide(name))) {
+          newjson.push_back(a);
+        }
+      }
+    } catch (const std::exception &e) {
+      bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
+      return false;
+    }
+  }();
+  auto meta = newjson.dump(4);
+  bela::error_code ec;
+  if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
+    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
+    return false;
+  }
+  auto bucketDir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
+  bela::fs::RemoveAll(bucketDir, ec);
+  return true;
+}
+
+int BucketModifier::Del(const baulk::Bucket &bucket, bool forcemode) {
   if (bucket.name.empty()) {
     bela::FPrintF(stderr, L"baulk bucket delete: bucket name is blank\n");
     return 1;
@@ -228,6 +271,9 @@ int BucketModifier::Del(const baulk::Bucket &bucket) {
   if (!deleted) {
     bela::FPrintF(stderr, L"baulk bucket '\x1b[31m%s\x1b[0m' not exists\n", bucket.name);
     return 1;
+  }
+  if (forcemode) {
+    PruneBucket(bucket);
   }
   bela::FPrintF(stderr, L"baulk bucket '\x1b[32m%s\x1b[0m' deleted\n", bucket.name);
   return 0;
@@ -281,10 +327,12 @@ int cmd_bucket(const argv_t &argv) {
       .Add(L"weights", baulk::cli::required_argument, L'W')
       .Add(L"mode", baulk::cli::required_argument, L'M')
       .Add(L"description", baulk::cli::required_argument, L'D')
-      .Add(L"replace", baulk::cli::no_argument, L'R');
+      .Add(L"replace", baulk::cli::no_argument, L'R')
+      .Add(L"force", baulk::cli::no_argument, L'F');
   baulk::Bucket bucket;
   bela::error_code ec;
   bool replace{false};
+  bool forcemode{false};
   auto ret = ba.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
@@ -323,6 +371,9 @@ int cmd_bucket(const argv_t &argv) {
         case L'R':
           replace = true;
           break;
+        case L'F':
+          forcemode = true;
+          break;
         default:
           break;
         }
@@ -344,6 +395,9 @@ int cmd_bucket(const argv_t &argv) {
       bucket.name = ua[index];
       index++;
     }
+    for (; index < ua.size(); index++) {
+      bela::FPrintF(stderr, L"baulk bucket: skip listing bucket '\x1b[33m%s\x1b[0m'\n", ua[index]);
+    }
     return bm.List(bucket.name);
   }
   if (bela::EqualsIgnoreCase(sa, L"delete") || bela::EqualsIgnoreCase(sa, L"del")) {
@@ -351,7 +405,10 @@ int cmd_bucket(const argv_t &argv) {
       bucket.name = ua[index];
       index++;
     }
-    return bm.Del(bucket);
+    for (; index < ua.size(); index++) {
+      bela::FPrintF(stderr, L"baulk bucket: skip deleting bucket '\x1b[33m%s\x1b[0m'\n", ua[index]);
+    }
+    return bm.Del(bucket, forcemode);
   }
   if (!bela::EqualsIgnoreCase(sa, L"add")) {
     bela::FPrintF(stderr, L"baulk bucket: unsupported subcommand '\x1b[31m%s\x1b[0m'\n", sa);
