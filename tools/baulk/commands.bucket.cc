@@ -230,6 +230,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
       bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
       return false;
     }
+    return true;
   }();
   auto meta = newjson.dump(4);
   bela::error_code ec;

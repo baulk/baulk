@@ -1,8 +1,8 @@
 {
     "bucket": [
         {
-            "description": "Baulk default bucket",
-            "name": "Baulk",
+            "description": "Baulk official bucket",
+            "name": "baulk",
             "url": "https://github.com/baulk/bucket",
             "weights": 100
         }
