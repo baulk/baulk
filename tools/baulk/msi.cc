@@ -110,6 +110,7 @@ bool Progressor::DoProgress(LPWSTR szMessage) {
     Update(mProgressTotal, mScriptInProgress ? mProgressTotal : mProgress);
     iCurPos = 0;
     mScriptInProgress = (field[3] == 1);
+    break;
   case 1:
     if (field[2] != 0) {
       mEnableActionData = true;

@@ -81,6 +81,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           break;
         case 'T':
           baulk::IsTraceMode = true;
+          break;
         case 'k':
           baulk::IsInsecureMode = true;
           break;

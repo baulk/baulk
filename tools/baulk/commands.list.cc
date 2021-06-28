@@ -67,7 +67,6 @@ int cmd_list(const argv_t &argv) {
     return cmd_list_all();
   }
   auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
-  size_t upgradable = 0;
   bela::error_code ec;
   for (const auto a : argv) {
     auto opkg = baulk::bucket::PackageLocalMeta(a, ec);

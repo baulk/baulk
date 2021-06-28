@@ -49,7 +49,7 @@ int cmd_cleancache(const argv_t &argv) {
   GetSystemTime(&now);
   FILETIME fnow;
   if (SystemTimeToFileTime(&now, &fnow) != TRUE) {
-    auto ec = bela::make_system_error_code();
+    ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec.message);
     return 1;
   }

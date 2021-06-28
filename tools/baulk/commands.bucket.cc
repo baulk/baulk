@@ -345,6 +345,7 @@ int cmd_bucket(const argv_t &argv) {
           break;
         case L'U':
           bucket.url = oa;
+          break;
         case L'W':
           if (!bela::SimpleAtoi(oa, &bucket.weights)) {
             ec = bela::make_error_code(bela::ErrGeneral, L"unable parse weights: ", oa);
