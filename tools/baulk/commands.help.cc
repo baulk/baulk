@@ -43,8 +43,11 @@ Command:
   unzip            Extract compressed files in a ZIP archive
 
 Alias:
+  h  help
   i  install
   r  uninstall
+  l  list
+  s  search
   u  update and upgrade
 
 See 'baulk help <command>' to read usage a specific subcommand.
