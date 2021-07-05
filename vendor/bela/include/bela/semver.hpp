@@ -113,10 +113,10 @@ template <typename CharT> constexpr CharT *to_chars(CharT *str, std::uint8_t x, 
 }
 
 template <typename CharT> constexpr CharT *to_chars(CharT *str, prerelease t) noexcept {
-  const auto p = t == prerelease::alpha ? Literal<CharT>::Alpha
-                                        : t == prerelease::beta ? Literal<CharT>::Beta
-                                                                : t == prerelease::rc ? Literal<CharT>::RC
-                                                                                      : std::basic_string_view<CharT>{};
+  const auto p = t == prerelease::alpha  ? Literal<CharT>::Alpha
+                 : t == prerelease::beta ? Literal<CharT>::Beta
+                 : t == prerelease::rc   ? Literal<CharT>::RC
+                                         : std::basic_string_view<CharT>{};
   for (auto it = p.rbegin(); it != p.rend(); ++it) {
     *(--str) = *it;
   }

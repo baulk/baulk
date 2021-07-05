@@ -5,7 +5,8 @@ add_library(
   llvm/Demangle.cpp
   llvm/ItaniumDemangle.cpp
   llvm/MicrosoftDemangle.cpp
-  llvm/MicrosoftDemangleNodes.cpp)
+  llvm/MicrosoftDemangleNodes.cpp
+  llvm/RustDemangle.cpp)
 
 if(BELA_ENABLE_LTO)
   set_property(TARGET belaund PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

@@ -526,7 +526,8 @@ PUGI__NS_BEGIN
 			xml_memory_page* page = xml_memory_page::construct(memory);
 			assert(page);
 
-			page->allocator = _root->allocator;
+			assert(this == _root->allocator);
+			page->allocator = this;
 
 			return page;
 		}
@@ -7091,8 +7092,12 @@ namespace pugi
 	#endif
 
 		// move allocation state
-		doc->_root = other->_root;
-		doc->_busy_size = other->_busy_size;
+		// note that other->_root may point to the embedded document page, in which case we should keep original (empty) state
+		if (other->_root != PUGI__GETPAGE(other))
+		{
+			doc->_root = other->_root;
+			doc->_busy_size = other->_busy_size;
+		}
 
 		// move buffer state
 		doc->buffer = other->buffer;
@@ -11822,14 +11827,16 @@ PUGI__NS_BEGIN
 				lexeme_t l = _lexer.current();
 				_lexer.next();
 
-				if (++_depth > xpath_ast_depth_limit)
-					return error_rec();
-
 				if (l == lex_double_slash)
 				{
 					n = alloc_node(ast_step, n, axis_descendant_or_self, nodetest_type_node, 0);
 					if (!n) return 0;
+
+					++_depth;
 				}
+
+				if (++_depth > xpath_ast_depth_limit)
+					return error_rec();
 
 				n = parse_step(n);
 				if (!n) return 0;

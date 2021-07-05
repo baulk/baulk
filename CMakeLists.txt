@@ -14,22 +14,7 @@ Please delete them.")
 endif()
 
 if(MSVC)
-  set(CMAKE_MSVC_RUNTIME_LIBRARY_DEFAULT "")
-  # FIXME: This block should go away after a transition period.
-  if(NOT CMAKE_VERSION VERSION_LESS 3.15)
-    # Filter out MSVC runtime library flags that may have come from the cache of an existing build tree or from scripts.
-    foreach(l C CXX)
-      foreach(c DEBUG MINSIZEREL RELEASE RELWITHDEBINFO)
-        string(REGEX REPLACE "[-/]M[DT]d?( |$)" "" "CMAKE_${l}_FLAGS_${c}" "${CMAKE_${l}_FLAGS_${c}}")
-      endforeach()
-    endforeach()
-  endif()
-  # http://stackoverflow.com/a/32128977/486990
-  add_compile_options(
-    "$<$<CONFIG:Debug>:/MTd>" # -MTd
-    "$<$<CONFIG:RelWithDebInfo>:/MT>" # -MT
-    "$<$<CONFIG:Release>:/MT>" # * MT
-    "$<$<CONFIG:MinSizeRel>:/MT>")
+  set(CMAKE_MSVC_RUNTIME_LIBRARY_DEFAULT "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
   add_compile_options("-utf-8")
   add_compile_options("-permissive-")
@@ -83,7 +68,7 @@ else()
 endif()
 
 set(BAULK_VERSION_MAJOR 2)
-set(BAULK_VERSION_MINOR 2)
+set(BAULK_VERSION_MINOR 3)
 set(BAULK_VERSION_PATCH 0)
 set(PACKAGE_VERSION "${BAULK_VERSION_MAJOR}.${BAULK_VERSION_MINOR}.${BAULK_VERSION_PATCH}")
 
