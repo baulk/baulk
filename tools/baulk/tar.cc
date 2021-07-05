@@ -38,13 +38,7 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
     return;
   }
-  auto basename = BaseName(filename);
-  auto n = bela::StringWidth(basename);
-  if (n <= suglen) {
-    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", basename);
-    return;
-  }
-  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...%s\x1b[0m", basename.substr(n - suglen));
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", BaseName(filename));
 }
 
 bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
