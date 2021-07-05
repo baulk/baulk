@@ -2219,7 +2219,7 @@ FOR_EACH_NODE_KIND(SPECIALIZATION)
 
 template <class T, size_t N>
 class PODSmallVector {
-  static_assert(std::is_pod<T>::value,
+  static_assert(std::is_standard_layout<T>::value,
                 "T is required to be a plain old data type");
 
   T* First = nullptr;
