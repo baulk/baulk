@@ -32,14 +32,14 @@ bool bisearch(char32_t rune, const bela::runewidth::interval *table, size_t max)
 // CalculateLength calculate unicode codepoint display width
 size_t CalculateWidth(char32_t rune) {
   // control characters we return 0;
-  if (rune == 0 || rune < 32 || (rune >= 0x7F && rune < 0xa0)) {
+  if (rune == 0 || rune > 0x10FFFF || rune < 32 || (rune >= 0x7F && rune < 0xa0)) {
     return 0;
   }
   if (bisearch(rune, bela::nonprint, std::size(bela::nonprint) - 1)) {
     return 0;
   }
-  if (bisearch(rune, bela::runewidth::notassigned, std::size(bela::runewidth::notassigned) - 1)) {
-    return 0;
+  if (bisearch(rune, bela::runewidth::narrow, std::size(bela::runewidth::narrow) - 1)) {
+    return 1;
   }
   if (bisearch(rune, bela::runewidth::combining, std::size(bela::runewidth::combining) - 1)) {
     return 0;

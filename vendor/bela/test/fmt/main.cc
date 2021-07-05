@@ -54,5 +54,9 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"[%016X]\n", xl);
   bela::FPrintF(stderr, L"[%16X]\n", xl);
   bela::FPrintF(stderr, L"%%pointer: [%p]\n", (void *)argv);
+  bela::FPrintF(stderr, L"StringWidth %d\n",
+                bela::StringWidth(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
+  bela::FPrintF(stderr, L"StringWidth %d\n",
+                bela::StringWidth(R"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   return 0;
 }

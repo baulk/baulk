@@ -342,7 +342,7 @@ size_t StringWidth(std::string_view str) {
     it += nb + 1;
     width += CalculateWidth(ch);
   }
-  return 0;
+  return width;
 }
 
 // Calculate UTF-16 string display width

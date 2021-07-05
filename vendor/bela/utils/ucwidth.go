@@ -112,7 +112,7 @@ func eastasian(out io.Writer, in io.Reader) error {
 	fmt.Fprint(out)
 
 	shapeup(&na)
-	generate(out, "notassigned", na)
+	generate(out, "narrow", na)
 	fmt.Fprintln(out)
 
 	shapeup(&nu)
