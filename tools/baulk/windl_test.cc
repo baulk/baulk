@@ -10,7 +10,7 @@
 namespace baulk {
 bool IsDebugMode = false;
 bool IsInsecureMode = false;
-constexpr size_t UerAgentMaximumLength = 64;
+constexpr size_t UerAgentMaximumLength = 256;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 std::wstring locale;
 std::wstring_view BaulkLocale() { return locale; }

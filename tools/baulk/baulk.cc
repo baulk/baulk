@@ -87,7 +87,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           break;
         case 'A':
           if (auto len = wcslen(oa); len < 256) {
-            wmemcmp(baulk::UserAgent, oa, len);
+            wmemcpy_s(baulk::UserAgent, baulk::UerAgentMaximumLength, oa, len);
             baulk::UserAgent[len] = 0;
           }
           break;

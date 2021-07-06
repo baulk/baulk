@@ -20,7 +20,7 @@ namespace baulk {
 bool IsDebugMode = false;
 bool IsForceMode = false;
 bool IsInsecureMode = false;
-constexpr size_t UerAgentMaximumLength = 64;
+constexpr size_t UerAgentMaximumLength = 256;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
 std::wstring BaulkRoot;
 std::wstring locale;
@@ -589,8 +589,8 @@ bool ParseArgv(int argc, wchar_t **argv) {
           baulk::IsInsecureMode = true;
           break;
         case 'A':
-          if (auto len = wcslen(oa); len < 256) {
-            wmemcmp(baulk::UserAgent, oa, len);
+          if (auto len = wcslen(oa); len < 64) {
+            wmemcpy_s(baulk::UserAgent, baulk::UerAgentMaximumLength, oa, len);
             baulk::UserAgent[len] = 0;
           }
           break;

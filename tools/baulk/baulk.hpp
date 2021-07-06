@@ -13,7 +13,7 @@ extern bool IsForceDelete;
 extern bool IsQuietMode;
 extern bool IsTraceMode;
 extern bool IsInsecureMode;
-constexpr size_t UerAgentMaximumLength = 64;
+constexpr size_t UerAgentMaximumLength = 256;
 extern wchar_t UserAgent[UerAgentMaximumLength];
 // DbgPrint added newline
 template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
