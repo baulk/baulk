@@ -112,6 +112,7 @@ begin
         '    "profiles": ['+
         '      {'+
         '        "name": "Baulk",'+
+        '        "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'+
         '        "commandline": "'+AppPath+'/bin/baulk-exec.exe --vs --clang winsh",'+
         '        "icon": "'+AppPath+'/share/baulk/baulk.ico",'+
         '        "startingDirectory": "%USERPROFILE%"'+
