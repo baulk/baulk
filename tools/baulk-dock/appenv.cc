@@ -11,7 +11,7 @@
 #include <bela/io.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
-#include <pwsh.hpp>
+#include <filesystem>
 
 namespace baulk::dock {
 constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
@@ -203,22 +203,12 @@ template <size_t Len = 256> std::wstring GetCwd() {
   return s;
 }
 
-std::wstring SearchShell() {
-  if (auto pwsh = baulk::pwsh::PwshExePath(); !pwsh.empty()) {
-    return pwsh;
-  }
-  if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
-    return pwshpreview;
-  }
-  return L"cmd.exe";
-}
-
 LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
   auto baulkexec = bela::StringCat(baulkroot, L"\\bin\\baulk-exec.exe");
   auto cwd = GetCwd();
   bela::EscapeArgv ea;
   if (auto wt = FindWindowsTerminal(); wt) {
-    ea.Assign(*wt).Append(L"--");
+    ea.Assign(*wt).Append(L"--title").Append(L"Windows Terminal \U0001F496 Baulk").Append(L"--");
   }
   ea.Append(baulkexec).Append(L"-W").Append(GetCwd());
   if (Button_GetCheck(hclang.hWnd) == BST_CHECKED) {
@@ -234,7 +224,7 @@ LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL 
   if (auto index = ComboBox_GetCurSel(hvenvbox.hWnd); index >= 0 && static_cast<size_t>(index) < tables.Envs.size()) {
     ea.Append(L"-E").Append(tables.Envs[index].Value);
   }
-  ea.Append(SearchShell());
+  ea.Append(L"winsh");
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));

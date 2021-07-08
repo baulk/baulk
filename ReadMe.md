@@ -279,7 +279,6 @@ Usage: baulk-exec [option] <command> [<args>] ...
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
-  --unchanged-title    Keep the terminal title unchanged
   --time               Summarize command system resource usage
 
 example:

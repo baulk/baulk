@@ -27,7 +27,6 @@ Usage: baulk-exec [option] <command> [<args>] ...
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
   --clang              Add Visual Studio's built-in clang to the PATH environment variable
-  --unchanged-title    Keep the terminal title unchanged
   --time               Summarize command system resource usage
 
 Example:
@@ -46,41 +45,6 @@ void Version() {
   bela::FPrintF(stdout, L"baulk-exec %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION,
                 BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
-
-std::wstring AvailableEnvTitle(const std::vector<std::wstring> &venvs) {
-  constexpr std::wstring_view bk = L"Baulk Terminal \U0001F496";
-  if (venvs.empty()) {
-    return std::wstring(bk);
-  }
-  auto firstenv = venvs[0];
-  if (venvs.size() > 1) {
-    return bela::StringCat(bk, L" [", firstenv, L"...+", venvs.size() - 1, L"]");
-  }
-  return bela::StringCat(bk, L" [", firstenv, L"]");
-}
-
-class TitleManager {
-public:
-  TitleManager() = default;
-  ~TitleManager() {
-    if (!title.empty()) {
-      SetConsoleTitleW(title.data());
-    }
-  }
-  bool UpdateTitle(std::wstring_view newtitle) {
-    wchar_t buffer[512] = {0};
-    auto n = GetConsoleTitleW(buffer, 512);
-    if (n == 0 || n >= 512) {
-      return false;
-    }
-    SetConsoleTitleW(newtitle.data());
-    title = buffer;
-    return true;
-  }
-
-private:
-  std::wstring title;
-};
 
 inline bela::Duration FromKernelTick(FILETIME ft) {
   auto tick = std::bit_cast<int64_t, FILETIME>(ft);
@@ -124,7 +88,7 @@ public:
   Executor() = default;
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
-  bool ParseArgv(int argc, wchar_t **argv, TitleManager &tm);
+  bool ParseArgv(int argc, wchar_t **argv);
   int Exec();
 
 private:
@@ -136,6 +100,7 @@ private:
   bool summarizeTime{false};
   Summarizer summarizer;
   bool LookPath(std::wstring_view exe, std::wstring &file);
+  bool FindArg0(std::wstring_view arg0, std::wstring &target);
 };
 
 bool Executor::LookPath(std::wstring_view cmd, std::wstring &file) {
@@ -154,33 +119,30 @@ bool Executor::LookPath(std::wstring_view cmd, std::wstring &file) {
   return true;
 }
 
-inline bool IsWindowsShell(std::wstring_view arg0, std::wstring &target) {
-  if (!bela::EqualsIgnoreCase(arg0, L"winsh")) {
-    return false;
-  }
-  if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
-    target.assign(std::move(pwshcore));
-    DbgPrint(L"Found installed pwsh %s", target);
-    return true;
-  }
-  if (bela::env::LookPath(L"powershell", target, true)) {
-    DbgPrint(L"Found powershell %s", target);
-    return true;
-  }
-  if (bela::env::LookPath(L"cmd", target, true)) {
-    DbgPrint(L"Found cmd %s", target);
-    return true;
-  }
-  return false;
-}
-
-inline bool IsPwshTarget(std::wstring_view arg0, std::wstring &target) {
-  if (NameEquals(arg0, L"pwsh")) {
+bool Executor::FindArg0(std::wstring_view arg0, std::wstring &target) {
+  if (NameEquals(arg0, L"winsh")) {
     if (auto pwshcore = baulk::pwsh::PwshCore(); !pwshcore.empty()) {
       target.assign(std::move(pwshcore));
       DbgPrint(L"Found installed pwsh %s", target);
       return true;
     }
+    if (bela::env::LookPath(L"powershell", target, true)) {
+      DbgPrint(L"Found powershell %s", target);
+      return true;
+    }
+    if (bela::env::LookPath(L"cmd", target, true)) {
+      DbgPrint(L"Found cmd %s", target);
+      return true;
+    }
+    return false;
+  }
+  if (NameEquals(arg0, L"pwsh")) {
+    if (auto pwshcore = baulk::pwsh::PwshExePath(); !pwshcore.empty()) {
+      target.assign(std::move(pwshcore));
+      DbgPrint(L"Found installed pwsh %s", target);
+      return true;
+    }
+    return false;
   }
   if (NameEquals(arg0, L"pwsh-preview")) {
     if (auto pwshpreview = baulk::pwsh::PwshCorePreview(); !pwshpreview.empty()) {
@@ -188,21 +150,21 @@ inline bool IsPwshTarget(std::wstring_view arg0, std::wstring &target) {
       DbgPrint(L"Found installed pwsh-preview %s", target);
       return true;
     }
+    return false;
   }
-  return false;
+  if (!LookPath(arg0, target)) {
+    bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
+                  bela::StrJoin(simulator.Paths(), L"\n"));
+    return false;
+  }
+  return true;
 }
 
 int Executor::Exec() {
   std::wstring target;
   std::wstring_view arg0(argv[0]);
-  if (!IsWindowsShell(arg0, target)) {
-    if (!cleanup || !IsPwshTarget(arg0, target)) {
-      if (!LookPath(arg0, target)) {
-        bela::FPrintF(stderr, L"\x1b[31mbaulk-exec: unable lookup %s in path\n%s\x1b[0m", arg0,
-                      bela::StrJoin(simulator.Paths(), L"\n"));
-        return 1;
-      }
-    }
+  if (!FindArg0(arg0, target)) {
+    return 1;
   }
   DbgPrint(L"target %s subsystem is console: %b", target, console);
   bela::EscapeArgv ea;
@@ -247,7 +209,7 @@ int Executor::Exec() {
 }
 
 // ParseArgv todo
-bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
+bool Executor::ParseArgv(int argc, wchar_t **cargv) {
   bela::ParseArgv pa(argc, cargv, true);
   pa.Add(L"help", bela::no_argument, L'h')
       .Add(L"version", bela::no_argument, L'v')
@@ -259,12 +221,10 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
       .Add(L"vs", bela::no_argument, 1000) // load visual studio environment
       .Add(L"vs-preview", bela::no_argument, 1001)
       .Add(L"clang", bela::no_argument, 1002)
-      .Add(L"unchanged-title", bela::no_argument, 1003)
       .Add(L"time", bela::no_argument, 1004);
   bool usevs = false;
   bool usevspreview = false;
   bool clang = false;
-  bool unchangedTitle = false;
   std::wstring arch;
   std::vector<std::wstring> venvs;
   bela::error_code ec;
@@ -310,9 +270,6 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
         case 1002:
           clang = true;
           break;
-        case 1003:
-          unchangedTitle = true;
-          break;
         case 1004:
           summarizeTime = true;
           break;
@@ -341,11 +298,14 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
 
   for (size_t i = 0; i < Argv.size(); i++) {
     const auto arg = Argv[i];
+    // support KEY=VALUE env setter
     auto pos = arg.find(L'=');
     if (pos == std::wstring::npos) {
+      // FIND ARGS
       for (size_t j = i; j < Argv.size(); j++) {
         argv.emplace_back(Argv[j]);
       }
+      // BREAK ARGS PARSE
       break;
     }
     simulator.SetEnv(arg.substr(0, pos), arg.substr(pos + 1));
@@ -408,20 +368,13 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv, TitleManager &tm) {
     DbgPrint(L"Turn on venv: %s", as);
   }
   searcher.FlushEnv();
-  if (unchangedTitle) {
-    return true;
-  }
-  auto newtitle = AvailableEnvTitle(searcher.availableEnv);
-  DbgPrint(L"Change terminal title: %s", newtitle);
-  tm.UpdateTitle(newtitle);
   return true;
 }
 } // namespace baulk::exec
 
 int wmain(int argc, wchar_t **argv) {
   baulk::exec::Executor executor;
-  baulk::exec::TitleManager tm;
-  if (!executor.ParseArgv(argc, argv, tm)) {
+  if (!executor.ParseArgv(argc, argv)) {
     return 1;
   }
   return executor.Exec();

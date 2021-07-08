@@ -27,7 +27,7 @@ VALUE "FileDescription", L"baulk-exec - Baulk extended executor"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-exec.exe"
 VALUE "LegalCopyright", BAULKUI_COPYRIGHT
-VALUE "OriginalFilename", L"baulkexec.exe"
+VALUE "OriginalFilename", L"baulk-exec.exe"
 VALUE "ProductName", L"baulk-exec - Baulk extended executor"
 VALUE "ProductVersion", BAULK_VERSION
 END

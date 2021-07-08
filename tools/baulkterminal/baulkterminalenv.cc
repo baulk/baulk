@@ -19,7 +19,12 @@ inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
 }
 
 bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
-  if (shell.empty() || NameEquals(shell, L"pwsh")) {
+  if (shell.empty()) {
+    ea.Append(L"winsh");
+    DbgPrint(L"Use winsh");
+    return true;
+  }
+  if (NameEquals(shell, L"pwsh")) {
     // PowerShell 7 or PowerShell 5
     if (auto pwsh = baulk::pwsh::PwshExePath(); !pwsh.empty()) {
       ea.Append(pwsh);
@@ -127,7 +132,7 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   if (!conhost) {
     DbgPrint(L"Turn off conhost, Try to find Windows Terminal");
     if (auto wt = FindWindowsTerminal(); wt) {
-      ea.Assign(*wt).Append(L"--");
+      ea.Assign(*wt).Append(L"--title").Append(L"Windows Terminal \U0001F496 Baulk").Append(L"--");
       DbgPrint(L"Found Windows Terminal: %s", *wt);
     }
   }

@@ -7,7 +7,7 @@
 
 namespace baulk::exec {
 extern bool IsDebugMode;
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args&... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -32,7 +32,7 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
-template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, const Args&... args) {
+template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -60,9 +60,8 @@ using argv_t = std::vector<std::wstring_view>;
 constexpr const wchar_t *string_nullable(std::wstring_view str) { return str.empty() ? nullptr : str.data(); }
 constexpr wchar_t *string_nullable(std::wstring &str) { return str.empty() ? nullptr : str.data(); }
 
-inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
-  auto argexe = bela::StripSuffix(arg, L".exe");
-  return bela::EqualsIgnoreCase(argexe, exe);
+inline bool NameEquals(const std::wstring_view arg, const std::wstring_view exe) {
+  return bela::EqualsIgnoreCase(bela::StripSuffix(arg, L".exe"), exe);
 }
 } // namespace baulk::exec
 
