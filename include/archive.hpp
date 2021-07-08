@@ -103,6 +103,7 @@ public:
 private:
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
+bool SetFileTimeEx(std::wstring_view file, bela::Time t, bela::error_code &ec);
 std::optional<std::wstring> PathCat(std::wstring_view root, std::string_view sub);
 std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite = false);
 bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite = false);

@@ -97,6 +97,7 @@ bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_
     ec = bela::from_std_error_code(e, L"mkdir ");
     return false;
   }
+  baulk::archive::SetFileTimeEx(dir, file.time, ec);
   return true;
 }
 

@@ -152,4 +152,21 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
   return true;
 }
 
+bool SetFileTimeEx(std::wstring_view file, bela::Time t, bela::error_code &ec) {
+  auto FileHandle =
+      CreateFileW(file.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                  nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code(L"CreateFileW() ");
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  auto ft = bela::ToFileTime(t);
+  if (::SetFileTime(FileHandle, &ft, &ft, &ft) != TRUE) {
+    ec = bela::make_system_error_code(L"SetFileTime ");
+    return false;
+  }
+  return true;
+}
+
 } // namespace baulk::archive

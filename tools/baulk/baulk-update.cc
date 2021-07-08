@@ -144,7 +144,6 @@ private:
   Reader reader;
   std::wstring destination;
   bela::terminal::terminal_size termsz{0};
-  int64_t decompressed{0};
   size_t destsize{0};
   bool owfile{true};
   bool extractFile(const File &file, bela::error_code &ec);
@@ -190,6 +189,7 @@ bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_
     ec = bela::from_std_error_code(e, L"mkdir ");
     return false;
   }
+  baulk::archive::SetFileTimeEx(dir, file.time, ec);
   return true;
 }
 
@@ -426,7 +426,7 @@ inline std::wstring UnarchivePath(std::wstring_view path) {
   return bela::StringCat(dir, L"\\", filename.substr(0, filename.size() - extName.size()));
 }
 
-bool BaulkExecUpdate(std::wstring_view baulkexecNew, std::wstring_view baulkroot) {
+bool BaulkExecUpdate(std::wstring_view baulkexecNew) {
   bela::error_code ec;
   auto baulkexec = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.exe");
   auto baulkexecdel = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.del");
@@ -516,7 +516,7 @@ int BaulkUpdate() {
 
   auto baulkexecNew = bela::StringCat(outdir, L"\\bin\\baulk-exec.exe");
   if (bela::PathExists(baulkexecNew)) {
-    BaulkExecUpdate(baulkexecNew, baulk::BaulkRoot);
+    BaulkExecUpdate(baulkexecNew);
   }
   auto baulkupdate = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(baulkupdate)) {
