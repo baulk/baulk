@@ -13,5 +13,7 @@ int wmain(int argc, wchar_t **argv) {
     fclose(fd);
   }
   bela::FPrintF(stderr, L"%s\n", bela::narrow::StringCat("H: ", bela::narrow::AlphaNum(bela::narrow::Hex(123456))));
+  bela::FPrintF(stderr, L"EADDRINUSE: %s\nEWOULDBLOCK: %s\n", bela::make_stdc_error_code(EADDRINUSE).message,
+                bela::make_stdc_error_code(EWOULDBLOCK).message);
   return 0;
 }

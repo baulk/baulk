@@ -78,10 +78,6 @@ inline bool IsValidDivisor(double d) {
   return d != 0.0;
 }
 
-// Can't use std::round() because it is only available in C++11.
-// Note that we ignore the possibility of floating-point over/underflow.
-template <typename Double> inline double Round(Double d) { return d < 0 ? std::ceil(d - 0.5) : std::floor(d + 0.5); }
-
 // *sec may be positive or negative.  *ticks must be in the range
 // -kTicksPerSecond < *ticks < kTicksPerSecond.  If *ticks is negative it
 // will be normalized to a positive value by adjusting *sec accordingly.
@@ -233,7 +229,7 @@ template <template <typename> class Operation> inline Duration ScaleDouble(Durat
   double lo_frac = std::modf(lo_doub, &lo_int);
 
   // Rolls lo into hi if necessary.
-  int64_t lo64 = static_cast<int64_t>(Round(lo_frac * kTicksPerSecond));
+  int64_t lo64 = static_cast<int64_t>(std::round(lo_frac * kTicksPerSecond));
 
   Duration ans;
   if (!SafeAddRepHi(hi_int, lo_int, &ans))
@@ -699,7 +695,7 @@ void AppendNumberUnit(std::wstring *out, double n, DisplayUnit unit) {
   wchar_t buf[kBufferSize]; // also large enough to hold integer part
   wchar_t *ep = buf + kBufferSize;
   double d = 0;
-  int64_t frac_part = static_cast<int64_t>(Round(std::modf(n, &d) * unit.pow10));
+  int64_t frac_part = static_cast<int64_t>(std::round(std::modf(n, &d) * unit.pow10));
   int64_t int_part = static_cast<int64_t>(d);
   if (int_part != 0 || frac_part != 0) {
     wchar_t *bp = Format64(ep, 0, int_part); // always < 1000
