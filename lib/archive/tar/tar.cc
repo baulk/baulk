@@ -204,6 +204,7 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
   h.Name = parseString(hdr.name);
   h.LinkName = parseString(hdr.linkname);
   h.Size = parseNumeric(hdr.size);
+  h.Mode = parseNumeric(hdr.mode);
   h.UID = static_cast<int>(parseNumeric(hdr.uid));
   h.GID = static_cast<int>(parseNumeric(hdr.gid));
   h.ModTime = bela::FromUnix(parseNumeric(hdr.mtime), 0);

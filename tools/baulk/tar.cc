@@ -41,6 +41,28 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
   bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", BaseName(filename));
 }
 
+bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
+  auto wn = bela::ToWide(linkname);
+  if (!baulk::archive::NewSymlink(filename, wn, ec, true)) {
+    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
+    return false;
+  }
+  return true;
+}
+
+bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
+  if (bela::PathExists(dir, bela::FileAttribute::Dir)) {
+    return true;
+  }
+  std::error_code e;
+  if (!std::filesystem::create_directories(dir, e)) {
+    ec = bela::from_std_error_code(e, L"mkdir ");
+    return false;
+  }
+  baulk::archive::SetFileTimeEx(dir, t, ec);
+  return true;
+}
+
 bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
   if (!baulk::fs::MakeDir(dest, ec)) {
     return false;
@@ -85,7 +107,22 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     if (!out) {
       continue;
     }
-    if (fh->Size == 0) {
+    if (fh->IsDir()) {
+      bela::error_code le;
+      if (!extractDir(*out, fh->ModTime, le)) {
+        bela::FPrintF(stderr, L"\nuntar mkdir %s\n", ec.message);
+      }
+      continue;
+    }
+    if (fh->IsSymlink()) {
+      bela::error_code le;
+      if (!extractSymlink(*out, fh->LinkName, ec)) {
+        bela::FPrintF(stderr, L"\nuntar mklink %s\n", ec.message);
+      }
+      continue;
+    }
+    // i
+    if (!fh->IsRegular()) {
       continue;
     }
     auto fd = baulk::archive::NewFD(*out, ec, true);

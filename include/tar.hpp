@@ -175,6 +175,9 @@ struct Header {
   int GID{0};
   int Format{0};
   char Typeflag{0};
+  bool IsDir() const { return Typeflag == TypeDir; }
+  bool IsRegular() const { return Typeflag == TypeReg || Typeflag == TypeRegA; }
+  bool IsSymlink() const { return Typeflag == TypeSymlink; }
 };
 using Writer = std::function<bool(const void *data, size_t len, bela::error_code &ec)>;
 struct ExtractReader {
@@ -194,7 +197,7 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
   bool PositionAt(int64_t pos, bela::error_code &ec);
-  bool Discard(int64_t len, bela::error_code& ec);
+  bool Discard(int64_t len, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
   int64_t Size() const { return size; }
   HANDLE FD() const { return fd; }
