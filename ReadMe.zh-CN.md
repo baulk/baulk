@@ -6,6 +6,7 @@
 [![Total Downloads](https://img.shields.io/github/downloads/baulk/baulk/total.svg)](https://github.com/baulk/baulk/releases)
 [![Version](https://img.shields.io/github/v/release/baulk/baulk)](https://github.com/baulk/baulk/releases/latest)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/baulk/baulk)
 
 
 Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环境变量，易于使用，能够和 Windows Terminal 集成，能够添加到右键菜单... 无论是 zip/7z/msi 都能管理。
