@@ -10,7 +10,9 @@
 #include "archive.hpp"
 
 namespace baulk::archive::zip {
+// https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 // https://www.hanshq.net/zip.html
+// https://www.hanshq.net/zip2.html
 // https://github.com/nih-at/libzip/blob/master/lib/zip.h
 typedef enum zip_method_e : uint16_t {
   ZIP_STORE = 0,    /* stored (uncompressed) */
