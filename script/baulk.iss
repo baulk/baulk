@@ -60,8 +60,9 @@ DefaultDirName={userpf}\baulk
 PrivilegesRequired=lowest
 OutputBaseFilename=BaulkUserSetup-{#BaseNameSuffix}
 #else
-DefaultDirName={pf}\baulk
+DefaultDirName={commonpf}\baulk
 OutputBaseFilename=BaulkSetup-{#BaseNameSuffix}
+UsedUserAreasWarning=no
 #endif
 
 UninstallDisplayIcon={app}\bin\baulk.exe

@@ -39,20 +39,22 @@ if ($null -ne $InnoCli) {
 else {
     $InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
 }
+$BaseNameSuffix = $ArchitecturesInstallIn64BitMode
+if ($BaseNameSuffix.Length -eq 0) {
+    $BaseNameSuffix = "ia32"
+}
 
 Write-Host "Build InstallTarget: admin"
 
 &$InnoSetup "$BaulkIss" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode" "/dInstallTarget=admin"
-$BaulkSetupFile = "$BaulkSetup.exe"
-if (!(Test-Path "$BaulkSetupFile")) {
-    Write-Host "create baulk installer failed"
+if (!(Test-Path "BaulkSetup-$BaseNameSuffix.exe")) {
+    Write-Host "create baulk installer failed: BaulkSetup-$BaseNameSuffix.exe not found"
     exit 1
 }
 Write-Host "Build InstallTarget: user"
 &$InnoSetup "$BaulkIss" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode" "/dInstallTarget=user"
-$BaulkSetupFile = "$BaulkSetupUser.exe"
-if (!(Test-Path "$BaulkSetupFile")) {
-    Write-Host "create baulk user installer failed"
+if (!(Test-Path "BaulkUserSetup-$BaseNameSuffix.exe")) {
+    Write-Host "create baulk user installer failed: BaulkUserSetup-$BaseNameSuffix.exe not found"
     exit 1
 }
 
