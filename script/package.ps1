@@ -17,19 +17,16 @@ Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
 $MSVC_ARCH = "$env:MSVC_ARCH"
 switch ($MSVC_ARCH) {
     "amd64_arm64" {
-        $BaulkSetup = "BaulkSetupARM64"
         $ArchitecturesAllowed = "arm64"
         $ArchitecturesInstallIn64BitMode = "arm64"
         break
     }
     "amd64" {
-        $BaulkSetup = "BaulkSetupX64"
         $ArchitecturesAllowed = "x64"
         $ArchitecturesInstallIn64BitMode = "x64"
         break
     }
     Default {
-        $BaulkSetup = "BaulkSetup"
         $ArchitecturesAllowed = ''
         $ArchitecturesInstallIn64BitMode = ''
     }
@@ -43,12 +40,22 @@ else {
     $InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
 }
 
-&$InnoSetup "$BaulkIss" "/dBAULK_BASENAME=$BaulkSetup" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode"
+Write-Host "Build InstallTarget: admin"
+
+&$InnoSetup "$BaulkIss" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode" "/dInstallTarget=admin"
 $BaulkSetupFile = "$BaulkSetup.exe"
 if (!(Test-Path "$BaulkSetupFile")) {
     Write-Host "create baulk installer failed"
     exit 1
 }
+Write-Host "Build InstallTarget: user"
+&$InnoSetup "$BaulkIss" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode" "/dInstallTarget=user"
+$BaulkSetupFile = "$BaulkSetupUser.exe"
+if (!(Test-Path "$BaulkSetupFile")) {
+    Write-Host "create baulk user installer failed"
+    exit 1
+}
+
 $setupobj = Get-FileHash -Algorithm SHA256 $BaulkSetupFile
 $hashtext2 = $setupobj.Algorithm + ":" + $setupobj.Hash.ToLower()
 $hashtext2 | Out-File -Encoding utf8 -FilePath "$BaulkSetupFile.sum"

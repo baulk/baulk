@@ -4,10 +4,6 @@
 
 #define AppVersion GetVersionNumbersString(AddBackslash(SourcePath) + "..\build\bin\baulk.exe")
 
-#ifndef BAULK_BASENAME
-  #define BAULK_BASENAME "BaulkSetup"
-#endif
-
 #ifndef ArchitecturesAllowed
   #define ArchitecturesAllowed "x64"
 #endif
@@ -22,6 +18,12 @@
 
 #ifndef AppUserId
   #define AppUserId "Baulk"
+#endif
+
+#if "" == ArchitecturesInstallIn64BitMode
+  #define BaseNameSuffix "ia32"
+#else
+  #define BaseNameSuffix ArchitecturesInstallIn64BitMode
 #endif
 
 
@@ -40,7 +42,6 @@ SolidCompression=yes
 OutputDir=..\build
 SetupIconFile=baulk-setup.ico
 ChangesEnvironment=true
-OutputBaseFilename={#BAULK_BASENAME}
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
 ; anything but x64.
 ; "ArchitecturesInstallIn64BitMode=x64" requests that the install be
@@ -57,8 +58,10 @@ VersionInfoCopyright=Copyright © 2021. Baulk contributors
 #if "user" == InstallTarget
 DefaultDirName={userpf}\baulk
 PrivilegesRequired=lowest
+OutputBaseFilename=BaulkUserSetup-{#BaseNameSuffix}
 #else
 DefaultDirName={pf}\baulk
+OutputBaseFilename=BaulkSetup-{#BaseNameSuffix}
 #endif
 
 UninstallDisplayIcon={app}\bin\baulk.exe
