@@ -69,14 +69,9 @@ private:
 
 std::optional<std::wstring> FindBaulkInstallPath(bool systemTarget, bela::error_code &ec) {
   HKEY hkey = nullptr;
-  if (systemTarget) {
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Baulk)", &hkey) != ERROR_SUCCESS) {
-      return std::nullopt;
-    }
-  } else {
-    if (RegOpenKeyW(HKEY_CURRENT_USER, LR"(SOFTWARE\Baulk)", &hkey) != ERROR_SUCCESS) {
-      return std::nullopt;
-    }
+  if (RegOpenKeyW((systemTarget ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER), LR"(SOFTWARE\Baulk)", &hkey) !=
+      ERROR_SUCCESS) {
+    return std::nullopt;
   }
   auto closer = bela::finally([&] { RegCloseKey(hkey); });
   wchar_t buffer[4096];
