@@ -19,8 +19,12 @@ inline std::optional<std::wstring> GitForWindowsInstallPath(bela::error_code &ec
   HKEY hkey = nullptr;
   if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\GitForWindows)", &hkey) != ok) {
     if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\WOW6432Node\GitForWindows)", &hkey) != ok) {
-      ec = bela::make_system_error_code();
-      return std::nullopt;
+      if (RegOpenKeyW(HKEY_CURRENT_USER, LR"(SOFTWARE\GitForWindows)", &hkey) != ok) {
+        if (RegOpenKeyW(HKEY_CURRENT_USER, LR"(SOFTWARE\WOW6432Node\GitForWindows)", &hkey) != ok) {
+          ec = bela::make_system_error_code();
+          return std::nullopt;
+        }
+      }
     }
   }
   auto closer = bela::finally([&] { RegCloseKey(hkey); });

@@ -27,6 +27,9 @@ int cmd_bucket(const argv_t &argv);
 // archive
 int cmd_unzip(const argv_t &argv);
 int cmd_untar(const argv_t &argv);
+int cmd_version(const argv_t &argv);
+//
+void Version();
 
 // USAGE:
 void usage_baulk();

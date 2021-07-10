@@ -12,6 +12,7 @@
 namespace baulk {
 // https://github.com/baulk/bucket/commits/master.atom
 constexpr std::wstring_view DefaultBucket = L"https://github.com/baulk/bucket";
+
 class BaulkEnv {
 public:
   BaulkEnv(const BaulkEnv &) = delete;
@@ -55,6 +56,7 @@ public:
   }
   std::wstring_view Profile() const { return profile; }
   std::wstring_view Locale() const { return locale; }
+  baulk::InstallMode InstallMode() { return installMode; }
 
 private:
   BaulkEnv() = default;
@@ -65,7 +67,67 @@ private:
   Buckets buckets;
   std::vector<std::wstring> freezepkgs;
   baulk::compiler::Executor executor;
+  baulk::InstallMode installMode{InstallMode::Portable};
 };
+
+std::optional<std::wstring> FindBaulkInstallPath(bool systemTarget, bela::error_code &ec) {
+  HKEY hkey = nullptr;
+  if (systemTarget) {
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Baulk)", &hkey) != ERROR_SUCCESS) {
+      return std::nullopt;
+    }
+  } else {
+    if (RegOpenKeyW(HKEY_CURRENT_USER, LR"(SOFTWARE\Baulk)", &hkey) != ERROR_SUCCESS) {
+      return std::nullopt;
+    }
+  }
+  auto closer = bela::finally([&] { RegCloseKey(hkey); });
+  wchar_t buffer[4096];
+  DWORD type = 0;
+  DWORD bufsize = sizeof(buffer);
+  if (RegQueryValueExW(hkey, L"InstallPath", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) !=
+      ERROR_SUCCESS) {
+    ec = bela::make_system_error_code();
+    return std::nullopt;
+  }
+  if (type != REG_SZ) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"InstallPath not REG_SZ: ", type);
+    return std::nullopt;
+  }
+  return std::make_optional<std::wstring>(buffer);
+}
+
+inline InstallMode FindInstallModeImpl(std::wstring_view root) {
+  std::filesystem::path baulkRoot(root);
+  bela::error_code ec;
+  if (auto installPath = FindBaulkInstallPath(true, ec); installPath) {
+    baulk::DbgPrint(L"Find Baulk System Installer: %s", *installPath);
+    if (baulkRoot.compare(*installPath) == 0) {
+      return InstallMode::System;
+    }
+  }
+  if (auto installPath = FindBaulkInstallPath(false, ec); installPath) {
+    baulk::DbgPrint(L"Find Baulk User Installer: %s", *installPath);
+    if (baulkRoot.compare(*installPath) == 0) {
+      return InstallMode::User;
+    }
+  }
+  return InstallMode::Portable;
+}
+
+inline std::wstring BaulkRootPath() {
+  bela::error_code ec;
+  if (auto exedir = bela::ExecutableParent(ec); exedir) {
+    return std::wstring(bela::DirName(*exedir));
+  }
+  bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
+  return L".";
+}
+
+InstallMode FindInstallMode() {
+  //
+  return FindInstallModeImpl(BaulkRootPath());
+}
 
 bool InitializeGitPath(std::wstring &git) {
   if (bela::env::LookPath(L"git.exe", git, true)) {
@@ -110,20 +172,12 @@ inline std::wstring BaulkLocaleName() {
   return L"";
 }
 
-inline std::wstring BaulkRootPath() {
-  bela::error_code ec;
-  if (auto exedir = bela::ExecutableParent(ec); exedir) {
-    return std::wstring(bela::DirName(*exedir));
-  }
-  bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
-  return L".";
-}
-
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
+  root = BaulkRootPath();
+  installMode = FindInstallModeImpl(root);
+  baulk::DbgPrint(L"Baulk root '%s' InstallMode: %s\n", root, baulk::InstallModeName(installMode));
   locale = BaulkLocaleName();
   baulk::DbgPrint(L"Baulk locale name %s\n", locale);
-  root = BaulkRootPath();
-  baulk::DbgPrint(L"Expand root '%s'\n", root);
   profile = ProfileResolve(profile_, root);
   baulk::DbgPrint(L"Expand profile to '%s'", profile);
   if (!InitializeGitPath(git)) {
@@ -209,6 +263,8 @@ baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkEx
 int BaulkBucketWeights(std::wstring_view bucket) { return BaulkEnv::Instance().BaulkBucketWeights(bucket); }
 
 bool BaulkInitializeExecutor(bela::error_code &ec) { return BaulkEnv::Instance().InitializeExecutor(ec); }
+
+baulk::InstallMode BaulkInstallMode() { return BaulkEnv::Instance().InstallMode(); }
 
 inline bool BaulkIsRunning(DWORD pid) {
   if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid); hProcess != nullptr) {

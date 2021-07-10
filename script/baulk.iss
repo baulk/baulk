@@ -36,11 +36,11 @@ AppPublisherURL=https://github.com/baulk/baulk
 AppSupportURL=https://github.com/baulk/baulk
 LicenseFile=..\LICENSE
 WizardStyle=modern
-DefaultGroupName=baulk
+DefaultGroupName=Baulk
 Compression=lzma2
 SolidCompression=yes
 OutputDir=..\build
-SetupIconFile=baulk-setup.ico
+SetupIconFile=..\res\screw-driver.ico
 ChangesEnvironment=true
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
 ; anything but x64.
@@ -56,11 +56,11 @@ VersionInfoVersion={#AppVersion}
 VersionInfoCopyright=Copyright © 2021. Baulk contributors
 
 #if "user" == InstallTarget
-DefaultDirName={userpf}\baulk
+DefaultDirName={userpf}\Baulk
 PrivilegesRequired=lowest
 OutputBaseFilename=BaulkUserSetup-{#BaseNameSuffix}
 #else
-DefaultDirName={commonpf}\baulk
+DefaultDirName={commonpf}\Baulk
 OutputBaseFilename=BaulkSetup-{#BaseNameSuffix}
 UsedUserAreasWarning=no
 #endif
@@ -82,6 +82,7 @@ Source: "..\build\bin\baulk-lnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-lnk
 Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-update.exe"
 Source: "..\build\bin\ssh-askpass-baulk.exe"; DestDir: "{app}\bin"; DestName: "ssh-askpass-baulk.exe"
 Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterminal.exe"
+Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
 Source: "..\res\screw-driver.ico"; DestDir: "{app}\share\baulk"; DestName: "baulk.ico"
 
@@ -98,6 +99,13 @@ Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescri
 Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; AppUserModelID: "{#AppUserId}"
 Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
+
+[Registry]
+; Aides installing
+Root: HKLM; Subkey: Software\Baulk; ValueType: string; ValueName: CurrentVersion; ValueData: {#AppVersion}; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: IsAdminInstallMode
+Root: HKLM; Subkey: Software\Baulk; ValueType: string; ValueName: InstallPath; ValueData: {app}; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: IsAdminInstallMode
+Root: HKCU; Subkey: Software\Baulk; ValueType: string; ValueName: CurrentVersion; ValueData: {#AppVersion}; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: not IsAdminInstallMode
+Root: HKCU; Subkey: Software\Baulk; ValueType: string; ValueName: InstallPath; ValueData: {app}; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: not IsAdminInstallMode
 
 [Code]
 

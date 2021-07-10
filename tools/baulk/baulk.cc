@@ -1,5 +1,4 @@
 #include <bela/path.hpp>
-#include <baulkrev.hpp>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"
@@ -29,16 +28,6 @@ struct command_map_t {
   decltype(baulk::commands::cmd_install) *cmd;
 };
 
-void Version() {
-  bela::FPrintF(stdout, L"baulk %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION, BAULK_REFNAME,
-                BAULK_REVISION, BAULK_BUILD_TIME);
-}
-
-int cmd_version(const baulk::commands::argv_t &) {
-  Version();
-  return 0;
-}
-
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   baulk::cli::BaulkArgv ba(argc - 1, argv + 1);
   std::wstring_view profile;
@@ -65,7 +54,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
           baulk::commands::usage_baulk();
           exit(0);
         case 'v':
-          Version();
+          baulk::commands::Version();
           exit(0);
         case 'P':
           profile = oa;
@@ -123,7 +112,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
   constexpr command_map_t cmdmaps[] = {
       {L"help", baulk::commands::cmd_help},
       {L"h", baulk::commands::cmd_help}, // help alias
-      {L"version", cmd_version},
+      {L"version", baulk::commands::cmd_version},
       {L"install", baulk::commands::cmd_install},       // install
       {L"i", baulk::commands::cmd_install},             // install
       {L"list", baulk::commands::cmd_list},             // list installed

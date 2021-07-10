@@ -7,6 +7,7 @@
 #include <bela/path.hpp>
 #include <bela/process.hpp>
 #include <bela/parseargv.hpp>
+#include <bela/str_split_narrow.hpp>
 #include <jsonex.hpp>
 #include <zip.hpp>
 #include "indicators.hpp"
@@ -252,17 +253,17 @@ bool ResolveBaulkRev(std::wstring &releasename) {
     releasename.assign(BAULK_REFNAME);
     return false;
   }
-  auto out = bela::ToWide(ps.Out());
 
-  std::vector<std::wstring_view> lines = bela::StrSplit(out, bela::ByChar('\n'), bela::SkipEmpty());
-  constexpr std::wstring_view releaseprefix = L"Release:";
+  std::vector<std::string_view> lines =
+      bela::narrow::StrSplit(ps.Out(), bela::narrow::ByChar('\n'), bela::narrow::SkipEmpty());
+  constexpr std::string_view releaseprefix = "Release:";
   for (auto line : lines) {
     line = bela::StripAsciiWhitespace(line);
     if (!bela::StartsWith(line, releaseprefix)) {
       continue;
     }
     auto relname = bela::StripAsciiWhitespace(line.substr(releaseprefix.size()));
-    releasename.assign(relname);
+    releasename = bela::ToWide(relname);
     return true;
   }
   releasename.assign(BAULK_REFNAME);

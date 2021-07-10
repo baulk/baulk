@@ -84,6 +84,26 @@ inline const std::wstring_view BucketObserveModeName(BucketObserveMode m) {
   return L"Github";
 }
 
+enum InstallMode : int {
+  Portable = 0, // Portable
+  User = 1,     // User Installer
+  System = 2,   // System Installer
+};
+InstallMode FindInstallMode();
+inline const std::wstring_view InstallModeName(InstallMode m) {
+  switch (m) {
+  case InstallMode::Portable:
+    break;
+  case InstallMode::User:
+    return L"User Installer";
+  case InstallMode::System:
+    return L"System Installer";
+  default:
+    break;
+  }
+  return L"Portable";
+}
+
 struct Bucket {
   Bucket() = default;
   Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99,
@@ -113,6 +133,7 @@ Buckets &BaulkBuckets();
 int BaulkBucketWeights(std::wstring_view bucket);
 std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
+baulk::InstallMode BaulkInstallMode();
 bool BaulkInitializeExecutor(bela::error_code &ec);
 // package base
 
