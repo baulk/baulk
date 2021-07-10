@@ -18,14 +18,7 @@ Build Time:    %s
 }
 
 int cmd_version(const baulk::commands::argv_t &) {
-  bela::FPrintF(stdout, LR"(Baulk - Minimal Package Manager for Windows  [%s]
-InstallTarget: %s
-Release:       %s
-Commit:        %s
-Build Time:    %s
-)",
-                BAULK_VERSION, baulk::InstallModeName(baulk::BaulkInstallMode()), BAULK_REFNAME, BAULK_REVISION,
-                BAULK_BUILD_TIME);
+  Version();
   return 0;
 }
 

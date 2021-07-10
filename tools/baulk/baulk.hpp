@@ -133,7 +133,6 @@ Buckets &BaulkBuckets();
 int BaulkBucketWeights(std::wstring_view bucket);
 std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
-baulk::InstallMode BaulkInstallMode();
 bool BaulkInitializeExecutor(bela::error_code &ec);
 // package base
 

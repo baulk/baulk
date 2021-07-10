@@ -22,7 +22,22 @@ public:
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", DefaultBucket);
     return true;
   }
+  bool InitializeExecutor(bela::error_code &ec) {
+    if (!executor.Initialize()) {
+      ec = executor.LastErrorCode();
+      return false;
+    }
+    return true;
+  }
+  static BaulkEnv &Instance() {
+    static BaulkEnv baulkEnv;
+    return baulkEnv;
+  }
   std::wstring_view BaulkRoot() const { return root; }
+  std::wstring_view Profile() const { return profile; }
+  std::wstring_view Locale() const { return locale; }
+  std::wstring_view Git() const { return git; }
+  baulk::compiler::Executor &BaulkExecutor() { return executor; }
   Buckets &BaulkBuckets() { return buckets; }
   int BaulkBucketWeights(std::wstring_view bucket) {
     for (const auto &bk : buckets) {
@@ -32,15 +47,6 @@ public:
     }
     return 0;
   }
-  std::wstring_view Git() const { return git; }
-  baulk::compiler::Executor &BaulkExecutor() { return executor; }
-  bool InitializeExecutor(bela::error_code &ec) {
-    if (!executor.Initialize()) {
-      ec = executor.LastErrorCode();
-      return false;
-    }
-    return true;
-  }
   bool IsFrozen(std::wstring_view pkg) const {
     for (const auto &p : freezepkgs) {
       if (pkg == p) {
@@ -49,14 +55,6 @@ public:
     }
     return false;
   }
-  //
-  static BaulkEnv &Instance() {
-    static BaulkEnv baulkEnv;
-    return baulkEnv;
-  }
-  std::wstring_view Profile() const { return profile; }
-  std::wstring_view Locale() const { return locale; }
-  baulk::InstallMode InstallMode() { return installMode; }
 
 private:
   BaulkEnv() = default;
@@ -67,7 +65,6 @@ private:
   Buckets buckets;
   std::vector<std::wstring> freezepkgs;
   baulk::compiler::Executor executor;
-  baulk::InstallMode installMode{InstallMode::Portable};
 };
 
 std::optional<std::wstring> FindBaulkInstallPath(bool systemTarget, bela::error_code &ec) {
@@ -97,8 +94,17 @@ std::optional<std::wstring> FindBaulkInstallPath(bool systemTarget, bela::error_
   return std::make_optional<std::wstring>(buffer);
 }
 
-inline InstallMode FindInstallModeImpl(std::wstring_view root) {
-  std::filesystem::path baulkRoot(root);
+inline std::wstring BaulkRootPath() {
+  bela::error_code ec;
+  if (auto exedir = bela::ExecutableParent(ec); exedir) {
+    return std::wstring(bela::DirName(*exedir));
+  }
+  bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
+  return L".";
+}
+
+InstallMode FindInstallMode() {
+  std::filesystem::path baulkRoot(BaulkRootPath());
   bela::error_code ec;
   if (auto installPath = FindBaulkInstallPath(true, ec); installPath) {
     baulk::DbgPrint(L"Find Baulk System Installer: %s", *installPath);
@@ -113,20 +119,6 @@ inline InstallMode FindInstallModeImpl(std::wstring_view root) {
     }
   }
   return InstallMode::Portable;
-}
-
-inline std::wstring BaulkRootPath() {
-  bela::error_code ec;
-  if (auto exedir = bela::ExecutableParent(ec); exedir) {
-    return std::wstring(bela::DirName(*exedir));
-  }
-  bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
-  return L".";
-}
-
-InstallMode FindInstallMode() {
-  //
-  return FindInstallModeImpl(BaulkRootPath());
 }
 
 bool InitializeGitPath(std::wstring &git) {
@@ -174,8 +166,7 @@ inline std::wstring BaulkLocaleName() {
 
 bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
   root = BaulkRootPath();
-  installMode = FindInstallModeImpl(root);
-  baulk::DbgPrint(L"Baulk root '%s' InstallMode: %s\n", root, baulk::InstallModeName(installMode));
+  baulk::DbgPrint(L"Baulk root '%s'", root);
   locale = BaulkLocaleName();
   baulk::DbgPrint(L"Baulk locale name %s\n", locale);
   profile = ProfileResolve(profile_, root);
@@ -229,42 +220,16 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
 bool InitializeBaulkEnv(int argc, wchar_t *const *argv, std::wstring_view profile) {
   return BaulkEnv::Instance().Initialize(argc, argv, profile);
 }
-
-bool BaulkIsFrozenPkg(std::wstring_view pkg) {
-  //
-  return BaulkEnv::Instance().IsFrozen(pkg);
-}
-
-std::wstring_view BaulkRoot() {
-  //
-  return BaulkEnv::Instance().BaulkRoot();
-}
-Buckets &BaulkBuckets() {
-  //
-  return BaulkEnv::Instance().BaulkBuckets();
-}
-
-std::wstring_view BaulkGit() {
-  //
-  return BaulkEnv::Instance().Git();
-}
-
-std::wstring_view BaulkProfile() {
-  //
-  return BaulkEnv::Instance().Profile();
-}
-std::wstring_view BaulkLocale() {
-  //
-  return BaulkEnv::Instance().Locale();
-}
-
-baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }
-
-int BaulkBucketWeights(std::wstring_view bucket) { return BaulkEnv::Instance().BaulkBucketWeights(bucket); }
-
 bool BaulkInitializeExecutor(bela::error_code &ec) { return BaulkEnv::Instance().InitializeExecutor(ec); }
 
-baulk::InstallMode BaulkInstallMode() { return BaulkEnv::Instance().InstallMode(); }
+std::wstring_view BaulkRoot() { return BaulkEnv::Instance().BaulkRoot(); }
+Buckets &BaulkBuckets() { return BaulkEnv::Instance().BaulkBuckets(); }
+std::wstring_view BaulkGit() { return BaulkEnv::Instance().Git(); }
+std::wstring_view BaulkProfile() { return BaulkEnv::Instance().Profile(); }
+std::wstring_view BaulkLocale() { return BaulkEnv::Instance().Locale(); }
+baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }
+int BaulkBucketWeights(std::wstring_view bucket) { return BaulkEnv::Instance().BaulkBucketWeights(bucket); }
+bool BaulkIsFrozenPkg(std::wstring_view pkg) { return BaulkEnv::Instance().IsFrozen(pkg); }
 
 inline bool BaulkIsRunning(DWORD pid) {
   if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid); hProcess != nullptr) {
