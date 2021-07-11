@@ -108,18 +108,28 @@ Root: HKCU; Subkey: Software\Baulk; ValueType: string; ValueName: CurrentVersion
 Root: HKCU; Subkey: Software\Baulk; ValueType: string; ValueName: InstallPath; ValueData: {app}; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: not IsAdminInstallMode
 
 [Code]
+procedure LogError(Msg:String);
+begin
+    SuppressibleMsgBox(Msg,mbError,MB_OK,IDOK);
+    Log(Msg);
+end;
 
 procedure InstallWindowsTerminalFragment;
 var
-    AppPath,JSONPath:String;
+    AppPath,JSONDirectory,JSONPath:String;
 begin
     if IsAdminInstallMode() then
-        JSONPath:=ExpandConstant('{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json')
+        JSONDirectory:=ExpandConstant('{commonappdata}\Microsoft\Windows Terminal\Fragments\Baulk')
     else
-        JSONPath:=ExpandConstant('{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk\baulk.json');
+        JSONDirectory:=ExpandConstant('{localappdata}\Microsoft\Windows Terminal\Fragments\Baulk');
+    if not ForceDirectories(JSONDirectory) then begin
+        LogError('Line {#__LINE__}: Unable to install Windows Terminal Fragment to '+JSONDirectory);
+        Exit;
+    end;
+    JSONPath:=JSONDirectory+'\baulk.json';
     AppPath:=ExpandConstant('{app}');
     StringChangeEx(AppPath, '\', '/', True);
-    SaveStringToFile(JSONPath,
+    if not SaveStringToFile(JSONPath,
         '{'+
         '    "profiles": ['+
         '      {'+
@@ -130,7 +140,9 @@ begin
         '        "startingDirectory": "%USERPROFILE%"'+
         '      }'+
         '    ]'+
-        '  }',False);
+        '  }',False) then begin;
+        LogError('Line {#__LINE__}: Unable to install Windows Terminal Fragment to '+JSONPath)
+    end;
 end;
 
 procedure CurStepChanged(CurStep:TSetupStep);
