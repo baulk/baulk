@@ -65,6 +65,22 @@ constexpr char TypeGNUSparse = 'S';
 constexpr char TypeGNULongName = 'L';
 constexpr char TypeGNULongLink = 'K';
 
+// Mode constants from the USTAR spec:
+// See http://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html#tag_20_92_13_06
+constexpr int c_ISUID = 04000; // Set uid
+constexpr int c_ISGID = 02000; // Set gid
+constexpr int c_ISVTX = 01000; // Save text (sticky bit)
+
+// Common Unix mode constants; these are not defined in any common tar standard.
+// Header.FileInfo understands these, but FileInfoHeader will never produce these.
+constexpr int c_ISDIR = 040000;   // Directory
+constexpr int c_ISFIFO = 010000;  // FIFO
+constexpr int c_ISREG = 0100000;  // Regular file
+constexpr int c_ISLNK = 0120000;  // Symbolic link
+constexpr int c_ISBLK = 060000;   // Block special file
+constexpr int c_ISCHR = 020000;   // Character special file
+constexpr int c_ISSOCK = 0140000; // Socket
+
 // https://www.mkssoftware.com/docs/man4/tar.4.asp
 /*  ustar
  *    File Header (512 bytes)
@@ -178,6 +194,64 @@ struct Header {
   bool IsDir() const { return Typeflag == TypeDir; }
   bool IsRegular() const { return Typeflag == TypeReg || Typeflag == TypeRegA; }
   bool IsSymlink() const { return Typeflag == TypeSymlink; }
+  bela::os::FileMode FileMode() const {
+    using I = std::underlying_type_t<bela::os::FileMode>;
+    auto mode = static_cast<I>(Mode) & bela::os::ModePerm;
+    if ((Mode & c_ISUID) != 0) {
+      mode |= bela::os::ModeSetuid;
+    }
+    if ((Mode & c_ISGID) != 0) {
+      mode |= bela::os::ModeSetgid;
+    }
+    if ((Mode & c_ISVTX) != 0) {
+      mode |= bela::os::ModeSticky;
+    }
+    auto m = static_cast<I>(Mode) & (~07777);
+    switch (m) {
+    case c_ISDIR:
+      mode |= bela::os::ModeDir;
+      break;
+    case c_ISFIFO:
+      mode |= bela::os::ModeNamedPipe;
+      break;
+    case c_ISLNK:
+      mode |= bela::os::ModeSymlink;
+      break;
+    case c_ISBLK:
+      mode |= bela::os::ModeDevice;
+      break;
+    case c_ISCHR:
+      mode |= bela::os::ModeDevice;
+      mode |= bela::os::ModeCharDevice;
+      break;
+    case c_ISSOCK:
+      mode |= bela::os::ModeSocket;
+      break;
+    default:
+      break;
+    }
+    switch (Typeflag) {
+    case TypeSymlink:
+      mode |= bela::os::ModeSymlink;
+      break;
+    case TypeChar:
+      mode |= bela::os::ModeDevice;
+      mode |= bela::os::ModeCharDevice;
+      break;
+    case TypeBlock:
+      mode |= bela::os::ModeDevice;
+      break;
+    case TypeDir:
+      mode |= bela::os::ModeDir;
+      break;
+    case TypeFifo:
+      mode |= bela::os::ModeNamedPipe;
+      break;
+    default:
+      break;
+    }
+    return static_cast<bela::os::FileMode>(mode);
+  }
 };
 using Writer = std::function<bool(const void *data, size_t len, bela::error_code &ec)>;
 struct ExtractReader {
