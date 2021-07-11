@@ -22,6 +22,8 @@ enum FileMode : uint32_t {
 
   // Mask for the type bits. For regular files, none will be set.
   ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular,
+
+  ModePerm = 0777, // Unix permission bits
 };
 [[nodiscard]] constexpr FileMode operator&(FileMode L, FileMode R) noexcept {
   using I = std::underlying_type_t<FileMode>;
@@ -31,6 +33,11 @@ enum FileMode : uint32_t {
   using I = std::underlying_type_t<FileMode>;
   return static_cast<FileMode>(static_cast<I>(L) | static_cast<I>(R));
 }
+
+constexpr inline bool IsDir(FileMode m) { return (m & ModeDir) != 0; }
+constexpr inline bool IsRegular(FileMode m) { return (m & ModeType) == 0; }
+constexpr inline FileMode Perm(FileMode m) { return m & ModePerm; }
+constexpr inline FileMode Type(FileMode m) { return m & ModeType; }
 
 } // namespace bela::os
 
