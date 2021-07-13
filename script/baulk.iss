@@ -26,7 +26,6 @@
   #define BaseNameSuffix ArchitecturesInstallIn64BitMode
 #endif
 
-
 [Setup]
 AppId=83ab2204-bde5-4385-9e13-fa8b6276a57e
 AppName=Baulk
@@ -37,7 +36,8 @@ AppSupportURL=https://github.com/baulk/baulk
 LicenseFile=..\LICENSE
 WizardStyle=modern
 DefaultGroupName=Baulk
-Compression=lzma2
+Compression=lzma2/ultra64
+LZMAUseSeparateProcess=yes
 SolidCompression=yes
 OutputDir=..\build
 SetupIconFile=..\res\screw-driver.ico
@@ -55,20 +55,20 @@ VersionInfoVersion={#AppVersion}
 VersionInfoCopyright=Copyright © 2021. Baulk contributors
 
 #if "user" == InstallTarget
+AppVerName=Baulk (User)
 VersionInfoDescription=Baulk User Installer
 DefaultDirName={userpf}\Baulk
 PrivilegesRequired=lowest
 OutputBaseFilename=BaulkUserSetup-{#BaseNameSuffix}
 VersionInfoOriginalFileName=BaulkUserSetup-{#BaseNameSuffix}.exe
 #else
+AppVerName=Baulk
 VersionInfoDescription=Baulk System Installer
 DefaultDirName={commonpf}\Baulk
 OutputBaseFilename=BaulkSetup-{#BaseNameSuffix}
 VersionInfoOriginalFileName=BaulkSetup-{#BaseNameSuffix}.exe
 UsedUserAreasWarning=no
 #endif
-
-
 
 UninstallDisplayIcon={app}\bin\baulk.exe
 
