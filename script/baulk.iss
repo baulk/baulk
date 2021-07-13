@@ -29,7 +29,7 @@
 
 [Setup]
 AppId=83ab2204-bde5-4385-9e13-fa8b6276a57e
-AppName=baulk
+AppName=Baulk
 AppVersion={#AppVersion}
 AppPublisher=Baulk contributors
 AppPublisherURL=https://github.com/baulk/baulk
@@ -51,19 +51,24 @@ ArchitecturesAllowed={#ArchitecturesAllowed}
 ArchitecturesInstallIn64BitMode={#ArchitecturesInstallIn64BitMode}
 ; version info
 VersionInfoCompany=Baulk contributors
-VersionInfoDescription=baulk - Minimal Package Manager for Windows
 VersionInfoVersion={#AppVersion}
 VersionInfoCopyright=Copyright © 2021. Baulk contributors
 
 #if "user" == InstallTarget
+VersionInfoDescription=Baulk User Installer
 DefaultDirName={userpf}\Baulk
 PrivilegesRequired=lowest
 OutputBaseFilename=BaulkUserSetup-{#BaseNameSuffix}
+VersionInfoOriginalFileName=BaulkUserSetup-{#BaseNameSuffix}.exe
 #else
+VersionInfoDescription=Baulk System Installer
 DefaultDirName={commonpf}\Baulk
 OutputBaseFilename=BaulkSetup-{#BaseNameSuffix}
+VersionInfoOriginalFileName=BaulkSetup-{#BaseNameSuffix}.exe
 UsedUserAreasWarning=no
 #endif
+
+
 
 UninstallDisplayIcon={app}\bin\baulk.exe
 
@@ -130,18 +135,18 @@ begin
     AppPath:=ExpandConstant('{app}');
     StringChangeEx(AppPath, '\', '/', True);
     if not SaveStringToFile(JSONPath,
-        '{'+
-        '    "profiles": ['+
-        '      {'+
-        '        "name": "Baulk",'+
-        '        "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'+
-        '        "commandline": "'+AppPath+'/bin/baulk-exec.exe --vs --clang winsh",'+
-        '        "icon": "'+AppPath+'/share/baulk/baulk.ico",'+
-        '        "startingDirectory": "%USERPROFILE%", '+
-        '        "tabTitle": "Windows Terminal \ud83d\udc96 Baulk"'+
-        '      }'+
-        '    ]'+
-        '  }',False) then begin;
+        '{'+#10
+        '  "profiles": ['#10+
+        '    {'#10+
+        '      "name": "Baulk",'#10+
+        '      "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'#10+
+        '      "commandline": "'+AppPath+'/bin/baulk-exec.exe --vs --clang winsh",'#10+
+        '      "icon": "'+AppPath+'/share/baulk/baulk.ico",'#10+
+        '      "startingDirectory": "%USERPROFILE%",'#10+
+        '      "tabTitle": "Windows Terminal \ud83d\udc96 Baulk"'#10+
+        '    }'#10+
+        '  ]'#10+
+        '}',False) then begin;
         LogError('Line {#__LINE__}: Unable to install Windows Terminal Fragment to '+JSONPath)
     end;
 end;
