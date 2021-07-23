@@ -23,6 +23,8 @@ inline void fromle(FileHeader &fh) {
 
 void fromle(OptionalHeader *oh, const IMAGE_OPTIONAL_HEADER64 *oh64) {
   oh->Magic = bela::fromle(oh64->Magic);
+  oh->MajorLinkerVersion = oh64->MajorLinkerVersion;
+  oh->MinorLinkerVersion = oh64->MinorLinkerVersion;
   oh->SizeOfCode = bela::fromle(oh64->SizeOfCode);
   oh->SizeOfInitializedData = bela::fromle(oh64->SizeOfInitializedData);
   oh->SizeOfUninitializedData = bela::fromle(oh64->SizeOfUninitializedData);
@@ -57,6 +59,8 @@ void fromle(OptionalHeader *oh, const IMAGE_OPTIONAL_HEADER64 *oh64) {
 
 void fromle(OptionalHeader *oh, const IMAGE_OPTIONAL_HEADER32 *oh32) {
   oh->Magic = bela::fromle(oh32->Magic);
+  oh->MajorLinkerVersion = oh32->MajorLinkerVersion;
+  oh->MinorLinkerVersion = oh32->MinorLinkerVersion;
   oh->SizeOfCode = bela::fromle(oh32->SizeOfCode);
   oh->SizeOfInitializedData = bela::fromle(oh32->SizeOfInitializedData);
   oh->SizeOfUninitializedData = bela::fromle(oh32->SizeOfUninitializedData);
