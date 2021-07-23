@@ -38,7 +38,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include "str_cat_narrow.hpp"
+#include <bela/str_cat_narrow.hpp>
 
 namespace bela::narrow::strings_internal {
 // The default formatter. Converts alpha-numeric types to strings.

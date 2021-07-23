@@ -49,6 +49,7 @@ int wmain() {
   bela::FPrintF(stderr, L"tick: %d\n", bela::ToUnixSeconds(tickNow));
   auto tickNow2 = bela::FromFileTime(ft);
   bela::FPrintF(stderr, L"FromFileTime time:  %s\n", bela::FormatTime(tickNow2));
+  bela::FPrintF(stderr, L"FromFileTime time(Narrow):  %s\n", bela::FormatTimeNarrow(tickNow2));
   TIME_ZONE_INFORMATION tz_info;
   GetTimeZoneInformation(&tz_info);
 

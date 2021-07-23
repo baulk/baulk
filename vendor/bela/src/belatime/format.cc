@@ -5,14 +5,13 @@
 #include <bela/terminal.hpp>
 
 namespace bela {
-
-const wchar_t kDigits[] = L"0123456789";
-const char kDigitsA[] = "0123456789";
-const int kDigits10_64 = 18;
+constexpr char kDigits[] = "0123456789";
+constexpr int kDigits10_64 = 18;
 // Formats a 64-bit integer in the given field width.  Note that it is up
 // to the caller of Format64() [and Format02d()/FormatOffset()] to ensure
 // that there is sufficient space before ep to hold the conversion.
-wchar_t *Format64(wchar_t *ep, int width, std::int_fast64_t v) {
+
+template <typename CharT> CharT *Format64(CharT *ep, int width, std::int_fast64_t v) {
   bool neg = false;
   if (v < 0) {
     --width;
@@ -26,47 +25,13 @@ wchar_t *Format64(wchar_t *ep, int width, std::int_fast64_t v) {
         last_digit += 10;
       }
       --width;
-      *--ep = kDigits[last_digit];
+      *--ep = static_cast<CharT>(kDigits[last_digit]);
     }
     v = -v;
   }
   do {
     --width;
-    *--ep = kDigits[v % 10];
-  } while (v /= 10);
-  while (--width >= 0) {
-    *--ep = '0'; // zero pad
-  }
-  if (neg) {
-    *--ep = '-';
-  }
-  return ep;
-}
-
-// Formats a 64-bit integer in the given field width.  Note that it is up
-// to the caller of Format64() [and Format02d()/FormatOffset()] to ensure
-// that there is sufficient space before ep to hold the conversion.
-char *Format64(char *ep, int width, std::int_fast64_t v) {
-  bool neg = false;
-  if (v < 0) {
-    --width;
-    neg = true;
-    if (v == (std::numeric_limits<std::int_fast64_t>::min)()) {
-      // Avoid negating minimum value.
-      std::int_fast64_t last_digit = -(v % 10);
-      v /= 10;
-      if (last_digit < 0) {
-        ++v;
-        last_digit += 10;
-      }
-      --width;
-      *--ep = kDigitsA[last_digit];
-    }
-    v = -v;
-  }
-  do {
-    --width;
-    *--ep = kDigitsA[v % 10];
+    *--ep = static_cast<CharT>(kDigits[v % 10]);
   } while (v /= 10);
   while (--width >= 0) {
     *--ep = '0'; // zero pad
@@ -78,15 +43,9 @@ char *Format64(char *ep, int width, std::int_fast64_t v) {
 }
 
 // Formats [0 .. 99] as %02d.
-inline wchar_t *Format02d(wchar_t *ep, int v) {
-  *--ep = kDigits[v % 10];
-  *--ep = kDigits[(v / 10) % 10];
-  return ep;
-}
-
-inline char *Format02d(char *ep, int v) {
-  *--ep = kDigitsA[v % 10];
-  *--ep = kDigitsA[(v / 10) % 10];
+template <typename CharT> constexpr inline CharT *Format02d(CharT *ep, int v) {
+  *--ep = static_cast<CharT>(kDigits[v % 10]);
+  *--ep = static_cast<CharT>(kDigits[(v / 10) % 10]);
   return ep;
 }
 
@@ -97,8 +56,8 @@ template <typename T> std::basic_string_view<T> trimSuffixZero(std::basic_string
   return sv;
 }
 
-// ABSL_DLL extern const char RFC3339_full[] = "%Y-%m-%d%ET%H:%M:%E*S%Ez";
-// ABSL_DLL extern const char RFC3339_sec[] = "%Y-%m-%d%ET%H:%M:%S%Ez";
+//  extern const char RFC3339_full[] = "%Y-%m-%d%ET%H:%M:%E*S%Ez";
+//  extern const char RFC3339_sec[] = "%Y-%m-%d%ET%H:%M:%S%Ez";
 std::wstring DateTime::Format(bool nano) {
   std::wstring stime;
   constexpr size_t bufsize = sizeof("2020-12-06T18:12:47.9858521+08:00") + 6;

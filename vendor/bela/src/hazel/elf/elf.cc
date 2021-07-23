@@ -3,44 +3,30 @@
 #include "internal.hpp"
 
 namespace hazel::elf {
-//
-
+// ELF parse code
 bool File::NewFile(std::wstring_view p, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
+  auto fd_ = bela::io::NewFile(p, ec);
+  if (!fd_) {
     return false;
   }
-  fd = CreateFileW(p.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  needClosed = true;
-  return ParseFile(ec);
+  fd = std::move(*fd_);
+  return parseFile(ec);
 }
 
 bool File::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
-    return false;
-  }
-  fd = fd_;
+  fd.Assgin(fd_, false);
   size = sz;
-  return ParseFile(ec);
+  return parseFile(ec);
 }
 
-bool File::ParseFile(bela::error_code &ec) {
+bool File::parseFile(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    LARGE_INTEGER li;
-    if (GetFileSizeEx(fd, &li) != TRUE) {
-      ec = bela::make_system_error_code(L"GetFileSizeEx: ");
+    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
       return false;
     }
-    size = li.QuadPart;
   }
   uint8_t ident[16];
-  if (!ReadAt(ident, sizeof(ident), 0, ec)) {
+  if (!fd.ReadAt(ident, 0, ec)) {
     return false;
   }
   constexpr uint8_t elfmagic[4] = {'\x7f', 'E', 'L', 'F'};
@@ -87,7 +73,7 @@ bool File::ParseFile(bela::error_code &ec) {
   switch (fh.Class) {
   case ELFCLASS32: {
     Elf32_Ehdr hdr;
-    if (!ReadAt(&hdr, sizeof(hdr), 0, ec)) {
+    if (!fd.ReadAt(hdr, 0, ec)) {
       return false;
     }
     fh.Type = endian_cast(hdr.e_type);
@@ -108,7 +94,7 @@ bool File::ParseFile(bela::error_code &ec) {
   } break;
   case ELFCLASS64: {
     Elf64_Ehdr hdr;
-    if (!ReadAt(&hdr, sizeof(hdr), 0, ec)) {
+    if (!fd.ReadAt(hdr, 0, ec)) {
       return false;
     }
     fh.Type = endian_cast(hdr.e_type);
@@ -149,7 +135,7 @@ bool File::ParseFile(bela::error_code &ec) {
     auto p = &progs[i];
     if (fh.Class == ELFCLASS32) {
       Elf32_Phdr ph;
-      if (!ReadAt(&ph, sizeof(ph), off, ec)) {
+      if (!fd.ReadAt(ph, off, ec)) {
         return false;
       }
       p->Type = endian_cast(ph.p_type);
@@ -162,7 +148,7 @@ bool File::ParseFile(bela::error_code &ec) {
       p->Align = endian_cast(ph.p_align);
     } else {
       Elf64_Phdr ph;
-      if (!ReadAt(&ph, sizeof(ph), off, ec)) {
+      if (!fd.ReadAt(ph, off, ec)) {
         return false;
       }
       p->Type = endian_cast(ph.p_type);
@@ -189,7 +175,7 @@ bool File::ParseFile(bela::error_code &ec) {
     auto p = &sections[i];
     if (fh.Class == ELFCLASS32) {
       Elf32_Shdr sh;
-      if (!ReadAt(&sh, sizeof(sh), off, ec)) {
+      if (!fd.ReadAt(sh, off, ec)) {
         return false;
       }
       p->Type = endian_cast(sh.sh_type);
@@ -205,7 +191,7 @@ bool File::ParseFile(bela::error_code &ec) {
     } else {
       Elf64_Shdr sh;
       // constexpr auto n=sizeof(Elf64_Shdr);
-      if (!ReadAt(&sh, sizeof(sh), off, ec)) {
+      if (!fd.ReadAt(sh, off, ec)) {
         return false;
       }
       p->Type = endian_cast(sh.sh_type);
@@ -225,7 +211,7 @@ bool File::ParseFile(bela::error_code &ec) {
     }
     if (fh.Class == ELFCLASS32) {
       Elf32_Chdr ch;
-      if (!ReadAt(&ch, sizeof(ch), off, ec)) {
+      if (!fd.ReadAt(ch, off, ec)) {
         return false;
       }
       p->compressionType = endian_cast(ch.ch_type);
@@ -234,7 +220,7 @@ bool File::ParseFile(bela::error_code &ec) {
       p->compressionOffset = sizeof(ch);
     } else {
       Elf64_Chdr ch;
-      if (!ReadAt(&ch, sizeof(ch), off, ec)) {
+      if (!fd.ReadAt(ch, off, ec)) {
         return false;
       }
       p->compressionType = endian_cast(ch.ch_type);
@@ -251,7 +237,7 @@ bool File::ParseFile(bela::error_code &ec) {
     return false;
   }
   for (auto i = 0; i < shnum; i++) {
-    sections[i].Name = getString(buffer.Span(), static_cast<int>(sections[i].nameIndex));
+    sections[i].Name = getString(buffer.make_const_span(), static_cast<int>(sections[i].nameIndex));
   }
   return true;
 }

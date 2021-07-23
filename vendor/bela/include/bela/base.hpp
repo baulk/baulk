@@ -17,14 +17,17 @@
 #include <vector>
 #include <system_error>
 #include <memory>
+#include "types.hpp"
 #include "str_cat.hpp"
 
 namespace bela {
 constexpr long ErrNone = 0;
+constexpr long ErrEOF = ERROR_HANDLE_EOF;
 constexpr long ErrGeneral = 0x4001;
 constexpr long ErrSkipParse = 0x4002;
 constexpr long ErrParseBroken = 0x4003;
 constexpr long ErrFileTooSmall = 0x4004;
+constexpr long ErrFileAlreadyOpened = 0x4005;
 constexpr long ErrEnded = 654320;
 constexpr long ErrCanceled = 654321;
 constexpr long ErrUnimplemented = 654322; // feature not implemented
@@ -167,9 +170,6 @@ template <class F> inline final_act<F> finally(const F &f) noexcept { return fin
 
 template <class F> inline final_act<F> finally(F &&f) noexcept { return final_act<F>(std::forward<F>(f)); }
 
-constexpr int64_t SizeUnInitialized{-1};
-
-template <typename T, typename K> constexpr bool FlagIsTrue(T a, K b) { return (a & static_cast<T>(b)) != 0; }
 } // namespace bela
 
 #endif

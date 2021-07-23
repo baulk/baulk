@@ -134,6 +134,7 @@ inline std::string FormatTimeNarrow(bela::Time t, bool nano = false) {
   auto dt = LocalDateTime(t);
   return dt.FormatNarrow(nano);
 }
+
 // Coordinated Universal Time
 inline std::wstring FormatUniversalTime(bela::Time t, bool nano = false) { return DateTime(t).Format(nano); }
 inline std::string FormatUniversalTimeNarrow(bela::Time t, bool nano = false) { return DateTime(t).FormatNarrow(nano); }

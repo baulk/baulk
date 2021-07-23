@@ -22,13 +22,14 @@ Function Invoke-BatchFile {
 }
 
 $vsinstalls = @(
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community"
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
-    "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community"
-    "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools"
+    "$env:ProgramFiles\Microsoft Visual Studio\2022\Enterprise"
+    "$env:ProgramFiles\Microsoft Visual Studio\2022\Community"
+    "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools"
+    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise"
+    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Community"
+    "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\BuildTools"
 )
 $vsvars = ""
-
 foreach ($vi in $vsinstalls) {
     if (Test-Path "$vi\VC\Auxiliary\Build\vcvarsall.bat") {
         $vsvars = "$vi\VC\Auxiliary\Build\vcvarsall.bat"

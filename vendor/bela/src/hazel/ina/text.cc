@@ -94,41 +94,41 @@ FE FF	UTF-16, big-endian
 FF FE	UTF-16, little-endian
 EF BB BF	UTF-8
 */
-status_t lookup_text(bela::MemView mv, hazel_result &hr) {
+status_t lookup_text(bela::bytes_view bv, hazel_result &hr) {
   //
-  switch (mv[0]) {
+  switch (bv[0]) {
   case 0x2B:
-    if (mv.size() >= 3 && mv[1] == 0x2F && mv[2] == 0xbf) {
+    if (bv.size() >= 3 && bv[1] == 0x2F && bv[2] == 0xbf) {
       // constexpr const byte_t utf7mgaic[]={0x2b,0x2f,0xbf};
       hr.assign(types::utf7, L"UTF-7 text");
     }
     break;
   case 0xEF: // UTF8 BOM 0xEF 0xBB 0xBF
-    if (mv.size() >= 3 && mv[1] == 0xBB && mv[2] == 0xBF) {
+    if (bv.size() >= 3 && bv[1] == 0xBB && bv[2] == 0xBF) {
       hr.assign(types::utf8bom, L"UTF-8 Unicode (with BOM) text");
       return Found;
     }
     break;
   case 0xFF: // UTF16LE 0xFF 0xFE
-    if (mv.size() > 4 && mv[1] == 0xFE && mv[2] == 0 && mv[3] == 0) {
+    if (bv.size() > 4 && bv[1] == 0xFE && bv[2] == 0 && bv[3] == 0) {
       hr.assign(types::utf32le, L"Little-endian UTF-32 Unicode text");
       return Found;
     }
-    if (mv.size() >= 2 && mv[1] == 0xFE) {
+    if (bv.size() >= 2 && bv[1] == 0xFE) {
       hr.assign(types::utf16le, L"Little-endian UTF-16 Unicode text");
       return Found;
     }
 
     break;
   case 0xFE: // UTF16BE 0xFE 0xFF
-    if (mv.size() >= 2 && mv[1] == 0xFF) {
+    if (bv.size() >= 2 && bv[1] == 0xFF) {
       hr.assign(types::utf16be, L"Big-endian UTF-16 Unicode text");
       return Found;
     }
     break;
     // FF FE 00 00
   case 0x0:
-    if (mv.size() >= 4 && mv[1] == 0 && mv[2] == 0xFE && mv[3] == 0xFF) {
+    if (bv.size() >= 4 && bv[1] == 0 && bv[2] == 0xFE && bv[3] == 0xFF) {
       hr.assign(types::utf32be, L"Big-endian UTF-32 Unicode text");
       return Found;
     }
@@ -140,7 +140,7 @@ status_t lookup_text(bela::MemView mv, hazel_result &hr) {
 }
 
 //////// --------------> use chardet
-status_t lookup_chardet(bela::MemView mv, hazel_result &hr) {
+status_t lookup_chardet(bela::bytes_view bv, hazel_result &hr) {
   if (hr.ZeroExists()) {
     hr.assign(types::none, L"Binary data");
     return Found;
@@ -149,16 +149,16 @@ status_t lookup_chardet(bela::MemView mv, hazel_result &hr) {
   return Found;
 }
 
-status_t LookupText(bela::MemView mv, hazel_result &hr) {
-  if (lookup_text(mv, hr) != Found) {
-    lookup_chardet(mv, hr);
+status_t LookupText(bela::bytes_view bv, hazel_result &hr) {
+  if (lookup_text(bv, hr) != Found) {
+    lookup_chardet(bv, hr);
   }
   // check text
   std::wstring shebangline;
   switch (hr.type()) {
   case types::utf8: {
     // Note that we may get truncated UTF-8 data
-    auto line = mv.sv();
+    auto line = bv.make_string_view();
     auto pos = line.find_first_of("\r\n");
     if (pos != std::string_view::npos) {
       line = line.substr(0, pos);
@@ -167,7 +167,7 @@ status_t LookupText(bela::MemView mv, hazel_result &hr) {
   } break;
   case types::utf8bom: {
     // Note that we may get truncated UTF-8 data
-    auto line = mv.submv(3).sv();
+    auto line = bv.make_string_view(3);
     auto pos = line.find_first_of("\r\n");
     if (pos != std::string_view::npos) {
       line = line.substr(0, pos);
@@ -175,7 +175,7 @@ status_t LookupText(bela::MemView mv, hazel_result &hr) {
     shebangline = bela::ToWide(line);
   } break;
   case types::utf16le: {
-    auto line = mv.submv(2).wsv();
+    auto line = bv.make_string_view<wchar_t>(2);
     auto pos = line.find_first_of(L"\r\n");
     if (pos != std::wstring_view::npos) {
       line = line.substr(0, pos);
@@ -183,7 +183,7 @@ status_t LookupText(bela::MemView mv, hazel_result &hr) {
     shebangline = line;
   } break;
   case types::utf16be: {
-    auto besb = mv.submv(2).wsv();
+    auto besb = bv.make_string_view<wchar_t>(2);
     shebangline.resize(besb.size());
     for (size_t i = 0; i < besb.size(); i++) {
       shebangline[i] = static_cast<wchar_t>(bela::swap16(static_cast<uint16_t>(besb[i])));

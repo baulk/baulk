@@ -7,7 +7,6 @@ PE32 Format image (from: Wikipedia):
 
 ![](./images/pe32.svg)
 
-
 ## IsWow64Process2
 
 ```c++
@@ -50,3 +49,14 @@ BOOL WINAPI IsWow64Process2(
 # Thanks
 
 Port from [https://github.com/golang/go/tree/master/src/debug/pe](https://github.com/golang/go/tree/master/src/debug/pe)
+
+Thanks [saferwall/pe](https://github.com/saferwall/pe)
+
+# References
+
+- [Peering Inside the PE: A Tour of the Win32 Portable Executable File Format by Matt Pietrek](http://bytepointer.com/resources/pietrek_peering_inside_pe.htm)
+- [An In-Depth Look into the Win32 Portable Executable File Format - Part 1 by Matt Pietrek](http://www.delphibasics.info/home/delphibasicsarticles/anin-depthlookintothewin32portableexecutablefileformat-part1)
+- [An In-Depth Look into the Win32 Portable Executable File Format - Part 2 by Matt Pietrek](http://www.delphibasics.info/home/delphibasicsarticles/anin-depthlookintothewin32portableexecutablefileformat-part2)
+- [Portable Executable File Format](https://blog.kowalczyk.info/articles/pefileformat.html)
+- [PE Format MSDN spec](https://docs.microsoft.com/en-us/windows/win32/debug/pe-format)
+- https://www.ntcore.com/files/dotnetformat.htm

@@ -3,7 +3,7 @@
 #include "internal.hpp"
 
 namespace hazel::elf {
-bool File::gnuVersionInit(std::span<uint8_t> str) {
+bool File::gnuVersionInit(std::span<const uint8_t> str) {
   if (gnuNeed.size() != 0) {
     // Already initialized
     return true;
@@ -45,7 +45,7 @@ bool File::gnuVersionInit(std::span<uint8_t> str) {
       auto nameoff = cast_from<uint32_t>(d.data() + j + 8);
       auto ndxNext = cast_from<uint32_t>(d.data() + j + 12);
       auto name = getString(str, static_cast<int>(nameoff));
-      if (ndx >= gnuNeed.size()) {
+      if (static_cast<size_t>(ndx) >= gnuNeed.size()) {
         gnuNeed.resize(2 * (ndx + 1));
       }
       gnuNeed[ndx].file = file;
@@ -72,7 +72,7 @@ bool File::DynamicSymbols(std::vector<Symbol> &syms, bela::error_code &ec) {
   if (!getSymbols(SHT_DYNSYM, syms, strdata, ec)) {
     return false;
   }
-  if (gnuVersionInit(strdata.Span())) {
+  if (gnuVersionInit(strdata.make_const_span())) {
     for (int i = 0; i < static_cast<int>(syms.size()); i++) {
       gnuVersion(i, syms[i].Library, syms[i].Version);
     }
@@ -88,7 +88,7 @@ bool File::ImportedSymbols(std::vector<ImportedSymbol> &symbols, bela::error_cod
   if (!getSymbols(SHT_DYNSYM, syms, strdata, ec)) {
     return false;
   }
-  gnuVersionInit(strdata.Span());
+  gnuVersionInit(strdata.make_const_span());
   symbols.reserve(syms.size());
   for (int i = 0; i < static_cast<int>(syms.size()); i++) {
     const auto &s = syms[i];

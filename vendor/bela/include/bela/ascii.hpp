@@ -44,6 +44,7 @@
 #include <cstring>
 #include <string>
 #include <algorithm>
+#include "types.hpp"
 
 // https://devblogs.microsoft.com/oldnewthing/?p=94836
 // What is __wchar_t (with the leading double underscores) and why am I getting
@@ -53,8 +54,9 @@
 namespace bela {
 namespace ascii_internal {
 
-template <typename T, size_t N> bool character_contains(const T (&a)[N], T c) {
-  static_assert(std::is_same_v<T, typename std::char_traits<T>::char_type>, "Bad char_traits for character_contains");
+template <typename T, size_t N>
+requires bela::character<T>
+bool character_contains(const T (&a)[N], T c) {
   for (const auto ch : a) {
     if (ch == c) {
       return true;

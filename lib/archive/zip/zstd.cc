@@ -20,7 +20,7 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
   uint32_t crc32val = 0;
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(binsize));
-    if (!ReadFull(inbuf.data(), static_cast<size_t>(minsize), ec)) {
+    if (!fd.ReadFull({inbuf.data(), static_cast<size_t>(minsize)}, ec)) {
       return false;
     }
     ZSTD_inBuffer in{inbuf.data(), minsize, 0};

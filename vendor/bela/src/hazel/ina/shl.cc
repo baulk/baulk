@@ -224,8 +224,8 @@ private:
 // This field can be present only if the value of the LinkInfoHeaderSize field
 // is greater than or equal to 0x00000024
 
-status_t LookupShellLink(bela::MemView mv, hazel_result &hr) {
-  shl_memview shm(reinterpret_cast<const char *>(mv.data()), mv.size());
+status_t LookupShellLink(bela::bytes_view bv, hazel_result &hr) {
+  shl_memview shm(reinterpret_cast<const char *>(bv.data()), bv.size());
   if (!shm.prepare()) {
     return None;
   }

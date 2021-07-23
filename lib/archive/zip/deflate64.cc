@@ -72,7 +72,7 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
   }
   auto closer = bela::finally([&] { inflateBack9End(&zs); });
   inflate64Writer iw{w, 0, 0, false};
-  inflate64Reader r{fd, chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
+  inflate64Reader r{fd.NativeFD(), chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
   ret = inflateBack9(&zs, get, &r, put, &iw);
   if (iw.canceled) {
     ec = bela::make_error_code(ErrCanceled, L"canceled");

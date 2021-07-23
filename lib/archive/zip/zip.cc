@@ -8,16 +8,7 @@
 #include "zipinternal.hpp"
 
 namespace baulk::archive::zip {
-// string cleaned avoid zip string contains 'NUL'
-inline std::string stringCleaned(const void *data, size_t N) {
-  auto p = reinterpret_cast<const char *>(data);
-  auto pos = memchr(data, 0, N);
-  if (pos == nullptr) {
-    return std::string(p, N);
-  }
-  N = reinterpret_cast<const char *>(pos) - p;
-  return std::string(p, N);
-}
+
 int findSignatureInBlock(const bela::Buffer &b) {
   for (auto i = static_cast<int>(b.size()) - directoryEndLen; i >= 0; i--) {
     if (b[i] == 'P' && b[i + 1] == 'K' && b[i + 2] == 0x05 && b[i + 3] == 0x06) {
@@ -31,7 +22,7 @@ int findSignatureInBlock(const bela::Buffer &b) {
 }
 bool Reader::readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec) {
   uint8_t buffer[256];
-  if (!ReadAt(buffer, directory64EndLen, offset, ec)) {
+  if (!fd.ReadAt({buffer, directory64EndLen}, offset, ec)) {
     return false;
   }
   bela::endian::LittenEndian b(buffer, directory64EndLen);
@@ -57,7 +48,7 @@ int64_t Reader::findDirectory64End(int64_t directoryEndOffset, bela::error_code 
     return -1;
   }
   uint8_t buffer[256];
-  if (!ReadAt(buffer, directory64LocLen, locOffset, ec)) {
+  if (!fd.ReadAt({buffer, directory64LocLen}, locOffset, ec)) {
     return -1;
   }
   bela::endian::LittenEndian b(buffer, directory64LocLen);
@@ -86,12 +77,12 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
       blen = size;
     }
     buffer.grow(blen);
-    if (!ReadAt(buffer.data(), blen, size - blen, ec)) {
+    if (!fd.ReadAt(buffer, blen, size - blen, ec)) {
       return false;
     }
     buffer.size() = blen;
     if (auto p = findSignatureInBlock(buffer); p >= 0) {
-      b.Reset(reinterpret_cast<const char *>(buffer.data()) + p, blen - p);
+      b.Reset({buffer.data() + p, static_cast<size_t>(blen - p)});
       directoryEndOffset = size - blen + p;
       break;
     }
@@ -115,7 +106,7 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
     ec = bela::make_error_code(L"zip: invalid comment length");
     return false;
   }
-  comment = stringCleaned(b.Data(), commentLen);
+  comment = bela::cstring_view({b.Data(), commentLen});
   if (d.directoryRecords == 0xFFFF || d.directorySize == 0xFFFF || d.directoryOffset == 0xFFFFFFFF) {
     ec.clear();
     auto p = findDirectory64End(directoryEndOffset, ec);
@@ -198,9 +189,9 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
   if (br.ReadFull(buffer.data(), totallen, ec) != totallen) {
     return false;
   }
-  file.name = stringCleaned(buffer.data(), filenameLen);
+  file.name = bela::cstring_view({buffer.data(), filenameLen});
   if (commentLen != 0) {
-    file.comment = stringCleaned(buffer.data() + filenameLen + extraLen, commentLen);
+    file.comment = bela::cstring_view({buffer.data() + filenameLen + extraLen, commentLen});
   }
   file.mode = resolveFileMode(file, externalAttrs);
   auto needUSize = file.uncompressedSize == SizeMin;
@@ -302,7 +293,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       auto ver = fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
       file.flags |= 0x800;
-      file.name = stringCleaned(fb.Data<char>(), fb.Size());
+      file.name = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }
     if (fieldTag == infoZipUnicodeCommentExtraID) {
@@ -316,7 +307,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       }
       auto ver = fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
-      file.comment = stringCleaned(fb.Data<char>(), fb.Size());
+      file.comment = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }
     // https://www.winzip.com/win/en/aes_info.html
@@ -344,12 +335,6 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
 }
 
 bool Reader::Initialize(bela::error_code &ec) {
-  LARGE_INTEGER li;
-  if (GetFileSizeEx(fd, &li) != TRUE) {
-    ec = bela::make_system_error_code(L"GetFileSizeEx: ");
-    return false;
-  }
-  size = li.QuadPart;
   directoryEnd d;
   if (!readDirectoryEnd(d, ec)) {
     return false;
@@ -360,12 +345,12 @@ bool Reader::Initialize(bela::error_code &ec) {
     return false;
   }
   files.reserve(d.directoryRecords);
-  if (!PositionAt(d.directoryOffset, ec)) {
+  if (!fd.Seek(d.directoryOffset, ec)) {
     return false;
   }
   // 64K avoid group
   Buffer buffer(64 * 1024);
-  bufioReader br(fd);
+  bufioReader br(fd.NativeFD());
   for (uint64_t i = 0; i < d.directoryRecords; i++) {
     File file;
     if (!readDirectoryHeader(br, buffer, file, ec)) {
@@ -379,26 +364,27 @@ bool Reader::Initialize(bela::error_code &ec) {
 }
 
 bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
+  if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
     return false;
   }
-  fd = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
+  auto fd_ = bela::io::NewFile(file, ec);
+  if (!fd_) {
     return false;
   }
-  needClosed = true;
+  if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    return false;
+  }
+  fd = std::move(*fd_);
   return Initialize(ec);
 }
 
 bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
+  if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
     return false;
   }
-  fd = nfd;
+  fd.Assgin(nfd, false);
   size = sz;
   return Initialize(ec);
 }

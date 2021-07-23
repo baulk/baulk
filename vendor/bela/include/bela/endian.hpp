@@ -5,6 +5,8 @@
 #include <cstring>
 #include <type_traits>
 #include <bit>
+#include <span>
+#include "types.hpp"
 
 namespace bela {
 constexpr inline bool IsBigEndian() { return std::endian::native == std::endian::big; }
@@ -79,46 +81,52 @@ inline signed long long bswap(signed long long v) {
 }
 
 // SO Network order is BigEndian
-template <typename T> inline T htons(T v) {
-  static_assert(std::is_integral_v<T>, "htnos requires integer");
+template <typename T>
+requires std::integral<T>
+inline T htons(T v) {
   if constexpr (IsBigEndian()) {
     return v;
   }
   return bswap(v);
 }
-template <typename T> inline T ntohs(T v) {
-  static_assert(std::is_integral_v<T>, "ntohs requires integer");
+template <typename T>
+requires std::integral<T>
+inline T ntohs(T v) {
   if constexpr (IsBigEndian()) {
     return v;
   }
   return bswap(v);
 }
 
-template <typename T> inline T fromle(T i) {
-  static_assert(std::is_integral<T>::value, "fromle requires integer");
+template <typename T>
+requires std::integral<T>
+inline T fromle(T i) {
   if constexpr (IsBigEndian()) {
     return bswap(i);
   }
   return i;
 }
 
-template <typename T> inline T frombe(T i) {
-  static_assert(std::is_integral<T>::value, "frombe requires integer");
+template <typename T>
+requires std::integral<T>
+inline T frombe(T i) {
   if constexpr (IsBigEndian()) {
     return i;
   }
   return bswap(i);
 }
 
-template <typename T> inline T unaligned_load(const void *p) {
-  static_assert(std::is_integral_v<T>, "unaligned_load requires integer");
+template <typename T>
+requires std::integral<T>
+inline T unaligned_load(const void *p) {
   T t;
   memcpy(&t, p, sizeof(T));
   return t;
 }
 
-template <typename T> inline T cast_fromle(const void *p) {
-  static_assert(std::is_integral_v<T>, "cast_fromle requires integer");
+template <typename T>
+requires std::integral<T>
+inline T cast_fromle(const void *p) {
   auto v = unaligned_load<T>(p);
   if constexpr (IsLittleEndian()) {
     return v;
@@ -126,8 +134,9 @@ template <typename T> inline T cast_fromle(const void *p) {
   return bswap(v);
 }
 
-template <typename T> inline T cast_frombe(const void *p) {
-  static_assert(std::is_integral_v<T>, "cast_frombe requires integer");
+template <typename T>
+requires std::integral<T>
+inline T cast_frombe(const void *p) {
   auto v = unaligned_load<T>(p);
   if constexpr (IsBigEndian()) {
     return v;
@@ -139,6 +148,11 @@ namespace endian {
 template <std::endian E = std::endian::native> class Reader {
 public:
   Reader() = default;
+  template <typename T, size_t N>
+  requires bela::standard_layout<T> Reader(T (&p)[N]) {
+    data = reinterpret_cast<const uint8_t *>(&p);
+    size = N * sizeof(T);
+  }
   Reader(const void *p, size_t len) : data(reinterpret_cast<const uint8_t *>(p)), size(len) {}
   Reader(const Reader &other) {
     data = other.data;
@@ -149,12 +163,14 @@ public:
     size = other.size;
     return *this;
   }
-  void Reset(const void *p, size_t len) {
-    data = reinterpret_cast<const uint8_t *>(p);
-    size = len;
+  template <typename T = uint8_t>
+  requires bela::standard_layout<T>
+  void Reset(std::span<T> s) {
+    data = reinterpret_cast<const uint8_t *>(s.data());
+    size = s.size() * sizeof(T);
   }
-  template <typename T> T Read() {
-    static_assert(std::is_integral_v<T>, "bela::endian::Reader::Read requires integer");
+  template <typename T>
+  requires std::integral<T> T Read() {
     auto v = bela::unaligned_load<T>(data);
     data += sizeof(T);
     size -= sizeof(T);
@@ -186,7 +202,9 @@ public:
     return Reader(p, n);
   }
   size_t Size() const { return size; }
-  template <typename T = char> const T *Data() const { return reinterpret_cast<const T *>(data); }
+  template <typename T = char>
+  requires bela::standard_layout<T>
+  const T *Data() const { return reinterpret_cast<const T *>(data); }
 
 private:
   const uint8_t *data{nullptr};

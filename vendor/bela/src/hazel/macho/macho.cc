@@ -5,39 +5,29 @@ namespace hazel::macho {
 //
 
 bool File::NewFile(std::wstring_view p, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
+  auto fd_ = bela::io::NewFile(p, ec);
+  if (!fd_) {
     return false;
   }
-  fd = CreateFileW(p.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  needClosed = true;
-  return ParseFile(ec);
+  fd = std::move(*fd_);
+  return parseFile(ec);
 }
 bool File::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
-    return false;
-  }
-  fd = fd_;
+  fd.Assgin(fd_, false);
   size = sz;
-  return ParseFile(ec);
+  return parseFile(ec);
 }
 
 bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
   uint8_t ident[4] = {0};
-  if (!ReadAt(ident, sizeof(ident), 0, ec)) {
+  if (!fd.ReadAt(ident, 0, ec)) {
     return false;
   }
   auto le = bela::cast_fromle<uint32_t>(ident);
   if (le == MH_MAGIC) {
     en = std::endian::little;
     mach_header mh;
-    if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
+    if (!fd.ReadAt(mh, 0, ec)) {
       return false;
     }
     offset = sizeof(mach_header);
@@ -53,7 +43,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
   if (le == MH_MAGIC_64) {
     en = std::endian::little;
     mach_header_64 mh;
-    if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
+    if (!fd.ReadAt(mh, 0, ec)) {
       return false;
     }
     offset = sizeof(mach_header_64);
@@ -71,7 +61,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
   if (be == MH_MAGIC) {
     en = std::endian::big;
     mach_header mh;
-    if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
+    if (!fd.ReadAt(mh, 0, ec)) {
       return false;
     }
     offset = sizeof(mach_header);
@@ -87,7 +77,7 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
   if (be == MH_MAGIC_64) {
     en = std::endian::big;
     mach_header_64 mh;
-    if (!ReadAt(&mh, sizeof(mh), 0, ec)) {
+    if (!fd.ReadAt(mh, 0, ec)) {
       return false;
     }
     offset = sizeof(mach_header_64);
@@ -104,13 +94,6 @@ bool File::readFileHeader(int64_t &offset, bela::error_code &ec) {
                              static_cast<int>(ident[1]), L"', '", static_cast<int>(ident[2]), L"', '",
                              static_cast<int>(ident[3]), L"']");
   return false;
-}
-
-inline std::string_view cstring(std::string_view str) {
-  if (auto pos = str.find('\0'); pos != std::string_view::npos) {
-    return str.substr(0, pos);
-  }
-  return str;
 }
 
 bool File::parseSymtab(std::string_view symdat, std::string_view strtab, std::string_view cmddat, const SymtabCmd &hdr,
@@ -149,7 +132,7 @@ bool File::parseSymtab(std::string_view symdat, std::string_view strtab, std::st
       ec = bela::make_error_code(L"invalid name in symbol table");
       return false;
     }
-    auto name = cstring(strtab.substr(nl.Name));
+    auto name = bela::cstring_view(strtab.substr(nl.Name));
     if (bela::StrContains(name, ".") && name[0] == '-') {
       name.remove_prefix(1);
     }
@@ -177,7 +160,7 @@ bool File::parseSymtab(std::string_view symdat, std::string_view strtab, std::st
 bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
   if (sh->Nreloc > 0) {
     bela::Buffer reldat(sh->Nreloc * 8);
-    if (!ReadAt(reldat, sh->Nreloc * 8, sh->Reloff, ec)) {
+    if (!fd.ReadAt(reldat, sh->Nreloc * 8, sh->Reloff, ec)) {
       return false;
     }
     std::string_view b{reinterpret_cast<const char *>(reldat.data()), reldat.size()};
@@ -221,14 +204,11 @@ bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
   return true;
 }
 
-bool File::ParseFile(bela::error_code &ec) {
+bool File::parseFile(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    LARGE_INTEGER li;
-    if (GetFileSizeEx(fd, &li) != TRUE) {
-      ec = bela::make_system_error_code(L"GetFileSizeEx: ");
+    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
       return false;
     }
-    size = li.QuadPart;
   }
   int64_t offset = {0};
   if (!readFileHeader(offset, ec)) {
@@ -236,7 +216,7 @@ bool File::ParseFile(bela::error_code &ec) {
   }
   is64bit = (fh.Magic == Magic64);
   bela::Buffer buffer(fh.Cmdsz);
-  if (!ReadAt(buffer, fh.Cmdsz, offset, ec)) {
+  if (!fd.ReadAt(buffer, fh.Cmdsz, offset, ec)) {
     return false;
   }
   std::string_view dat{reinterpret_cast<const char *>(buffer.data()), fh.Cmdsz};
@@ -270,7 +250,7 @@ bool File::ParseFile(bela::error_code &ec) {
         ec = bela::make_error_code(L"invalid path in rpath command");
         return false;
       }
-      loads[i].Path = new std::string(cstring(cmddat.substr(hdr.Path)));
+      loads[i].Path = new std::string(bela::cstring_view(cmddat.substr(hdr.Path)));
       loads[i].bytes = cmddat;
     } break;
     case LoadCmdDylib: {
@@ -286,7 +266,7 @@ bool File::ParseFile(bela::error_code &ec) {
       }
       loads[i].bytes = cmddat;
       loads[i].DyLib = new hazel::macho::DyLib();
-      loads[i].DyLib->Name = cstring(cmddat.substr(NameLen));
+      loads[i].DyLib->Name = bela::cstring_view(cmddat.substr(NameLen));
       loads[i].DyLib->Time = endian_cast(p->Time);
       loads[i].DyLib->CurrentVersion = endian_cast(p->CurrentVersion);
       loads[i].DyLib->CompatVersion = endian_cast(p->CompatVersion);
@@ -305,7 +285,7 @@ bool File::ParseFile(bela::error_code &ec) {
       hdr.Strsize = endian_cast(p->Strsize);
       hdr.Symoff = endian_cast(p->Symoff);
       bela::Buffer strtab(hdr.Strsize);
-      if (!ReadAt(strtab, hdr.Strsize, hdr.Stroff, ec)) {
+      if (!fd.ReadAt(strtab, hdr.Strsize, hdr.Stroff, ec)) {
         return false;
       }
       auto symsz = 12;
@@ -314,7 +294,7 @@ bool File::ParseFile(bela::error_code &ec) {
       }
       auto symdatsz = hdr.Nsyms * symsz;
       bela::Buffer symdat(symdatsz);
-      if (!ReadAt(symdat, symdatsz, hdr.Symoff, ec)) {
+      if (!fd.ReadAt(symdat, symdatsz, hdr.Symoff, ec)) {
         return false;
       }
       std::string_view symdatsv{reinterpret_cast<const char *>(symdat.data()), symdat.size()};
@@ -350,7 +330,7 @@ bool File::ParseFile(bela::error_code &ec) {
       dysymtab.Locreloff = endian_cast(p->Locreloff);
       dysymtab.Nlocrel = endian_cast(p->Nlocrel);
       dysymtab.IndirectSyms.resize(dysymtab.Nindirectsyms);
-      if (!ReadAt(dysymtab.IndirectSyms.data(), dysymtab.Nindirectsyms * 4, dysymtab.Indirectsymoff, ec)) {
+      if (!fd.ReadAt(dysymtab.IndirectSyms, dysymtab.Indirectsymoff, ec)) {
         return false;
       }
       for (uint32_t j = 0; j < dysymtab.Nindirectsyms; j++) {
@@ -368,7 +348,7 @@ bool File::ParseFile(bela::error_code &ec) {
       s->Bytes = cmddat;
       s->Cmd = cmd;
       s->Len = siz;
-      s->Name = cstring({reinterpret_cast<const char *>(p->Name), sizeof(p->Name)});
+      s->Name = bela::cstring_view(p->Name);
       s->Addr = endian_cast(p->Addr);
       s->Memsz = endian_cast(p->Memsz);
       s->Offset = endian_cast(p->Offset);
@@ -387,8 +367,8 @@ bool File::ParseFile(bela::error_code &ec) {
         auto se = reinterpret_cast<const Section32 *>(b.data());
         b.remove_prefix(sizeof(Section32));
         auto sh = &(sections[i]);
-        sh->Name = cstring({reinterpret_cast<const char *>(se->Name), sizeof(se->Name)});
-        sh->Seg = cstring({reinterpret_cast<const char *>(se->Seg), sizeof(se->Seg)});
+        sh->Name = bela::cstring_view(se->Name);
+        sh->Seg = bela::cstring_view(se->Seg);
         sh->Addr = endian_cast(se->Addr);
         sh->Size = endian_cast(se->Size);
         sh->Offset = endian_cast(se->Offset);
@@ -412,7 +392,7 @@ bool File::ParseFile(bela::error_code &ec) {
       s->Bytes = cmddat;
       s->Cmd = cmd;
       s->Len = siz;
-      s->Name = cstring({reinterpret_cast<const char *>(p->Name), sizeof(p->Name)});
+      s->Name = bela::cstring_view(p->Name);
       s->Addr = endian_cast(p->Addr);
       s->Memsz = endian_cast(p->Memsz);
       s->Offset = endian_cast(p->Offset);
@@ -431,8 +411,8 @@ bool File::ParseFile(bela::error_code &ec) {
         auto se = reinterpret_cast<const Section64 *>(b.data());
         b.remove_prefix(sizeof(Section64));
         auto sh = &(sections[j]);
-        sh->Name = cstring({reinterpret_cast<const char *>(se->Name), sizeof(se->Name)});
-        sh->Seg = cstring({reinterpret_cast<const char *>(se->Seg), sizeof(se->Seg)});
+        sh->Name = bela::cstring_view(se->Name);
+        sh->Seg = bela::cstring_view(se->Seg);
         sh->Addr = endian_cast(se->Addr);
         sh->Size = endian_cast(se->Size);
         sh->Offset = endian_cast(se->Offset);

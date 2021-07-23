@@ -6,8 +6,6 @@
 
 namespace bela {
 namespace terminal {
-//
-
 // Is same terminal maybe console or Cygwin pty
 bool IsSameTerminal(HANDLE fd);
 bool IsSameTerminal(FILE *fd);

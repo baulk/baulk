@@ -71,7 +71,7 @@ private:
   ssize_t r{0};
   bool fsread(void *b, ssize_t len, ssize_t &rlen, bela::error_code &ec) {
     DWORD dwSize = {0};
-    if (ReadFile(fd, b, static_cast<DWORD>(len), &dwSize, nullptr) != TRUE) {
+    if (::ReadFile(fd, b, static_cast<DWORD>(len), &dwSize, nullptr) != TRUE) {
       ec = bela::make_system_error_code(L"ReadFile: ");
       return false;
     }

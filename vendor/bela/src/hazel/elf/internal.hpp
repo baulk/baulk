@@ -19,7 +19,7 @@ inline std::string_view cstring_view(const uint8_t *data, size_t len) {
 }
 
 // getString extracts a string from symbol string table.
-inline std::string getString(std::span<uint8_t> buffer, int start) {
+inline std::string getString(std::span<const uint8_t> buffer, int start) {
   if (start < 0 || static_cast<size_t>(start) >= buffer.size()) {
     return "";
   }
@@ -31,7 +31,7 @@ inline std::string getString(std::span<uint8_t> buffer, int start) {
   return "";
 }
 
-inline std::optional<std::string> getStringO(std::span<uint8_t> buffer, int start) {
+inline std::optional<std::string> getStringO(std::span<const uint8_t> buffer, int start) {
   if (start < 0 || static_cast<size_t>(start) >= buffer.size()) {
     return std::nullopt;
   }

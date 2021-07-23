@@ -27,7 +27,6 @@ bela base [Abseil](https://github.com/abseil/abseil-cpp): strcat. numbers subsit
 bela base Visual C++: charconv (support wchar_t only)  
 bela Use parallel-hashmap [https://github.com/greg7mdp/parallel-hashmap](https://github.com/greg7mdp/parallel-hashmap)  
 bela Use semver [https://github.com/Neargye/semver](https://github.com/Neargye/semver)  
-bela TOML port from [https://github.com/skystrife/cpptoml](https://github.com/skystrife/cpptoml)  
 bela Use musl fnmatch(MIT) [https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c](https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c)  
 bela Use LLVM tokenize commandline (support wchar_t only)  
 bela Use [https://github.com/BLAKE3-team/BLAKE3](https://github.com/BLAKE3-team/BLAKE3)  

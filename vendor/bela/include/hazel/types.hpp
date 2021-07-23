@@ -143,6 +143,7 @@ typedef enum hazel_types_e : uint32_t {
   //
   iso,
   jar,
+  ifc, // msvc C++20 module file
 } hazel_types_t;
 
 }

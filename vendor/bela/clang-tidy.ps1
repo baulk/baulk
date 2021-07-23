@@ -16,19 +16,11 @@ $clangtidyLocal = $(
     "$VS2022Root\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
     "$VS2022Root\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
     "$VS2022Root\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    # x86
-    "$VS2022Root\Preview\VC\Tools\Llvm\bin\clang-tidy.exe", 
-    "$VS2022Root\Community\VC\Tools\Llvm\bin\clang-tidy.exe", 
-    "$VS2022Root\Professional\VC\Tools\Llvm\bin\clang-tidy.exe",
-    "$VS2022Root\Enterprise\VC\Tools\Llvm\bin\clang-tidy.exe",
     # x64
     "$VS2019Root\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
     "$VS2019Root\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
     "$VS2019Root\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    # x86
-    "$VS2019Root\Community\VC\Tools\Llvm\bin\clang-tidy.exe", 
-    "$VS2019Root\Professional\VC\Tools\Llvm\bin\clang-tidy.exe",
-    "$VS2019Root\Enterprise\VC\Tools\Llvm\bin\clang-tidy.exe",
+    # install
     "$env:ProgramFiles\llvm\bin\clang-tidy.exe", 
     "${env:ProgramFiles(x86)}\llvm\bin\clang-tidy.exe"
 )

@@ -22,10 +22,10 @@ int findSignatureInBlock(const bela::Buffer &b) {
 }
 bool Reader::readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec) {
   uint8_t buffer[256];
-  if (!ReadAt(buffer, directory64EndLen, offset, ec)) {
+  if (!fd.ReadAt({buffer, directory64EndLen}, offset, ec)) {
     return false;
   }
-  bela::endian::LittenEndian b(buffer, directory64EndLen);
+  bela::endian::LittenEndian b({buffer, directory64EndLen});
   if (auto sig = b.Read<uint32_t>(); sig != directory64EndSignature) {
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
@@ -48,10 +48,10 @@ int64_t Reader::findDirectory64End(int64_t directoryEndOffset, bela::error_code 
     return -1;
   }
   uint8_t buffer[256];
-  if (!ReadAt(buffer, directory64LocLen, locOffset, ec)) {
+  if (!fd.ReadAt({buffer, directory64LocLen}, locOffset, ec)) {
     return -1;
   }
-  bela::endian::LittenEndian b(buffer, directory64LocLen);
+  bela::endian::LittenEndian b({buffer, directory64LocLen});
   if (auto sig = b.Read<uint32_t>(); sig != directory64LocSignature) {
     return -1;
   }
@@ -87,12 +87,11 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
       blen = size;
     }
     buffer.grow(blen);
-    if (!ReadAt(buffer.data(), blen, size - blen, ec)) {
+    if (!fd.ReadAt(buffer, blen, size - blen, ec)) {
       return false;
     }
-    buffer.size() = blen;
     if (auto p = findSignatureInBlock(buffer); p >= 0) {
-      b.Reset(reinterpret_cast<const char *>(buffer.data()) + p, blen - p);
+      b.Reset({buffer.data() + p, static_cast<size_t>(blen - p)});
       directoryEndOffset = size - blen + p;
       break;
     }
@@ -146,7 +145,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   if (br.ReadFull(buf, sizeof(buf), ec) != sizeof(buf)) {
     return false;
   }
-  bela::endian::LittenEndian b(buf, sizeof(buf));
+  bela::endian::LittenEndian b(buf);
   if (auto n = static_cast<int>(b.Read<uint32_t>()); n != directoryHeaderSignature) {
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
@@ -171,9 +170,10 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   if (br.ReadFull(buffer.data(), totallen, ec) != totallen) {
     return false;
   }
-  file.name = cleanupName(buffer.data(), filenameLen);
+  buffer.size() = static_cast<size_t>(totallen);
+  file.name = buffer.as_bytes_view().make_cstring_view(0, filenameLen);
   if (commentLen != 0) {
-    file.comment = cleanupName(buffer.data() + filenameLen + extraLen, commentLen);
+    file.comment = buffer.as_bytes_view().make_cstring_view(filenameLen + extraLen, commentLen);
   }
   auto needUSize = file.uncompressedSize == SizeMin;
   auto needSize = file.compressedSize == SizeMin;
@@ -181,7 +181,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   file.mode = resolveFileMode(file, externalAttrs);
   bela::Time modified;
 
-  bela::endian::LittenEndian extra(buffer.data() + filenameLen, static_cast<size_t>(extraLen));
+  bela::endian::LittenEndian extra({buffer.data() + filenameLen, static_cast<size_t>(extraLen)});
   for (; extra.Size() >= 4;) {
     auto fieldTag = extra.Read<uint16_t>();
     auto fieldSize = static_cast<int>(extra.Read<uint16_t>());
@@ -276,7 +276,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       auto ver = fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
       file.flags |= 0x800;
-      file.name = cleanupName(fb.Data<char>(), fb.Size());
+      file.name = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }
     if (fieldTag == infoZipUnicodeCommentExtraID) {
@@ -290,7 +290,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       }
       auto ver = fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
-      file.comment = cleanupName(fb.Data<char>(), fb.Size());
+      file.comment = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }
     // https://www.winzip.com/win/en/aes_info.html
@@ -318,12 +318,11 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
 }
 
 bool Reader::Initialize(bela::error_code &ec) {
-  LARGE_INTEGER li;
-  if (GetFileSizeEx(fd, &li) != TRUE) {
-    ec = bela::make_system_error_code(L"GetFileSizeEx: ");
-    return false;
+  if (size == bela::SizeUnInitialized) {
+    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+      return false;
+    }
   }
-  size = li.QuadPart;
   directoryEnd d;
   if (!readDirectoryEnd(d, ec)) {
     return false;
@@ -335,11 +334,11 @@ bool Reader::Initialize(bela::error_code &ec) {
   }
   comment.assign(std::move(d.comment));
   files.reserve(d.directoryRecords);
-  if (!PositionAt(d.directoryOffset, ec)) {
+  if (!fd.Seek(d.directoryOffset, ec)) {
     return false;
   }
   bela::Buffer buffer(16 * 1024);
-  bufioReader br(fd);
+  bufioReader br(fd.NativeFD());
   for (uint64_t i = 0; i < d.directoryRecords; i++) {
     File file;
     if (!readDirectoryHeader(br, buffer, file, ec)) {
@@ -353,26 +352,16 @@ bool Reader::Initialize(bela::error_code &ec) {
 }
 
 bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
+  auto fd_ = bela::io::NewFile(file, ec);
+  if (!fd_) {
     return false;
   }
-  fd = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  needClosed = true;
+  fd = std::move(*fd_);
   return Initialize(ec);
 }
 
 bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
-    ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
-    return false;
-  }
-  fd = nfd;
+  fd.Assgin(nfd, false);
   size = sz;
   return Initialize(ec);
 }

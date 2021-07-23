@@ -20,6 +20,7 @@ static constexpr const uint8_t WinResMagic[] = {
 };
 static constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A, 0x64, 0x65, 0x62,
                                              0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};
+static constexpr const uint8_t ifcMagic[] = {0x54, 0x51, 0x45, 0x1a};
 struct BigObjHeader {
   enum : uint16_t { MinBigObjectVersion = 2 };
 
@@ -70,19 +71,19 @@ struct mach_header_64 {
   uint32_t reserved;   /* reserved */
 };
 
-status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
-  if (mv.size() < 4) {
+status_t LookupExecutableFile(bela::bytes_view bv, hazel_result &hr) {
+  if (bv.size() < 4) {
     return None;
   }
-  switch (mv[0]) {
+  switch (bv[0]) {
   case 0x00:
-    if (mv.StartsWith(bobj)) {
+    if (bv.starts_with(bobj)) {
       size_t minsize = offsetof(BigObjHeader, UUID) + sizeof(BigObjMagic);
-      if (mv.size() < minsize) {
+      if (bv.size() < minsize) {
         hr.assign(types::coff_import_library, L"COFF import library");
         return Found;
       }
-      const char *start = reinterpret_cast<const char *>(mv.data()) + offsetof(BigObjHeader, UUID);
+      const char *start = reinterpret_cast<const char *>(bv.data()) + offsetof(BigObjHeader, UUID);
       if (memcmp(start, BigObjMagic, sizeof(BigObjMagic)) == 0) {
         hr.assign(types::coff_object, L"COFF object");
         return Found;
@@ -94,7 +95,7 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
       hr.assign(types::coff_import_library, L"COFF import library");
       return Found;
     }
-    if (mv.size() >= sizeof(WinResMagic) && memcmp(mv.data(), WinResMagic, sizeof(WinResMagic)) == 0) {
+    if (bv.size() >= sizeof(WinResMagic) && memcmp(bv.data(), WinResMagic, sizeof(WinResMagic)) == 0) {
       hr.assign(types::windows_resource, L"Windows compiled resource file (.res)");
       return Found;
     }
@@ -102,47 +103,47 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     //   hr.assign(L"COFF object", types::coff_object);
     //   return Found;
     // }
-    if (mv.StartsWith(wasmobj)) {
+    if (bv.starts_with(wasmobj)) {
       hr.assign(types::wasm_object, L"WebAssembly Object file");
       return Found;
     }
     break;
   case 0x01:
-    if (mv.StartsWith(xo32)) {
+    if (bv.starts_with(xo32)) {
       hr.assign(types::xcoff_object_32, L"32-bit XCOFF object file");
       return Found;
     }
-    if (mv.StartsWith(xo64)) {
+    if (bv.starts_with(xo64)) {
       hr.assign(types::xcoff_object_64, L"64-bit XCOFF object file");
       return Found;
     }
     break;
   case 0xDE:
-    if (mv.StartsWith(irobj)) {
+    if (bv.starts_with(irobj)) {
       hr.assign(types::bitcode, L"LLVM IR bitcode");
       return Found;
     }
     break;
   case 'B':
-    if (mv.StartsWith(irobj2)) {
+    if (bv.starts_with(irobj2)) {
       hr.assign(types::bitcode, L"LLVM IR bitcode");
       return Found;
     }
     break;
   case '!': // .a
-    if ((mv.StartsWith("!<arch>\n") && !mv.StartsWith(debMagic)) || mv.StartsWith("!<thin>\n")) {
+    if ((bv.starts_with("!<arch>\n") && !bv.starts_bytes_with(debMagic)) || bv.starts_with("!<thin>\n")) {
       // Skip DEB package
       hr.assign(types::archive, L"ar style archive file");
       return Found;
     }
     break;
   case '\177': // ELF
-    if (mv.StartsWith(ElfMagic) && mv.size() >= 18) {
-      bool Data2MSB = (mv[5] == 2);
+    if (bv.starts_bytes_with(ElfMagic) && bv.size() >= 18) {
+      bool Data2MSB = (bv[5] == 2);
       unsigned high = Data2MSB ? 16 : 17;
       unsigned low = Data2MSB ? 17 : 16;
-      if (mv[high] == 0) {
-        switch (mv[low]) {
+      if (bv[high] == 0) {
+        switch (bv[low]) {
         default:
           break;
         case 1:
@@ -164,8 +165,8 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     }
     break;
   case 0xCA:
-    if (mv.StartsWith("\xCA\xFE\xBA\xBE") || mv.StartsWith("\xCA\xFE\xBA\xBF")) {
-      if (mv.size() >= 8 && mv[7] < 43) {
+    if (bv.starts_with("\xCA\xFE\xBA\xBE") || bv.starts_with("\xCA\xFE\xBA\xBF")) {
+      if (bv.size() >= 8 && bv[7] < 43) {
         hr.assign(types::macho_universal_binary, L"Mach-O universal binary");
         return Found;
       }
@@ -177,26 +178,26 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
     [[fallthrough]];
   case 0xCF: {
     uint16_t type = 0;
-    if (mv.StartsWith("\xFE\xED\xFA\xCE") || mv.StartsWith("\xFE\xED\xFA\xCF")) {
+    if (bv.starts_with("\xFE\xED\xFA\xCE") || bv.starts_with("\xFE\xED\xFA\xCF")) {
       /* Native endian */
       size_t minsize;
-      if (mv[3] == 0xCE) {
+      if (bv[3] == 0xCE) {
         minsize = sizeof(mach_header);
       } else {
         minsize = sizeof(mach_header_64);
       }
-      if (mv.size() >= minsize)
-        type = mv[12] << 24 | mv[13] << 12 | mv[14] << 8 | mv[15];
-    } else if (mv.StartsWith("\xCE\xFA\xED\xFE") || mv.StartsWith("\xCF\xFA\xED\xFE")) {
+      if (bv.size() >= minsize)
+        type = bv[12] << 24 | bv[13] << 12 | bv[14] << 8 | bv[15];
+    } else if (bv.starts_with("\xCE\xFA\xED\xFE") || bv.starts_with("\xCF\xFA\xED\xFE")) {
       /* Reverse endian */
       size_t minsize;
-      if (mv[0] == 0xCE) {
+      if (bv[0] == 0xCE) {
         minsize = sizeof(mach_header);
       } else {
         minsize = sizeof(mach_header_64);
       }
-      if (mv.size() >= minsize) {
-        type = mv[15] << 24 | mv[14] << 12 | mv[13] << 8 | mv[12];
+      if (bv.size() >= minsize) {
+        type = bv[15] << 24 | bv[14] << 12 | bv[13] << 8 | bv[12];
       }
     }
     switch (type) {
@@ -251,7 +252,7 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
   case 0x4c: // 80386 Windows
     [[fallthrough]];
   case 0xc4: // ARMNT Windows
-    if (mv[1] == 0x01) {
+    if (bv[1] == 0x01) {
       hr.assign(types::coff_object, L"COFF object");
       return Found;
     }
@@ -259,33 +260,39 @@ status_t LookupExecutableFile(bela::MemView mv, hazel_result &hr) {
   case 0x90: // PA-RISC Windows
     [[fallthrough]];
   case 0x68: // mc68K Windows
-    if (mv[1] == 0x02) {
+    if (bv[1] == 0x02) {
       hr.assign(types::coff_object, L"COFF object");
       return Found;
     }
     break;
   case 'M':
-    if (mv.StartsWith("MZ") && mv.size() >= 0x3c + 4) {
+    if (bv.starts_with("MZ") && bv.size() >= 0x3c + 4) {
       // read32le
-      uint32_t off = bela::cast_fromle<uint32_t>(mv.data() + 0x3c);
-      auto sv = mv.submv(off);
-      if (sv.StartsWith(PEMagic)) {
+      uint32_t off = bela::cast_fromle<uint32_t>(bv.data() + 0x3c);
+      auto sv = bv.subview(off);
+      if (sv.starts_bytes_with(PEMagic)) {
         hr.assign(types::pecoff_executable, L"PE executable file");
         return Found;
       }
     }
-    if (mv.StartsWith("Microsoft C/C++ MSF 7.00\r\n")) {
+    if (bv.starts_with("Microsoft C/C++ MSF 7.00\r\n")) {
       hr.assign(types::pdb, L"Windows PDB debug info file");
       return Found;
     }
-    if (mv.StartsWith("MDMP")) {
+    if (bv.starts_with("MDMP")) {
       hr.assign(types::minidump, L"Windows minidump file");
       return Found;
     }
     break;
   case 0x64: // x86-64 or ARM64 Windows.
-    if (mv[1] == 0x86 || mv[1] == 0xaa) {
+    if (bv[1] == 0x86 || bv[1] == 0xaa) {
       hr.assign(types::coff_object, L"COFF object");
+      return Found;
+    }
+    break;
+  case 0x54:
+    if (bv.starts_bytes_with(ifcMagic)) {
+      hr.assign(types::ifc, L"MSVC IFC (C++ module binary)");
       return Found;
     }
     break;

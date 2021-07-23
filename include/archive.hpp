@@ -57,11 +57,13 @@ public:
   [[nodiscard]] size_t pos() const { return pos_; }
   [[nodiscard]] size_t &pos() { return pos_; }
   void grow(size_t n);
-  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
+  template <typename I>
+  requires bela::standard_layout<I>
+  [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
   [[nodiscard]] const uint8_t *data() const { return data_; }
   [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
   [[nodiscard]] uint8_t *data() { return data_; }
-  auto Span() const { return std::span(data_, data_ + size_); }
+  auto make_span() const { return std::span(data_, data_ + size_); }
 
 private:
   uint8_t *data_{nullptr};

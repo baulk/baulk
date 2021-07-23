@@ -20,14 +20,15 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"usage: %s path\n", argv[0]);
     return 1;
   }
-  bela::File file;
+
   bela::error_code ec;
-  if (!file.Open(argv[1], ec)) {
+  auto fd = bela::io::NewFile(argv[1], ec);
+  if (!fd) {
     bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
     return 1;
   }
   FILE_STANDARD_INFO di;
-  if (GetFileInformationByHandleEx(file.FD(), FileStandardInfo, &di, sizeof(di)) == TRUE) {
+  if (GetFileInformationByHandleEx(fd->NativeFD(), FileStandardInfo, &di, sizeof(di)) == TRUE) {
     bela::FPrintF(stderr, L"File size: %d %b\n", di.EndOfFile.QuadPart, di.Directory);
   } else {
     auto ec = bela::make_system_error_code();
@@ -35,7 +36,7 @@ int wmain(int argc, wchar_t **argv) {
   }
 
   hazel::hazel_result hr;
-  if (!hazel::LookupFile(file, hr, ec)) {
+  if (!hazel::LookupFile(*fd, hr, ec)) {
     bela::FPrintF(stderr, L"unable detect file type %s\n", ec.message);
     return 1;
   }
@@ -43,7 +44,10 @@ int wmain(int argc, wchar_t **argv) {
   space.resize(hr.align_length() + 2, ' ');
   bela::FPrintF(stderr, L"space len %d hr.align_length() %d\n", space.size(), hr.align_length());
   std::wstring_view spaceview(space);
-  bela::FPrintF(stderr, L"file %v %v\n", file.FullPath(), hr.type());
+  if (auto p = bela::RealPathByHandle(fd->NativeFD(), ec); p) {
+    bela::FPrintF(stderr, L"file %v %v\n", *p, hr.type());
+  }
+
   const std::wstring_view desc = L"Description";
   bela::FPrintF(stderr, L"%s:%s%s\n", desc, spaceview.substr(0, spaceview.size() - desc.size() - 1), hr.description());
   // https://en.cppreference.com/w/cpp/utility/variant/visit

@@ -8,6 +8,7 @@
 #include <bela/time.hpp>
 #include <bela/phmap.hpp>
 #include <bela/os.hpp>
+#include <bela/io.hpp>
 
 namespace hazel::zip {
 // https://www.hanshq.net/zip.html
@@ -113,51 +114,8 @@ enum mszipconatiner_t : int {
 
 class Reader {
 private:
-  bool PositionAt(int64_t pos, bela::error_code &ec) const {
-    auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
-    LARGE_INTEGER oli{0};
-    if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
-      ec = bela::make_system_error_code(L"SetFilePointerEx: ");
-      return false;
-    }
-    return true;
-  }
-  bool ReadFull(void *buffer, size_t len, bela::error_code &ec) const {
-    auto p = reinterpret_cast<uint8_t *>(buffer);
-    size_t total = 0;
-    while (total < len) {
-      DWORD dwSize = 0;
-      if (ReadFile(fd, p + total, static_cast<DWORD>(len - total), &dwSize, nullptr) != TRUE) {
-        ec = bela::make_system_error_code(L"ReadFile: ");
-        return false;
-      }
-      if (dwSize == 0) {
-        ec = bela::make_error_code(ERROR_HANDLE_EOF, L"Reached the end of the file");
-        return false;
-      }
-      total += dwSize;
-    }
-    return true;
-  }
-  // ReadAt ReadFull
-  bool ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) const {
-    if (!PositionAt(pos, ec)) {
-      return false;
-    }
-    return ReadFull(buffer, len, ec);
-  }
-  void Free() {
-    if (needClosed && fd != INVALID_HANDLE_VALUE) {
-      CloseHandle(fd);
-      fd = INVALID_HANDLE_VALUE;
-    }
-  }
   void MoveFrom(Reader &&r) {
-    Free();
-    fd = r.fd;
-    r.fd = INVALID_HANDLE_VALUE;
-    needClosed = r.needClosed;
-    r.needClosed = false;
+    r.fd = std::move(fd);
     size = r.size;
     r.size = 0;
     uncompressedSize = r.uncompressedSize;
@@ -175,7 +133,7 @@ public:
     MoveFrom(std::move(r));
     return *this;
   }
-  ~Reader() { Free(); }
+  ~Reader() = default;
   bool OpenReader(std::wstring_view file, bela::error_code &ec);
   bool OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec);
   std::string_view Comment() const { return comment; }
@@ -196,13 +154,12 @@ public:
   bool LooksLikeODF(std::string *mime = nullptr) const;
 
 private:
+  bela::io::FD fd;
   std::string comment;
   std::vector<File> files;
-  HANDLE fd{INVALID_HANDLE_VALUE};
   int64_t size{bela::SizeUnInitialized};
   int64_t uncompressedSize{0};
   int64_t compressedSize{0};
-  bool needClosed{false};
   bool Initialize(bela::error_code &ec);
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);

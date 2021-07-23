@@ -25,7 +25,7 @@ add_library(
   hazel.cc
   mime.cc)
 
-target_link_libraries(hazel bela)
+target_link_libraries(hazel bela belawin)
 
 if(BELA_ENABLE_LTO)
   set_property(TARGET hazel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

@@ -4,14 +4,14 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string>
+#include "bytes_view.hpp"
 
 namespace bela {
-constexpr inline size_t align_length(size_t n) { return (n / 8 + 1) * 8; }
-namespace buffer {
-template <typename T = uint8_t, typename Allocator = std::allocator<T>> class Buffer {
+
+class Buffer {
 private:
-  typedef Allocator allocator_type;
-  allocator_type get_allocator() const noexcept { return alloc_; }
+  std::allocator<uint8_t> alloc_;
   void MoveFrom(Buffer &&other) {
     Free(); // Free self
     data_ = other.data_;
@@ -24,12 +24,12 @@ private:
   }
   void Free() {
     if (data_ != nullptr) {
-      get_allocator().deallocate(data_, capacity_);
+      alloc_.deallocate(data_, capacity_);
       data_ = nullptr;
       capacity_ = 0;
+      size_ = 0;
     }
   }
-  allocator_type alloc_;
 
 public:
   Buffer() = default;
@@ -49,29 +49,31 @@ public:
     if (n <= capacity_) {
       return;
     }
-    auto b = get_allocator().allocate(n);
+    auto b = alloc_.allocate(n);
     if (size_ != 0) {
-      memcpy(b, data_, sizeof(T) * n);
+      memcpy(b, data_, size_);
     }
     if (data_ != nullptr) {
-      get_allocator().deallocate(data_, capacity_);
+      alloc_.deallocate(data_, capacity_);
     }
     data_ = b;
     capacity_ = n;
   }
-  template <typename I> [[nodiscard]] const I *cast() const { return reinterpret_cast<const I *>(data_); }
-  [[nodiscard]] const T *data() const { return data_; }
-  [[nodiscard]] T operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
-  [[nodiscard]] T *data() { return data_; }
-  std::span<T> Span() const { return std::span(data_, data_ + size_); }
-  // std::span<T> Span
+  [[nodiscard]] const uint8_t *data() const { return data_; }
+  [[nodiscard]] uint8_t operator[](const size_t _Off) const noexcept { return *(data_ + _Off); }
+  [[nodiscard]] uint8_t *data() { return data_; }
+  std::span<const uint8_t> make_const_span() const { return std::span{data_, size_}; }
+  std::span<uint8_t> make_span(size_t spanlen = std::string_view::npos) const {
+    return std::span{data_, (std::min)(capacity_, spanlen)};
+  }
+  auto as_bytes_view() const { return bytes_view(data_, size_); }
+
 private:
-  T *data_{nullptr};
+  uint8_t *data_{nullptr};
   size_t size_{0};
   size_t capacity_{0};
 };
-} // namespace buffer
-using Buffer = bela::buffer::Buffer<uint8_t, std::allocator<uint8_t>>;
+
 } // namespace bela
 
 #endif

@@ -23,14 +23,14 @@ struct p7z_header_t {
 };
 #pragma pack()
 
-status_t lookup_7zinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_7zinternal(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
   constexpr const uint8_t k7zFinishSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C + 1};
-  if (!mv.StartsWith(k7zSignature)) {
+  if (!bv.starts_bytes_with(k7zSignature)) {
     return None;
   }
   p7z_header_t hdr;
-  auto hd = mv.bit_cast<p7z_header_t>(&hdr);
+  auto hd = bv.bit_cast<p7z_header_t>(&hdr);
   if (hd == nullptr) {
     return None;
   }
@@ -42,19 +42,19 @@ status_t lookup_7zinternal(bela::MemView mv, hazel_result &hr) {
 
 // RAR archive
 // https://www.rarlab.com/technote.htm
-status_t lookup_rarinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_rarinternal(bela::bytes_view bv, hazel_result &hr) {
   /*RAR 5.0 signature consists of 8 bytes: 0x52 0x61 0x72 0x21 0x1A 0x07 0x01
    * 0x00. You need to search for this signature in supposed archive from
    * beginning and up to maximum SFX module size. Just for comparison this is
    * RAR 4.x 7 byte length signature: 0x52 0x61 0x72 0x21 0x1A 0x07 0x00.*/
   constexpr const uint8_t rarSignature[] = {0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x01, 0x00};
   constexpr const uint8_t rar4Signature[] = {0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00};
-  if (mv.StartsWith(rarSignature)) {
+  if (bv.starts_bytes_with(rarSignature)) {
     hr.assign(types::rar, L"Roshal Archive (RAR)");
     hr.append(L"Version", 5);
     return Found;
   }
-  if (mv.StartsWith(rar4Signature)) {
+  if (bv.starts_bytes_with(rar4Signature)) {
     hr.assign(types::rar, L"Roshal Archive (RAR)");
     hr.append(L"Version", 4);
     return Found;
@@ -77,14 +77,14 @@ struct xar_header {
 };
 #pragma pack()
 
-status_t lookup_xarinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_xarinternal(bela::bytes_view bv, hazel_result &hr) {
   // https://github.com/mackyle/xar/wiki/xarformat
   constexpr const uint8_t xarSignature[] = {'x', 'a', 'r', '!'};
-  if (!mv.StartsWith(xarSignature)) {
+  if (!bv.starts_bytes_with(xarSignature)) {
     return None;
   }
   xar_header hdr;
-  auto xhd = mv.bit_cast<xar_header>(&hdr);
+  auto xhd = bv.bit_cast<xar_header>(&hdr);
   if (xhd == nullptr || bela::frombe(xhd->size) < 28) {
     return None;
   }
@@ -129,13 +129,13 @@ struct apple_disk_image_header {
 };
 #pragma pack()
 
-status_t lookup_dmginternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_dmginternal(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t dmgSignature[] = {'k', 'o', 'l', 'y'};
-  if (!mv.StartsWith(dmgSignature)) {
+  if (!bv.starts_bytes_with(dmgSignature)) {
     return None;
   }
   apple_disk_image_header hdr;
-  auto hd = mv.bit_cast<apple_disk_image_header>(&hdr);
+  auto hd = bv.bit_cast<apple_disk_image_header>(&hdr);
   constexpr auto hsize = sizeof(apple_disk_image_header);
   if (hd == nullptr || bela::frombe(hd->HeaderSize) != hsize) {
     return None;
@@ -146,14 +146,14 @@ status_t lookup_dmginternal(bela::MemView mv, hazel_result &hr) {
 }
 
 // PDF file format
-status_t lookup_pdfinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_pdfinternal(bela::bytes_view bv, hazel_result &hr) {
   // https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/pdf_reference_1-7.pdf
   // %PDF-1.7
   constexpr const uint8_t pdfMagic[] = {0x25, 0x50, 0x44, 0x46, '-'};
-  if (!mv.StartsWith(pdfMagic) || mv.size() < 8) {
+  if (!bv.starts_bytes_with(pdfMagic) || bv.size() < 8) {
     return None;
   }
-  auto sv = mv.submv(5).sv();
+  auto sv = bv.make_string_view(5);
   auto pos = sv.find_first_of("\r\n");
   if (pos == std::string_view::npos) {
     return None;
@@ -214,14 +214,14 @@ struct wim_header_t {
 };
 #pragma pack()
 // https://www.microsoft.com/en-us/download/details.aspx?id=13096
-status_t lookup_wiminternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_wiminternal(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t wimMagic[] = {'M', 'S', 'W', 'I', 'M', 0x00, 0x00, 0x00};
-  if (!mv.StartsWith(wimMagic)) {
+  if (!bv.starts_bytes_with(wimMagic)) {
     return None;
   }
   constexpr const size_t hdsize = sizeof(wim_header_t);
   wim_header_t hdr;
-  auto hd = mv.bit_cast<wim_header_t>(&hdr);
+  auto hd = bv.bit_cast<wim_header_t>(&hdr);
   if (hd == nullptr || bela::fromle(hd->cbSize) < hdsize) {
     return None;
   }
@@ -287,13 +287,13 @@ struct cabinet_header_t {
   // uint8_t  szDiskNext[];     /* (optional) name of next disk */
 };
 
-status_t lookup_cabinetinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_cabinetinternal(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t cabMagic[] = {'M', 'S', 'C', 'F', 0, 0, 0, 0};
-  if (!mv.StartsWith(cabMagic)) {
+  if (!bv.starts_bytes_with(cabMagic)) {
     return None;
   }
   cabinet_header_t hdr;
-  auto hd = mv.bit_cast<cabinet_header_t>(&hdr);
+  auto hd = bv.bit_cast<cabinet_header_t>(&hdr);
   if (hd == nullptr) {
     return None;
   }
@@ -364,9 +364,9 @@ struct gnutar_header_t {
 };
 #pragma pack()
 
-status_t lookup_tarinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_tarinternal(bela::bytes_view bv, hazel_result &hr) {
   ustar_header_t hdr;
-  auto hd = mv.bit_cast<ustar_header_t>(&hdr);
+  auto hd = bv.bit_cast<ustar_header_t>(&hdr);
   if (hd == nullptr) {
     return None;
   }
@@ -376,7 +376,7 @@ status_t lookup_tarinternal(bela::MemView mv, hazel_result &hr) {
     hr.assign(types::tar, L"Tarball (ustar) archive data");
     return Found;
   }
-  if (memcmp(hd->magic, gnutarMagic, ArrayLength(gnutarMagic)) == 0 && mv.size() > sizeof(gnutar_header_t)) {
+  if (memcmp(hd->magic, gnutarMagic, ArrayLength(gnutarMagic)) == 0 && bv.size() > sizeof(gnutar_header_t)) {
     hr.assign(types::tar, L"Tarball (gnutar) archive data");
     return Found;
   }
@@ -389,13 +389,13 @@ struct sqlite_header_t {
   uint16_t version;
 };
 
-status_t lookup_sqliteinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_sqliteinternal(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t sqliteMagic[] = {'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't'};
-  if (!mv.StartsWith(sqliteMagic)) {
+  if (!bv.starts_bytes_with(sqliteMagic)) {
     return None;
   }
   sqlite_header_t hdr;
-  auto hd = mv.bit_cast<sqlite_header_t>(&hdr);
+  auto hd = bv.bit_cast<sqlite_header_t>(&hdr);
   if (hd == nullptr || hd->sigver[15] != 0) {
     return None;
   }
@@ -420,24 +420,24 @@ bool IsSwf(const uint8_t *buf, size_t size) {
 }
 
 /// Magic only
-status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
+status_t lookup_archivesinternal(bela::bytes_view bv, hazel_result &hr) {
   // DEB
   constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A, 0x64, 0x65, 0x62,
                                         0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};
-  if (mv.StartsWith(debMagic)) {
+  if (bv.starts_bytes_with(debMagic)) {
     hr.assign(types::deb, L"Debian packages");
     return Found;
   }
   // RPM
   constexpr const uint8_t rpmMagic[] = {0xED, 0xAB, 0xEE, 0xDB}; // size>96
-  if (mv.StartsWith(rpmMagic) && mv.size() > 96) {
+  if (bv.starts_bytes_with(rpmMagic) && bv.size() > 96) {
     hr.assign(types::rpm, L"RPM Package Manager");
     return Found;
   }
   constexpr const uint8_t crxMagic[] = {0x43, 0x72, 0x32, 0x34};
-  if (mv.StartsWith(crxMagic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(crxMagic) && hr.ZeroExists()) {
     uint32_t version = {0};
-    if (auto pv = mv.bit_cast(&version, 4); pv != nullptr) {
+    if (auto pv = bv.bit_cast(&version, 4); pv != nullptr) {
       hr.assign(types::crx, L"Chrome Extension");
       hr.append(L"Version", bela::fromle(version));
       return Found;
@@ -445,24 +445,24 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   }
   // XZ
   constexpr const uint8_t xzMagic[] = {0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00};
-  if (mv.StartsWith(xzMagic)) {
+  if (bv.starts_bytes_with(xzMagic)) {
     hr.assign(types::xz, L"XZ archive data");
     return Found;
   }
   // GZ
   constexpr const uint8_t gzMagic[] = {0x1F, 0x8B, 0x8};
-  if (mv.StartsWith(gzMagic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(gzMagic) && hr.ZeroExists()) {
     hr.assign(types::gz, L"GZ archive data");
     return Found;
   }
   // BZ2
   // https://github.com/dsnet/compress/blob/master/doc/bzip2-format.pdf
   constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
-  if (mv.StartsWith(bz2Magic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(bz2Magic) && hr.ZeroExists()) {
     hr.assign(types::bz2, L"BZ2 archive data");
     return Found;
   }
-  auto zstdmagic = bela::cast_fromle<uint32_t>(mv.data());
+  auto zstdmagic = bela::cast_fromle<uint32_t>(bv.data());
   if (zstdmagic == 0xFD2FB528U || (zstdmagic & 0xFFFFFFF0) == 0x184D2A50) {
     hr.assign(types::zstd, L"ZSTD archive data");
     return Found;
@@ -471,15 +471,15 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   // https://wiki.nesdev.com/w/index.php/UNIF
   // UNIF
   constexpr const uint8_t nesMagic[] = {0x41, 0x45, 0x53, 0x1A};
-  if (mv.StartsWith(nesMagic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(nesMagic) && hr.ZeroExists()) {
     hr.assign(types::nes, L"Nintendo NES ROM");
     return Found;
   }
   // Universal NES Image Format
   constexpr const uint8_t unifMagic[] = {'U', 'N', 'I', 'F'};
-  if (mv.size() > 40 && mv.StartsWith(unifMagic)) {
+  if (bv.size() > 40 && bv.starts_bytes_with(unifMagic)) {
     uint32_t v = 0;
-    if (auto pv = mv.bit_cast(&v, 4); pv != nullptr && mv[8] == 0x0 && mv[9] == 0) {
+    if (auto pv = bv.bit_cast(&v, 4); pv != nullptr && bv[8] == 0x0 && bv[9] == 0) {
       hr.assign(types::nes, L"Universal NES Image Format");
       hr.append(L"Version", bela::fromle(v));
       return Found;
@@ -489,23 +489,23 @@ status_t lookup_archivesinternal(bela::MemView mv, hazel_result &hr) {
   // AR
   // constexpr const uint8_t arMagic[]={0x21,0x3c,0x61,0x72,0x63,0x68,0x3E};
   constexpr const uint8_t zMagic[] = {0x1F, 0xA0, 0x1F, 0x9D};
-  if (mv.StartsWith(zMagic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(zMagic) && hr.ZeroExists()) {
     hr.assign(types::z, L"X compressed archive data");
     return Found;
   }
 
   constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
-  if (mv.StartsWith(lzMagic) && hr.ZeroExists()) {
+  if (bv.starts_bytes_with(lzMagic) && hr.ZeroExists()) {
     hr.assign(types::lz, L"LZ archive data");
     return Found;
   }
   // SWF
-  if (IsSwf(mv.data(), mv.size())) {
+  if (IsSwf(bv.data(), bv.size())) {
     hr.assign(types::swf, L"Adobe Flash file format");
     return Found;
   }
   // EPUB
-  if (IsEPUB(mv.data(), mv.size())) {
+  if (IsEPUB(bv.data(), bv.size())) {
     hr.assign(types::epub, L"EPUB document");
     return Found;
   }
@@ -517,38 +517,21 @@ inline bool IsZip(const uint8_t *buf, size_t size) {
           (buf[3] == 0x4 || buf[3] == 0x6 || buf[3] == 0x8));
 }
 
-status_t LookupArchives(bela::MemView mv, hazel_result &hr) {
-  if (IsZip(mv.data(), mv.size())) {
+status_t LookupArchives(bela::bytes_view bv, hazel_result &hr) {
+  if (IsZip(bv.data(), bv.size())) {
     hr.assign(types::zip, L"ZIP file");
     return Found;
   }
-  if (lookup_7zinternal(mv, hr) == Found) {
-    return Found;
+
+  decltype(&hazel::internal::lookup_7zinternal) funs[] = {
+      lookup_7zinternal,  lookup_rarinternal,     lookup_xarinternal, lookup_dmginternal,      lookup_pdfinternal,
+      lookup_wiminternal, lookup_cabinetinternal, lookup_tarinternal, lookup_archivesinternal,
+  };
+  for (auto fun : funs) {
+    if (fun(bv, hr) == Found) {
+      return Found;
+    }
   }
-  if (lookup_rarinternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_xarinternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_dmginternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_pdfinternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_wiminternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_cabinetinternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_tarinternal(mv, hr) == Found) {
-    return Found;
-  }
-  if (lookup_sqliteinternal(mv, hr) == Found) {
-    return Found;
-  }
-  return lookup_archivesinternal(mv, hr);
+  return None;
 }
 } // namespace hazel::internal

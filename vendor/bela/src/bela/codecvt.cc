@@ -3,6 +3,7 @@
 // https://github.com/llvm-mirror/llvm/blob/master/lib/Support/ConvertUTF.cpp
 //
 #include <bela/codecvt.hpp>
+#include <bela/types.hpp>
 
 namespace bela {
 
@@ -169,6 +170,7 @@ inline char32_t AnnexU8(const char8_t *it, int nb) {
 }
 
 template <typename T, typename Allocator>
+requires bela::wide_character<T>
 bool mbrtoc16(const char8_t *s, size_t len, std::basic_string<T, std::char_traits<T>, Allocator> &container) {
   if (s == nullptr || len == 0) {
     return false;
@@ -219,7 +221,9 @@ std::u16string mbrtoc16(const char8_t *str, size_t len) {
   return s;
 }
 
-template <size_t N, typename T> inline std::basic_string_view<T> EncodeUnicode(T (&buf)[N], char32_t ch) {
+template <size_t N, typename T>
+requires bela::character<T>
+inline std::basic_string_view<T> EncodeUnicode(T (&buf)[N], char32_t ch) {
   T *end = buf + N;
   T *writer = end;
   uint64_t value = ch;
@@ -278,7 +282,8 @@ std::string EscapeNonBMP(std::string_view sv) {
   return s;
 }
 
-template <typename T> std::basic_string<T> EscapeNonBMPInternal(std::u16string_view sv) {
+template <typename T>
+requires bela::wide_character<T> std::basic_string<T> EscapeNonBMPInternal(std::u16string_view sv) {
   std::basic_string<T> s;
   s.reserve(sv.size());
   auto it = sv.data();

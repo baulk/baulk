@@ -25,7 +25,7 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
   for (;;) {
     if (zs.avail_in == 0 && csize != 0) {
       auto minsize = (std::min)(csize, static_cast<uint64_t>(xzinsize));
-      if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
+      if (!fd.ReadFull({in.data(), static_cast<size_t>(minsize)}, ec)) {
         return false;
       }
       zs.next_in = in.data();
@@ -100,7 +100,7 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
   // $ cat stream_inside_zipx | xxd | head -n 1
   // 00000000: 0914 0500 5d00 8000 0000 2814 .... ....
   uint8_t d[16] = {0};
-  if (!ReadFull(d, 9, ec)) {
+  if (!fd.ReadFull({d, 9}, ec)) {
     return false;
   }
   if (d[2] != 0x05 || d[3] != 0x00) {
@@ -129,7 +129,7 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
   for (;;) {
     if (zs.avail_in == 0 && csize > 0) {
       auto minsize = (std::min)(csize, static_cast<uint64_t>(xzinsize));
-      if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
+      if (!fd.ReadFull({in.data(), static_cast<size_t>(minsize)}, ec)) {
         return false;
       }
       zs.next_in = in.data();

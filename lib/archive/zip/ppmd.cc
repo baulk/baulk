@@ -127,7 +127,7 @@ static void SzBigFree(ISzAllocPtr p, void *address) {
 const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};
 
 bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code &ec) const {
-  SectionReader sr(fd, file.compressedSize);
+  SectionReader sr(fd.NativeFD(), file.compressedSize);
   CByteInToLook s;
   s.vt.Read = ppmd_read;
   s.sr = &sr;

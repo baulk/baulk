@@ -1,33 +1,104 @@
 //
 #include <bela/base.hpp>
-#include <bela/mapview.hpp>
 #include <bela/endian.hpp>
 #include <bela/io.hpp>
 #include <bela/path.hpp>
 
 namespace bela::io {
-bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxsize) {
-  bela::MapView mv;
-  if (!mv.MappingView(file, ec, 1, static_cast<size_t>(maxsize))) {
+void FD::Free() {
+  if (fd != INVALID_HANDLE_VALUE && needClosed) {
+    CloseHandle(fd);
+  }
+  fd = INVALID_HANDLE_VALUE;
+}
+void FD::MoveFrom(FD &&o) {
+  Free();
+  fd = o.fd;
+  needClosed = o.needClosed;
+  o.fd = INVALID_HANDLE_VALUE;
+  o.needClosed = false;
+}
+
+bool FD::ReadFull(std::span<uint8_t> buffer, bela::error_code &ec) const {
+  if (buffer.size() == 0) {
+    return true;
+  }
+  auto p = reinterpret_cast<uint8_t *>(buffer.data());
+  auto len = buffer.size();
+  size_t total = 0;
+  while (total < len) {
+    DWORD dwSize = 0;
+    if (::ReadFile(fd, p + total, static_cast<DWORD>(len - total), &dwSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"ReadFile: ");
+      return false;
+    }
+    if (dwSize == 0) {
+      ec = bela::make_error_code(ErrEOF, L"Reached the end of the file");
+      return false;
+    }
+    total += dwSize;
+  }
+  return true;
+}
+
+bool FD::ReadAt(std::span<uint8_t> buffer, int64_t pos, bela::error_code &ec) const {
+  if (!bela::io::Seek(fd, pos, ec)) {
     return false;
   }
-  auto mmv = mv.subview();
+  return ReadFull(buffer, ec);
+}
+
+std::optional<FD> NewFile(std::wstring_view file, bela::error_code &ec) {
+  auto fd = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (fd == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code(L"CreateFileW() ");
+    return std::nullopt;
+  }
+  return std::make_optional<FD>(fd, true);
+}
+
+std::optional<FD> NewFile(std::wstring_view file, DWORD dwDesiredAccess, DWORD dwShareMode,
+                          LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
+                          DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, bela::error_code &ec) {
+  auto fd = CreateFileW(file.data(), dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition,
+                        dwFlagsAndAttributes, hTemplateFile);
+  if (fd == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code(L"CreateFileW() ");
+    return std::nullopt;
+  }
+  return std::make_optional<FD>(fd, true);
+}
+
+bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxsize) {
+  auto fd = bela::io::NewFile(file, ec);
+  if (!fd) {
+    return false;
+  }
+  auto size = fd->Size(ec);
+  if (size == bela::SizeUnInitialized) {
+    return false;
+  }
+  auto maxSize = (std::min)(static_cast<size_t>(maxsize), static_cast<size_t>(size));
+  bela::Buffer buffer(maxSize);
+  if (!fd->ReadFull(buffer, maxSize, ec)) {
+    return false;
+  }
+  auto bv = buffer.as_bytes_view();
   constexpr uint8_t utf8bom[] = {0xEF, 0xBB, 0xBF};
   constexpr uint8_t utf16le[] = {0xFF, 0xFE};
   constexpr uint8_t utf16be[] = {0xFE, 0xFF};
-  if (mmv.StartsWith(utf8bom)) {
-    out = bela::ToWide(mmv.submv(3).sv());
+  if (bv.starts_bytes_with(utf8bom)) {
+    out = bela::ToWide(bv.make_string_view<char>(3));
     return true;
   }
   if constexpr (bela::IsLittleEndian()) {
-    if (mmv.StartsWith(utf16le)) {
-      auto sv = mmv.submv(2).sv();
-      out.assign(reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2);
+    if (bv.starts_bytes_with(utf16le)) {
+      out = bv.make_string_view<wchar_t>(2);
       return true;
     }
-    if (mmv.StartsWith(utf16be)) {
-      auto sv = mmv.submv(2).sv();
-      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2};
+    if (bv.starts_bytes_with(utf16be)) {
+      auto wsv = bv.make_string_view<wchar_t>(2);
       out.resize(wsv.size());
       wchar_t *p = out.data();
       for (size_t i = 0; i < wsv.size(); i++) {
@@ -36,14 +107,12 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
       return true;
     }
   } else {
-    if (mmv.StartsWith(utf16be)) {
-      auto sv = mmv.submv(2).sv();
-      out.assign(reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2);
+    if (bv.starts_bytes_with(utf16be)) {
+      out = bv.make_string_view<wchar_t>(2);
       return true;
     }
-    if (mmv.StartsWith(utf16le)) {
-      auto sv = mmv.submv(2).sv();
-      std::wstring_view wsv{reinterpret_cast<const wchar_t *>(sv.data()), sv.size() / 2};
+    if (bv.starts_bytes_with(utf16le)) {
+      auto wsv = bv.make_string_view<wchar_t>(2);
       out.resize(wsv.size());
       wchar_t *p = out.data();
       for (size_t i = 0; i < wsv.size(); i++) {
@@ -52,7 +121,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
       return true;
     }
   }
-  out = bela::ToWide(mmv.sv());
+  out = bela::ToWide(bv.make_string_view<char>());
   return true;
 }
 bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxline) {

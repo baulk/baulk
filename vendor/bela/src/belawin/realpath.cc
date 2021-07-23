@@ -6,7 +6,7 @@
 
 namespace bela {
 // Thanks MSVC STL filesystem
-template <class _Ty>[[nodiscard]] _Ty _Unaligned_load(const void *_Ptr) { // load a _Ty from _Ptr
+template <class _Ty> [[nodiscard]] _Ty _Unaligned_load(const void *_Ptr) { // load a _Ty from _Ptr
   static_assert(std::is_trivial_v<_Ty>, "Unaligned loads require trivial types");
   _Ty _Tmp;
   std::memcpy(&_Tmp, _Ptr, sizeof(_Tmp));
@@ -186,7 +186,7 @@ bool LookupAppExecLinkTarget(std::wstring_view src, AppExecTarget &target) {
   if (b.size() == 0) {
     return false;
   }
-  auto p = b.cast<REPARSE_DATA_BUFFER>();
+  auto p = b.as_bytes_view().unsafe_cast<REPARSE_DATA_BUFFER>();
   if (p->ReparseTag != IO_REPARSE_TAG_APPEXECLINK) {
     return false;
   }
@@ -202,7 +202,7 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &
   if (b.size() == 0) {
     return std::make_optional(bela::PathAbsolute(src));
   }
-  auto p = b.cast<REPARSE_DATA_BUFFER>();
+  auto p = b.as_bytes_view().unsafe_cast<REPARSE_DATA_BUFFER>();
 
   switch (p->ReparseTag) {
   case IO_REPARSE_TAG_APPEXECLINK:

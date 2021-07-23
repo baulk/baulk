@@ -6,7 +6,7 @@ namespace baulk::archive::zip {
 
 bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
-  if (!ReadAt(buf, fileHeaderLen, file.position, ec)) {
+  if (!fd.ReadAt({buf, fileHeaderLen}, file.position, ec)) {
     return false;
   }
   bela::endian::LittenEndian b(buf, sizeof(buf));
@@ -18,7 +18,7 @@ bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec)
   auto filenameLen = static_cast<int>(b.Read<uint16_t>());
   auto extraLen = static_cast<int>(b.Read<uint16_t>());
   auto position = file.position + fileHeaderLen + filenameLen + extraLen;
-  if (!PositionAt(position, ec)) {
+  if (!fd.Seek(position, ec)) {
     return false;
   }
   switch (file.method) {
@@ -27,7 +27,7 @@ bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec)
     auto csize = file.compressedSize;
     while (csize != 0) {
       auto minsize = (std::min)(csize, static_cast<uint64_t>(sizeof(buffer)));
-      if (!ReadFull(buffer, static_cast<size_t>(minsize), ec)) {
+      if (!fd.ReadFull({buffer, static_cast<size_t>(minsize)}, ec)) {
         return false;
       }
       if (!w(buffer, static_cast<size_t>(minsize))) {

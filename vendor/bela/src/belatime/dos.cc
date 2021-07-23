@@ -7,6 +7,9 @@ namespace bela {
 constexpr int WindowsEpochDays = (1601 - 1) * 365 + (1601 - 1) / 4 - (1601 - 1) / 100 + (1601 - 1) / 400;
 constexpr int64_t UnixEpochStart = 11644473600ll;
 
+constexpr uint64_t _Win_ticks_per_second = 10000000ULL;
+constexpr uint64_t _Win_ticks_from_epoch = ((1970 - 1601) * 365 + 3 * 24 + 17) * 86400ULL * _Win_ticks_per_second;
+
 constexpr inline bool IsLeapYear(int Y) { return Y % 4 == 0 && (Y % 100 != 0 || Y % 400 == 0); }
 constexpr int sinceWindowsEpochDays(int Y) {
   Y--;

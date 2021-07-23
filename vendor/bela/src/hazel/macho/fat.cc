@@ -4,34 +4,32 @@
 namespace hazel::macho {
 
 bool FatFile::NewFile(std::wstring_view p, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
+  if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
     return false;
   }
-  fd = CreateFileW(p.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                   FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
+  auto fd_ = bela::io::NewFile(p, ec);
+  if (!fd_) {
     return false;
   }
-  needClosed = true;
-  return ParseFile(ec);
+  fd.Assgin(std::move(*fd_));
+  return parseFile(ec);
 }
 
 bool FatFile::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
-  if (fd != INVALID_HANDLE_VALUE) {
+  if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
     return false;
   }
-  fd = fd_;
+  fd.Assgin(fd_, false);
   size = sz;
-  return ParseFile(ec);
+  return parseFile(ec);
 }
 
 //
-bool FatFile::ParseFile(bela::error_code &ec) {
+bool FatFile::parseFile(bela::error_code &ec) {
   uint8_t ident[4] = {0};
-  if (!ReadAt(ident, sizeof(ident), 0, ec)) {
+  if (!fd.ReadAt(ident, 0, ec)) {
     return false;
   }
   if (bela::cast_frombe<uint32_t>(ident) != MagicFat) {
@@ -49,7 +47,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
   }
   auto offset = 4ll;
   uint32_t narch{0};
-  if (!ReadFull(&narch, sizeof(narch), ec)) {
+  if (!fd.ReadFull(narch, ec)) {
     return false;
   }
   narch = bela::frombe(narch);
@@ -64,7 +62,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
   for (uint32_t i = 0; i < narch; i++) {
     auto p = &arches[i];
     fat_arch fa;
-    if (ReadFull(&fa, sizeof(fa), ec)) {
+    if (fd.ReadFull(fa, ec)) {
       ec = bela::make_error_code(ec.code, L"invalid fat_arch header: ", ec.message);
       return false;
     }
@@ -75,7 +73,7 @@ bool FatFile::ParseFile(bela::error_code &ec) {
     fa.size = bela::frombe(fa.size);
     offset += sizeof(fa);
     p->file.baseOffset = fa.offset;
-    if (!p->file.NewFile(fd, p->file.size, ec)) {
+    if (!p->file.NewFile(fd.NativeFD(), p->file.size, ec)) {
       return false;
     }
     auto seenArch = (static_cast<uint64_t>(fa.cputype) << 32) | static_cast<uint64_t>(fa.cpusubtype);

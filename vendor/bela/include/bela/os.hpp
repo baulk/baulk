@@ -3,6 +3,7 @@
 #define BELA_OS_HPP
 #include <cstdint>
 #include <type_traits>
+#include "base.hpp"
 
 namespace bela::os {
 enum FileMode : uint32_t {

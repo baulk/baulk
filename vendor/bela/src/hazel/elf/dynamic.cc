@@ -26,7 +26,7 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
       auto v = cast_from<uint32_t>(dss.data() + 4);
       dss.remove_prefix(8);
       if (static_cast<int>(t) == tag) {
-        if (auto s = getStringO(str.Span(), static_cast<int>(v)); s) {
+        if (auto s = getStringO(str.make_const_span(), static_cast<int>(v)); s) {
           sv.emplace_back(std::move(*s));
         }
       }
@@ -38,7 +38,7 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
     auto v = cast_from<uint64_t>(dss.data() + 8);
     dss.remove_prefix(16);
     if (static_cast<int>(t) == tag) {
-      if (auto s = getStringO(str.Span(), static_cast<int>(v)); s) {
+      if (auto s = getStringO(str.make_const_span(), static_cast<int>(v)); s) {
         sv.emplace_back(std::move(*s));
       }
     }

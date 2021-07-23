@@ -34,13 +34,13 @@ struct git_midx_header_t {
 };
 #pragma pack()
 // https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
-status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
+status_t explore_git_file(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t packMagic[] = {'P', 'A', 'C', 'K'};
   constexpr const uint8_t midxMagic[] = {'M', 'I', 'D', 'X'};
   constexpr const uint8_t indexMagic[] = {0xFF, 0x74, 0x4F, 0x63};
-  if (mv.StartsWith(packMagic)) {
+  if (bv.starts_bytes_with(packMagic)) {
     git_pack_header_t hdr;
-    auto hd = mv.bit_cast<git_pack_header_t>(&hdr);
+    auto hd = bv.bit_cast<git_pack_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }
@@ -49,9 +49,9 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
     hr.append(L"Counts", bela::frombe(hd->objsize));
     return Found;
   }
-  if (mv.StartsWith(indexMagic)) {
+  if (bv.starts_bytes_with(indexMagic)) {
     git_index_header_t hdr;
-    auto hd = mv.bit_cast<git_index_header_t>(&hdr);
+    auto hd = bv.bit_cast<git_index_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }
@@ -64,7 +64,7 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
       break;
     case 3: {
       git_index3_header_t hdr_;
-      if (auto hdr3 = mv.bit_cast<git_index3_header_t>(&hdr_); hdr3 != nullptr) {
+      if (auto hdr3 = bv.bit_cast<git_index3_header_t>(&hdr_); hdr3 != nullptr) {
         hr.append(L"Counts", bela::frombe(hdr3->packobjects));
       }
     } break;
@@ -73,9 +73,9 @@ status_t explore_git_file(bela::MemView mv, hazel_result &hr) {
     };
     return Found;
   }
-  if (mv.StartsWith(midxMagic)) {
+  if (bv.starts_bytes_with(midxMagic)) {
     git_midx_header_t hdr;
-    auto hd = mv.bit_cast<git_midx_header_t>(&hdr);
+    auto hd = bv.bit_cast<git_midx_header_t>(&hdr);
     if (hd == nullptr) {
       return None;
     }

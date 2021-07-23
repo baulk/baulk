@@ -32,7 +32,7 @@ bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   while (symtab.size() >= Sym32Size) {
     auto sym = reinterpret_cast<const Elf32_Sym *>(symtab.data());
     auto symbol = &syms[i];
-    symbol->Name = getString(strdata.Span(), endian_cast(sym->st_name));
+    symbol->Name = getString(strdata.make_const_span(), endian_cast(sym->st_name));
     symbol->Info = endian_cast(sym->st_info);
     symbol->Other = endian_cast(sym->st_other);
     symbol->Value = endian_cast(sym->st_shndx);
@@ -69,7 +69,7 @@ bool File::getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   while (symtab.size() >= Sym64Size) {
     auto sym = reinterpret_cast<const Elf64_Sym *>(symtab.data());
     auto symbol = &syms[i];
-    symbol->Name = getString(strdata.Span(), endian_cast(sym->st_name));
+    symbol->Name = getString(strdata.make_const_span(), endian_cast(sym->st_name));
     symbol->Info = endian_cast(sym->st_info);
     symbol->Other = endian_cast(sym->st_other);
     symbol->Value = endian_cast(sym->st_shndx);

@@ -20,7 +20,7 @@ bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &
   uint32_t crc32val = 0;
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
-    if (!ReadFull(in.data(), static_cast<size_t>(minsize), ec)) {
+    if (!fd.ReadFull({in.data(), static_cast<size_t>(minsize)}, ec)) {
       return false;
     }
     bzs.avail_in = static_cast<unsigned int>(minsize);

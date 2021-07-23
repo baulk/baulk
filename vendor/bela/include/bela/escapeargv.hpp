@@ -4,6 +4,7 @@
 #include <string_view>
 #include <vector>
 #include <span>
+#include "types.hpp"
 
 namespace bela {
 
@@ -30,7 +31,9 @@ public:
 } // namespace argv_internal
 
 // basic escape argv
-template <typename charT, typename Allocator = std::allocator<charT>> class basic_escape_argv {
+template <typename charT, typename Allocator = std::allocator<charT>>
+requires bela::character<charT>
+class basic_escape_argv {
 public:
   typedef std::basic_string_view<charT> string_view_t;
   typedef std::basic_string<charT, std::char_traits<charT>, Allocator> string_t;
