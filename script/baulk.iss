@@ -90,6 +90,11 @@ Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterm
 Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
 Source: "..\res\screw-driver.ico"; DestDir: "{app}\share\baulk"; DestName: "baulk.ico"
+Source: "..\script\Fragments.ps1"; DestDir: "{app}\script"; DestName: "Fragments.ps1"
+Source: "..\script\Fragments.bat"; DestDir: "{app}\script"; DestName: "Fragments.bat"
+Source: "..\script\FragmentsARM64.ps1"; DestDir: "{app}\script"; DestName: "FragmentsARM64.ps1"
+Source: "..\script\FragmentsARM64.bat"; DestDir: "{app}\script"; DestName: "FragmentsARM64.bat"
+Source: "..\script\FragmentsDel.bat"; DestDir: "{app}\script"; DestName: "FragmentsDel.bat"
 
 [UninstallDelete]
 ; Delete Windows Terminal profile fragments
@@ -140,7 +145,7 @@ begin
         '    {'#10+
         '      "name": "Baulk",'#10+
         '      "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'#10+
-        '      "commandline": "'+AppPath+'/bin/baulk-exec.exe --vs --clang winsh",'#10+
+        '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs --clang winsh",'#10+
         '      "icon": "'+AppPath+'/share/baulk/baulk.ico",'#10+
         '      "startingDirectory": "%USERPROFILE%",'#10+
         '      "tabTitle": "Windows Terminal \ud83d\udc96 Baulk"'#10+

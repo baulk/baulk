@@ -67,8 +67,8 @@ else()
   set(BAULK_VERSION_BUILD 1)
 endif()
 
-set(BAULK_VERSION_MAJOR 2)
-set(BAULK_VERSION_MINOR 3)
+set(BAULK_VERSION_MAJOR 3)
+set(BAULK_VERSION_MINOR 0)
 set(BAULK_VERSION_PATCH 0)
 set(PACKAGE_VERSION "${BAULK_VERSION_MAJOR}.${BAULK_VERSION_MINOR}.${BAULK_VERSION_PATCH}")
 
@@ -106,15 +106,13 @@ include_directories("${CMAKE_BINARY_DIR}/include" "./include" "./vendor/bela/inc
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)
-install(FILES "script/installmenu.bat" DESTINATION script)
-install(FILES "script/installmenu.ps1" DESTINATION script)
-install(FILES "script/uninstallmenu.bat" DESTINATION script)
-install(FILES "script/uninstallmenu.ps1" DESTINATION script)
+install(FILES "res/screw-driver.ico" DESTINATION "share/baulk" RENAME baulk.ico)
 
-install(FILES "script/arm64/installmenu.bat" DESTINATION script/arm64)
-install(FILES "script/arm64/installmenu.ps1" DESTINATION script/arm64)
-install(FILES "script/arm64/uninstallmenu.bat" DESTINATION script/arm64)
-install(FILES "script/arm64/uninstallmenu.ps1" DESTINATION script/arm64)
+install(FILES "script/Fragments.ps1" DESTINATION script)
+install(FILES "script/Fragments.bat" DESTINATION script)
+install(FILES "script/FragmentsARM64.ps1" DESTINATION script)
+install(FILES "script/FragmentsARM64.bat" DESTINATION script)
+install(FILES "script/FragmentsDel.bat" DESTINATION script)
 
 add_subdirectory(vendor/bela)
 add_subdirectory(lib/archive)
