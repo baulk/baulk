@@ -58,7 +58,7 @@ constexpr const char32_t offsetfromu8[6] = {0x00000000UL, 0x00003080UL, 0x000E20
 // enough to represent any UTF-32 code unit (32 bits). It has the same size,
 // signedness, and alignment as std::uint_least32_t, but is a distinct type.
 
-inline constexpr bool IsSurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
+constexpr bool IsSurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 
 size_t char32tochar16(char32_t rune, char16_t *dest, size_t dlen) {
   if (dlen == 0 || dest == nullptr) {

@@ -138,7 +138,7 @@ bool LookupReparsePoint(std::wstring_view file, FileReparsePoint &frp, bela::err
     ec.message = bela::resolve_system_error_message(ERROR_NOT_A_REPARSE_POINT);
     return false;
   }
-  auto p = b.as_bytes_view().unsafe_cast<REPARSE_DATA_BUFFER>();
+  auto p = b.as_bytes_view().unchecked_cast<REPARSE_DATA_BUFFER>();
   frp.type = static_cast<reparse_point_t>(p->ReparseTag);
   frp.attributes.emplace(L"TAG", bela::StringCat(L"0x", bela::Hex(frp.type, bela::kZeroPad8)));
   frp.attributes.emplace(L"TagName", lookup_reparse_tagname(frp.type));

@@ -20,7 +20,7 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
   std::vector<image_import_descriptor> ida;
   for (size_t offset = idd->VirtualAddress - ds->VirtualAddress; offset < static_cast<size_t>(ds->Size);
        offset += sizeof(IMAGE_IMPORT_DESCRIPTOR)) {
-    auto dt = bv.direct_cast<IMAGE_IMPORT_DESCRIPTOR>(offset);
+    auto dt = bv.checked_cast<IMAGE_IMPORT_DESCRIPTOR>(offset);
     if (dt == nullptr) {
       break;
     }

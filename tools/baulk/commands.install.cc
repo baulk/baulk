@@ -1,6 +1,5 @@
 //
 #include <bela/terminal.hpp>
-#include <version.hpp>
 #include "pkg.hpp"
 #include "commands.hpp"
 #include "baulk.hpp"

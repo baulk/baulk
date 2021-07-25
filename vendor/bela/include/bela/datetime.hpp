@@ -40,7 +40,7 @@ constexpr int64_t daysPer100Years = 365 * 100 + 24;
 constexpr int64_t daysPer4Years = 365 * 4 + 1;
 constexpr int64_t unixEpochDays = 1969 * 365 + 1969 / 4 - 1969 / 100 + 1969 / 400;
 
-inline constexpr bool IsLeapYear(std::int_least64_t y) { return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0); }
+constexpr bool IsLeapYear(std::int_least64_t y) { return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0); }
 
 class DateTime;
 namespace time_internal {
@@ -48,12 +48,12 @@ bool MakeDateTime(int64_t second, DateTime &dt);
 constexpr int LeapMonths[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 constexpr int Months[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 // Unix epoch
-constexpr inline std::int_least64_t daysSinceEpoch(std::int_least64_t Y) {
+constexpr std::int_least64_t daysSinceEpoch(std::int_least64_t Y) {
   Y--;
   return Y * 365 + Y / 4 - Y / 100 + Y / 400 - unixEpochDays;
 }
 
-constexpr inline int64_t DaysSinceEpoch(std::int_least64_t y, std::int_least8_t mon, std::int_least8_t d) {
+constexpr int64_t DaysSinceEpoch(std::int_least64_t y, std::int_least8_t mon, std::int_least8_t d) {
   auto leapYear = IsLeapYear(y);
   auto mondays = leapYear ? time_internal::LeapMonths[mon - 1] : time_internal::Months[mon - 1];
   if (d < 1 || d > mondays) {
@@ -70,9 +70,12 @@ constexpr inline int64_t DaysSinceEpoch(std::int_least64_t y, std::int_least8_t 
   return days;
 }
 
+std::wstring FormatDateTimeW(const DateTime &dt, bool nano);
+std::string FormatDateTimeA(const DateTime &dt, bool nano);
+
 }; // namespace time_internal
 
-inline constexpr Weekday GetWeekday(std::int_least64_t y, std::int_least8_t mon, std::int_least8_t d) {
+constexpr Weekday GetWeekday(std::int_least64_t y, std::int_least8_t mon, std::int_least8_t d) {
   // 1969-12-31 Wednesday -1 day
   // 1970-01-01 Thursday 0 day
   auto days = time_internal::DaysSinceEpoch(y, mon, d);
@@ -101,12 +104,17 @@ public:
   constexpr auto Weekday() const noexcept { return wday; }
   auto &TimeZoneOffset() noexcept { return tzoffset; }
   // RFC3339
-  std::wstring Format(bool nano = false);
-  std::string FormatNarrow(bool nano = false);
+
+  template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
+  requires bela::character<CharT>
+  [[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> Format(bool nano = false) const;
+
   bela::Time Time() const noexcept;
 
 private:
   friend bool time_internal::MakeDateTime(int64_t second, DateTime &dt);
+  friend std::wstring time_internal::FormatDateTimeW(const DateTime &dt, bool nano);
+  friend std::string time_internal::FormatDateTimeA(const DateTime &dt, bool nano);
   std::int_fast64_t year;
   bela::Month month;
   std::int_least8_t day;
@@ -118,6 +126,13 @@ private:
   bela::Weekday wday;
 };
 
+template <> inline std::wstring DateTime::Format<wchar_t>(bool nano) const {
+  return time_internal::FormatDateTimeW(*this, nano);
+}
+template <> inline std::string DateTime::Format<char>(bool nano) const {
+  return time_internal::FormatDateTimeA(*this, nano);
+}
+
 std::int_least32_t TimeZoneOffset();
 
 inline bela::DateTime LocalDateTime(bela::Time t) {
@@ -125,19 +140,19 @@ inline bela::DateTime LocalDateTime(bela::Time t) {
   return bela::DateTime(t - bela::Seconds(tzoffset), tzoffset);
 }
 
-inline std::wstring FormatTime(bela::Time t, bool nano = false) {
+template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
+requires bela::character<CharT>
+[[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> FormatTime(bela::Time t, bool nano = false) {
   auto dt = LocalDateTime(t);
-  return dt.Format(nano);
+  return dt.Format<CharT>(nano);
 }
 
-inline std::string FormatTimeNarrow(bela::Time t, bool nano = false) {
-  auto dt = LocalDateTime(t);
-  return dt.FormatNarrow(nano);
+template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
+requires bela::character<CharT>
+[[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> FormatUniversalTime(bela::Time t,
+                                                                                               bool nano = false) {
+  return DateTime(t).Format<CharT>(nano);
 }
-
-// Coordinated Universal Time
-inline std::wstring FormatUniversalTime(bela::Time t, bool nano = false) { return DateTime(t).Format(nano); }
-inline std::string FormatUniversalTimeNarrow(bela::Time t, bool nano = false) { return DateTime(t).FormatNarrow(nano); }
 
 std::wstring_view WeekdayName(Weekday wd, bool shortname = true) noexcept;
 std::wstring_view MonthName(Month mon, bool shortname = true) noexcept;

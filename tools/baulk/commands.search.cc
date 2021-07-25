@@ -1,6 +1,5 @@
 #include <bela/fnmatch.hpp>
 #include <bela/ascii.hpp>
-#include <version.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
 #include "commands.hpp"

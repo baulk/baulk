@@ -3,9 +3,9 @@
 #include <bela/path.hpp>
 #include <bela/io.hpp>
 #include <bela/simulator.hpp>
-#include <version.hpp>
+#include <bela/datetime.hpp>
+#include <bela/semver.hpp>
 #include <jsonex.hpp>
-#include <time.hpp>
 #include "bucket.hpp"
 #include "launcher.hpp"
 #include "pkg.hpp"
@@ -31,7 +31,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     nlohmann::json j;
     j["version"] = bela::ToNarrow(pkg.version);
     j["bucket"] = bela::ToNarrow(pkg.bucket);
-    j["date"] = baulk::time::TimeNow();
+    j["date"] = bela::FormatTime<char>(bela::Now());
     AddArray(j, "force_delete", pkg.forceDeletes);
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
@@ -238,8 +238,8 @@ int BaulkInstall(const baulk::Package &pkg) {
   bela::error_code ec;
   auto pkglocal = baulk::bucket::PackageLocalMeta(pkg.name, ec);
   if (pkglocal) {
-    baulk::version::version pkgversion(pkg.version);
-    baulk::version::version oldversion(pkglocal->version);
+    bela::version pkgversion(pkg.version);
+    bela::version oldversion(pkglocal->version);
     // new version less installed version or weights < weigths
     if (pkgversion < oldversion || (pkgversion == oldversion && pkg.weights <= pkglocal->weights)) {
       return PackageMakeLinks(pkg);

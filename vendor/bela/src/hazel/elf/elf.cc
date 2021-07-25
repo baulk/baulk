@@ -1,6 +1,6 @@
 ///
 #include <hazel/hazel.hpp>
-#include "internal.hpp"
+#include <hazel/elf.hpp>
 
 namespace hazel::elf {
 // ELF parse code
@@ -236,8 +236,9 @@ bool File::parseFile(bela::error_code &ec) {
   if (!sectionData(sections[shstrndx], buffer, ec)) {
     return false;
   }
+  auto bv = buffer.as_bytes_view();
   for (auto i = 0; i < shnum; i++) {
-    sections[i].Name = getString(buffer.make_const_span(), static_cast<int>(sections[i].nameIndex));
+    sections[i].Name = bv.make_cstring_view(sections[i].nameIndex);
   }
   return true;
 }

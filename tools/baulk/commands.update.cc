@@ -3,9 +3,9 @@
 #include <bela/path.hpp>
 #include <bela/io.hpp>
 #include <bela/strip.hpp>
+#include <bela/datetime.hpp>
 #include <filesystem>
 #include <jsonex.hpp>
-#include <time.hpp>
 #include "net.hpp"
 #include "bucket.hpp"
 #include "fs.hpp"
@@ -110,7 +110,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
     return false;
   }
   bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name, *latest);
-  status[bucket.name] = bucket_metadata{*latest, baulk::time::TimeNow()};
+  status[bucket.name] = bucket_metadata{*latest, bela::FormatTime<char>(bela::Now())};
   updated = true;
   return true;
 }

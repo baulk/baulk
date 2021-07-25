@@ -61,6 +61,16 @@ public:
   }
   [[nodiscard]] auto size() const { return size_; }
   [[nodiscard]] const auto *data() const { return data_; }
+
+  void remove_prefix(const size_t count) noexcept {
+    auto minSize = (std::min)(count, size_);
+    size_ -= minSize;
+    data_ += minSize;
+  }
+  void remove_suffix(const size_t count) noexcept {
+    auto minSize = (std::min)(count, size_);
+    size_ -= minSize;
+  }
   // make_cstring_view convert null terminating character to string_view
   [[nodiscard]] auto make_cstring_view(size_t offset = 0, size_t cslength = std::string_view::npos) const {
     if (offset > size_) {
@@ -88,16 +98,19 @@ public:
     }
     return data_[off];
   }
-  [[nodiscard]] auto make_span() const { return std::span{data_, size_}; }
+  [[nodiscard]] auto make_const_span() const { return std::span{data_, size_}; }
 
   template <typename T>
   requires bela::standard_layout<T>
-  [[nodiscard]] const T *unsafe_cast() const { return reinterpret_cast<const T *>(data_); }
+  [[nodiscard]] const T *unchecked_cast(size_t offset = 0) const {
+    // offset and T unchecked
+    return reinterpret_cast<const T *>(data_ + offset);
+  }
 
-  // direct_cast converts bytes_view to other types of pointers without alignment check
+  // checked_cast converts bytes_view to other types of pointers without alignment check
   template <typename T>
   requires bela::standard_layout<T>
-  [[nodiscard]] const T *direct_cast(size_t offset) const {
+  [[nodiscard]] const T *checked_cast(size_t offset = 0) const {
     if (offset + sizeof(T) > size_) {
       return nullptr;
     }

@@ -10,15 +10,15 @@
 
 namespace bela {
 namespace cmdline_internal {
-constexpr inline bool isWhitespace(wchar_t ch) { return ch == L' ' || ch == L'\t' || ch == L'\r' || ch == L'\n'; }
+constexpr bool isWhitespace(wchar_t ch) { return ch == L' ' || ch == L'\t' || ch == L'\r' || ch == L'\n'; }
 
 inline std::wstring_view StripTrailingWhitespace(std::wstring_view str) {
   auto it = std::find_if_not(str.rbegin(), str.rend(), isWhitespace);
   return str.substr(0, str.rend() - it);
 }
 
-constexpr inline bool isWhitespaceOrNull(wchar_t ch) { return isWhitespace(ch) || ch == L'\0'; }
-constexpr inline bool isQuote(wchar_t ch) { return ch == '\"' || ch == '\''; }
+constexpr bool isWhitespaceOrNull(wchar_t ch) { return isWhitespace(ch) || ch == L'\0'; }
+constexpr bool isQuote(wchar_t ch) { return ch == '\"' || ch == '\''; }
 
 inline void vector_fill_n(std::vector<wchar_t> &Token, size_t n, wchar_t ch) {
   for (size_t i = 0; i < n; i++) {

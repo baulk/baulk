@@ -19,7 +19,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
   auto bv = sdata->as_bytes_view();
   // seek to the virtual address specified in the export data directory
   auto N = exd->VirtualAddress - ds->VirtualAddress;
-  auto cied = bv.direct_cast<IMAGE_EXPORT_DIRECTORY>(N);
+  auto cied = bv.checked_cast<IMAGE_EXPORT_DIRECTORY>(N);
   if (cied == nullptr) {
     return true;
   }

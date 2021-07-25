@@ -22,7 +22,7 @@ bool File::LookupDelayImports(FunctionTable::symbols_map_t &sm, bela::error_code
   std::vector<image_delayload_descriptor> ida;
   for (size_t offset = delay->VirtualAddress - sec->VirtualAddress; offset < sec->Size;
        offset += sizeof(IMAGE_DELAYLOAD_DESCRIPTOR)) {
-    auto dt = bv.direct_cast<IMAGE_DELAYLOAD_DESCRIPTOR>(offset);
+    auto dt = bv.checked_cast<IMAGE_DELAYLOAD_DESCRIPTOR>(offset);
     if (dt == nullptr) {
       break;
     }

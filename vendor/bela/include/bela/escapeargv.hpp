@@ -27,6 +27,10 @@ template <> class Literal<char16_t> {
 public:
   static constexpr std::u16string_view Empty = u"\"\"";
 };
+template <> class Literal<char8_t> {
+public:
+  static constexpr std::u8string_view Empty = u8"\"\"";
+};
 
 } // namespace argv_internal
 
@@ -35,9 +39,9 @@ template <typename charT, typename Allocator = std::allocator<charT>>
 requires bela::character<charT>
 class basic_escape_argv {
 public:
-  typedef std::basic_string_view<charT> string_view_t;
-  typedef std::basic_string<charT, std::char_traits<charT>, Allocator> string_t;
-
+  using string_view_t = std::basic_string_view<charT>;
+  using string_t = std::basic_string<charT, std::char_traits<charT>, Allocator>;
+  static constexpr auto string_empty_escape = argv_internal::Literal<charT>::Empty;
   template <typename... Args> basic_escape_argv(string_view_t arg0, Args... arg) {
     string_view_t svv[] = {arg0, arg...};
     AssignFull(svv);
@@ -90,7 +94,7 @@ public:
         saver += ' ';
       }
       if (ac.empty()) {
-        saver += argv_internal::Literal<charT>::Empty;
+        saver += string_empty_escape;
         continue;
       }
       if (ac.size() == avs[i].len) {
@@ -160,7 +164,7 @@ private:
       s += ' ';
     }
     if (sv.empty()) {
-      s += argv_internal::Literal<charT>::Empty;
+      s += string_empty_escape;
       return;
     }
     bool hasspace = false;

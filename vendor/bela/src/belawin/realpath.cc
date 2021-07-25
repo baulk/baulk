@@ -186,7 +186,7 @@ bool LookupAppExecLinkTarget(std::wstring_view src, AppExecTarget &target) {
   if (b.size() == 0) {
     return false;
   }
-  auto p = b.as_bytes_view().unsafe_cast<REPARSE_DATA_BUFFER>();
+  auto p = b.as_bytes_view().unchecked_cast<REPARSE_DATA_BUFFER>();
   if (p->ReparseTag != IO_REPARSE_TAG_APPEXECLINK) {
     return false;
   }
@@ -202,7 +202,7 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &
   if (b.size() == 0) {
     return std::make_optional(bela::PathAbsolute(src));
   }
-  auto p = b.as_bytes_view().unsafe_cast<REPARSE_DATA_BUFFER>();
+  auto p = b.as_bytes_view().unchecked_cast<REPARSE_DATA_BUFFER>();
 
   switch (p->ReparseTag) {
   case IO_REPARSE_TAG_APPEXECLINK:

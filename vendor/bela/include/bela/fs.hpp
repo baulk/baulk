@@ -4,7 +4,7 @@
 #include "base.hpp"
 
 namespace bela::fs {
-inline constexpr bool DirSkipFaster(const wchar_t *dir) {
+constexpr bool DirSkipFaster(const wchar_t *dir) {
   return (dir[0] == L'.' && (dir[1] == L'\0' || (dir[1] == L'.' && dir[2] == L'\0')));
 }
 

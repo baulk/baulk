@@ -181,7 +181,7 @@ inline size_t char32tochar8(char32_t rune, std::basic_string<T, std::char_traits
   return 0;
 }
 
-inline constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
+constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 
 inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   if (rune <= 0xFFFF) {

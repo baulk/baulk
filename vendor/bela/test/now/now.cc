@@ -18,8 +18,10 @@ inline std::string TimeString(time_t t) {
   buffer.resize(n);
   return buffer;
 }
-
-inline std::wstring_view trimSuffixZero(std::wstring_view sv) {
+std::wstring_view trimZero(std::wstring_view sv) {
+  if (auto pos = sv.find_first_not_of('0'); pos != std::wstring_view::npos) {
+    sv.remove_prefix(pos);
+  }
   if (auto pos = sv.find_last_not_of('0'); pos != std::wstring_view::npos) {
     return sv.substr(0, pos + 1);
   }
@@ -30,7 +32,7 @@ int wmain() {
 
   constexpr const wchar_t *sv[] = {L"11110000", L"", L"0001110"};
   for (const auto s : sv) {
-    bela::FPrintF(stderr, L"[%s]--[%s]\n", s, trimSuffixZero(s));
+    bela::FPrintF(stderr, L"[%s]--[%s]\n", s, trimZero(s));
   }
   auto t0 = time(nullptr);
   bela::FPrintF(stderr, L"time:  %d\n", t0);
@@ -49,7 +51,7 @@ int wmain() {
   bela::FPrintF(stderr, L"tick: %d\n", bela::ToUnixSeconds(tickNow));
   auto tickNow2 = bela::FromFileTime(ft);
   bela::FPrintF(stderr, L"FromFileTime time:  %s\n", bela::FormatTime(tickNow2));
-  bela::FPrintF(stderr, L"FromFileTime time(Narrow):  %s\n", bela::FormatTimeNarrow(tickNow2));
+  bela::FPrintF(stderr, L"FromFileTime time(Narrow):  %s\n", bela::FormatTime<char>(tickNow2));
   TIME_ZONE_INFORMATION tz_info;
   GetTimeZoneInformation(&tz_info);
 

@@ -6,7 +6,7 @@
 #include <bela/str_cat_narrow.hpp>
 #include <bela/io.hpp>
 #include <bela/str_split.hpp>
-#include <time.hpp>
+#include <bela/datetime.hpp>
 #include <jsonex.hpp>
 #include "launcher.hpp"
 #include "fs.hpp"
@@ -49,7 +49,7 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, 
       newlinks[bela::ToNarrow(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
     }
     obj["links"] = newlinks;
-    obj["updated"] = baulk::time::TimeNow();
+    obj["updated"] = bela::FormatTime<char>(bela::Now());
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
@@ -102,7 +102,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
         baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, le.message);
       }
     }
-    obj["updated"] = baulk::time::TimeNow();
+    obj["updated"] = bela::FormatTime<char>(bela::Now());
     obj["links"] = newlinkobj;
     newjson = obj.dump(4);
   } catch (const std::exception &e) {

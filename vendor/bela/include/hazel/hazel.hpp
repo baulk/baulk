@@ -15,7 +15,7 @@ using bela::ErrGeneral;
 // https://en.cppreference.com/w/cpp/utility/variant
 
 // helper constant for the visitor #3
-template <class> inline constexpr bool always_false_v = false;
+template <class> constexpr bool always_false_v = false;
 
 // helper type for the visitor #4
 template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };

@@ -26,19 +26,66 @@ enum FileMode : uint32_t {
 
   ModePerm = 0777, // Unix permission bits
 };
-[[nodiscard]] constexpr FileMode operator&(FileMode L, FileMode R) noexcept {
-  using I = std::underlying_type_t<FileMode>;
-  return static_cast<FileMode>(static_cast<I>(L) & static_cast<I>(R));
-}
-[[nodiscard]] constexpr FileMode operator|(FileMode L, FileMode R) noexcept {
-  using I = std::underlying_type_t<FileMode>;
-  return static_cast<FileMode>(static_cast<I>(L) | static_cast<I>(R));
+
+template <class I>
+requires std::integral<I>
+[[nodiscard]] constexpr FileMode
+operator<<(const FileMode _Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT, every static_cast is intentional
+  using K = std::underlying_type_t<FileMode>;
+  return static_cast<FileMode>(static_cast<K>(_Arg) << _Shift);
 }
 
-constexpr inline bool IsDir(FileMode m) { return (m & ModeDir) != 0; }
-constexpr inline bool IsRegular(FileMode m) { return (m & ModeType) == 0; }
-constexpr inline FileMode Perm(FileMode m) { return m & ModePerm; }
-constexpr inline FileMode Type(FileMode m) { return m & ModeType; }
+template <class I>
+requires std::integral<I>
+[[nodiscard]] constexpr FileMode
+operator>>(const FileMode _Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT, every static_cast is intentional
+  using K = std::underlying_type_t<FileMode>;
+  return static_cast<FileMode>(static_cast<K>(_Arg) >> _Shift);
+}
+
+[[nodiscard]] constexpr FileMode operator&(FileMode L, FileMode R) noexcept {
+  using K = std::underlying_type_t<FileMode>;
+  return static_cast<FileMode>(static_cast<K>(L) & static_cast<K>(R));
+}
+[[nodiscard]] constexpr FileMode operator|(FileMode L, FileMode R) noexcept {
+  using K = std::underlying_type_t<FileMode>;
+  return static_cast<FileMode>(static_cast<K>(L) | static_cast<K>(R));
+}
+
+[[nodiscard]] constexpr FileMode
+operator^(const FileMode _Left, const FileMode _Right) noexcept { // bitwise XOR, every static_cast is intentional
+  using K = std::underlying_type_t<FileMode>;
+  return static_cast<FileMode>(static_cast<K>(_Left) ^ static_cast<K>(_Right));
+}
+
+template <class I>
+requires std::integral<I>
+constexpr FileMode &operator<<=(FileMode &_Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT
+  return _Arg = _Arg << _Shift;
+}
+
+template <class I>
+requires std::integral<I>
+constexpr FileMode &operator>>=(FileMode &_Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT
+  return _Arg = _Arg >> _Shift;
+}
+
+constexpr FileMode &operator|=(FileMode &_Left, const FileMode _Right) noexcept { // bitwise OR
+  return _Left = _Left | _Right;
+}
+
+constexpr FileMode &operator&=(FileMode &_Left, const FileMode _Right) noexcept { // bitwise AND
+  return _Left = _Left & _Right;
+}
+
+constexpr FileMode &operator^=(FileMode &_Left, const FileMode _Right) noexcept { // bitwise XOR
+  return _Left = _Left ^ _Right;
+}
+
+constexpr bool IsDir(FileMode m) { return (m & ModeDir) != 0; }
+constexpr bool IsRegular(FileMode m) { return (m & ModeType) == 0; }
+constexpr FileMode Perm(FileMode m) { return m & ModePerm; }
+constexpr FileMode Type(FileMode m) { return m & ModeType; }
 
 } // namespace bela::os
 

@@ -10,12 +10,12 @@
 namespace bela {
 constexpr const char PathSeparatorA = '\\';
 constexpr const char PathUnixSeparatorA = '/';
-inline constexpr bool IsPathSeparator(char c) { return c == PathSeparatorA || c == PathUnixSeparatorA; }
+constexpr bool IsPathSeparator(char c) { return c == PathSeparatorA || c == PathUnixSeparatorA; }
 // Windows Path base
 constexpr const wchar_t PathSeparator = L'\\';
 constexpr const wchar_t PathUnixSeparator = L'/';
 constexpr const size_t PathMax = 0x8000;
-inline constexpr bool IsPathSeparator(wchar_t c) { return c == PathSeparator || c == PathUnixSeparator; }
+constexpr bool IsPathSeparator(wchar_t c) { return c == PathSeparator || c == PathUnixSeparator; }
 // BaseName DirName - parse pathname components
 std::wstring_view BaseName(std::wstring_view name);
 // BaseName DirName - parse pathname components

@@ -111,7 +111,7 @@ std::optional<DotNetMetadata> File::LookupDotNetMetadata(bela::error_code &ec) c
   }
   auto bv = sdata->as_bytes_view();
   auto N = clrd->VirtualAddress - sec->VirtualAddress;
-  auto cr = bv.direct_cast<IMAGE_COR20_HEADER>(N);
+  auto cr = bv.checked_cast<IMAGE_COR20_HEADER>(N);
   if (cr == nullptr) {
     return std::nullopt;
   }
@@ -123,7 +123,7 @@ std::optional<DotNetMetadata> File::LookupDotNetMetadata(bela::error_code &ec) c
     // avoid bad data
     return std::nullopt;
   }
-  auto d = bv.direct_cast<STORAGESIGNATURE>(N);
+  auto d = bv.checked_cast<STORAGESIGNATURE>(N);
   if (d == nullptr) {
     return std::nullopt;
   }

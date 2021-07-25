@@ -23,6 +23,7 @@ bool FD::ReadFull(std::span<uint8_t> buffer, bela::error_code &ec) const {
   if (buffer.size() == 0) {
     return true;
   }
+  // auto bytes=std::as_writable_bytes(buffer);
   auto p = reinterpret_cast<uint8_t *>(buffer.data());
   auto len = buffer.size();
   size_t total = 0;

@@ -1,5 +1,5 @@
 ///
-#include "internal.hpp"
+#include <hazel/elf.hpp>
 
 namespace hazel::elf {
 
@@ -23,22 +23,20 @@ bool File::getSymbols32(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   if (!stringTable(symSec->Link, strdata, ec)) {
     return false;
   }
-  std::string_view symtab{reinterpret_cast<const char *>(buffer.data()), buffer.size()};
-  if (symtab.size() > Sym32Size) {
-    symtab.remove_prefix(Sym32Size);
+  auto bv = strdata.as_bytes_view();
+  auto bsv = buffer.as_bytes_view();
+  if (bsv.size() > Sym32Size) {
+    bsv.remove_prefix(Sym32Size);
   }
-  syms.resize(symtab.size() / Sym32Size);
-  int i = 0;
-  while (symtab.size() >= Sym32Size) {
-    auto sym = reinterpret_cast<const Elf32_Sym *>(symtab.data());
-    auto symbol = &syms[i];
-    symbol->Name = getString(strdata.make_const_span(), endian_cast(sym->st_name));
-    symbol->Info = endian_cast(sym->st_info);
-    symbol->Other = endian_cast(sym->st_other);
-    symbol->Value = endian_cast(sym->st_shndx);
-    symbol->Size = endian_cast(sym->st_size);
-    symtab.remove_prefix(Sym32Size);
-    i++;
+  syms.resize(bsv.size() / Sym32Size);
+  for (auto &symbol : syms) {
+    auto sym = bsv.unchecked_cast<Elf32_Sym>();
+    bsv.remove_prefix(Sym32Size);
+    symbol.Name = bv.make_cstring_view(endian_cast(sym->st_name));
+    symbol.Info = endian_cast(sym->st_info);
+    symbol.Other = endian_cast(sym->st_other);
+    symbol.Value = endian_cast(sym->st_shndx);
+    symbol.Size = endian_cast(sym->st_size);
   }
   return true;
 }
@@ -60,22 +58,21 @@ bool File::getSymbols64(uint32_t st, std::vector<Symbol> &syms, bela::Buffer &st
   if (!stringTable(symSec->Link, strdata, ec)) {
     return false;
   }
+  auto bv = strdata.as_bytes_view();
+  auto bsv = buffer.as_bytes_view();
   std::string_view symtab{reinterpret_cast<const char *>(buffer.data()), buffer.size()};
   if (symtab.size() > Sym64Size) {
     symtab.remove_prefix(Sym64Size);
   }
   syms.resize(symtab.size() / Sym64Size);
-  int i = 0;
-  while (symtab.size() >= Sym64Size) {
-    auto sym = reinterpret_cast<const Elf64_Sym *>(symtab.data());
-    auto symbol = &syms[i];
-    symbol->Name = getString(strdata.make_const_span(), endian_cast(sym->st_name));
-    symbol->Info = endian_cast(sym->st_info);
-    symbol->Other = endian_cast(sym->st_other);
-    symbol->Value = endian_cast(sym->st_shndx);
-    symbol->Size = endian_cast(sym->st_size);
-    symtab.remove_prefix(Sym64Size);
-    i++;
+  for (auto &symbol : syms) {
+    auto sym = bsv.unchecked_cast<Elf64_Sym>();
+    bsv.remove_prefix(Sym64Size);
+    symbol.Name = bv.make_cstring_view(endian_cast(sym->st_name));
+    symbol.Info = endian_cast(sym->st_info);
+    symbol.Other = endian_cast(sym->st_other);
+    symbol.Value = endian_cast(sym->st_shndx);
+    symbol.Size = endian_cast(sym->st_size);
   }
   return true;
 }

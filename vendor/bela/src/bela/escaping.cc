@@ -57,7 +57,7 @@ inline int hex_digit_to_int(wchar_t c) {
   return x & 0xf;
 }
 
-inline constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
+constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
 inline size_t char32tochar16(char32_t rune, char16_t *dest) {
   if (rune <= 0xFFFF) {
     dest[0] = issurrogate(rune) ? 0xFFFD : static_cast<char16_t>(rune);

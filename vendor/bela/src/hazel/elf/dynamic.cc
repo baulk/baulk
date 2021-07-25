@@ -1,5 +1,5 @@
 //
-#include "internal.hpp"
+#include <hazel/elf.hpp>
 
 namespace hazel::elf {
 bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec) const {
@@ -19,27 +19,28 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
   if (!stringTable(ds->Link, str, ec)) {
     return false;
   }
-  std::string_view dss{reinterpret_cast<const char *>(d.data()), d.size()};
+  auto bsv = str.as_bytes_view();
+  auto dv = d.as_bytes_view();
   if (fh.Class == ELFCLASS32) {
-    while (dss.size() >= 8) {
-      auto t = cast_from<uint32_t>(dss.data());
-      auto v = cast_from<uint32_t>(dss.data() + 4);
-      dss.remove_prefix(8);
+    while (dv.size() >= 8) {
+      auto t = cast_from<uint32_t>(dv.data());
+      auto v = cast_from<uint32_t>(dv.data() + 4);
+      dv.remove_prefix(8);
       if (static_cast<int>(t) == tag) {
-        if (auto s = getStringO(str.make_const_span(), static_cast<int>(v)); s) {
-          sv.emplace_back(std::move(*s));
+        if (auto s = bsv.make_cstring_view(v); !s.empty()) {
+          sv.emplace_back(s);
         }
       }
     }
     return true;
   }
-  while (dss.size() >= 16) {
-    auto t = cast_from<uint64_t>(dss.data());
-    auto v = cast_from<uint64_t>(dss.data() + 8);
-    dss.remove_prefix(16);
+  while (dv.size() >= 16) {
+    auto t = cast_from<uint64_t>(dv.data());
+    auto v = cast_from<uint64_t>(dv.data() + 8);
+    dv.remove_prefix(16);
     if (static_cast<int>(t) == tag) {
-      if (auto s = getStringO(str.make_const_span(), static_cast<int>(v)); s) {
-        sv.emplace_back(std::move(*s));
+      if (auto s = bsv.make_cstring_view(v); !s.empty()) {
+        sv.emplace_back(s);
       }
     }
   }

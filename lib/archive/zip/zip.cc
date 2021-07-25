@@ -335,6 +335,11 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
 }
 
 bool Reader::Initialize(bela::error_code &ec) {
+  if (size == bela::SizeUnInitialized) {
+    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+      return false;
+    }
+  }
   directoryEnd d;
   if (!readDirectoryEnd(d, ec)) {
     return false;
@@ -370,9 +375,6 @@ bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
   }
   auto fd_ = bela::io::NewFile(file, ec);
   if (!fd_) {
-    return false;
-  }
-  if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
     return false;
   }
   fd = std::move(*fd_);

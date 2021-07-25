@@ -2,7 +2,7 @@
 #include <bela/terminal.hpp>
 #include <bela/str_cat_narrow.hpp>
 #include <bela/path.hpp>
-#include <time.hpp>
+#include <bela/datetime.hpp>
 #include "baulkterminal.hpp"
 
 namespace baulkterminal {
@@ -23,8 +23,8 @@ public:
     if (fd == INVALID_HANDLE_VALUE) {
       return -1;
     }
-    auto um = bela::narrow::StringCat("[DEBUG] ", baulk::time::TimeNow(), " [", GetCurrentProcessId(), "] ",
-                                      bela::ToNarrow(msg), "\n");
+    auto um = bela::narrow::StringCat("[DEBUG] ", bela::FormatTime<char>(bela::Now()), " [", GetCurrentProcessId(),
+                                      "] ", bela::ToNarrow(msg), "\n");
     DWORD written = 0;
     if (WriteFile(fd, um.data(), static_cast<DWORD>(um.size()), &written, nullptr) != TRUE) {
       return -1;

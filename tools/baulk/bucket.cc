@@ -2,9 +2,9 @@
 #include <bela/path.hpp>
 #include <bela/process.hpp>
 #include <bela/str_split_narrow.hpp>
+#include <bela/semver.hpp>
 #include <xml.hpp>
 #include <jsonex.hpp>
-#include <version.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
 #include "fs.hpp"
@@ -242,7 +242,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::
 
 bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
   // initialize version from installed version
-  baulk::version::version pkgversion(opkg.version);
+  bela::version pkgversion(opkg.version);
   auto weights = opkg.weights;
   bool updated{false};
   auto bucketsdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
@@ -259,7 +259,7 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
     }
     pkgN->bucket = bk.name;
     pkgN->weights = bk.weights;
-    baulk::version::version newversion(pkgN->version);
+    bela::version newversion(pkgN->version);
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
     if (newversion > pkgversion || (newversion == pkgversion && weights < pkgN->weights)) {
@@ -273,7 +273,7 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
 }
 // package metadata
 std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::error_code &ec) {
-  baulk::version::version pkgversion; // 0.0.0.0
+  bela::version pkgversion; // 0.0.0.0
   baulk::Package pkg;
   auto bucketsdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
   size_t pkgsame = 0;
@@ -289,7 +289,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::err
     pkgsame++;
     pkgN->bucket = bk.name;
     pkgN->weights = bk.weights;
-    baulk::version::version newversion(pkgN->version);
+    bela::version newversion(pkgN->version);
     // compare version newversion is > oldversion
     // newversion == oldversion and strversion not equail compare weights
     if (newversion > pkgversion || (newversion == pkgversion && pkg.weights < pkgN->weights)) {
