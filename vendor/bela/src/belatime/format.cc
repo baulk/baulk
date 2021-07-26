@@ -85,7 +85,6 @@ FormatDateTimeInternal(std::int_fast64_t year, bela::Month month, std::int_least
   stime.append(bp, static_cast<std::size_t>(ep - bp));
   if (nano) {
     bp = Format64(ep, 10, nsec);
-    std::basic_string_view<CharT> nsv;
     auto sv = trimZero(std::basic_string_view<CharT>(bp, static_cast<size_t>(ep - bp)));
     if (!sv.empty()) {
       stime.push_back('.');

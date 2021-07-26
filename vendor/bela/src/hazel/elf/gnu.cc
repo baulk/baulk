@@ -90,9 +90,10 @@ bool File::ImportedSymbols(std::vector<ImportedSymbol> &symbols, bela::error_cod
   for (int i = 0; i < static_cast<int>(syms.size()); i++) {
     const auto &s = syms[i];
     if (SymBind(s.Info) == STB_GLOBAL && s.SectionIndex == SHN_UNDEF) {
-      symbols.emplace_back(ImportedSymbol{s.Name});
-      auto &back = symbols.back();
-      gnuVersion(i, back.Library, back.Version);
+      ImportedSymbol is;
+      is.Name = s.Name;
+      gnuVersion(i, is.Library, is.Version);
+      symbols.emplace_back(std::move(is));
     }
   }
   return true;

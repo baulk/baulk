@@ -280,6 +280,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       continue;
     }
     if (fieldTag == infoZipUnicodePathID) {
+      // 4.6.9 -Info-ZIP Unicode Path Extra Field (0x7075):
       /*
        (UPath) 0x7075        Short       tag for this extra block type ("up")
          TSize         Short       total data size for this block
@@ -290,13 +291,15 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       if (fb.Size() < 5 || (file.flags & 0x800) != 0) {
         continue;
       }
-      auto ver = fb.Pick();
+      (void)fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
+      (void)crc32val;
       file.flags |= 0x800;
       file.name = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }
     if (fieldTag == infoZipUnicodeCommentExtraID) {
+      //  4.6.8 -Info-ZIP Unicode Comment Extra Field (0x6375):
       // (UCom) 0x6375        Short       tag for this extra block type ("uc")
       //  TSize         Short       total data size for this block
       //  Version       1 byte      version of this extra field, currently 1
@@ -305,8 +308,9 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       if (fb.Size() < 5) {
         continue;
       }
-      auto ver = fb.Pick();
+      (void)fb.Pick();
       auto crc32val = fb.Read<uint32_t>();
+      (void)crc32val;
       file.comment = bela::cstring_view({fb.Data<char>(), fb.Size()});
       continue;
     }

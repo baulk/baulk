@@ -55,10 +55,10 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     }
   }
   if (ied.AddressOfNames > ds->VirtualAddress && ied.AddressOfNames < ds->VirtualAddress + ds->VirtualSize) {
-    auto N = ied.AddressOfNames - ds->VirtualAddress;
-    if (bv.size() - N >= exports.size() * 4) {
+    auto L = ied.AddressOfNames - ds->VirtualAddress;
+    if (bv.size() - L >= exports.size() * 4) {
       for (size_t i = 0; i < exports.size(); i++) {
-        exports[i].Name = bv.make_cstring_view(bv.cast_fromle<uint32_t>(N + i * 4) - ds->VirtualAddress);
+        exports[i].Name = bv.make_cstring_view(bv.cast_fromle<uint32_t>(L + i * 4) - ds->VirtualAddress);
       }
     }
   }
