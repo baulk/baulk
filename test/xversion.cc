@@ -1,7 +1,7 @@
 #include <bela/terminal.hpp>
 #include <bela/match.hpp>
 #include <bela/strip.hpp>
-#include <version.hpp>
+#include <bela/semver.hpp>
 
 inline std::wstring_view cleanup_version(std::wstring_view ver) { return bela::StripPrefix(ver, L"v"); }
 
@@ -20,8 +20,8 @@ int wmain() {
                                   L"1.0-rc.1",
                                   L"1.2.3-rc.4"};
   for (auto v : vs) {
-    baulk::version::version sv(cleanup_version(v));
-    bela::FPrintF(stderr, L"resolve version: %s to %s\n", v, sv.to_wstring());
+    bela::version sv(cleanup_version(v));
+    bela::FPrintF(stderr, L"resolve version: %s to %s\n", v, sv.make_string_version<wchar_t>());
   }
   return 0;
 }

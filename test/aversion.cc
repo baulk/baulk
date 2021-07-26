@@ -1,7 +1,7 @@
 #include <string_view>
 #include <cstdio>
 #include <vector>
-#include "../include/version.hpp"
+#include <bela/semver.hpp>
 
 int main() {
   const std::string_view vs[] = {"19.00",
@@ -18,8 +18,8 @@ int main() {
                                  "1.0-rc.1",
                                  "1.2.3-rc.4"};
   for (auto v : vs) {
-    baulk::version::version sv(v);
-    auto str = sv.to_string();
+    bela::version sv(v);
+    auto str = sv.make_string_version<char>();
     fprintf(stderr, "resolve version(%u.%u.%u.%u): %s to %s\n", sv.major, sv.minor, sv.patch, sv.build, v.data(),
             str.data());
   }
