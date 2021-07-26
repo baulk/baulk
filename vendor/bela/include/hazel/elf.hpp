@@ -115,8 +115,8 @@ private:
     return nullptr;
   }
   bool sectionData(const Section &sec, bela::Buffer &buffer, bela::error_code &ec) const {
-    buffer.grow(sec.Size);
-    if (!fd.ReadAt(buffer, sec.Size, sec.Offset, ec)) {
+    buffer.grow(static_cast<size_t>(sec.Size));
+    if (!fd.ReadAt(buffer, static_cast<size_t>(sec.Size), sec.Offset, ec)) {
       return false;
     }
     return true;

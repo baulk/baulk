@@ -34,7 +34,7 @@ std::string_view BaseName(std::string_view name) {
 
 void showProgress(const bela::terminal::terminal_size &termsz, std::string_view filename) {
   auto suglen = static_cast<size_t>(termsz.columns) - 8;
-  if (auto n = bela::StringWidth(filename); n <= suglen) {
+  if (auto n = bela::string_width<char>(filename); n <= suglen) {
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
     return;
   }

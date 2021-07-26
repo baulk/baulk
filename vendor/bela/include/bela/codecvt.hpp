@@ -3,7 +3,8 @@
 #define BELA_CODECVT_HPP
 #include <string>
 #include <vector>
-#include "ucwidth.hpp"
+#include <span>
+#include "types.hpp"
 
 /*
  * UTF-8 to UTF-16
@@ -24,46 +25,326 @@
  */
 
 namespace bela {
-size_t char32tochar16(char32_t rune, char16_t *dest, size_t dlen);
-size_t char32tochar8(char32_t rune, char *dest, size_t dlen);
-// UTF-8/UTF-16 codecvt
-std::string c16tomb(const char16_t *data, size_t len);
-std::wstring mbrtowc(const char8_t *str, size_t len);
-std::u16string mbrtoc16(const char8_t *str, size_t len);
+constexpr bool rune_is_surrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
+
+constexpr const size_t kMaxEncodedUTF8Size = 4;
+constexpr const size_t kMaxEncodedUTF16Size = 2;
+
+template <typename CharT = char8_t>
+requires bela::narrow_character<CharT>
+[[nodiscard]] constexpr size_t encode_into_unchecked(char32_t rune, CharT *dest) {
+  if (rune <= 0x7F) {
+    dest[0] = static_cast<CharT>(rune);
+    return 1;
+  }
+  if (rune <= 0x7FF) {
+    dest[0] = static_cast<CharT>(0xC0 | ((rune >> 6) & 0x1F));
+    dest[1] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return 2;
+  }
+  if (rune <= 0xFFFF) {
+    dest[0] = static_cast<CharT>(0xE0 | ((rune >> 12) & 0x0F));
+    dest[1] = static_cast<CharT>(0x80 | ((rune >> 6) & 0x3F));
+    dest[2] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return 3;
+  }
+  if (rune <= 0x10FFFF) {
+    dest[0] = static_cast<CharT>(0xF0 | ((rune >> 18) & 0x07));
+    dest[1] = static_cast<CharT>(0x80 | ((rune >> 12) & 0x3F));
+    dest[2] = static_cast<CharT>(0x80 | ((rune >> 6) & 0x3F));
+    dest[3] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return 4;
+  }
+  return 0;
+}
+
+template <typename CharT = char16_t>
+requires bela::wide_character<CharT>
+[[nodiscard]] constexpr size_t encode_into_unchecked(char32_t rune, CharT *dest) {
+  if (rune <= 0xFFFF) {
+    dest[0] = rune_is_surrogate(rune) ? 0xFFFD : static_cast<CharT>(rune);
+    return 1;
+  }
+  if (rune > 0x0010FFFF) {
+    dest[0] = 0xFFFD;
+    return 1;
+  }
+  dest[0] = static_cast<CharT>(0xD7C0 + (rune >> 10));
+  dest[1] = static_cast<CharT>(0xDC00 + (rune & 0x3FF));
+  return 2;
+}
+
+template <typename CharT = char8_t>
+requires bela::narrow_character<CharT>
+[[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune, CharT *dest,
+                                                                                           size_t len) {
+  using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
+  if (rune <= 0x7F) {
+    if (len == 0) {
+      return string_view_t();
+    }
+    dest[0] = static_cast<CharT>(rune);
+    return string_view_t(dest, 1);
+  }
+  if (rune <= 0x7FF) {
+    if (len < 2) {
+      return string_view_t();
+    }
+    dest[0] = static_cast<CharT>(0xC0 | ((rune >> 6) & 0x1F));
+    dest[1] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return string_view_t(dest, 2);
+  }
+  if (rune <= 0xFFFF) {
+    if (len < 3) {
+      return string_view_t();
+    }
+    dest[0] = static_cast<CharT>(0xE0 | ((rune >> 12) & 0x0F));
+    dest[1] = static_cast<CharT>(0x80 | ((rune >> 6) & 0x3F));
+    dest[2] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return string_view_t(dest, 3);
+  }
+  if (rune <= 0x10FFFF && len >= 4) {
+    dest[0] = static_cast<CharT>(0xF0 | ((rune >> 18) & 0x07));
+    dest[1] = static_cast<CharT>(0x80 | ((rune >> 12) & 0x3F));
+    dest[2] = static_cast<CharT>(0x80 | ((rune >> 6) & 0x3F));
+    dest[3] = static_cast<CharT>(0x80 | (rune & 0x3F));
+    return string_view_t(dest, 4);
+  }
+  return string_view_t();
+}
+
+template <typename CharT = char16_t>
+requires bela::wide_character<CharT>
+[[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune, CharT *dest,
+                                                                                           size_t len) {
+  using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
+  if (len == 0) {
+    return string_view_t();
+  }
+  if (rune <= 0xFFFF) {
+    dest[0] = rune_is_surrogate(rune) ? 0xFFFD : static_cast<CharT>(rune);
+    return string_view_t(dest, 1);
+  }
+  if (rune > 0x0010FFFF) {
+    dest[0] = 0xFFFD;
+    return string_view_t(dest, 1);
+  }
+  if (len < 2) {
+    return string_view_t();
+  }
+  dest[0] = static_cast<CharT>(0xD7C0 + (rune >> 10));
+  dest[1] = static_cast<CharT>(0xDC00 + (rune & 0x3FF));
+  return string_view_t(dest, 2);
+}
+
+template <typename CharT = char8_t, size_t N>
+requires bela::character<CharT>
+[[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune,
+                                                                                           CharT (&dest)[N]) {
+  return encode_into<CharT>(rune, dest, N);
+}
+
+// bela codecvt code
+namespace codecvt_internal {
+
+/*
+ * Index into the table below with the first byte of a UTF-8 sequence to
+ * get the number of trailing bytes that are supposed to follow it.
+ * Note that *legal* UTF-8 values can't have 4 or 5-bytes. The table is
+ * left as-is for anyone who may want to do such conversion, which was
+ * allowed in earlier algorithms.
+ */
+// clang-format off
+static constexpr const char trailingbytesu8[256] = {
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
+};
+// clang-format on
+constexpr const char32_t offsetfromu8[6] = {0x00000000UL, 0x00003080UL, 0x000E2080UL,
+                                            0x03C82080UL, 0xFA082080UL, 0x82082080UL};
+
+inline char32_t decode_rune(const char8_t *it, int nb) {
+  char32_t ch = 0;
+  switch (nb) {
+  case 5:
+    ch += *it++;
+    ch <<= 6; /* remember, illegal UTF-8 */
+    [[fallthrough]];
+  case 4:
+    ch += *it++;
+    ch <<= 6; /* remember, illegal UTF-8 */
+    [[fallthrough]];
+  case 3:
+    ch += *it++;
+    ch <<= 6;
+    [[fallthrough]];
+  case 2:
+    ch += *it++;
+    ch <<= 6;
+    [[fallthrough]];
+  case 1:
+    ch += *it++;
+    ch <<= 6;
+    [[fallthrough]];
+  case 0:
+    ch += *it++;
+  }
+  ch -= offsetfromu8[nb];
+  return ch;
+}
+} // namespace codecvt_internal
+
+// CodePoint rune width
+size_t rune_width(char32_t rune);
+
+// Encode UTF8 to UTF16
+template <typename From, typename To, typename Allocator = std::allocator<To>>
+requires bela::narrow_character<From> && bela::wide_character<To>
+[[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::basic_string_view<From> sv) {
+  using string_t = std::basic_string<To, std::char_traits<To>, Allocator>;
+  auto it = reinterpret_cast<const char8_t *>(sv.data());
+  auto end = it + sv.size();
+  string_t us;
+  us.reserve(sv.size());
+  while (it < end) {
+    uint16_t nb = codecvt_internal::trailingbytesu8[*it];
+    if (nb >= end - it) {
+      break;
+    }
+    // https://docs.microsoft.com/en-us/cpp/cpp/attributes?view=vs-2019
+    auto ch = codecvt_internal::decode_rune(it, nb);
+    it += nb + 1;
+    if (ch <= 0xFFFF) {
+      if (ch >= 0xD800 && ch <= 0xDBFF) {
+        us += static_cast<To>(0xFFFD);
+        continue;
+      }
+      us += static_cast<To>(ch);
+      continue;
+    }
+    if (ch > 0x10FFFF) {
+      us += static_cast<To>(0xFFFD);
+      continue;
+    }
+    ch -= 0x10000U;
+    us += static_cast<To>((ch >> 10) + 0xD800);
+    us += static_cast<To>((ch & 0x3FF) + 0xDC00);
+  }
+  return us;
+}
+
+// Encode UTF16 to UTF8
+template <typename From, typename To, typename Allocator = std::allocator<To>>
+requires bela::wide_character<From> && bela::narrow_character<To>
+[[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::basic_string_view<From> sv) {
+  using string_t = std::basic_string<To, std::char_traits<To>, Allocator>;
+  string_t s;
+  s.reserve(sv.size());
+  auto it = sv.data();
+  auto end = it + sv.size();
+  To buffer[8] = {0};
+  while (it < end) {
+    char32_t ch = *it++;
+    if (ch >= 0xD800 && ch <= 0xDBFF) {
+      if (it >= end) {
+        return s;
+      }
+      char32_t ch2 = *it;
+      if (ch2 < 0xDC00 || ch2 > 0xDFFF) {
+        break;
+      }
+      ch = ((ch - 0xD800) << 10) + (ch2 - 0xDC00) + 0x10000U;
+      ++it;
+    }
+    s.append(buffer, encode_into_unchecked(ch, buffer));
+  }
+  return s;
+}
+
+// Calculate UTF16 string width under terminal (Monospace font)
+template <typename CharT = char16_t>
+requires bela::wide_character<CharT> size_t string_width(std::basic_string_view<CharT> sv) {
+  size_t width = 0;
+  auto it = sv.data();
+  auto end = it + sv.size();
+  while (it < end) {
+    char32_t ch = *it++;
+    if (ch >= 0xD800 && ch <= 0xDBFF) {
+      if (it >= end) {
+        break;
+      }
+      char32_t ch2 = *it;
+      if (ch2 < 0xDC00 || ch2 > 0xDFFF) {
+        break;
+      }
+      ch = ((ch - 0xD800) << 10) + (ch2 - 0xDC00) + 0x10000U;
+      ++it;
+    }
+    width += rune_width(ch);
+  }
+  return width;
+}
+
+// Calculate UTF8 string width under terminal (Monospace font)
+template <typename CharT = char8_t>
+requires bela::narrow_character<CharT> size_t string_width(std::basic_string_view<CharT> sv) {
+  size_t width = 0;
+  auto it = reinterpret_cast<const char8_t *>(sv.data());
+  auto end = it + sv.size();
+  while (it < end) {
+    unsigned short nb = codecvt_internal::trailingbytesu8[*it];
+    if (nb >= end - it) {
+      break;
+    }
+    auto ch = codecvt_internal::decode_rune(it, nb);
+    it += nb + 1;
+    width += rune_width(ch);
+  }
+  return width;
+}
+
 // Narrow std::wstring_view to UTF-8
 inline std::string ToNarrow(std::wstring_view uw) {
-  return c16tomb(reinterpret_cast<const char16_t *>(uw.data()), uw.size());
+  //
+  return encode_into<wchar_t, char>(uw);
 }
 // Narrow const wchar_t* to UTF-8
 inline std::string ToNarrow(const wchar_t *data, size_t len) {
-  return c16tomb(reinterpret_cast<const char16_t *>(data), len);
+  //
+  return encode_into<wchar_t, char>({data, len});
 }
 // Narrow std::u16string_view to UTF-8
-inline std::string ToNarrow(std::u16string_view uw) { return c16tomb(uw.data(), uw.size()); }
+inline std::string ToNarrow(std::u16string_view uw) {
+  //
+  return encode_into<char16_t, char>(uw);
+}
 // Narrow const char16_t* to UTF-8
-inline std::string ToNarrow(const char16_t *data, size_t len) { return c16tomb(data, len); }
+inline std::string ToNarrow(const char16_t *data, size_t len) {
+  //
+  return encode_into<char16_t, char>({data, len});
+}
 
-inline std::wstring ToWide(const char *str, size_t len) { return mbrtowc(reinterpret_cast<const char8_t *>(str), len); }
+inline std::wstring ToWide(const char *str, size_t len) {
+  //
+  return encode_into<char, wchar_t>({str, len});
+}
 
 inline std::wstring ToWide(std::string_view sv) {
-  return mbrtowc(reinterpret_cast<const char8_t *>(sv.data()), sv.size());
+  //
+  return encode_into<char, wchar_t>(sv);
 }
 
-inline std::wstring ToWide(std::u8string_view sv) { return mbrtowc(sv.data(), sv.size()); }
-
-// Escape Unicode Non Basic Multilingual Plane
-std::string EscapeNonBMP(std::string_view sv);
-std::wstring EscapeNonBMP(std::wstring_view sv);
-std::u16string EscapeNonBMP(std::u16string_view sv);
-
-// Calculate UTF-8 string display width
-size_t StringWidth(std::string_view str);
-// Calculate UTF-16 string display width
-size_t StringWidth(std::u16string_view str);
-// Calculate UTF-16 string display width (Windows)
-inline size_t StringWidth(std::wstring_view str) {
-  return StringWidth(std::u16string_view{reinterpret_cast<const char16_t *>(str.data()), str.size()});
+inline std::wstring ToWide(std::u8string_view sv) {
+  //
+  return encode_into<char8_t, wchar_t>(sv);
 }
+
 } // namespace bela
 
 #endif

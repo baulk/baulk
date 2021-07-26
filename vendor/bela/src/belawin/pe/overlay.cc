@@ -8,7 +8,7 @@ int64_t File::ReadOverlay(std::span<uint8_t> overlayData, bela::error_code &ec) 
     return -1;
   }
   auto readSize = (std::min)(static_cast<int64_t>(overlayData.size()), size - overlayOffset);
-  if (!fd.ReadAt(overlayData.subspan(0, readSize), overlayOffset, ec)) {
+  if (!fd.ReadAt(overlayData.subspan(0, static_cast<size_t>(readSize)), overlayOffset, ec)) {
     return -1;
   }
   return readSize;

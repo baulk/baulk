@@ -92,10 +92,21 @@ void blake3_hasher_finalize(
   size_t out_len);
 ```
 
-Finalize the hasher and emit an output of any length. This doesn't
-modify the hasher itself, and it's possible to finalize again after
-adding more input. The constant `BLAKE3_OUT_LEN` provides the default
-output length, 32 bytes.
+Finalize the hasher and return an output of any length, given in bytes.
+This doesn't modify the hasher itself, and it's possible to finalize
+again after adding more input. The constant `BLAKE3_OUT_LEN` provides
+the default output length, 32 bytes, which is recommended for most
+callers.
+
+Outputs shorter than the default length of 32 bytes (256 bits) provide
+less security. An N-bit BLAKE3 output is intended to provide N bits of
+first and second preimage resistance and N/2 bits of collision
+resistance, for any N up to 256. Longer outputs don't provide any
+additional security.
+
+Shorter BLAKE3 outputs are prefixes of longer ones. Explicitly
+requesting a short output is equivalent to truncating the default-length
+output. (Note that this is different between BLAKE2 and BLAKE3.)
 
 ## Less Common API Functions
 
@@ -181,13 +192,13 @@ widest instruction set available. By default, `blake3_dispatch.c`
 expects to be linked with code for five different instruction sets:
 portable C, SSE2, SSE4.1, AVX2, and AVX-512.
 
-For each of the x86 SIMD instruction sets, two versions are available,
-one in assembly (which is further divided into three flavors: Unix,
-Windows MSVC, and Windows GNU) and one using C intrinsics. The assembly
-versions are generally preferred: they perform better, they perform more
-consistently across different compilers, and they build more quickly. On
-the other hand, the assembly versions are x86\_64-only, and you need to
-select the right flavor for your target platform.
+For each of the x86 SIMD instruction sets, four versions are available:
+three flavors of assembly (Unix, Windows MSVC, and Windows GNU) and one
+version using C intrinsics. The assembly versions are generally
+preferred. They perform better, they perform more consistently across
+different compilers, and they build more quickly. On the other hand, the
+assembly versions are x86\_64-only, and you need to select the right
+flavor for your target platform.
 
 Here's an example of building a shared library on x86\_64 Linux using
 the assembly implementations:
@@ -259,12 +270,13 @@ example:
 gcc -shared -O3 -o libblake3.so blake3.c blake3_dispatch.c blake3_portable.c
 ```
 
-# Differences from the Rust Implementation
+# Multithreading
 
-The single-threaded Rust and C implementations use the same algorithms,
-and their performance is the same if you use the assembly
-implementations or if you compile the intrinsics-based implementations
-with Clang. (Both Clang and rustc are LLVM-based.)
-
-The C implementation doesn't currently include any multithreading
-optimizations. OpenMP support or similar might be added in the future.
+Unlike the Rust implementation, the C implementation doesn't currently support
+multithreading. A future version of this library could add support by taking an
+optional dependency on OpenMP or similar. Alternatively, we could expose a
+lower-level API to allow callers to implement concurrency themselves. The
+former would be more convenient and less error-prone, but the latter would give
+callers the maximum possible amount of control. The best choice here depends on
+the specific use case, so if you have a use case for multithreaded hashing in
+C, please file a GitHub issue and let us know.

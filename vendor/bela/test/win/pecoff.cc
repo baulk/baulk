@@ -65,7 +65,7 @@ static void process_color(FILE *out, std::string_view sv, int64_t offset) {
   uint64_t maxlen = sv.size();
   do {
     n = (std::min)(maxlen, inputlen);
-    memcpy(input, sv.data(), n);
+    memcpy(input, sv.data(), static_cast<size_t>(n));
     sv.remove_prefix(n);
     maxlen -= n;
     /* Write the offset */

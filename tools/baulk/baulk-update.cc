@@ -152,7 +152,7 @@ private:
   bool extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec);
   void showProgress(std::wstring_view filename) {
     auto suglen = static_cast<size_t>(termsz.columns) - 8;
-    if (auto n = bela::StringWidth(filename); n <= suglen) {
+    if (auto n = bela::string_width<wchar_t>(filename); n <= suglen) {
       bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
       return;
     }

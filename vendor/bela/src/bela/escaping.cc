@@ -33,6 +33,7 @@
 #include <bela/escaping.hpp>
 #include <bela/ascii.hpp>
 #include <bela/str_cat.hpp>
+#include <bela/codecvt.hpp>
 
 namespace bela {
 constexpr wchar_t uhc[] = L"0123456789ABCDEF";
@@ -55,21 +56,6 @@ inline int hex_digit_to_int(wchar_t c) {
     x += 9;
   }
   return x & 0xf;
-}
-
-constexpr bool issurrogate(char32_t rune) { return (rune >= 0xD800 && rune <= 0xDFFF); }
-inline size_t char32tochar16(char32_t rune, char16_t *dest) {
-  if (rune <= 0xFFFF) {
-    dest[0] = issurrogate(rune) ? 0xFFFD : static_cast<char16_t>(rune);
-    return 1;
-  }
-  if (rune > 0x0010FFFF) {
-    dest[0] = 0xFFFD;
-    return 1;
-  }
-  dest[0] = static_cast<char16_t>(0xD7C0 + (rune >> 10));
-  dest[1] = static_cast<char16_t>(0xDC00 + (rune & 0x3FF));
-  return 2;
 }
 
 bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar_t *dest, ptrdiff_t *dest_len,
@@ -228,7 +214,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           d += 5;
           break;
         }
-        d += char32tochar16(rune, reinterpret_cast<char16_t *>(d));
+        d += bela::encode_into_unchecked(rune, d);
         break;
       }
       case 'U': {
@@ -272,7 +258,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           d += 9;
           break;
         }
-        d += char32tochar16(rune, reinterpret_cast<char16_t *>(d));
+        d += bela::encode_into_unchecked(rune, d);
         break;
       }
       default: {

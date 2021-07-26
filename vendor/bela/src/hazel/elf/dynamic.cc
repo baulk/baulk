@@ -39,7 +39,7 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
     auto v = cast_from<uint64_t>(dv.data() + 8);
     dv.remove_prefix(16);
     if (static_cast<int>(t) == tag) {
-      if (auto s = bsv.make_cstring_view(v); !s.empty()) {
+      if (auto s = bsv.make_cstring_view(static_cast<size_t>(v)); !s.empty()) {
         sv.emplace_back(s);
       }
     }

@@ -120,7 +120,7 @@ private:
       return;
 
     SwapAndRestore<size_t> SavePosition(Position, Position);
-    Position = Backref;
+    Position = static_cast<size_t>(Backref);
     Demangler();
   }
 
@@ -865,7 +865,7 @@ void Demangler::demangleConstChar() {
     break;
   default:
     if (isAsciiPrintable(CodePoint)) {
-      char C = CodePoint;
+      char C = static_cast<char>(CodePoint);
       print(C);
     } else {
       print(R"(\u{)");
@@ -890,8 +890,8 @@ Identifier Demangler::parseIdentifier() {
     Error = true;
     return {};
   }
-  StringView S = Input.substr(Position, Bytes);
-  Position += Bytes;
+  StringView S = Input.substr(Position, static_cast<size_t>(Bytes));
+  Position += static_cast<size_t>(Bytes);
 
   if (!std::all_of(S.begin(), S.end(), isValid)) {
     Error = true;
@@ -1070,7 +1070,7 @@ void Demangler::printLifetime(uint64_t Index) {
   uint64_t Depth = BoundLifetimes - Index;
   print('\'');
   if (Depth < 26) {
-    char C = 'a' + Depth;
+    char C = static_cast<char>('a' + Depth);
     print(C);
   } else {
     print('z');

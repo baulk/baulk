@@ -89,15 +89,8 @@ public:
   }
   // Add unicode
   Writer &AddUnicode(char32_t ch, size_t width, wchar_t kc = ' ', bool la = false) {
-    constexpr size_t kMaxEncodedUTF16Size = 2;
-    wchar_t digits[kMaxEncodedUTF16Size + 2];
-    if (ch < 0xFFFF) {
-      digits[0] = static_cast<wchar_t>(ch);
-      return Append(digits, 1, width, kc, la);
-    }
-    auto n = char32tochar16(ch, reinterpret_cast<char16_t *>(digits), kMaxEncodedUTF16Size + 2);
-
-    return Append(digits, n, width, kc, la);
+    wchar_t digits[bela::kMaxEncodedUTF16Size + 2];
+    return Append(digits, bela::encode_into_unchecked(ch, digits), width, kc, la);
   }
   // Add unicode point
   Writer &AddUnicodePoint(char32_t ch) {

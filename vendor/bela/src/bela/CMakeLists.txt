@@ -5,7 +5,6 @@ add_library(
   errno.cc
   ascii.cc
   city.cc
-  ucwidth.cc
   codecvt.cc
   escaping.cc
   fmt.cc

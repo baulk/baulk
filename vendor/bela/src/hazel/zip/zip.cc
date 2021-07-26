@@ -79,15 +79,15 @@ inline std::string cleanupName(const void *data, size_t N) {
 bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   bela::Buffer buffer(16 * 1024);
   int64_t directoryEndOffset = 0;
-  constexpr int64_t offrange[] = {1024, 65 * 1024};
+  constexpr size_t offrange[] = {1024, 65 * 1024};
   bela::endian::LittenEndian b;
-  for (size_t i = 0; i < bela::ArrayLength(offrange); i++) {
+  for (size_t i = 0; i < std::size(offrange); i++) {
     auto blen = offrange[i];
-    if (blen > size) {
-      blen = size;
+    if (static_cast<int64_t>(blen) > size) {
+      blen = static_cast<size_t>(size);
     }
     buffer.grow(blen);
-    if (!fd.ReadAt(buffer, blen, size - blen, ec)) {
+    if (!fd.ReadAt(buffer, blen, size - static_cast<int64_t>(blen), ec)) {
       return false;
     }
     if (auto p = findSignatureInBlock(buffer); p >= 0) {
@@ -333,7 +333,7 @@ bool Reader::Initialize(bela::error_code &ec) {
     return false;
   }
   comment.assign(std::move(d.comment));
-  files.reserve(d.directoryRecords);
+  files.reserve(static_cast<size_t>(d.directoryRecords));
   if (!fd.Seek(d.directoryOffset, ec)) {
     return false;
   }
@@ -518,7 +518,7 @@ bool Reader::LooksLikeODF(std::string *mime) const {
   for (const auto &file : files) {
     if (file.name == "mimetype" && file.method == ZIP_STORE && file.compressedSize < 120) {
       bela::error_code ec;
-      mime->reserve(file.compressedSize);
+      mime->reserve(static_cast<size_t>(file.compressedSize));
       return Decompress(
           file,
           [&](const void *data, size_t sz) -> bool {

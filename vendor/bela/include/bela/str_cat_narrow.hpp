@@ -56,6 +56,7 @@
 #include <array>
 #include <string_view>
 #include <charconv> // C++17
+#include "codecvt.hpp"
 
 namespace bela::narrow {
 namespace strings_internal {
@@ -240,6 +241,9 @@ public:
       const std::basic_string<char, std::char_traits<char>, Allocator> &str)
       : piece_(str) {}
   AlphaNum(char c) = delete;
+  AlphaNum(char32_t ch) : piece_(digits_, bela::encode_into_unchecked(ch, digits_)) {
+    static_assert(sizeof(digits_) > bela::kMaxEncodedUTF8Size, "difits_ buffer is too small");
+  }
   AlphaNum(const AlphaNum &) = delete;
   AlphaNum &operator=(const AlphaNum &) = delete;
   std::string_view::size_type size() const { return piece_.size(); }

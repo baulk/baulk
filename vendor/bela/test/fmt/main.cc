@@ -9,30 +9,40 @@ int wmain(int argc, wchar_t **argv) {
                   "\xE7\xA0\xB4 \xE6\x99\x93"; // force encode UTF-8
   const wchar_t wx[] = L"Engine (\xD83D\xDEE0) 中国 \U0001F496 \x0041 \x7834 "
                        L"\x6653 \xD840\xDCE3";
-  constexpr auto iscpp17 = __cplusplus >= 201703L;
+
+  const auto *u8x = u8"💙 中国 \U0001F496 你爱我我爱你，蜜雪冰城甜蜜蜜";
+  constexpr auto iscpp20 = __cplusplus >= 202004L;
   bela::FPrintF(stderr,
                 L"Argc: %d Arg0: \x1b[32m%s\x1b[0m W: %s UTF-8: %s "
-                L"__cplusplus: %d C++17: %b\n",
-                argc, argv[0], wx, ux, __cplusplus, iscpp17);
+                L"__cplusplus: %d C++20: %b\n%s\n",
+                argc, argv[0], wx, ux, __cplusplus, iscpp20, u8x);
 
-  char32_t em = 0x1F603;     // 😃 U+1F603
-  char32_t sh = 0x1F496;     //  💖
-  char32_t blueheart = U'💙'; //💙
-  char32_t se = 0x1F92A;     //🤪
-  char32_t em2 = U'中';
-  char32_t hammerandwrench = 0x1F6E0;
+  constexpr char32_t em = 0x1F603;     // 😃 U+1F603
+  constexpr char32_t sh = 0x1F496;     //  💖
+  constexpr char32_t blueheart = U'💙'; //💙
+  constexpr char32_t se = 0x1F92A;     //🤪
+  constexpr char32_t em2 = U'中';
+  constexpr char32_t hammerandwrench = 0x1F6E0;
+
+  wchar_t buf0[4];
+  char16_t buf1[4];
+  char buf2[8];
+  char8_t buf3[8];
+
+  bela::FPrintF(stderr, L"encode_into %s [wchar_t], %s [char16_t], %s [char] %s [char8_t]\n",
+                bela::encode_into(sh, buf0), bela::encode_into(sh, buf1), bela::encode_into(sh, buf2),
+                bela::encode_into(sh, buf3));
+
   auto s = bela::StringCat(L"Look emoji -->", em, L" U+", bela::AlphaNum(bela::Hex(em)));
   bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s, &em);
-  bela::FPrintF(stderr, L"Unicode %c Width: %d \u2600 %d 中 %d ©: %d [%c] %d [%c] %d \n", em, bela::CalculateWidth(em),
-                bela::CalculateWidth(0x2600), bela::CalculateWidth(L'中'), bela::CalculateWidth(0xA9), 161,
-                bela::CalculateWidth(161), hammerandwrench, bela::CalculateWidth(hammerandwrench));
+  bela::FPrintF(stderr, L"Unicode %c Width: %d \u2600 %d 中 %d ©: %d [%c] %d [%c] %d \n", em, bela::rune_width(em),
+                bela::rune_width(0x2600), bela::rune_width(L'中'), bela::rune_width(0xA9), 161, bela::rune_width(161),
+                hammerandwrench, bela::rune_width(hammerandwrench));
   bela::FPrintF(stderr, L"Unicode2 %c Width: %d \u2600 %d 中 %d  ©: %d [%c] %d [%c] %d\n", em,
                 bela::unicode::CalculateWidthInternal(em), bela::unicode::CalculateWidthInternal(0x2600),
                 bela::unicode::CalculateWidthInternal(L'中'), bela::unicode::CalculateWidthInternal(0xA9), 161,
                 bela::unicode::CalculateWidthInternal(161), hammerandwrench,
                 bela::unicode::CalculateWidthInternal(hammerandwrench));
-  auto es = bela::EscapeNonBMP(wx);
-  bela::FPrintF(stderr, L"EscapeNonBMP: %s\n", es);
   bela::FPrintF(stderr, L"[%-10d]\n", argc);
   bela::FPrintF(stderr, L"[%10d]\n", argc);
   bela::FPrintF(stderr, L"[%010d]\n", argc);
@@ -55,8 +65,8 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"[%16X]\n", xl);
   bela::FPrintF(stderr, L"%%pointer: [%p]\n", (void *)argv);
   bela::FPrintF(stderr, L"StringWidth %d\n",
-                bela::StringWidth(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
+                bela::string_width<wchar_t>(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   bela::FPrintF(stderr, L"StringWidth %d\n",
-                bela::StringWidth(R"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
+                bela::string_width<char>(R"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   return 0;
 }
