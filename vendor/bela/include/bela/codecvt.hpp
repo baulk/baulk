@@ -213,28 +213,28 @@ requires bela::narrow_character<From> && bela::wide_character<To>
   string_t us;
   us.reserve(sv.size());
   while (it < end) {
-    uint16_t nb = codecvt_internal::trailingbytesu8[*it];
+    uint16_t nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
     if (nb >= end - it) {
       break;
     }
     // https://docs.microsoft.com/en-us/cpp/cpp/attributes?view=vs-2019
-    auto ch = codecvt_internal::decode_rune(it, nb);
+    auto rune = codecvt_internal::decode_rune(it, nb);
     it += nb + 1;
-    if (ch <= 0xFFFF) {
-      if (ch >= 0xD800 && ch <= 0xDBFF) {
+    if (rune <= 0xFFFF) {
+      if (rune >= 0xD800 && rune <= 0xDBFF) {
         us += static_cast<To>(0xFFFD);
         continue;
       }
-      us += static_cast<To>(ch);
+      us += static_cast<To>(rune);
       continue;
     }
-    if (ch > 0x10FFFF) {
+    if (rune > 0x10FFFF) {
       us += static_cast<To>(0xFFFD);
       continue;
     }
-    ch -= 0x10000U;
-    us += static_cast<To>((ch >> 10) + 0xD800);
-    us += static_cast<To>((ch & 0x3FF) + 0xDC00);
+    rune -= 0x10000U;
+    us += static_cast<To>((rune >> 10) + 0xD800);
+    us += static_cast<To>((rune & 0x3FF) + 0xDC00);
   }
   return us;
 }
@@ -248,65 +248,136 @@ requires bela::wide_character<From> && bela::narrow_character<To>
   s.reserve(sv.size());
   auto it = sv.data();
   auto end = it + sv.size();
-  To buffer[8] = {0};
   while (it < end) {
-    char32_t ch = *it++;
-    if (ch >= 0xD800 && ch <= 0xDBFF) {
+    char32_t rune = *it++;
+    if (rune >= 0xD800 && rune <= 0xDBFF) {
       if (it >= end) {
         return s;
       }
-      char32_t ch2 = *it;
-      if (ch2 < 0xDC00 || ch2 > 0xDFFF) {
+      char32_t rune2 = *it;
+      if (rune2 < 0xDC00 || rune2 > 0xDFFF) {
         break;
       }
-      ch = ((ch - 0xD800) << 10) + (ch2 - 0xDC00) + 0x10000U;
+      rune = ((rune - 0xD800) << 10) + (rune2 - 0xDC00) + 0x10000U;
       ++it;
     }
-    s.append(buffer, encode_into_unchecked(ch, buffer));
+    if (rune <= 0x7F) {
+      s += static_cast<To>(rune);
+      continue;
+    }
+    if (rune <= 0x7FF) {
+      s += static_cast<To>(0xC0 | ((rune >> 6) & 0x1F));
+      s += static_cast<To>(0x80 | (rune & 0x3F));
+      continue;
+    }
+    if (rune <= 0xFFFF) {
+      s += static_cast<To>(0xE0 | ((rune >> 12) & 0x0F));
+      s += static_cast<To>(0x80 | ((rune >> 6) & 0x3F));
+      s += static_cast<To>(0x80 | (rune & 0x3F));
+      continue;
+    }
+    if (rune <= 0x10FFFF) {
+      s += static_cast<To>(0xF0 | ((rune >> 18) & 0x07));
+      s += static_cast<To>(0x80 | ((rune >> 12) & 0x3F));
+      s += static_cast<To>(0x80 | ((rune >> 6) & 0x3F));
+      s += static_cast<To>(0x80 | (rune & 0x3F));
+      continue;
+    }
   }
   return s;
 }
 
+template <typename CharT = char8_t>
+requires bela::wide_character<CharT>
+[[nodiscard]] constexpr size_t string_length(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
+  size_t len = 0;
+  auto it = sv.data();
+  auto end = it + sv.size();
+  while (it < end) {
+    if (char32_t rune = *it++; rune >= 0xD800 && rune <= 0xDBFF) {
+      if (it >= end) {
+        break;
+      }
+      if (char32_t rune2 = *it; rune2 < 0xDC00 || rune2 > 0xDFFF) {
+        break;
+      }
+      ++it;
+    }
+    len++;
+  }
+  return len;
+}
+
+template <typename CharT = char8_t>
+requires bela::narrow_character<CharT>
+[[nodiscard]] constexpr size_t string_length(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
+  size_t len = 0;
+  auto it = sv.data();
+  auto end = it + sv.size();
+  while (it < end) {
+    unsigned short nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
+    if (nb >= end - it) {
+      break;
+    }
+    len++;
+    it += nb + 1;
+  }
+  return len;
+}
+
+template <typename CharT = char8_t, size_t N>
+requires bela::character<CharT>
+[[nodiscard]] constexpr size_t string_length(CharT (&str)[N]) {
+  // string_length
+  return string_length<CharT>({str, N});
+}
+
 // Calculate UTF16 string width under terminal (Monospace font)
 template <typename CharT = char16_t>
-requires bela::wide_character<CharT> size_t string_width(std::basic_string_view<CharT> sv) {
+requires bela::wide_character<CharT> size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t width = 0;
   auto it = sv.data();
   auto end = it + sv.size();
   while (it < end) {
-    char32_t ch = *it++;
-    if (ch >= 0xD800 && ch <= 0xDBFF) {
+    char32_t rune = *it++;
+    if (rune >= 0xD800 && rune <= 0xDBFF) {
       if (it >= end) {
         break;
       }
-      char32_t ch2 = *it;
-      if (ch2 < 0xDC00 || ch2 > 0xDFFF) {
+      char32_t rune2 = *it;
+      if (rune2 < 0xDC00 || rune2 > 0xDFFF) {
         break;
       }
-      ch = ((ch - 0xD800) << 10) + (ch2 - 0xDC00) + 0x10000U;
+      rune = ((rune - 0xD800) << 10) + (rune2 - 0xDC00) + 0x10000U;
       ++it;
     }
-    width += rune_width(ch);
+    width += rune_width(rune);
   }
   return width;
 }
 
 // Calculate UTF8 string width under terminal (Monospace font)
 template <typename CharT = char8_t>
-requires bela::narrow_character<CharT> size_t string_width(std::basic_string_view<CharT> sv) {
+requires bela::narrow_character<CharT> size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t width = 0;
   auto it = reinterpret_cast<const char8_t *>(sv.data());
   auto end = it + sv.size();
   while (it < end) {
-    unsigned short nb = codecvt_internal::trailingbytesu8[*it];
+    unsigned short nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
     if (nb >= end - it) {
       break;
     }
-    auto ch = codecvt_internal::decode_rune(it, nb);
+    width += rune_width(codecvt_internal::decode_rune(it, nb));
     it += nb + 1;
-    width += rune_width(ch);
   }
   return width;
+}
+
+template <typename CharT = char8_t, size_t N>
+requires bela::character<CharT>
+[[nodiscard]] constexpr size_t string_width(CharT (&str)[N]) {
+  // string_length
+  return string_width<CharT>({str, N});
 }
 
 // Narrow std::wstring_view to UTF-8

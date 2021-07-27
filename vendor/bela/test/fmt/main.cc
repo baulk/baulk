@@ -5,18 +5,23 @@
 #include "ucwidth-wt.hpp"
 
 int wmain(int argc, wchar_t **argv) {
-  const auto ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4 --> \xF0\xA0\x83\xA3 \x41 "
-                  "\xE7\xA0\xB4 \xE6\x99\x93"; // force encode UTF-8
-  const wchar_t wx[] = L"Engine (\xD83D\xDEE0) 中国 \U0001F496 \x0041 \x7834 "
-                       L"\x6653 \xD840\xDCE3";
-
-  const auto *u8x = u8"💙 中国 \U0001F496 你爱我我爱你，蜜雪冰城甜蜜蜜";
+  constexpr std::string_view ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4 --> \xF0\xA0\x83\xA3 \x41 "
+                                  "\xE7\xA0\xB4 \xE6\x99\x93"; // force encode UTF-8
+  constexpr std::wstring_view wx = L"Engine (\xD83D\xDEE0) 中国 \U0001F496 \x0041 \x7834 "
+                                   L"\x6653 \xD840\xDCE3";
+  constexpr std::wstring_view wx2 = L"Engine (🛠) 中国 💖 A 破 晓 𠃣";
+  constexpr std::u8string_view u8x = u8"💙 中国 \U0001F496 你爱我我爱你，蜜雪冰城甜蜜蜜";
+  constexpr std::u16string_view u16x = u"💙 中国 \U0001F496 你爱我我爱你，蜜雪冰城甜蜜蜜";
   constexpr auto iscpp20 = __cplusplus >= 202004L;
+  constexpr auto u16len = bela::string_length(u16x);
+  constexpr auto u8len = bela::string_length(u8x);
+  constexpr auto wlen = bela::string_length(wx);
+  constexpr auto w2len = bela::string_length(wx2);
   bela::FPrintF(stderr,
                 L"Argc: %d Arg0: \x1b[32m%s\x1b[0m W: %s UTF-8: %s "
                 L"__cplusplus: %d C++20: %b\n%s\n",
                 argc, argv[0], wx, ux, __cplusplus, iscpp20, u8x);
-
+  bela::FPrintF(stderr, L"StringLength: %d StringLength %d\n", bela::string_length(u8x), bela::string_length(u16x));
   constexpr char32_t em = 0x1F603;     // 😃 U+1F603
   constexpr char32_t sh = 0x1F496;     //  💖
   constexpr char32_t blueheart = U'💙'; //💙
