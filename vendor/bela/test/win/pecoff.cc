@@ -169,8 +169,13 @@ int wmain(int argc, wchar_t **argv) {
       bela::FPrintF(stdout, L"(Delay) Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);
     }
   }
-  // amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.488_none_ca04af081b815d21
+  // amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.s0.19041.488_none_ca04af081b815d21
   for (const auto &d : ft.exports) {
+    if (!d.ForwardName.empty()) {
+      bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d) --> %s\x1b[0m\n", d.Ordinal, d.Address,
+                    llvm::demangle(d.Name), d.Hint, d.ForwardName);
+      continue;
+    }
     bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address, llvm::demangle(d.Name),
                   d.Hint);
   }

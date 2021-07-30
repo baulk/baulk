@@ -66,9 +66,6 @@ constexpr int64_t kTicksPerSecond = 1000 * 1000 * 1000 * kTicksPerNanosecond;
 template <std::intmax_t N> constexpr Duration FromInt64(int64_t v, std::ratio<1, N>);
 constexpr Duration FromInt64(int64_t v, std::ratio<60>);
 constexpr Duration FromInt64(int64_t v, std::ratio<3600>);
-template <typename T>
-using EnableIfIntegral = typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, int>::type;
-template <typename T> using EnableIfFloat = typename std::enable_if<std::is_floating_point<T>::value, int>::type;
 } // namespace time_internal
 
 class Duration {
@@ -96,16 +93,29 @@ public:
 
   // Overloads that forward to either the int64_t or double overloads above.
   // Integer operands must be representable as int64_t.
-  template <typename T> Duration &operator*=(T r) {
+  template <typename T>
+  requires bela::integral_superset<T> Duration &operator*=(T r) {
     int64_t x = r;
     return *this *= x;
   }
-  template <typename T> Duration &operator/=(T r) {
+
+  template <typename T>
+  requires bela::integral_superset<T> Duration &operator/=(T r) {
     int64_t x = r;
     return *this /= x;
   }
-  Duration &operator*=(float r) { return *this *= static_cast<double>(r); }
-  Duration &operator/=(float r) { return *this /= static_cast<double>(r); }
+
+  template <typename T>
+  requires std::floating_point<T> Duration &operator*=(T r) {
+    double x = r;
+    return *this *= x;
+  }
+
+  template <typename T>
+  requires std::floating_point<T> Duration &operator/=(T r) {
+    double x = r;
+    return *this /= x;
+  }
 
   template <typename H> friend H AbslHashValue(H h, Duration d) {
     return H::combine(std::move(h), d.rep_hi_, d.rep_lo_);
@@ -291,12 +301,24 @@ constexpr Duration InfiniteDuration();
 //
 //   bela::Duration a = bela::Seconds(60);
 //   bela::Duration b = bela::Minutes(1);  // b == a
-constexpr Duration Nanoseconds(int64_t n);
-constexpr Duration Microseconds(int64_t n);
-constexpr Duration Milliseconds(int64_t n);
-constexpr Duration Seconds(int64_t n);
-constexpr Duration Minutes(int64_t n);
-constexpr Duration Hours(int64_t n);
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Nanoseconds(T n) { return time_internal::FromInt64(n, std::nano{}); }
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Microseconds(T n) { return time_internal::FromInt64(n, std::micro{}); }
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Milliseconds(T n) { return time_internal::FromInt64(n, std::milli{}); }
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Seconds(T n) { return time_internal::FromInt64(n, std::ratio<1>{}); }
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Minutes(T n) { return time_internal::FromInt64(n, std::ratio<60>{}); }
+template <typename T>
+requires bela::integral_superset<T>
+constexpr Duration Hours(T n) { return time_internal::FromInt64(n, std::ratio<3600>{}); }
 
 // Factory overloads for constructing `Duration` values from a floating-point
 // number of the unit indicated by the factory function's name. These functions
@@ -307,10 +329,14 @@ constexpr Duration Hours(int64_t n);
 //
 //   auto a = bela::Seconds(1.5);        // OK
 //   auto b = bela::Milliseconds(1500);  // BETTER
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Nanoseconds(T n) { return n * Nanoseconds(1); }
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Microseconds(T n) { return n * Microseconds(1); }
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Milliseconds(T n) { return n * Milliseconds(1); }
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Seconds(T n) {
+template <typename T>
+requires std::floating_point<T> Duration Nanoseconds(T n) { return n * Nanoseconds(1); }
+template <typename T>
+requires std::floating_point<T> Duration Microseconds(T n) { return n * Microseconds(1); }
+template <typename T>
+requires std::floating_point<T> Duration Milliseconds(T n) { return n * Milliseconds(1); }
+template <typename T>
+requires std::floating_point<T> Duration Seconds(T n) {
   if (n >= 0) { // Note: `NaN >= 0` is false.
     if (n >= static_cast<T>((std::numeric_limits<int64_t>::max)())) {
       return InfiniteDuration();
@@ -324,8 +350,10 @@ template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Seconds(T n)
     return -time_internal::MakePosDoubleDuration(-n);
   }
 }
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Minutes(T n) { return n * Minutes(1); }
-template <typename T, time_internal::EnableIfFloat<T> = 0> Duration Hours(T n) { return n * Hours(1); }
+template <typename T>
+requires std::floating_point<T> Duration Minutes(T n) { return n * Minutes(1); }
+template <typename T>
+requires std::floating_point<T> Duration Hours(T n) { return n * Hours(1); }
 
 // ToInt64Nanoseconds()
 // ToInt64Microseconds()
@@ -700,13 +728,6 @@ template <typename T> T ToChronoDuration(Duration d) {
 }
 
 } // namespace time_internal
-
-constexpr Duration Nanoseconds(int64_t n) { return time_internal::FromInt64(n, std::nano{}); }
-constexpr Duration Microseconds(int64_t n) { return time_internal::FromInt64(n, std::micro{}); }
-constexpr Duration Milliseconds(int64_t n) { return time_internal::FromInt64(n, std::milli{}); }
-constexpr Duration Seconds(int64_t n) { return time_internal::FromInt64(n, std::ratio<1>{}); }
-constexpr Duration Minutes(int64_t n) { return time_internal::FromInt64(n, std::ratio<60>{}); }
-constexpr Duration Hours(int64_t n) { return time_internal::FromInt64(n, std::ratio<3600>{}); }
 
 constexpr bool operator<(Duration lhs, Duration rhs) {
   return time_internal::GetRepHi(lhs) != time_internal::GetRepHi(rhs)

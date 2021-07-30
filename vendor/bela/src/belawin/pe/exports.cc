@@ -62,11 +62,17 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
       }
     }
   }
+  // RVA
+  auto dsSectionEnd = ds->VirtualAddress + ds->Size;
   if (ied.AddressOfFunctions > ds->VirtualAddress && ied.AddressOfFunctions < ds->VirtualAddress + ds->VirtualSize) {
     auto L = ied.AddressOfFunctions - ds->VirtualAddress;
     for (size_t i = 0; i < exports.size(); i++) {
       if (bv.size() - L > static_cast<size_t>(exports[i].Ordinal * 4 + 4)) {
-        exports[i].Address = bv.cast_fromle<uint32_t>(L + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
+        auto address = bv.cast_fromle<uint32_t>(L + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
+        if (address > ds->VirtualAddress && address < dsSectionEnd) {
+          exports[i].ForwardName = bv.make_cstring_view(address - ds->VirtualAddress);
+        }
+        exports[i].Address = address;
       }
     }
   }

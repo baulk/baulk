@@ -45,6 +45,7 @@ constexpr std::u8string_view irobj2{u8"\xBC\xC0\xDE", 3};
 constexpr std::u8string_view bobj{u8"\0\0\xFF\xFF", 4};
 constexpr std::u8string_view xo32{u8"\x01\xDF", 2};
 constexpr std::u8string_view xo64{u8"\x01\xF7", 2};
+constexpr uint8_t goffmagic[] = {0x03, 0xF0, 0x00};
 
 struct mach_header {
   uint32_t magic;      /* mach magic number identifier */
@@ -115,6 +116,12 @@ status_t LookupExecutableFile(bela::bytes_view bv, hazel_result &hr) {
     }
     if (bv.starts_with(xo64)) {
       hr.assign(types::xcoff_object_64, L"64-bit XCOFF object file");
+      return Found;
+    }
+    break;
+  case 0x03:
+    if (bv.starts_bytes_with(goffmagic)) {
+      hr.assign(types::goff_object, L"[SystemZ][z/OS] GOFF object");
       return Found;
     }
     break;

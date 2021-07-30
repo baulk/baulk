@@ -22,8 +22,7 @@ constexpr bool is_character_v =
 template <class T> constexpr bool is_wide_character_v = is_any_of_v<std::remove_cv_t<T>, wchar_t, char16_t>;
 
 template <class T>
-constexpr bool is_narrow_character_v =
-    is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, char8_t>;
+constexpr bool is_narrow_character_v = is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, char8_t>;
 
 template <class T>
 concept character = is_character_v<T>;
@@ -39,6 +38,9 @@ concept standard_layout = std::is_standard_layout_v<T>;
 
 template <class T>
 concept trivial = std::is_trivial_v<T>;
+
+template <class T>
+concept integral_superset = std::integral<T> || std::is_enum_v<T>;
 
 // funs
 

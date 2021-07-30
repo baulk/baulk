@@ -123,7 +123,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::lnk, L"application/x-ms-shortcut"}, // .lnk application/x-ms-shortcut
       {types::iso, L"application/x-iso9660-image"},
       {types::ifc, L"application/vnd.microsoft.ifc"},
-  };
+      {types::goff_object, L"application/x-goff-object"}};
   //
   for (const auto &m : mimes) {
     if (m.t == t) {

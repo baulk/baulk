@@ -266,9 +266,8 @@ struct Symbol {
 
 struct ExportedSymbol {
   std::string Name; // UTF-8
-  std::string UndecoratedName;
   std::string ForwardName;
-  DWORD Address;
+  DWORD Address{0};
   unsigned short Ordinal{0xFFFF};
   int Hint{0};
 };
