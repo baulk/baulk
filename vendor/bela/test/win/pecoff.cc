@@ -171,13 +171,14 @@ int wmain(int argc, wchar_t **argv) {
   }
   // amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.s0.19041.488_none_ca04af081b815d21
   for (const auto &d : ft.exports) {
-    if (!d.ForwardName.empty()) {
-      bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d) --> %s\x1b[0m\n", d.Ordinal, d.Address,
-                    llvm::demangle(d.Name), d.Hint, d.ForwardName);
+    if (d.ForwardName.empty()) {
+      bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address, llvm::demangle(d.Name),
+                    d.Hint);
       continue;
     }
-    bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address, llvm::demangle(d.Name),
-                  d.Hint);
+
+    bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d) --> %s\x1b[0m\n", d.Ordinal, d.Address,
+                  llvm::demangle(d.Name), d.Hint, d.ForwardName);
   }
   std::vector<bela::pe::Symbol> syms;
   if (file.LookupSymbols(syms, ec)) {

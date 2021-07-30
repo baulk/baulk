@@ -39,43 +39,30 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     ied.AddressOfNames = bela::fromle(cied->AddressOfNames);               // RVA from base of image
     ied.AddressOfNameOrdinals = bela::fromle(cied->AddressOfNameOrdinals); // RVA from base of image
   }
-  if (ied.NumberOfNames == 0) {
+  if (ied.NumberOfFunctions == 0 || ied.AddressOfFunctions == 0) {
     return true;
   }
+  const auto sectionEnd = ds->VirtualAddress + ds->VirtualSize;
+  const auto exdEnd = exd->VirtualAddress + exd->Size;
   auto ordinalBase = static_cast<uint16_t>(ied.Base);
-  exports.resize(ied.NumberOfNames);
-  if (ied.AddressOfNameOrdinals > ds->VirtualAddress &&
-      ied.AddressOfNameOrdinals < ds->VirtualAddress + ds->VirtualSize) {
-    auto L = ied.AddressOfNameOrdinals - ds->VirtualAddress;
-    if (bv.size() - L > exports.size() * 2) {
-      for (size_t i = 0; i < exports.size(); i++) {
-        exports[i].Ordinal = bv.cast_fromle<uint16_t>(L + i * 2) + ordinalBase;
-        exports[i].Hint = static_cast<int>(i);
-      }
+  exports.resize(ied.NumberOfFunctions);
+  auto ordinalTable = bv.subview(ied.AddressOfNameOrdinals - ds->VirtualAddress);
+  auto nameTable = bv.subview(ied.AddressOfNames - ds->VirtualAddress);
+  auto funTable = bv.subview(ied.AddressOfFunctions - ds->VirtualAddress);
+  auto addressTable = bv.subview(ied.AddressOfFunctions - ds->VirtualAddress);
+  for (DWORD i = 0; i < ied.NumberOfNames; i++) {
+    exports[i].Hint = i;
+    auto nameRVA = nameTable.cast_fromle<uint32_t>(i * 4);
+    exports[i].Name = bv.make_cstring_view(nameRVA - ds->VirtualAddress);
+    auto ordinal = ordinalTable.cast_fromle<uint16_t>(i * 2) + ordinalBase;
+    exports[i].Ordinal = ordinal;
+    auto address = addressTable.cast_fromle<uint32_t>((ordinal - ordinalBase) * 4);
+    if (address > exd->VirtualAddress && address < exdEnd) {
+      exports[i].ForwardName = bv.make_cstring_view(address - ds->VirtualAddress);
     }
+    exports[i].Address = address;
   }
-  if (ied.AddressOfNames > ds->VirtualAddress && ied.AddressOfNames < ds->VirtualAddress + ds->VirtualSize) {
-    auto L = ied.AddressOfNames - ds->VirtualAddress;
-    if (bv.size() - L >= exports.size() * 4) {
-      for (size_t i = 0; i < exports.size(); i++) {
-        exports[i].Name = bv.make_cstring_view(bv.cast_fromle<uint32_t>(L + i * 4) - ds->VirtualAddress);
-      }
-    }
-  }
-  // RVA
-  auto dsSectionEnd = ds->VirtualAddress + ds->Size;
-  if (ied.AddressOfFunctions > ds->VirtualAddress && ied.AddressOfFunctions < ds->VirtualAddress + ds->VirtualSize) {
-    auto L = ied.AddressOfFunctions - ds->VirtualAddress;
-    for (size_t i = 0; i < exports.size(); i++) {
-      if (bv.size() - L > static_cast<size_t>(exports[i].Ordinal * 4 + 4)) {
-        auto address = bv.cast_fromle<uint32_t>(L + static_cast<int>(exports[i].Ordinal - ordinalBase) * 4);
-        if (address > ds->VirtualAddress && address < dsSectionEnd) {
-          exports[i].ForwardName = bv.make_cstring_view(address - ds->VirtualAddress);
-        }
-        exports[i].Address = address;
-      }
-    }
-  }
+
   std::sort(exports.begin(), exports.end(), [](const ExportedSymbol &a, const ExportedSymbol &b) -> bool {
     //
     return a.Ordinal < b.Ordinal;
