@@ -111,6 +111,13 @@ static void process_color(FILE *out, std::string_view sv, int64_t offset) {
   } while (n == 16 && maxlen > 0);
 }
 
+std::string demangle(const std::string_view MangledName) {
+  if (MangledName.empty()) {
+    return "(unnamed)";
+  }
+  return llvm::demangle(MangledName);
+}
+
 int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
     bela::FPrintF(stderr, L"usage: %s pefile\n", argv[0]);
@@ -172,13 +179,13 @@ int wmain(int argc, wchar_t **argv) {
   // amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.s0.19041.488_none_ca04af081b815d21
   for (const auto &d : ft.exports) {
     if (d.ForwardName.empty()) {
-      bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address, llvm::demangle(d.Name),
+      bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d)\x1b[0m\n", d.Ordinal, d.Address, demangle(d.Name),
                     d.Hint);
       continue;
     }
 
-    bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d) --> %s\x1b[0m\n", d.Ordinal, d.Address,
-                  llvm::demangle(d.Name), d.Hint, d.ForwardName);
+    bela::FPrintF(stdout, L"\x1b[35mE %5d %08X %s  (Hint: %d) --> %s\x1b[0m\n", d.Ordinal, d.Address, demangle(d.Name),
+                  d.Hint, d.ForwardName);
   }
   std::vector<bela::pe::Symbol> syms;
   if (file.LookupSymbols(syms, ec)) {
