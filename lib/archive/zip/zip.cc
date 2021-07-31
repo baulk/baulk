@@ -1,7 +1,6 @@
 ///
 #include <bela/path.hpp>
 #include <bela/endian.hpp>
-#include <bela/algorithm.hpp>
 #include <bela/bufio.hpp>
 #include <bitset>
 #include <bela/terminal.hpp>
@@ -71,7 +70,7 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   int64_t directoryEndOffset = 0;
   constexpr int64_t offrange[] = {1024, 65 * 1024};
   bela::endian::LittenEndian b;
-  for (size_t i = 0; i < bela::ArrayLength(offrange); i++) {
+  for (size_t i = 0; i < std::size(offrange); i++) {
     auto blen = offrange[i];
     if (blen > size) {
       blen = size;

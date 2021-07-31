@@ -2,7 +2,6 @@
 #include <bela/terminal.hpp>
 #include <bela/str_cat.hpp>
 #include <bela/io.hpp>
-#include <bela/algorithm.hpp>
 #include <algorithm>
 #include <set>
 
@@ -303,7 +302,7 @@ constexpr Language languages[] = {
 };
 
 std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
-  auto max = bela::ArrayLength(languages);
+  auto max = std::size(languages);
   size_t min = 0;
   while (min <= max) {
     auto mid = min + (max - min) / 2;
@@ -313,7 +312,7 @@ std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
     }
     min = mid + 1;
   }
-  if (min < bela::ArrayLength(languages) && languages[min].interpreter == ie) {
+  if (min < std::size(languages) && languages[min].interpreter == ie) {
     return languages[min].language;
   }
   return L"";

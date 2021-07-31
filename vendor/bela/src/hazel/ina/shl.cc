@@ -75,7 +75,7 @@ public:
     if (dwSize != 0x0000004C) {
       return false;
     }
-    if (memcmp(data_ + 4, shuuid, hazel::internal::ArrayLength(shuuid)) != 0) {
+    if (memcmp(data_ + 4, shuuid, sizeof(shuuid)) != 0) {
       return false;
     }
     linkflags_ = bela::cast_fromle<uint32_t>(data_ + 20);

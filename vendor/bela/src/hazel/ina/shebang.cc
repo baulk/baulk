@@ -144,7 +144,7 @@ constexpr Language languages[] = {
 };
 
 const std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
-  int max = static_cast<int>(bela::ArrayLength(languages) - 1);
+  int max = static_cast<int>(std::size(languages) - 1);
   int min = 0;
   while (min <= max) {
     auto mid = min + (max - min) / 2;
@@ -154,7 +154,7 @@ const std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
     }
     min = mid + 1;
   }
-  if (static_cast<size_t>(min) < bela::ArrayLength(languages) && languages[min].interpreter == ie) {
+  if (static_cast<size_t>(min) < std::size(languages) && languages[min].interpreter == ie) {
     return languages[min].language;
   }
   return L"";

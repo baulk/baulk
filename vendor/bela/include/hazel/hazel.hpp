@@ -24,6 +24,7 @@ template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 class hazel_result;
 bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec);
+bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec);
 using hazel_value_t = std::variant<std::string, std::wstring, std::vector<std::string>, std::vector<std::wstring>,
                                    int16_t, int32_t, int64_t, uint16_t, uint32_t, uint64_t, bela::Time>;
 class hazel_result {
@@ -104,6 +105,7 @@ public:
   bool ZeroExists() const { return zeroPosition != -1; }
 
 private:
+  friend bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec);
   friend bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec);
   std::wstring description_;
   bela::flat_hash_map<std::wstring, hazel_value_t> values_;

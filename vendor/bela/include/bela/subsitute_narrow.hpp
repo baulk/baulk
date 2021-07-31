@@ -35,7 +35,6 @@
 #pragma once
 #include "ascii.hpp"
 #include "str_cat_narrow.hpp" //AlphaNum
-#include "algorithm.hpp"
 
 namespace bela::narrow {
 
@@ -49,44 +48,44 @@ inline void SubstituteAndAppend(std::string *output, std::string_view format) {
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0) {
   const std::string_view args[] = {a0.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0,
                                 const AlphaNum &a1) {
   const std::string_view args[] = {a0.Piece(), a1.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
                                 const AlphaNum &a2) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
                                 const AlphaNum &a2, const AlphaNum &a3) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
                                 const AlphaNum &a2, const AlphaNum &a3, const AlphaNum &a4) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(), a4.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
                                 const AlphaNum &a2, const AlphaNum &a3, const AlphaNum &a4, const AlphaNum &a5) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(), a4.Piece(), a5.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
                                 const AlphaNum &a2, const AlphaNum &a3, const AlphaNum &a4, const AlphaNum &a5,
                                 const AlphaNum &a6) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(), a4.Piece(), a5.Piece(), a6.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
@@ -94,7 +93,7 @@ inline void SubstituteAndAppend(std::string *output, std::string_view format, co
                                 const AlphaNum &a6, const AlphaNum &a7) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(),
                                     a4.Piece(), a5.Piece(), a6.Piece(), a7.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
@@ -102,7 +101,7 @@ inline void SubstituteAndAppend(std::string *output, std::string_view format, co
                                 const AlphaNum &a6, const AlphaNum &a7, const AlphaNum &a8) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(), a4.Piece(),
                                     a5.Piece(), a6.Piece(), a7.Piece(), a8.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 inline void SubstituteAndAppend(std::string *output, std::string_view format, const AlphaNum &a0, const AlphaNum &a1,
@@ -110,7 +109,7 @@ inline void SubstituteAndAppend(std::string *output, std::string_view format, co
                                 const AlphaNum &a6, const AlphaNum &a7, const AlphaNum &a8, const AlphaNum &a9) {
   const std::string_view args[] = {a0.Piece(), a1.Piece(), a2.Piece(), a3.Piece(), a4.Piece(),
                                     a5.Piece(), a6.Piece(), a7.Piece(), a8.Piece(), a9.Piece()};
-  substitute_internal::SubstituteAndAppendArray(output, format, args, bela::ArrayLength(args));
+  substitute_internal::SubstituteAndAppendArray(output, format, args, std::size(args));
 }
 
 [[nodiscard]] inline std::string Substitute(std::string_view format) {

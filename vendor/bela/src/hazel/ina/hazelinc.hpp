@@ -2,13 +2,9 @@
 #ifndef HAZEL_INTERNAL_INC_HPP
 #define HAZEL_INTERNAL_INC_HPP
 #include <hazel/hazel.hpp>
-#include <bela/algorithm.hpp>
 #include <bela/endian.hpp>
 
 namespace hazel::internal {
-using bela::ArrayEnd;
-using bela::ArrayEqual;
-using bela::ArrayLength;
 typedef enum hazel_status_e : int {
   None = 0,
   Found, ///

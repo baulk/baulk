@@ -44,7 +44,6 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
   }
   const auto sectionEnd = ds->VirtualAddress + ds->VirtualSize;
   const auto exdEnd = exd->VirtualAddress + exd->Size;
-  auto ordinalBase = static_cast<uint16_t>(ied.Base);
   exports.resize(ied.NumberOfFunctions);
   auto ordinalTable = bv.subview(ied.AddressOfNameOrdinals - ds->VirtualAddress);
   auto nameTable = bv.subview(ied.AddressOfNames - ds->VirtualAddress);
@@ -56,18 +55,17 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
       exports[i].ForwardName = bv.make_cstring_view(address - ds->VirtualAddress);
     }
     exports[i].Address = address;
-    exports[i].Ordinal = static_cast<uint16_t>(i + ordinalBase);
+    exports[i].Ordinal = static_cast<uint16_t>(i + ied.Base);
   }
   for (DWORD i = 0; i < ied.NumberOfNames; i++) {
     auto nameRVA = nameTable.cast_fromle<uint32_t>(i * 4);
     auto name = bv.make_cstring_view(nameRVA - ds->VirtualAddress);
-    uint16_t ordinal = ordinalTable.cast_fromle<uint16_t>(i * 2) + ordinalBase;
-    auto index = ordinal - ordinalBase;
-    if (index < 0 || static_cast<DWORD>(index) >= ied.NumberOfFunctions) {
+    uint16_t ordinalIndex = ordinalTable.cast_fromle<uint16_t>(i * 2);
+    if (ordinalIndex < 0 || static_cast<DWORD>(ordinalIndex) >= ied.NumberOfFunctions) {
       continue;
     }
-    exports[index].Name = name;
-    exports[index].Hint = i;
+    exports[ordinalIndex].Name = name;
+    exports[ordinalIndex].Hint = i;
   }
 
   std::sort(exports.begin(), exports.end(), [](const ExportedSymbol &a, const ExportedSymbol &b) -> bool {

@@ -372,11 +372,11 @@ status_t lookup_tarinternal(bela::bytes_view bv, hazel_result &hr) {
   }
   constexpr const uint8_t ustarMagic[] = {'u', 's', 't', 'a', 'r', 0};
   constexpr const uint8_t gnutarMagic[] = {'u', 's', 't', 'a', 'r', ' ', ' ', 0};
-  if (memcmp(hd->magic, ustarMagic, ArrayLength(ustarMagic)) == 0) {
+  if (memcmp(hd->magic, ustarMagic, sizeof(ustarMagic)) == 0) {
     hr.assign(types::tar, L"Tarball (ustar) archive data");
     return Found;
   }
-  if (memcmp(hd->magic, gnutarMagic, ArrayLength(gnutarMagic)) == 0 && bv.size() > sizeof(gnutar_header_t)) {
+  if (memcmp(hd->magic, gnutarMagic, sizeof(gnutarMagic)) == 0 && bv.size() > sizeof(gnutar_header_t)) {
     hr.assign(types::tar, L"Tarball (gnutar) archive data");
     return Found;
   }

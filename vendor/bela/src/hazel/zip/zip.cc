@@ -1,7 +1,6 @@
 ///
 #include <bela/path.hpp>
 #include <bela/endian.hpp>
-#include <bela/algorithm.hpp>
 #include <bela/bufio.hpp>
 #include <bitset>
 #include <bela/terminal.hpp>

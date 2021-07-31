@@ -9,6 +9,29 @@ namespace hazel {
 
 typedef hazel::internal::status_t (*lookup_handle_t)(bela::bytes_view bv, hazel_result &hr);
 
+bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec) {
+  if (auto p = memchr(bv.data(), 0, bv.size()); p != nullptr) {
+    hr.zeroPosition = static_cast<int64_t>(reinterpret_cast<const uint8_t *>(p) - bv.data());
+  }
+
+  constexpr lookup_handle_t handles[] = {
+      hazel::internal::LookupExecutableFile, //
+      hazel::internal::LookupArchives,       // 7z ...
+      hazel::internal::LookupDocs,
+      hazel::internal::LookupFonts,     //
+      hazel::internal::LookupShellLink, // shortcut
+      hazel::internal::LookupMedia,     // media
+      hazel::internal::LookupImages,    // images
+      hazel::internal::LookupText,
+  };
+  for (auto h : handles) {
+    if (h(bv, hr) == hazel::internal::Found) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec) {
   if ((hr.size_ = bela::io::Size(fd.NativeFD(), ec)) == bela::SizeUnInitialized) {
     return false;
@@ -18,27 +41,8 @@ bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec) {
   if (!fd.ReadAt({buffer, static_cast<size_t>(minSize)}, 0, ec)) {
     return false;
   }
-  if (auto p = memchr(buffer, 0, static_cast<size_t>(minSize)); p != nullptr) {
-    hr.zeroPosition = static_cast<int64_t>(reinterpret_cast<const uint8_t *>(p) - buffer);
-  }
   bela::bytes_view bv(buffer, static_cast<size_t>(minSize));
-  using namespace hazel::internal;
-  constexpr lookup_handle_t handles[] = {
-      LookupExecutableFile, //
-      LookupArchives,       // 7z ...
-      LookupDocs,
-      LookupFonts,     //
-      LookupShellLink, // shortcut
-      LookupMedia,     // media
-      LookupImages,    // images
-      LookupText,
-  };
-  for (auto h : handles) {
-    if (h(bv, hr) == Found) {
-      return true;
-    }
-  }
-  return false;
+  return LookupBytes(bv, hr, ec);
 }
 
 } // namespace hazel

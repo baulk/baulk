@@ -200,9 +200,6 @@ inline char32_t decode_rune(const char8_t *it, int nb) {
 }
 } // namespace codecvt_internal
 
-// CodePoint rune width
-size_t rune_width(char32_t rune);
-
 // Encode UTF8 to UTF16
 template <typename From, typename To, typename Allocator = std::allocator<To>>
 requires bela::narrow_character<From> && bela::wide_character<To>
@@ -331,6 +328,9 @@ requires bela::character<CharT>
   // string_length
   return string_length<CharT>({str, N});
 }
+
+// CodePoint rune width
+size_t rune_width(char32_t rune);
 
 // Calculate UTF16 string width under terminal (Monospace font)
 template <typename CharT = char16_t>
