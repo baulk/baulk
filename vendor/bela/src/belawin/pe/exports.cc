@@ -63,7 +63,7 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     auto name = bv.make_cstring_view(nameRVA - ds->VirtualAddress);
     uint16_t ordinal = ordinalTable.cast_fromle<uint16_t>(i * 2) + ordinalBase;
     auto index = ordinal - ordinalBase;
-    if (index < 0 || static_cast<DWORD>(index) > ied.NumberOfFunctions) {
+    if (index < 0 || static_cast<DWORD>(index) >= ied.NumberOfFunctions) {
       continue;
     }
     exports[index].Name = name;
