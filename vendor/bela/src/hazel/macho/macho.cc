@@ -359,14 +359,14 @@ bool File::parseFile(bela::error_code &ec) {
       s->Flag = endian_cast(p->Flag);
       auto b = cmddat.substr(sizeof(Segment32));
       sections.resize(s->Nsect);
-      for (uint32_t i = 0; i < s->Nsect; i++) {
+      for (uint32_t k = 0; k < s->Nsect; k++) {
         if (b.size() < sizeof(Section32)) {
           ec = bela::make_error_code(L"invalid block in Section32 data");
           return false;
         }
         auto se = reinterpret_cast<const Section32 *>(b.data());
         b.remove_prefix(sizeof(Section32));
-        auto sh = &(sections[i]);
+        auto sh = &(sections[k]);
         sh->Name = bela::cstring_view(se->Name);
         sh->Seg = bela::cstring_view(se->Seg);
         sh->Addr = endian_cast(se->Addr);
@@ -432,7 +432,7 @@ bool File::parseFile(bela::error_code &ec) {
   }
   return true;
 }
-bool File::Depends(std::vector<std::string> &libs, bela::error_code &ec) {
+bool File::Depends(std::vector<std::string> &libs, bela::error_code &) {
   for (const auto &l : loads) {
     if (l.Cmd == LoadCmdDylib && l.DyLib != nullptr) {
       libs.emplace_back(l.DyLib->Name);

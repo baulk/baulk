@@ -13,7 +13,6 @@ add_library(
   match.cc
   memutil.cc
   numbers.cc
-  winansi.cc
   str_split.cc
   str_split_narrow.cc
   str_replace.cc

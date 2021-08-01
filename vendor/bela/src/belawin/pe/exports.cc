@@ -42,16 +42,14 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
   if (ied.NumberOfFunctions == 0 || ied.AddressOfFunctions == 0) {
     return true;
   }
-  const auto sectionEnd = ds->VirtualAddress + ds->VirtualSize;
-  const auto exdEnd = exd->VirtualAddress + exd->Size;
+  const auto exportDataEnd = exd->VirtualAddress + exd->Size;
   exports.resize(ied.NumberOfFunctions);
   auto ordinalTable = bv.subview(ied.AddressOfNameOrdinals - ds->VirtualAddress);
   auto nameTable = bv.subview(ied.AddressOfNames - ds->VirtualAddress);
-  auto funTable = bv.subview(ied.AddressOfFunctions - ds->VirtualAddress);
   auto addressTable = bv.subview(ied.AddressOfFunctions - ds->VirtualAddress);
   for (DWORD i = 0; i < ied.NumberOfFunctions; i++) {
     auto address = addressTable.cast_fromle<uint32_t>(i * 4);
-    if (address > exd->VirtualAddress && address < exdEnd) {
+    if (address > exd->VirtualAddress && address < exportDataEnd) {
       exports[i].ForwardName = bv.make_cstring_view(address - ds->VirtualAddress);
     }
     exports[i].Address = address;
@@ -67,11 +65,6 @@ bool File::LookupExports(std::vector<ExportedSymbol> &exports, bela::error_code 
     exports[ordinalIndex].Name = name;
     exports[ordinalIndex].Hint = i;
   }
-
-  std::sort(exports.begin(), exports.end(), [](const ExportedSymbol &a, const ExportedSymbol &b) -> bool {
-    //
-    return a.Ordinal < b.Ordinal;
-  });
   return true;
 }
 

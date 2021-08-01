@@ -9,7 +9,7 @@ namespace hazel {
 
 typedef hazel::internal::status_t (*lookup_handle_t)(bela::bytes_view bv, hazel_result &hr);
 
-bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec) {
+bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &) {
   if (auto p = memchr(bv.data(), 0, bv.size()); p != nullptr) {
     hr.zeroPosition = static_cast<int64_t>(reinterpret_cast<const uint8_t *>(p) - bv.data());
   }
