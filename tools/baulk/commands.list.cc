@@ -52,7 +52,7 @@ int cmd_list_all() {
 }
 
 void usage_list() {
-  bela::FPrintF(stderr, LR"(Usage: baulk search [package]...
+  bela::FPrintF(stderr, LR"(Usage: baulk list [package]...
 List installed packages based on package names.
 
 Example:
