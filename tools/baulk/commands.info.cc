@@ -73,6 +73,7 @@ int cmd_info(const argv_t &argv) {
   }
   for (auto pkg : argv) {
     pkg_info(pkg);
+    bela::FPrintF(stderr, L"\n");
   }
   return 0;
 }
