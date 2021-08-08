@@ -28,6 +28,7 @@ Command:
   version          Show version number and quit
   list             List installed packages based on package names
   search           Search in package descriptions
+  info             Show package information
   install          Install specific packages. upgrade if already installed. (alias: i)
   uninstall        Uninstall specific packages. (alias: r)
   update           Update bucket metadata

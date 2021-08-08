@@ -67,6 +67,7 @@ Command:
   version          Show version number and quit
   list             List installed packages based on package names
   search           Search in package descriptions
+  info             Show package information
   install          Install specific packages. upgrade if already installed. (alias: i)
   uninstall        Uninstall specific packages. (alias: r)
   update           Update bucket metadata
@@ -77,8 +78,8 @@ Command:
   sha256sum        Calculate the SHA256 checksum of a file
   cleancache       Cleanup download cache
   bucket           Add, delete or list buckets
-  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd (experimental)
-  unzip            Extract compressed files in a ZIP archive (experimental)
+  untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
+  unzip            Extract compressed files in a ZIP archive
 
 Alias:
   i  install
