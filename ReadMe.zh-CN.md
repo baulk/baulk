@@ -94,6 +94,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |---|---|---|
 |list|查看已安装的包|N/A|
 |search|搜索 Bucket 中可用的包|baulk search 命令支持文件名匹配模式，比如 `baulk search *` 将搜索 Bucket 中所有的包|
+|info|显示包的相关信息|N/A|
 |install|安装特定的包|install 还具备其他特性，当包已安装时会重新构建启动器，当包存在新版本时会将其升级，`--force` 将升级被冻结的包|
 |uninstall|卸载特定的包|N/A|
 |update|更新 bucket 元数据|类似 Ubuntu apt update 命令|
@@ -112,6 +113,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 ```powershell
 baulk list
 baulk search *w
+baulk info wget
 baulk freeze python
 baulk unfreeze python
 baulk update
