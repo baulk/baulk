@@ -8,6 +8,7 @@ add_executable(
   bucket.cc
   commands.freeze.cc
   commands.help.cc
+  commands.info.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc

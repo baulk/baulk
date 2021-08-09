@@ -113,6 +113,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       {L"help", baulk::commands::cmd_help},
       {L"h", baulk::commands::cmd_help}, // help alias
       {L"version", baulk::commands::cmd_version},
+      {L"info", baulk::commands::cmd_info},             // info
       {L"install", baulk::commands::cmd_install},       // install
       {L"i", baulk::commands::cmd_install},             // install
       {L"list", baulk::commands::cmd_list},             // list installed
