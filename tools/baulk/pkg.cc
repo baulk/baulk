@@ -230,7 +230,7 @@ void DisplayDependencies(const baulk::Package &pkg) {
   if (pkg.venv.dependencies.empty()) {
     return;
   }
-  bela::FPrintF(stderr, L"\x1b[33mPackage '%s' depoends on: \x1b[34m%s\x1b[0m", pkg.name,
+  bela::FPrintF(stderr, L"\x1b[33mPackage '%s' depends on: \x1b[34m%s\x1b[0m", pkg.name,
                 bela::StrJoin(pkg.venv.dependencies, L"\n    "));
 }
 
@@ -299,6 +299,16 @@ int BaulkInstall(const baulk::Package &pkg) {
   }
   if (auto ret = PackageExpand(pkg, *pkgfile); ret != 0) {
     return ret;
+  }
+  if (!pkg.suggest.empty()) {
+    bela::FPrintF(stderr, L"Suggest installing:");
+    for (auto it : pkg.suggest) {
+      bela::FPrintF(stderr, L"  \x1b[32m%s\x1b[0m", it);
+    }
+    bela::FPrintF(stderr, L"\n");
+  }
+  if (!pkg.notes.empty()) {
+    bela::FPrintF(stderr, L"Notes: %s\n", pkg.notes);
   }
   DisplayDependencies(pkg);
   return 0;

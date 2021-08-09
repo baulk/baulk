@@ -174,8 +174,12 @@ struct Package {
   std::wstring checksum;
   std::wstring extension;
   std::wstring rename; // only exe extension support rename feature
+  std::wstring homepage;
+  std::wstring notes;
+  std::wstring license;
   std::vector<std::wstring> urls;
   std::vector<std::wstring> forceDeletes; // uninstall delete dirs
+  std::vector<std::wstring> suggest;
   std::vector<LinkMeta> links;
   std::vector<LinkMeta> launchers;
   BaulkVirtualEnv venv;
