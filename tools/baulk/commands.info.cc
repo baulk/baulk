@@ -68,9 +68,6 @@ int cmd_info(const argv_t &argv) {
     bela::FPrintF(stderr, L"baulk info: \x1b[31m%s\x1b[0m\n", ec.message);
     return 1;
   }
-  if (!baulk::BaulkInitializeExecutor(ec)) {
-    baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
-  }
   for (auto pkg : argv) {
     pkg_info(pkg);
     bela::FPrintF(stderr, L"\n");
