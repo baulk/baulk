@@ -94,6 +94,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |---|---|---|
 |list|View installed packages|N/A|
 |search|Search for packages available in Bucket|baulk search command supports file name matching mode, for example `baulk search *` will search all packages in Bucket|
+|info|Show package information|N/A|
 |install|Install specific packages|install also has other features, when the package has been installed will rebuild the launcher, when there is a new version of the package will upgrade it, `--force` will upgrade the frozen package|
 |uninstall|Uninstall a specific package|N/A|
 |update|update bucket metadata|similar to Ubuntu apt update command|
@@ -112,6 +113,7 @@ Example:
 ```powershell
 baulk list
 baulk search *w
+baulk info wget
 baulk freeze python
 baulk unfreeze python
 baulk update
