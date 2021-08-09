@@ -14,31 +14,31 @@ int pkg_info(std::wstring_view name) {
     return 1;
   }
   auto lopkg = baulk::bucket::PackageLocalMeta(name, oec);
-  bela::FPrintF(stderr, L"Name: \x1b[32m%s\x1b[0m\n"
-                         "Bucket: \x1b[34m%s\x1b[0m\n"
+  bela::FPrintF(stderr, L"Name:        \x1b[32m%s\x1b[0m\n"
+                         "Bucket:      \x1b[34m%s\x1b[0m\n"
                          "Description: %s\n"
     , pkg->name, pkg->bucket, pkg->description);
   if (lopkg) {
-    bela::FPrintF(stderr, L"Version: %s [installed \x1b[33m%s\x1b[0m]\n"
-                         "Installed: Yes\n"
+    bela::FPrintF(stderr, L"Version:     %s [installed \x1b[33m%s\x1b[0m]\n"
+                         "Installed:   Yes\n"
     , pkg->version, lopkg->version);
   } else{
-    bela::FPrintF(stderr, L"Version: %s\n"
-                         "Installed: No\n"
+    bela::FPrintF(stderr, L"Version:     %s\n"
+                         "Installed:   No\n"
     , pkg->version);
   }
-  bela::FPrintF(stderr, L"Urls: \n");
+  bela::FPrintF(stderr, L"Urls:\n");
   for (auto it : pkg->urls) {
     bela::FPrintF(stderr, L"  %s\n", it);
   }
   if (!pkg->links.empty()) {
-    bela::FPrintF(stderr, L"Links: \n");
+    bela::FPrintF(stderr, L"Links:\n");
     for (auto it : pkg->links) {
       bela::FPrintF(stderr, L"  %s\n", it.path);
     }
   }
   if (!pkg->launchers.empty()) {
-    bela::FPrintF(stderr, L"Launchers: \n");
+    bela::FPrintF(stderr, L"Launchers:\n");
     for (auto it : pkg->launchers) {
       bela::FPrintF(stderr, L"  %s\n", it.path);
     }
