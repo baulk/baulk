@@ -144,6 +144,10 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
     baulk::json::JsonAssignor ja(j);
     pkg.description = ja.get("description");
     pkg.version = ja.get("version");
+    pkg.homepage = ja.get("homepage");
+    pkg.license = ja.get("license");
+    pkg.notes = ja.get("notes");
+    ja.get("suggest", pkg.suggest);
     ja.patharray("force_delete", pkg.forceDeletes);
     // to lower
     pkg.extension = bela::AsciiStrToLower(ja.get("extension"));
