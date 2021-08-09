@@ -301,7 +301,7 @@ int BaulkInstall(const baulk::Package &pkg) {
     return ret;
   }
   if (!pkg.suggest.empty()) {
-    bela::FPrintF(stderr, L"Suggest install: ");
+    bela::FPrintF(stderr, L"Suggest installing: ");
     for (auto it : pkg.suggest) {
       bela::FPrintF(stderr, L"  \x1b[32m%s\x1b[0m", it);
     }
