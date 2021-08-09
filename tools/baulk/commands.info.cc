@@ -17,7 +17,9 @@ int pkg_info(std::wstring_view name) {
   bela::FPrintF(stderr, L"Name:        \x1b[32m%s\x1b[0m\n"
                          "Bucket:      \x1b[34m%s\x1b[0m\n"
                          "Description: %s\n"
-    , pkg->name, pkg->bucket, pkg->description);
+                         "Homepage:    %s\n"
+                         "License:     %s\n"
+    , pkg->name, pkg->bucket, pkg->description, pkg->homepage, pkg->license);
   if (lopkg) {
     bela::FPrintF(stderr, L"Version:     %s [installed \x1b[33m%s\x1b[0m]\n"
                          "Installed:   Yes\n"
@@ -42,6 +44,16 @@ int pkg_info(std::wstring_view name) {
     for (auto it : pkg->launchers) {
       bela::FPrintF(stderr, L"  %s\n", it.path);
     }
+  }
+  if (!pkg->suggest.empty()) {
+    bela::FPrintF(stderr, L"Suggest:\n");
+    for (auto it : pkg->suggest) {
+      bela::FPrintF(stderr, L"  \x1b[32m%s\x1b[0m", it);
+    }
+    bela::FPrintF(stderr, L"\n");
+  }
+  if (!pkg->notes.empty()) {
+    bela::FPrintF(stderr, L"Notes:\n  %s\n", pkg->notes);
   }
 
   return 0;
