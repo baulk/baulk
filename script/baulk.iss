@@ -85,7 +85,6 @@ Source: "..\build\bin\baulk-dock.exe"; DestDir: "{app}\bin"; DestName: "baulk-do
 Source: "..\build\bin\baulk-exec.exe"; DestDir: "{app}\bin"; DestName: "baulk-exec.exe"
 Source: "..\build\bin\baulk-lnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-lnk.exe"
 Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-update.exe"
-Source: "..\build\bin\ssh-askpass-baulk.exe"; DestDir: "{app}\bin"; DestName: "ssh-askpass-baulk.exe"
 Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterminal.exe"
 Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
