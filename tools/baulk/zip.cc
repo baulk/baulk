@@ -21,9 +21,9 @@ public:
       if (bela::terminal::IsSameTerminal(stderr)) {
         if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
           CygwinTerminalSize(termsz);
-        } else {
-          bela::terminal::TerminalSize(stderr, termsz);
+          return;
         }
+        bela::terminal::TerminalSize(stderr, termsz);
       }
     }
   }
