@@ -277,6 +277,7 @@ bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
 }
 // package metadata
 std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::error_code &ec) {
+  ec.clear();
   bela::version pkgversion; // 0.0.0.0
   baulk::Package pkg;
   auto bucketsdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName);
@@ -302,7 +303,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgname, bela::err
     }
   }
   if (pkgsame == 0) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"'", pkgname, L"' not yet ported.");
+    ec = bela::make_error_code(ErrPackageNotYetPorted, L"'", pkgname, L"' not yet ported.");
     return std::nullopt;
   }
   return std::make_optional(std::move(pkg));

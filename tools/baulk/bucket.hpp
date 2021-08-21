@@ -7,6 +7,8 @@
 #include "baulk.hpp"
 
 namespace baulk::bucket {
+constexpr long ErrPackageNotYetPorted = bela::ErrUnimplemented + 1000;
+
 std::optional<std::wstring> BucketNewest(const baulk::Bucket &bucket, bela::error_code &ec);
 bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error_code &ec);
 // PackageMeta from file

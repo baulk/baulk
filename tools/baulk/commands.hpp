@@ -13,7 +13,7 @@ int cmd_install(const argv_t &argv);
 int cmd_list(const argv_t &argv);
 int cmd_search(const argv_t &argv);
 int cmd_uninstall(const argv_t &argv);
-int cmd_update(const argv_t &argv);
+int cmd_update(const argv_t & /*unused argv*/);
 int cmd_upgrade(const argv_t &argv);
 int cmd_update_and_upgrade(const argv_t &argv);
 int cmd_freeze(const argv_t &argv);
@@ -50,6 +50,8 @@ void usage_cleancache();
 void usage_bucket();
 void usage_untar();
 void usage_unzip();
+//
+int BaulkUpdateBucket(bool showUpdatable);
 } // namespace baulk::commands
 
 #endif
