@@ -95,6 +95,9 @@ std::optional<std::wstring> PathCat(std::wstring_view root, const File &file, bo
   if (IsDangerousPath(path)) {
     return std::nullopt;
   }
+  if (path.size() <= root.size()) {
+    return std::nullopt;
+  }
   if (!path.starts_with(root)) {
     return std::nullopt;
   }
