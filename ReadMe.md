@@ -293,8 +293,6 @@ example:
 
 ## Baulk Windows Terminal integration
 
-**Baulk 3.0 Release wait**
-
 Baulk also provides the `baulkterminal.exe` program, which is highly integrated with Windows Terminal and can start Windows Terminal after setting the Baulk environment variable, which solves the problem of avoiding conflicts caused by tool modification of system environment variables and anytime. In addition, Baulk added a custom installation option integrated into the Windows Terminal plug-in during the installation process. You can also use Fragments.bat to manually integrate Baulk into Windows Terminal.
 
 baulkterminal usage:

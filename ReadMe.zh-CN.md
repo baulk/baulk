@@ -294,8 +294,6 @@ example:
 
 ## Baulk Windows Terminal 集成
 
-**Baulk 3.0 Release wait**
-
 Baulk 还提供了 `baulkterminal.exe` 程序，此程序与 Windows Terminal 高度集成，能够在设置好 Baulk 环境变量后启动 Windows Terminal，这样就解决了既要避免工具修改系统环境变量造成冲突，又要随时随地的加载相关环境变量的矛盾。另外 Baulk 在安装过程中添加了集成到 Windows Terminal 插件的自定义安装选项，你也可以使用 Fragments.bat 手动将 Baulk 集成到 Windows Terminal。
 
 baulkterminal 命令行帮助：
