@@ -34,7 +34,7 @@ bool untar(std::wstring_view file) {
     }
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", fh->Name);
     auto dest = baulk::archive::tar::PathRemoveExtension(file);
-    auto out = baulk::archive::PathCat(dest, fh->Name);
+    auto out = baulk::archive::JoinSanitizePath(dest, fh->Name);
     if (!out) {
       continue;
     }

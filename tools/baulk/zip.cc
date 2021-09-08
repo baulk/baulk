@@ -102,7 +102,7 @@ bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_
 }
 
 bool Extractor::extractFile(const File &file, bela::error_code &ec) {
-  auto dest = baulk::archive::zip::PathCat(destination, file);
+  auto dest = baulk::archive::zip::JoinSanitizePath(destination, file);
   if (!dest) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;

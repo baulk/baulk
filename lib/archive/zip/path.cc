@@ -88,7 +88,7 @@ constexpr bool IsDangerousPath(std::wstring_view p) {
   return false;
 }
 
-std::optional<std::wstring> PathCat(std::wstring_view root, const File &file, bool autocvt) {
+std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, const File &file, bool autocvt) {
   auto filename = PathConvert(file, autocvt);
   auto path = bela::PathCat(root, filename);
   // not allowed path

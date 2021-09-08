@@ -103,7 +103,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
       break;
     }
     showProgress(termsz, fh->Name);
-    auto out = baulk::archive::PathCat(dest, fh->Name);
+    auto out = baulk::archive::JoinSanitizePath(dest, fh->Name);
     if (!out) {
       continue;
     }
