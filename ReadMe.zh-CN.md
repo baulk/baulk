@@ -36,12 +36,6 @@ baulk upgrade
 baulk uninstall wget
 ```
 
-你可以右键以管理员权限运行 `script/installmenu.bat` 将 baulkterminal 添加到右键菜单，这样你就能在任意目录打开初始化 Baulk 环境的 Windows Terminal 了。
-
-请注意 `script/installmenu.bat` 默认开启了 `--vs` 即初始化 Visual Studio 环境，版本 > 1.5.2 如果没有安装便不会初始化。
-
-![](./docs/images/menu.png)
-
 **上面就是 Baulk 的基本使用了，非常简单，如果你需要对 Baulk 有个更深入的了解，可以继续阅读下面的内容。**
 
 ## 命令行参数
