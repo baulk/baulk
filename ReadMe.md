@@ -37,10 +37,6 @@ baulk upgrade
 baulk uninstall wget
 ```
 
-You can right-click to run `script/installmenu.bat` with administrator privileges to add baulkterminal to the right-click menu.
-
-![](./docs/images/menu.png)
-
 **This is the most basic operation. If you need to know more about baulk, you can continue to read the introduction below.**
 
 ## Baulk Usage and Details
