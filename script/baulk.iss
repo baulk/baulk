@@ -94,6 +94,11 @@ Source: "..\script\Fragments.bat"; DestDir: "{app}\script"; DestName: "Fragments
 Source: "..\script\FragmentsARM64.ps1"; DestDir: "{app}\script"; DestName: "FragmentsARM64.ps1"
 Source: "..\script\FragmentsARM64.bat"; DestDir: "{app}\script"; DestName: "FragmentsARM64.bat"
 Source: "..\script\FragmentsDel.bat"; DestDir: "{app}\script"; DestName: "FragmentsDel.bat"
+#if "user" == InstallTarget
+Source: "..\manifest\user-install.env"; DestDir: "{app}"; DestName: "baulk.env"
+#else
+Source: "..\manifest\system-install.env"; DestDir: "{app}"; DestName: "baulk.env"
+#endif
 
 [UninstallDelete]
 ; Delete Windows Terminal profile fragments
