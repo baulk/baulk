@@ -33,6 +33,7 @@ std::optional<std::wstring> SearchBaulkPortableRoot(bela::error_code &ec) {
   return std::nullopt;
 }
 
+// Protable (baulk >=4.0)
 bool PathMappingTable::InitializeFromPortable(bela::error_code &ec) {
   auto portableRoot = SearchBaulkPortableRoot(ec);
   if (!portableRoot) {
@@ -41,6 +42,7 @@ bool PathMappingTable::InitializeFromPortable(bela::error_code &ec) {
   return true;
 }
 
+// Legacy Install (baulk <=3.0)
 bool PathMappingTable::InitializeFromLegacy(bela::error_code &ec) {
   auto portableRoot = SearchBaulkPortableRoot(ec);
   if (!portableRoot) {
@@ -49,17 +51,21 @@ bool PathMappingTable::InitializeFromLegacy(bela::error_code &ec) {
   return true;
 }
 
-// $BAULK_VFS_ROOT/bin baulk cli
-// $BAULK_VFS_ROOT/local/bin --> links
-// $BAULK_VFS_ROOT/vfs
-// $BAULK_VFS_ROOT/bucket
+// Windows Store (baulk >=4.0)
 bool PathMappingTable::InitializeFromDesktopBridge(bela::error_code &ec) {
   //
   return true;
 }
 
+// User Install (baulk >=4.0)
 bool PathMappingTable::InitializeFromLocalAppData(bela::error_code &ec) {
   auto root = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk");
+  return true;
+}
+
+// System Install (baulk >=4.0)
+bool PathMappingTable::InitializeFromSystemAppData(bela::error_code &ec) {
+  //
   return true;
 }
 
