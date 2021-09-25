@@ -2,78 +2,16 @@
 #include "vfsinternal.hpp"
 #include <bela/path.hpp>
 #include <bela/env.hpp>
+#include <appmodel.h>
 
 namespace baulk::vfs {
-inline bool PathFileIsExists(std::wstring_view file) {
-  auto at = GetFileAttributesW(file.data());
-  return (INVALID_FILE_ATTRIBUTES != at && (at & FILE_ATTRIBUTE_DIRECTORY) == 0);
-}
 
-std::optional<std::wstring> SearchBaulkPortableRoot(bela::error_code &ec) {
-  auto exepath = bela::ExecutableFinalPathParent(ec);
-  if (!exepath) {
-    return std::nullopt;
-  }
-  auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
-  if (PathFileIsExists(baulkexe)) {
-    return std::make_optional<std::wstring>(bela::DirName(*exepath));
-  }
-  std::wstring_view portableRoot(*exepath);
-  for (size_t i = 0; i < 5; i++) {
-    if (portableRoot == L".") {
-      break;
-    }
-    auto baulkexe = bela::StringCat(portableRoot, L"\\bin\\baulk.exe");
-    if (PathFileIsExists(baulkexe)) {
-      return std::make_optional<std::wstring>(portableRoot);
-    }
-    portableRoot = bela::DirName(portableRoot);
-  }
-  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
-  return std::nullopt;
-}
 
-// Protable (baulk >=4.0)
-bool PathMappingTable::InitializeFromPortable(bela::error_code &ec) {
-  auto portableRoot = SearchBaulkPortableRoot(ec);
-  if (!portableRoot) {
-    return false;
-  }
-  return true;
-}
-
-// Legacy Install (baulk <=3.0)
-bool PathMappingTable::InitializeFromLegacy(bela::error_code &ec) {
-  auto portableRoot = SearchBaulkPortableRoot(ec);
-  if (!portableRoot) {
-    return false;
-  }
-  return true;
-}
-
-// Windows Store (baulk >=4.0)
-bool PathMappingTable::InitializeFromDesktopBridge(bela::error_code &ec) {
-  //
-  return true;
-}
-
-// User Install (baulk >=4.0)
-bool PathMappingTable::InitializeFromLocalAppData(bela::error_code &ec) {
-  auto root = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk");
-  return true;
-}
-
-// System Install (baulk >=4.0)
-bool PathMappingTable::InitializeFromSystemAppData(bela::error_code &ec) {
-  //
-  return true;
-}
-
-FsProvider &FsProvider::Instance() {
-  static FsProvider inst;
+PathFs &PathFs::Instance() {
+  static PathFs inst;
   return inst;
 }
-bool FsProvider::Initialize(bela::error_code &ec) {
+bool PathFs::Initialize(bela::error_code &ec) {
   if (initialized) {
     return true;
   }
@@ -81,8 +19,6 @@ bool FsProvider::Initialize(bela::error_code &ec) {
   initialized = true;
   return true;
 }
-const PathMappingTable &BaulkPathMappingTable() {
-  //
-  return FsProvider::Instance().PathTable();
-}
+
+
 } // namespace baulk::vfs
