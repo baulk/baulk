@@ -243,6 +243,7 @@ inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::
     // VS160COMNTOOLS
     auto key = bela::StringCat(L"VS", vv[0], L"0COMNTOOLS");
     auto p = bela::StringCat(vs.path, LR"(\Common7\IDE\Tools\)");
+    simulator->SetEnv(key, p);
   }
   // Libs
   JoinEnv(includes, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\include)");
@@ -252,36 +253,37 @@ inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::
   JoinEnv(libs, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
   JoinEnv(paths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
-  // IDE tools
-  JoinEnv(paths, vs.path, LR"(\Common7\IDE\VC\VCPackages)");
-  JoinEnv(paths, vs.path, LR"(\Common7\IDE)");
-  JoinEnv(paths, vs.path, LR"(\Common7\IDE\Tools)");
-// Performance Tools
-#ifdef _M_X64
-  JoinEnv(paths, vs.path, LR"(Team Tools\Performance Tools\x64)");
-#endif
-  JoinEnv(paths, vs.path, LR"(Team Tools\Performance Tools)");
-  //
-  // Extension
-  JoinEnv(paths, vs.path, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)");
-  JoinEnv(paths, vs.path, LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)");
-#ifdef _M_X64
-  JoinEnv(paths, vs.path, LR"(\MSBuild\Current\Bin\amd64)");
-#else
-  // msbuild
-  JoinEnv(paths, vs.path, LR"(\MSBuild\Current\Bin)");
-#endif
-  // VC\Tools\Llvm\bin
-#ifdef _M_X64
-  if (auto llvmdir = bela::StringCat(vs.path, LR"(\VC\Tools\Llvm\x64\bin)"); bela::PathExists(llvmdir)) {
-    JoinForceEnv(paths, llvmdir);
-  } else {
-    JoinEnv(paths, vs.path, LR"(\VC\Tools\Llvm\bin)");
-  }
 
-#else
-  JoinEnv(paths, vs.path, LR"(\VC\Tools\Llvm\bin)");
+  constexpr std::wstring_view vsPathSuffix[] = {
+      // IDE tools
+      LR"(\Common7\IDE\VC\VCPackages)",
+      LR"(\Common7\IDE)",
+      LR"(\Common7\IDE\Tools)",
+  // Performance Tools
+#ifdef _M_X64
+      LR"(\Team Tools\Performance Tools\x64)",
 #endif
+      LR"(\Team Tools\Performance Tools)",
+      // Extension
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)",
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)",
+      // MSBuild and LLVM
+      LR"(\MSBuild\Current\bin\Roslyn)",
+      LR"(\Common7\Tools\devinit)",
+#ifdef _M_X64
+      LR"(\MSBuild\Current\Bin\amd64)",
+      LR"(\VC\Tools\Llvm\x64\bin)",
+#else
+      LR"(\MSBuild\Current\Bin)",
+      LR"(\VC\Tools\Llvm\bin)",
+#endif
+      //LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
+      LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
+  };
+  for (auto p : vsPathSuffix) {
+    JoinEnv(paths, vs.path, p);
+  }
   // add libpaths
   JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", HostArch);
   JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", HostArch);
