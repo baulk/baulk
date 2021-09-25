@@ -32,9 +32,7 @@ target_link_libraries(out_test belawin)
 
 add_executable(
   vsenv_test
-  vsenv.cc
-  ../tools/baulk/compiler.cc
-  ../tools/baulk/fs.cc)
+  vsenv.cc)
 
 target_link_libraries(vsenv_test belawin)
 
