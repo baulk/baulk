@@ -57,12 +57,12 @@ std::optional<vs_instances> decode_vs_instances(const std::string_view text, bel
   for (auto &so : o->obj) {
     baulk::json::json_view jv(so);
     vs_instance vs{
-        .path = jv.string_value("installationPath"),
-        .version = jv.string_value("installationVersion"),
-        .instance_id = jv.string_value("instanceId"),
-        .product_id = jv.string_value("productId"),
-        .is_launchable = jv.boolean("isLaunchable"),
-        .is_prerelease = jv.boolean("isPrerelease"),
+        .path = jv.fetch("installationPath"),
+        .version = jv.fetch("installationVersion"),
+        .instance_id = jv.fetch("instanceId"),
+        .product_id = jv.fetch("productId"),
+        .is_launchable = jv.fetch("isLaunchable", false),
+        .is_prerelease = jv.fetch("isPrerelease", false),
     };
     vss.emplace_back(std::move(vs));
   }
@@ -277,7 +277,7 @@ inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::
       LR"(\MSBuild\Current\Bin)",
       LR"(\VC\Tools\Llvm\bin)",
 #endif
-      //LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
+      // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
       LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
       LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
   };

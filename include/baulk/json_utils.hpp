@@ -21,7 +21,7 @@ class json_view {
 public:
   json_view(const nlohmann::json &o) : obj(o) {}
   // fecth string value
-  std::wstring string_value(const std::string_view key, std::wstring_view dv = L"") {
+  std::wstring fetch(const std::string_view key, std::wstring_view dv = L"") {
     if (auto it = obj.find(key); it != obj.end() && it->is_string()) {
       return bela::encode_into<char, wchar_t>(it->get<std::string_view>());
     }
@@ -59,7 +59,7 @@ public:
 
   // fetch integer value
   template <typename T>
-  requires std::integral<T> T fetch(std::string_view name, const T dv = 0) {
+  requires std::integral<T> T fetch(std::string_view name, const T dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       return it->get<T>();
     }
@@ -68,7 +68,7 @@ public:
   // fetch path array
   template <typename T, typename Allocator = std::allocator<T>>
   requires bela::wide_character<T>
-  bool fetch_paths(std::string_view name, std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &paths) {
+  bool fetch_as_paths(std::string_view name, std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &paths) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it.value().is_string()) {
         paths.emplace_back(FromSlash(bela::encode_into<char, wchar_t>(it->get<std::string_view>())));
@@ -84,7 +84,7 @@ public:
     return false;
   }
   // check flags
-  bool boolean(std::string_view name, bool dv = false) {
+  bool fetch(std::string_view name, bool dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_boolean()) {
       return it->get<bool>();
     }
