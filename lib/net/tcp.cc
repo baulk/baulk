@@ -1,6 +1,8 @@
 //
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
+#include <atomic>
+#include <thread>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <baulk/net.hpp>
@@ -10,9 +12,10 @@ namespace baulk::net {
 // https://docs.microsoft.com/zh-cn/windows/win32/api/winsock2/nf-winsock2-wsaconnectbynamew
 // RIO
 // https://docs.microsoft.com/zh-cn/windows/win32/api/mswsock/ns-mswsock-rio_extension_function_table
-class Winsock {
+std::once_flag winsock_once;
+class winsock_initializer {
 public:
-  Winsock() {
+  winsock_initializer() {
     WORD wVersionRequested = MAKEWORD(2, 2);
     WSADATA wsaData;
     if (auto err = WSAStartup(wVersionRequested, &wsaData); err != 0) {
@@ -22,14 +25,14 @@ public:
     }
     initialized = true;
   }
-  ~Winsock() {
+  ~winsock_initializer() {
     if (initialized) {
       WSACleanup();
     }
   }
 
 private:
-  bool initialized{false};
+  std::atomic_bool initialized{false};
 };
 
 inline constexpr bool InProgress(int rv) { return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS; }
@@ -110,12 +113,6 @@ void Conn::Close() {
   }
 }
 
-void Conn::Move(Conn &&other) {
-  Close();
-  sock = other.sock;
-  other.sock = BAULK_INVALID_SOCKET;
-}
-
 ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
   WSABUF wsabuf{static_cast<ULONG>(len), const_cast<char *>(reinterpret_cast<const char *>(data))};
   DWORD dwbytes = 0;
@@ -188,8 +185,8 @@ bool DialTimeoutInternal(BAULKSOCK sock, const ADDRINFOEX4 *hi, int timeout, bel
   return true;
 }
 
-std::optional<baulk::net::Conn> DialTimeout(std::wstring_view address, int port, int timeout, bela::error_code &ec) {
-  static Winsock winsock_;
+std::optional<Conn> DialTimeout(std::wstring_view address, int port, int timeout, bela::error_code &ec) {
+  static winsock_initializer initializer_;
   PADDRINFOEX4 rhints = nullptr;
   if (!ResolveName(address, port, &rhints, ec)) {
     bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);

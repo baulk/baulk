@@ -27,10 +27,14 @@ public:
 
 private:
   BAULKSOCK sock{BAULK_INVALID_SOCKET};
-  void Move(Conn &&other);
+  void Move(Conn &&other) {
+    Close();
+    sock = other.sock;
+    other.sock = BAULK_INVALID_SOCKET;
+  }
 };
 // timeout milliseconds
-std::optional<Conn> DialTimeout(std::wstring_view address, int port, int timeoutms,
+std::optional<Conn> DialTimeout(std::wstring_view address, int port, int timeout,
                                 bela::error_code &ec); // second
 } // namespace baulk::net
 
