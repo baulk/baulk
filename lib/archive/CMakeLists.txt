@@ -166,7 +166,7 @@ set(BROTLI_SOURCES
     brotli/enc/utf8_util.c)
 
 add_library(
-  baulkarchive STATIC
+  baulk.archive STATIC
   archive.cc
   tar/brotli.cc
   tar/bzip.cc
@@ -205,10 +205,10 @@ list(APPEND BAULK_ZIP_INC zstd)
 list(APPEND BAULK_ZIP_INC brotli/include)
 list(APPEND BAULK_ZIP_INC ced)
 
-target_include_directories(baulkarchive PRIVATE ${BAULK_ZIP_INC})
-target_compile_options(baulkarchive PRIVATE ${LZMA_DEF})
+target_include_directories(baulk.archive PRIVATE ${BAULK_ZIP_INC})
+target_compile_options(baulk.archive PRIVATE ${LZMA_DEF})
 target_link_libraries(
-  baulkarchive
+  baulk.archive
   belawin
   deflate64
   lzma

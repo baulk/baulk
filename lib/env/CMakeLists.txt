@@ -1,4 +1,4 @@
 # env libs
 
-add_library(baulkenv STATIC baulkenv.cc baulkvenv.cc)
-target_link_libraries(baulkenv belawin)
+add_library(baulk.env STATIC baulkenv.cc baulkvenv.cc)
+target_link_libraries(baulk.env belawin)

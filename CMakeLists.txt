@@ -115,8 +115,7 @@ install(FILES "script/FragmentsARM64.bat" DESTINATION script)
 install(FILES "script/FragmentsDel.bat" DESTINATION script)
 
 add_subdirectory(vendor/bela)
-add_subdirectory(lib/archive)
-add_subdirectory(lib/env)
+add_subdirectory(lib)
 add_subdirectory(tools)
 
 if(BUILD_TEST)

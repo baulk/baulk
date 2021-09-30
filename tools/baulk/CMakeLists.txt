@@ -49,7 +49,7 @@ add_executable(
 
 target_link_libraries(
   baulk
-  baulkarchive
+  baulk.archive
   belahash
   belawin
   belatime
@@ -59,7 +59,7 @@ target_link_libraries(
 
 target_link_libraries(
   baulk-update
-  baulkarchive
+  baulk.archive
   belawin
   belatime
   winhttp

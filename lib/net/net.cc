@@ -1,16 +1,5 @@
 // baulk net utils lib
 //
-#include <bela/base.hpp>
-#include <bela/env.hpp>
-#include <bela/path.hpp>
-#include <bela/strip.hpp>
-#include <winhttp.h>
-#include <cstdio>
-#include <cstdlib>
-#include <limits>
-#include <baulk/indicators.hpp>
-#include <baulk/tcp.hpp>
-#include <baulk/net.hpp>
 #include "internal.hpp"
 
 #ifndef WINHTTP_OPTION_SECURITY_INFO
@@ -22,7 +11,7 @@
 #endif
 
 namespace baulk::net {
-
+constexpr size_t UerAgentMaximumLength = 256;
 bool IsInsecureMode = false;
 wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/7.0 (Baulk)";
 
@@ -38,70 +27,6 @@ inline void Free(HINTERNET &h) {
     WinHttpCloseHandle(h);
   }
 }
-
-class FilePart {
-public:
-  FilePart() noexcept = default;
-  FilePart(const FilePart &) = delete;
-  FilePart &operator=(const FilePart &) = delete;
-  FilePart(FilePart &&o) noexcept { transfer_ownership(std::move(o)); }
-  FilePart &operator=(FilePart &&o) noexcept {
-    transfer_ownership(std::move(o));
-    return *this;
-  }
-  ~FilePart() noexcept { rollback(); }
-
-  bool Finish() {
-    if (FileHandle == INVALID_HANDLE_VALUE) {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return false;
-    }
-    CloseHandle(FileHandle);
-    FileHandle = INVALID_HANDLE_VALUE;
-    auto part = bela::StringCat(path, L".part");
-    return (MoveFileW(part.data(), path.data()) == TRUE);
-  }
-  bool Write(const char *data, DWORD len) {
-    DWORD dwlen = 0;
-    if (WriteFile(FileHandle, data, len, &dwlen, nullptr) != TRUE) {
-      return false;
-    }
-    return len == dwlen;
-  }
-  static std::optional<FilePart> MakeFilePart(std::wstring_view p, bela::error_code &ec) {
-    FilePart file;
-    file.path = bela::PathAbsolute(p); // Path cleanup
-    auto part = bela::StringCat(file.path, L".part");
-    file.FileHandle = ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-                                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file.FileHandle == INVALID_HANDLE_VALUE) {
-      ec = bela::make_system_error_code();
-      return std::nullopt;
-    }
-    return std::make_optional(std::move(file));
-  }
-
-private:
-  HANDLE FileHandle{INVALID_HANDLE_VALUE};
-  std::wstring path;
-  void transfer_ownership(FilePart &&other) {
-    if (FileHandle != INVALID_HANDLE_VALUE) {
-      CloseHandle(FileHandle);
-    }
-    FileHandle = other.FileHandle;
-    other.FileHandle = INVALID_HANDLE_VALUE;
-    path = other.path;
-    other.path.clear();
-  }
-  void rollback() noexcept {
-    if (FileHandle != INVALID_HANDLE_VALUE) {
-      CloseHandle(FileHandle);
-      FileHandle = INVALID_HANDLE_VALUE;
-      auto part = bela::StringCat(path, L".part");
-      DeleteFileW(part.data());
-    }
-  }
-};
 
 // https://devblogs.microsoft.com/premier-developer/microsoft-tls-1-3-support-reference/
 // https://stackoverflow.com/questions/56072561/how-to-enable-tls-1-3-in-windows-10/59210166#59210166
