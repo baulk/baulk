@@ -5,7 +5,7 @@
 #include <thread>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include "internal.hpp"
+#include "include.hpp"
 
 namespace baulk::net {
 // WSAConnectByName
