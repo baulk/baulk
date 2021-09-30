@@ -1,6 +1,6 @@
 //
 #include <baulk/net.hpp>
-#include "internal.hpp"
+#include "include.hpp"
 
 namespace baulk::net {
 constexpr auto MaximumTime = (std::numeric_limits<std::uint64_t>::max)();

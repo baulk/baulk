@@ -12,7 +12,6 @@ namespace baulk::net {
 // https://docs.microsoft.com/zh-cn/windows/win32/api/winsock2/nf-winsock2-wsaconnectbynamew
 // RIO
 // https://docs.microsoft.com/zh-cn/windows/win32/api/mswsock/ns-mswsock-rio_extension_function_table
-std::once_flag winsock_once;
 class winsock_initializer {
 public:
   winsock_initializer() {

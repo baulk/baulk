@@ -1,6 +1,6 @@
 // baulk net utils lib
 //
-#include "internal.hpp"
+#include "include.hpp"
 
 #ifndef WINHTTP_OPTION_SECURITY_INFO
 #define WINHTTP_OPTION_SECURITY_INFO 151

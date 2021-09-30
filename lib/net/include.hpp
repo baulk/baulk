@@ -5,6 +5,7 @@
 #include <bela/env.hpp>
 #include <bela/path.hpp>
 #include <bela/strip.hpp>
+#include <bela/phmap.hpp>
 #include <winhttp.h>
 #include <cstdio>
 #include <cstdlib>
@@ -14,6 +15,16 @@
 #include <baulk/net.hpp>
 
 namespace baulk::net {
+// class Executor {
+// public:
+//   Executor(const Executor &) = delete;
+//   Executor &operator=(const Executor &) = delete;
+
+// private:
+//   Executor() = default;
+//   bela::flat_hash_map<std::wstring, std::wstring> parts;
+// };
+
 struct UrlComponets {
   std::wstring host;
   std::wstring filename;
