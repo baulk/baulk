@@ -10,7 +10,7 @@
 |---|---|---|---|
 |`BAULK_ROOT`|`baulk::vfs::AppRoot()`|Baulk 包的展开目录|导出|
 |`BAULK_APPDATA`|`baulk::vfs::AppData()`|Baulk 便携配置目录|导出|
-|`BAULK_VFS`|`baulk::vfs::AppVFS()`|该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰|导出|
+|`BAULK_VFS`|`baulk::vfs::AppVFS()`|该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰，该目录除非是运行强制删除，否则删除包的时候不会删除|导出|
 |`BAULK_PKGROOT`|...|该变量与特定的包相关|导出|
 |`BAULK_BINDIR`|...|||
 
