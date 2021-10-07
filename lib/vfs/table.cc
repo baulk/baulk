@@ -5,22 +5,23 @@
 
 namespace baulk::vfs::vfs_internal {
 
-bool prepareBaulkRoot(const FsRedirectionTable &table, bela::error_code &ec) {
-  auto fast_mkdir = [&](std::wstring_view d) -> bool {
-    if (bela::PathExists(d, bela::FileAttribute::Dir)) {
-      return true;
-    }
-    std::error_code e;
-    if (!std::filesystem::create_directories(d, e)) {
-      ec = bela::from_std_error_code(e, L"create baulk dir error: ");
-      return false;
-    }
+bool create_directories(std::wstring_view d, bela::error_code &ec) {
+  if (bela::PathExists(d, bela::FileAttribute::Dir)) {
     return true;
-  };
-  if (!fast_mkdir(table.binlocation)) {
+  }
+  std::error_code e;
+  if (!std::filesystem::create_directories(d, e)) {
+    ec = bela::from_std_error_code(e, L"create_directories: ");
     return false;
   }
-  // TODO: create other dirs?
+  return true;
+}
+
+bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec) {
+  if (!create_directories(table.binlocation, ec)) {
+    return false;
+  }
+  // TODO: create_directories others ?
   return true;
 }
 
@@ -33,7 +34,7 @@ bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   locks = bela::StringCat(root, L"\\locks");
   buckets = bela::StringCat(root, L"\\buckets");
   binlocation = bela::StringCat(root, L"\\local\\bin");
-  return prepareBaulkRoot(*this, ec);
+  return pathFsNewBinLocation(*this, ec);
 }
 
 // Protable (baulk >=4.0)
