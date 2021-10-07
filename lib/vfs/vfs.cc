@@ -6,19 +6,23 @@
 
 namespace baulk::vfs {
 
-
 PathFs &PathFs::Instance() {
   static PathFs inst;
   return inst;
 }
+
 bool PathFs::Initialize(bela::error_code &ec) {
-  if (initialized) {
-    return true;
-  }
-  // TODO init
-  initialized = true;
-  return true;
+  bool result = true;
+  std::call_once(initialized, [&, this] {
+    //
+    result = InitializeInternal(ec);
+  });
+  return result;
 }
 
+bool PathFs::InitializeInternal(bela::error_code &ec) {
+  //
+  return false;
+}
 
 } // namespace baulk::vfs

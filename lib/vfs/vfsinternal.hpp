@@ -1,5 +1,6 @@
 ///
 #include <atomic>
+#include <thread>
 #include <baulk/vfs.hpp>
 
 namespace baulk::vfs {
@@ -32,7 +33,8 @@ public:
 
 private:
   PathFs() {}
+  bool InitializeInternal(bela::error_code &ec);
   vfs_internal::FsRedirectionTable table;
-  std::atomic_bool initialized{false};
+  std::once_flag initialized;
 };
 } // namespace baulk::vfs
