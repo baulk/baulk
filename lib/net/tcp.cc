@@ -45,7 +45,7 @@ inline bela::error_code make_wsa_error_code(int code, std::wstring_view prefix =
 
 typedef struct _QueryContext {
   OVERLAPPED QueryOverlapped;
-  PADDRINFOEX QueryResults{nullptr};
+  PADDRINFOEXW QueryResults{nullptr};
   HANDLE CompleteEvent{nullptr};
 } QUERY_CONTEXT, *PQUERY_CONTEXT;
 
@@ -70,7 +70,7 @@ bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::e
   ADDRINFOEX4 hints = {0};
   hints.ai_family = AF_UNSPEC;
   hints.ai_flags = AI_EXTENDED | AI_FQDN | AI_CANONNAME | AI_RESOLUTION_HANDLE;
-  hints.ai_version = ADDRINFOEX_VERSION_6;
+  hints.ai_version = ADDRINFOEX_VERSION_4;
   DWORD QueryTimeout = 5 * 1000; // 5 seconds
   QUERY_CONTEXT QueryContext;
   HANDLE CancelHandle = NULL;
