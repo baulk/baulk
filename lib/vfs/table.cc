@@ -1,47 +1,57 @@
 #include "vfsinternal.hpp"
 #include <bela/path.hpp>
 #include <bela/env.hpp>
+#include <filesystem>
 
 namespace baulk::vfs::vfs_internal {
-std::optional<std::wstring> SearchBaulkPortableRoot(bela::error_code &ec) {
-  auto exepath = bela::ExecutableFinalPathParent(ec);
-  if (!exepath) {
-    return std::nullopt;
-  }
-  auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
-  if (bela::PathFileIsExists(baulkexe)) {
-    return std::make_optional<std::wstring>(bela::DirName(*exepath));
-  }
-  std::wstring_view portableRoot(*exepath);
-  for (size_t i = 0; i < 5; i++) {
-    if (portableRoot == L".") {
-      break;
-    }
-    auto baulkexe = bela::StringCat(portableRoot, L"\\bin\\baulk.exe");
-    if (bela::PathFileIsExists(baulkexe)) {
-      return std::make_optional<std::wstring>(portableRoot);
-    }
-    portableRoot = bela::DirName(portableRoot);
-  }
-  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
-  return std::nullopt;
-}
 
-// Protable (baulk >=4.0)
-bool FsRedirectionTable::InitializeFromPortable(bela::error_code &ec) {
-  auto portableRoot = SearchBaulkPortableRoot(ec);
-  if (!portableRoot) {
+bool prepareBaulkRoot(const FsRedirectionTable &table, bela::error_code &ec) {
+  auto fast_mkdir = [&](std::wstring_view d) -> bool {
+    if (bela::PathExists(d, bela::FileAttribute::Dir)) {
+      return true;
+    }
+    std::error_code e;
+    if (!std::filesystem::create_directories(d, e)) {
+      ec = bela::from_std_error_code(e, L"create baulk dir error: ");
+      return false;
+    }
+    return true;
+  };
+  if (!fast_mkdir(table.binlocation)) {
     return false;
   }
+  // TODO: create other dirs?
   return true;
 }
 
+// baulk >=4.0
+bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
+  etc = bela::StringCat(root, L"\\etc");
+  vfs = bela::StringCat(root, L"\\vfs");
+  pakcage_root = bela::StringCat(root, L"\\packages");
+  temp = bela::StringCat(root, L"\\tmp");
+  locks = bela::StringCat(root, L"\\locks");
+  buckets = bela::StringCat(root, L"\\buckets");
+  binlocation = bela::StringCat(root, L"\\local\\bin");
+  return prepareBaulkRoot(*this, ec);
+}
+
+// Protable (baulk >=4.0)
+bool FsRedirectionTable::InitializeFromPortable(std::wstring_view portableRoot, bela::error_code &ec) {
+  root = portableRoot;
+  return InitializeFromNewest(ec);
+}
+
 // Legacy Install (baulk <=3.0)
-bool FsRedirectionTable::InitializeFromLegacy(bela::error_code &ec) {
-  auto portableRoot = SearchBaulkPortableRoot(ec);
-  if (!portableRoot) {
-    return false;
-  }
+bool FsRedirectionTable::InitializeFromLegacy(std::wstring_view portableRoot, bela::error_code &ec) {
+  root = portableRoot;
+  etc = bela::StringCat(portableRoot, L"\\bin\\etc");
+  vfs = bela::StringCat(portableRoot, L"\\bin\\vfs");
+  pakcage_root = bela::StringCat(portableRoot, L"\\bin\\pkgs");
+  temp = bela::StringCat(portableRoot, L"\\bin\\pkgs\\.pkgtmp");
+  locks = bela::StringCat(portableRoot, L"\\bin\\locks");
+  buckets = bela::StringCat(portableRoot, L"\\buckets");
+  binlocation = bela::StringCat(portableRoot, L"\\bin\\links");
   return true;
 }
 
@@ -54,12 +64,14 @@ bool FsRedirectionTable::InitializeFromDesktopBridge(bela::error_code &ec) {
 // User Install (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromLocalAppData(bela::error_code &ec) {
   auto root = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk");
-  return true;
+  if (!bela::PathExists(root, bela::FileAttribute::Dir)) {
+  }
+  return InitializeFromNewest(ec);
 }
 
 // System Install (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromSystemAppData(bela::error_code &ec) {
-  //
-  return true;
+  auto root = bela::WindowsExpandEnv(L"%SystemDrive%\\baulk");
+  return InitializeFromNewest(ec);
 }
 } // namespace baulk::vfs::vfs_internal

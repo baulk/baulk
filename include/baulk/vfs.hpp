@@ -7,6 +7,7 @@
 namespace baulk::vfs {
 // InitializePathFs: baulk initialize vfs PathFs
 bool InitializePathFs(bela::error_code &ec);
+std::wstring_view PathFsModel();
 std::wstring_view AppRoot();
 std::wstring_view AppData();
 std::wstring_view AppVFS();
