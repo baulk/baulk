@@ -146,6 +146,7 @@ inline bool ReadAt(HANDLE fd, void *buffer, size_t len, int64_t pos, size_t &out
 [[maybe_unused]] constexpr auto MaximumRead = 1024ull * 1024 * 8; // 8MB
 [[maybe_unused]] constexpr auto MaximumLineLength = 1024ull * 64; // 64KB
 bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxsize = MaximumRead);
+bool ReadFile(std::wstring_view file, std::string &out, bela::error_code &ec, uint64_t maxsize = MaximumRead);
 bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxline = MaximumLineLength);
 inline std::optional<std::wstring> ReadLine(std::wstring_view file, bela::error_code &ec,
                                             uint64_t maxline = MaximumLineLength) {
@@ -159,10 +160,10 @@ bool WriteTextU16LE(std::wstring_view text, std::wstring_view file, bela::error_
 bool WriteText(std::string_view text, std::wstring_view file, bela::error_code &ec);
 bool WriteTextAtomic(std::string_view text, std::wstring_view file, bela::error_code &ec);
 inline bool WriteText(std::wstring_view text, std::wstring_view file, bela::error_code &ec) {
-  return WriteText(bela::ToNarrow(text), file, ec);
+  return WriteText(bela::encode_into<wchar_t, char>(text), file, ec);
 }
 inline bool WriteText(std::u16string_view text, std::wstring_view file, bela::error_code &ec) {
-  return WriteText(bela::ToNarrow(text), file, ec);
+  return WriteText(bela::encode_into<char16_t, char>(text), file, ec);
 }
 
 } // namespace bela::io

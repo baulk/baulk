@@ -21,6 +21,7 @@ bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec)
   if (!create_directories(table.binlocation, ec)) {
     return false;
   }
+  create_directories(table.temp, ec);
   // TODO: create_directories others ?
   return true;
 }

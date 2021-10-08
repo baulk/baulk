@@ -40,6 +40,7 @@ public:
 private:
   PathFs() {}
   bool InitializeInternal(bela::error_code &ec);
+  bool DetectPathFsModel(std::wstring_view envfile, bela::error_code &ec);
   std::once_flag initialized;
   std::wstring fsmodel;
   vfs_internal::FsRedirectionTable table;

@@ -7,7 +7,6 @@
 #include <appmodel.h>
 #include <filesystem>
 #include <ShlObj.h>
-//#include <winrt/Windows.ApplicationModel.h>
 
 namespace baulk::vfs {
 std::optional<std::wstring> PackageFamilyName() {
@@ -101,6 +100,15 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
   if (IsPackaged()) {
     fsmodel = L"DesktopBridge";
     return table.InitializeFromDesktopBridge(ec);
+  }
+  auto baulkRoot = searchBaulkPortableRoot(ec);
+  if (!baulkRoot) {
+    return false;
+  }
+  auto envfile = bela::StringCat(*baulkRoot, L"\\baulk.env");
+  if (!bela::PathFileIsExists(envfile)) {
+    fsmodel = L"PortableLegacy";
+    return table.InitializeFromLegacy(*baulkRoot, ec);
   }
   return false;
 }

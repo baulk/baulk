@@ -63,7 +63,7 @@ int wmain() {
   for (const auto s : sv) {
     parseLine1(s);
     parseLine2(s);
-    auto ns = bela::ToNarrow(s);
+    auto ns = bela::encode_into<wchar_t, char>(s);
     parseLine3(ns);
     parseLine4(ns);
   }

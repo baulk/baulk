@@ -6,6 +6,8 @@
 #include "endian.hpp"
 
 namespace bela {
+// The class bytes_view describes an object that can refer to a constant contiguous sequence of bytes (uint8_t) objects
+// with the first element of the sequence at position zero.
 class bytes_view {
 public:
   static constexpr size_t npos = static_cast<size_t>(-1);
@@ -83,14 +85,14 @@ public:
     }
     return std::string_view(reinterpret_cast<const char *>(p), cslength);
   }
-  // make_string_view convert bytes_view to base_string_view<T>
+  // make_string_view convert bytes_view to base_string_view<T> offset is byte offset
   template <typename T = char>
   requires bela::character<T>
   [[nodiscard]] auto make_string_view(const size_t offset = 0) const {
     if (offset > size_) {
       return std::basic_string_view<T>();
     }
-    return std::basic_string_view<T>(reinterpret_cast<const T *>(data_) + offset, (size_ - offset) / sizeof(T));
+    return std::basic_string_view<T>(reinterpret_cast<const T *>(data_ + offset), (size_ - offset) / sizeof(T));
   }
   [[nodiscard]] auto operator[](const std::size_t off) const {
     if (off >= size_) {
