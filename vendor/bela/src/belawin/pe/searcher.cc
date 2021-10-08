@@ -51,7 +51,7 @@ SymbolSearcher::SymbolSearcher(std::wstring_view exe, Machine machine) {
 
 std::optional<std::string> SymbolSearcher::LoadOrdinalFunctionName(std::string_view dllname, int ordinal,
                                                                    bela::error_code &ec) {
-  auto wdn = bela::ToWide(dllname);
+  auto wdn = bela::encode_into<char, wchar_t>(dllname);
   for (auto &p : Paths) {
     auto file = bela::StringCat(p, L"\\", wdn);
     if (bela::PathExists(file)) {

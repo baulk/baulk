@@ -90,7 +90,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
   constexpr uint8_t utf16le[] = {0xFF, 0xFE};
   constexpr uint8_t utf16be[] = {0xFE, 0xFF};
   if (bv.starts_bytes_with(utf8bom)) {
-    out = bela::ToWide(bv.make_string_view<char>(3));
+    out = bela::encode_into<char, wchar_t>(bv.make_string_view<char>(3));
     return true;
   }
   if constexpr (bela::IsLittleEndian()) {
@@ -122,7 +122,7 @@ bool ReadFile(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
       return true;
     }
   }
-  out = bela::ToWide(bv.make_string_view<char>());
+  out = bela::encode_into<char, wchar_t>(bv.make_string_view<char>());
   return true;
 }
 bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, uint64_t maxline) {
@@ -132,6 +132,65 @@ bool ReadLine(std::wstring_view file, std::wstring &out, bela::error_code &ec, u
   if (auto pos = out.find_first_of(L"\r\n"); pos != std::wstring::npos) {
     out.resize(pos);
   }
+  return true;
+}
+
+bool ReadFile(std::wstring_view file, std::string &out, bela::error_code &ec, uint64_t maxsize) {
+  auto fd = bela::io::NewFile(file, ec);
+  if (!fd) {
+    return false;
+  }
+  auto size = fd->Size(ec);
+  if (size == bela::SizeUnInitialized) {
+    return false;
+  }
+  auto maxSize = (std::min)(static_cast<size_t>(maxsize), static_cast<size_t>(size));
+  bela::Buffer buffer(maxSize);
+  if (!fd->ReadFull(buffer, maxSize, ec)) {
+    return false;
+  }
+  auto bv = buffer.as_bytes_view();
+  constexpr uint8_t utf8bom[] = {0xEF, 0xBB, 0xBF};
+  constexpr uint8_t utf16le[] = {0xFF, 0xFE};
+  constexpr uint8_t utf16be[] = {0xFE, 0xFF};
+  if (bv.starts_bytes_with(utf8bom)) {
+    out = bv.make_string_view<char>(3);
+    return true;
+  }
+  if constexpr (bela::IsLittleEndian()) {
+    if (bv.starts_bytes_with(utf16le)) {
+      out = bela::encode_into<wchar_t, char>(bv.make_string_view<wchar_t>(2));
+      return true;
+    }
+    if (bv.starts_bytes_with(utf16be)) {
+      auto wsv = bv.make_string_view<wchar_t>(2);
+      std::wstring tempout;
+      tempout.resize(wsv.size());
+      wchar_t *p = tempout.data();
+      for (size_t i = 0; i < wsv.size(); i++) {
+        p[i] = static_cast<wchar_t>(bela::frombe(static_cast<uint16_t>(wsv[i])));
+      }
+      out = bela::encode_into<wchar_t, char>(tempout);
+      return true;
+    }
+  } else {
+    if (bv.starts_bytes_with(utf16be)) {
+      out = bela::encode_into<wchar_t, char>(bv.make_string_view<wchar_t>(2));
+      return true;
+    }
+    if (bv.starts_bytes_with(utf16le)) {
+      auto wsv = bv.make_string_view<wchar_t>(2);
+      std::wstring tempout;
+      tempout.resize(wsv.size());
+      wchar_t *p = tempout.data();
+      for (size_t i = 0; i < wsv.size(); i++) {
+        p[i] = bela::fromle(wsv[i]);
+      }
+      out = bela::encode_into<wchar_t, char>(tempout);
+      return true;
+    }
+  }
+  out = bv.make_string_view<char>();
   return true;
 }
 

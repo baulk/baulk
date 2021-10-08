@@ -170,7 +170,7 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
       if (args[ca].at == ArgType::STRING) {
         w.Append(args[ca].strings.data, args[ca].strings.len, width, pc, left);
       } else if (args[ca].at == ArgType::USTRING) {
-        auto ws = bela::ToWide(args[ca].ustring.data, args[ca].ustring.len);
+        auto ws = bela::encode_into<char, wchar_t>({args[ca].ustring.data, args[ca].ustring.len});
         w.Append(ws.data(), ws.size(), width, pc, left);
       }
       ca++;
@@ -294,7 +294,7 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
         w.Append(args[ca].strings.data, args[ca].strings.len, width, pc, left);
         break;
       case ArgType::USTRING: {
-        auto ws = bela::ToWide(args[ca].ustring.data, args[ca].ustring.len);
+        auto ws = bela::encode_into<char, wchar_t>({args[ca].ustring.data, args[ca].ustring.len});
         w.Append(ws.data(), ws.size(), width, pc, left);
       } break;
       default:

@@ -163,7 +163,7 @@ status_t LookupText(bela::bytes_view bv, hazel_result &hr) {
     if (pos != std::string_view::npos) {
       line = line.substr(0, pos);
     }
-    shebangline = bela::ToWide(line);
+    shebangline = bela::encode_into<char, wchar_t>(line);
   } break;
   case types::utf8bom: {
     // Note that we may get truncated UTF-8 data
@@ -172,7 +172,7 @@ status_t LookupText(bela::bytes_view bv, hazel_result &hr) {
     if (pos != std::string_view::npos) {
       line = line.substr(0, pos);
     }
-    shebangline = bela::ToWide(line);
+    shebangline = bela::encode_into<char, wchar_t>(line);
   } break;
   case types::utf16le: {
     auto line = bv.make_string_view<wchar_t>(2);

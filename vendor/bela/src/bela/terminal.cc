@@ -107,7 +107,7 @@ bela::ssize_t WriteTerminal(HANDLE fd, std::wstring_view data) {
 }
 // Write data to same file not windows terminal
 bela::ssize_t WriteSameFile(HANDLE fd, std::wstring_view data) {
-  auto ndata = bela::ToNarrow(data);
+  auto ndata = bela::encode_into<wchar_t, char>(data);
   DWORD dwWrite = 0;
   if (!::WriteFile(fd, ndata.data(), (DWORD)ndata.size(), &dwWrite, nullptr)) {
     return -1;
@@ -192,7 +192,7 @@ private:
       return -1;
     }
     if (mode == TerminalMode::ConPTY) {
-      return WriteTerminal(fd, bela::ToWide(data));
+      return WriteTerminal(fd, bela::encode_into<char, wchar_t>(data));
     }
     return WriteSameFile(fd, data);
   }
@@ -216,7 +216,7 @@ bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
 bela::ssize_t WriteAutoFallback(FILE *fd, std::string_view data) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
   if (IsTerminal(FileHandle)) {
-    return WriteTerminal(FileHandle, bela::ToWide(data));
+    return WriteTerminal(FileHandle, bela::encode_into<char, wchar_t>(data));
   }
   return WriteSameFile(FileHandle, data);
 }
