@@ -3,6 +3,7 @@
 #include <bela/path.hpp>
 #include <bela/io.hpp>
 #include <bela/env.hpp>
+#include <bela/match.hpp>
 #include <toml.hpp>
 #include <appmodel.h>
 #include <filesystem>
@@ -110,7 +111,19 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
     fsmodel = L"PortableLegacy";
     return table.InitializeFromLegacy(*baulkRoot, ec);
   }
-  return false;
+  if (!InitializeBaulkEnv(envfile, ec)) {
+    return false;
+  }
+  if (bela::EqualsIgnoreCase(fsmodel, L"User")) {
+    return table.InitializeFromLocalAppData(ec);
+  }
+  if (bela::EqualsIgnoreCase(fsmodel, L"System")) {
+    return table.InitializeFromSystemAppData(ec);
+  }
+  if (bela::EndsWithIgnoreCase(fsmodel, L"Portable")) {
+    return table.InitializeFromPortable(*baulkRoot, ec);
+  }
+  return table.InitializeFromLegacy(*baulkRoot, ec);
 }
 
 } // namespace baulk::vfs
