@@ -7,7 +7,7 @@ namespace baulk::vfs {
 namespace vfs_internal {
 struct FsRedirectionTable {
 public:
-  std::wstring root;         // baulk root
+  std::wstring basePath;     // baulk root
   std::wstring etc;          // baulk etc
   std::wstring vfs;          // baulk pakcage vfs
   std::wstring pakcage_root; // baulk package root
@@ -44,4 +44,7 @@ private:
   std::wstring fsmodel;
   vfs_internal::FsRedirectionTable table;
 };
+
+std::wstring_view GetAppBasePath();
+
 } // namespace baulk::vfs

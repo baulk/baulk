@@ -27,52 +27,50 @@ bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec)
 
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
-  etc = bela::StringCat(root, L"\\etc");
-  vfs = bela::StringCat(root, L"\\vfs");
-  pakcage_root = bela::StringCat(root, L"\\packages");
-  temp = bela::StringCat(root, L"\\tmp");
-  locks = bela::StringCat(root, L"\\locks");
-  buckets = bela::StringCat(root, L"\\buckets");
-  binlocation = bela::StringCat(root, L"\\local\\bin");
+  etc = bela::StringCat(basePath, L"\\etc");
+  vfs = bela::StringCat(basePath, L"\\vfs");
+  pakcage_root = bela::StringCat(basePath, L"\\packages");
+  temp = bela::StringCat(basePath, L"\\tmp");
+  locks = bela::StringCat(basePath, L"\\locks");
+  buckets = bela::StringCat(basePath, L"\\buckets");
+  binlocation = bela::StringCat(basePath, L"\\local\\bin");
   return pathFsNewBinLocation(*this, ec);
 }
 
 // Protable (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromPortable(std::wstring_view portableRoot, bela::error_code &ec) {
-  root = portableRoot;
+  basePath = portableRoot;
   return InitializeFromNewest(ec);
 }
 
 // Legacy Install (baulk <=3.0)
 bool FsRedirectionTable::InitializeFromLegacy(std::wstring_view portableRoot, bela::error_code &ec) {
-  root = portableRoot;
-  etc = bela::StringCat(portableRoot, L"\\bin\\etc");
-  vfs = bela::StringCat(portableRoot, L"\\bin\\vfs");
-  pakcage_root = bela::StringCat(portableRoot, L"\\bin\\pkgs");
-  temp = bela::StringCat(portableRoot, L"\\bin\\pkgs\\.pkgtmp");
-  locks = bela::StringCat(portableRoot, L"\\bin\\locks");
-  buckets = bela::StringCat(portableRoot, L"\\buckets");
-  binlocation = bela::StringCat(portableRoot, L"\\bin\\links");
+  basePath = portableRoot;
+  etc = bela::StringCat(basePath, L"\\bin\\etc");
+  vfs = bela::StringCat(basePath, L"\\bin\\vfs");
+  pakcage_root = bela::StringCat(basePath, L"\\bin\\pkgs");
+  temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp");
+  locks = bela::StringCat(basePath, L"\\bin\\locks");
+  buckets = bela::StringCat(basePath, L"\\buckets");
+  binlocation = bela::StringCat(basePath, L"\\bin\\links");
   return true;
 }
 
 // Windows Store (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromDesktopBridge(bela::error_code &ec) {
-  //
-  return true;
+  basePath = GetAppBasePath();
+  return InitializeFromNewest(ec);
 }
 
 // User Install (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromLocalAppData(bela::error_code &ec) {
-  auto root = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk");
-  if (!bela::PathExists(root, bela::FileAttribute::Dir)) {
-  }
+  basePath = bela::WindowsExpandEnv(L"%LOCALAPPDATA%\\baulk");
   return InitializeFromNewest(ec);
 }
 
 // System Install (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromSystemAppData(bela::error_code &ec) {
-  auto root = bela::WindowsExpandEnv(L"%SystemDrive%\\baulk");
+  basePath = bela::WindowsExpandEnv(L"%SystemDrive%\\baulk");
   return InitializeFromNewest(ec);
 }
 } // namespace baulk::vfs::vfs_internal

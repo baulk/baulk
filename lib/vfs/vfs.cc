@@ -3,10 +3,62 @@
 #include <bela/path.hpp>
 #include <bela/io.hpp>
 #include <bela/env.hpp>
-#include <appmodel.h>
 #include <toml.hpp>
+#include <appmodel.h>
+#include <filesystem>
+#include <ShlObj.h>
+//#include <winrt/Windows.ApplicationModel.h>
 
 namespace baulk::vfs {
+std::optional<std::wstring> PackageFamilyName() {
+  UINT32 len = 0;
+  auto rc = GetCurrentPackageFamilyName(&len, 0);
+  if (rc == APPMODEL_ERROR_NO_PACKAGE) {
+    return std::nullopt;
+  }
+  std::wstring packageName;
+  packageName.resize(len);
+  if (rc = GetCurrentPackageFamilyName(&len, packageName.data()) != 0) {
+    return std::nullopt;
+  }
+  packageName.resize(len);
+  return std::make_optional(std::move(packageName));
+}
+
+bool IsPackaged() {
+  static const bool isPackaged = []() -> bool { return !!PackageFamilyName(); }();
+  return isPackaged;
+}
+
+static constexpr std::wstring_view UnpackagedFolderName{L"\\Baulk"};
+std::wstring_view GetAppBasePath() {
+  static std::wstring basePath = []() {
+    PWSTR localAppDataFolder{nullptr};
+    auto closer = bela::finally([&] {
+      if (localAppDataFolder != nullptr) {
+        CoTaskMemFree(localAppDataFolder);
+      }
+    });
+    std::wstring basePath;
+    // KF_FLAG_FORCE_APP_DATA_REDIRECTION, when engaged, causes SHGet... to return
+    // the new AppModel paths (Packages/xxx/RoamingState, etc.) for standard path requests.
+    // Using this flag allows us to avoid Windows.Storage.ApplicationData completely.
+    if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_FORCE_APP_DATA_REDIRECTION, nullptr, &localAppDataFolder) !=
+        S_OK) {
+      basePath = bela::WindowsExpandEnv(L"%LOCALAPPDATA%");
+    } else {
+      basePath = localAppDataFolder;
+    }
+    if (!IsPackaged()) {
+      basePath += UnpackagedFolderName;
+    }
+    // Create the directory if it doesn't exist
+    std::filesystem::create_directories(basePath);
+    return basePath;
+  }();
+  return basePath;
+}
+
 std::optional<std::wstring> searchBaulkPortableRoot(bela::error_code &ec) {
   auto exepath = bela::ExecutableFinalPathParent(ec);
   if (!exepath) {
@@ -46,7 +98,10 @@ bool PathFs::Initialize(bela::error_code &ec) {
 }
 
 bool PathFs::InitializeInternal(bela::error_code &ec) {
-  //
+  if (IsPackaged()) {
+    fsmodel = L"DesktopBridge";
+    return table.InitializeFromDesktopBridge(ec);
+  }
   return false;
 }
 

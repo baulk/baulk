@@ -57,3 +57,7 @@ target_link_libraries(repols_test belawin belatime)
 add_executable(chdirtime_test chdirtime.cc)
 
 target_link_libraries(chdirtime_test belawin belatime)
+
+add_executable(packaged_test packaged.cc)
+
+target_link_libraries(packaged_test belawin)
