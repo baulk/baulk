@@ -8,6 +8,7 @@ namespace vfs_internal {
 struct FsRedirectionTable {
 public:
   std::wstring basePath;     // baulk root
+  std::wstring appdata;      // new appdata
   std::wstring etc;          // baulk etc
   std::wstring vfs;          // baulk pakcage vfs
   std::wstring pakcage_root; // baulk package root

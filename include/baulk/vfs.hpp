@@ -10,14 +10,17 @@ bool InitializePathFs(bela::error_code &ec);
 bool IsPackaged();
 std::wstring_view PathFsModel();
 std::wstring_view AppBasePath(); // root
-std::wstring AppPackagePath(std::wstring_view packageName);
 std::wstring_view AppData();
+std::wstring_view AppEtc();
 std::wstring_view AppVFS();
-
-inline std::wstring AppProfile() {
-  //
-  return bela::StringCat(AppBasePath(), L"\\config\\baulk.json");
-}
+std::wstring_view AppTemp();
+std::wstring_view AppLocks();
+std::wstring_view AppBuckets();
+std::wstring_view AppBinLocation();
+// cat ..
+std::wstring AppPackagePath(std::wstring_view packageName);
+std::wstring AppPIDFile();
+std::wstring AppDefaultProfile();
 
 } // namespace baulk::vfs
 

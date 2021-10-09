@@ -29,6 +29,7 @@ bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec)
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   etc = bela::StringCat(basePath, L"\\etc");
+  appdata = bela::StringCat(basePath, L"\\appdata");
   vfs = bela::StringCat(basePath, L"\\vfs");
   pakcage_root = bela::StringCat(basePath, L"\\packages");
   temp = bela::StringCat(basePath, L"\\tmp");
@@ -48,6 +49,7 @@ bool FsRedirectionTable::InitializeFromPortable(std::wstring_view portableRoot, 
 bool FsRedirectionTable::InitializeFromLegacy(std::wstring_view portableRoot, bela::error_code &ec) {
   basePath = portableRoot;
   etc = bela::StringCat(basePath, L"\\bin\\etc");
+  appdata = bela::StringCat(basePath, L"\\bin\\appdata");
   vfs = bela::StringCat(basePath, L"\\bin\\vfs");
   pakcage_root = bela::StringCat(basePath, L"\\bin\\pkgs");
   temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp");
