@@ -8,7 +8,6 @@ bool PathFs::InitializeBaulkEnv(std::wstring_view envfile, bela::error_code &ec)
   std::string text;
   constexpr int64_t envFileSize = 1024 * 1024 * 4;
   if (!bela::io::ReadFile(envfile, text, ec, envFileSize)) {
-    //
     return false;
   }
   try {
