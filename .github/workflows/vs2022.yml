@@ -1,0 +1,49 @@
+name: Build-VS2022-Preview
+on:
+  push:
+    paths-ignore:
+      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+      - "docs/**"
+      - "**.md"
+      - "**.txt"
+      - "!CMakeLists.txt"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "**.txt"
+      - "!CMakeLists.txt"
+      - "LICENSE"
+jobs:
+  build:
+    name: Build
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        baulk_target: [baulk-vs2022-win64, baulk-vs2022-win32, baulk-vs2022-arm64]
+        include:
+          - baulk_target: baulk-vs2022-win64
+            msvc_arch: amd64
+          - baulk_target: baulk-vs2022-win32
+            msvc_arch: amd64_x86
+          - baulk_target: baulk-vs2022-arm64
+            msvc_arch: amd64_arm64
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: compile-baulk
+        shell: cmd
+        env:
+          msvc_arch: ${{ matrix.msvc_arch }}
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsall.bat" %msvc_arch%
+          set BAULK_REFNAME=${{ github.ref }}
+          mkdir build
+          cd build
+          set CC=cl
+          set CXX=cl
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+          ninja all
