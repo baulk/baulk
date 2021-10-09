@@ -1,27 +1,17 @@
 //
 #include <bela/io.hpp>
-#include <toml.hpp>
+#include <baulk/json_utils.hpp>
 #include "vfsinternal.hpp"
 
 namespace baulk::vfs {
 bool PathFs::InitializeBaulkEnv(std::wstring_view envfile, bela::error_code &ec) {
-  std::string text;
-  constexpr int64_t envFileSize = 1024 * 1024 * 4;
-  if (!bela::io::ReadFile(envfile, text, ec, envFileSize)) {
+  using namespace std::string_view_literals;
+  auto j = baulk::json::parse_file(envfile, ec);
+  if (!j) {
     return false;
   }
-  try {
-    auto tomltable = toml::parse(text);
-    if (auto model = tomltable["model"].value<std::string_view>(); model) {
-      fsmodel = bela::encode_into<char, wchar_t>(*model);
-    }
-  } catch (const toml::parse_error &e) {
-    ec = bela::make_error_code(bela::encode_into<char, wchar_t>(e.what()));
-    return false;
-  }
-  if (fsmodel.empty()) {
-    fsmodel = L"PortableLegacy";
-  }
+  auto jv = j->view();
+  fsmodel = jv.fetch("model", L"Legacy"sv);
   return true;
 }
 } // namespace baulk::vfs

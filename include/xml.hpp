@@ -9,9 +9,8 @@ namespace baulk::xml {
 using document = pugi::xml_document;
 inline std::optional<document> parse_string(const std::string_view buffer, bela::error_code &ec) {
   baulk::xml::document doc;
-  auto result = doc.load_buffer(buffer.data(), buffer.size());
-  if (!result) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(result.description()));
+  if (auto result = doc.load_buffer(buffer.data(), buffer.size(), pugi::parse_default, pugi::encoding_utf8); !result) {
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(result.description()));
     return std::nullopt;
   }
   return std::make_optional(std::move(doc));

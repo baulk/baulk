@@ -30,7 +30,8 @@ public:
   // fetch string array value
   template <typename T, typename Allocator = std::allocator<T>>
   requires bela::wide_character<T>
-  bool fetch(std::string_view name, std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
+  bool fetch_strings_checked(std::string_view name,
+                             std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it->is_string()) {
         v.emplace_back(bela::encode_into<char, T>(it->get<std::string_view>()));
@@ -49,7 +50,7 @@ public:
   // fetch integer value return details key exists
   template <typename T>
   requires std::integral<T>
-  bool fetch(std::string_view name, T &v) {
+  bool fetch_integer_checked(std::string_view name, T &v) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       v = it->get<T>();
       return true;
@@ -59,7 +60,7 @@ public:
 
   // fetch integer value
   template <typename T>
-  requires std::integral<T> T fetch(std::string_view name, const T dv) {
+  requires std::integral<T> T fetch_as_integer(std::string_view name, const T dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       return it->get<T>();
     }
@@ -68,7 +69,8 @@ public:
   // fetch path array
   template <typename T, typename Allocator = std::allocator<T>>
   requires bela::wide_character<T>
-  bool fetch_as_paths(std::string_view name, std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &paths) {
+  bool fetch_paths_checked(std::string_view name,
+                           std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &paths) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it.value().is_string()) {
         paths.emplace_back(FromSlash(bela::encode_into<char, wchar_t>(it->get<std::string_view>())));
@@ -84,7 +86,7 @@ public:
     return false;
   }
   // check flags
-  bool fetch(std::string_view name, bool dv) {
+  bool fetch_as_boolean(std::string_view name, bool dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_boolean()) {
       return it->get<bool>();
     }

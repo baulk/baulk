@@ -4,7 +4,6 @@
 #include <bela/io.hpp>
 #include <bela/env.hpp>
 #include <bela/match.hpp>
-#include <toml.hpp>
 #include <appmodel.h>
 #include <filesystem>
 #include <ShlObj.h>
@@ -108,7 +107,7 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
   }
   auto envfile = bela::StringCat(*baulkRoot, L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
-    fsmodel = L"PortableLegacy";
+    fsmodel = L"Legacy";
     return table.InitializeFromLegacy(*baulkRoot, ec);
   }
   if (!InitializeBaulkEnv(envfile, ec)) {

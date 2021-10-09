@@ -61,8 +61,8 @@ std::optional<vs_instances> decode_vs_instances(const std::string_view text, bel
         .version = jv.fetch("installationVersion"),
         .instance_id = jv.fetch("instanceId"),
         .product_id = jv.fetch("productId"),
-        .is_launchable = jv.fetch("isLaunchable", false),
-        .is_prerelease = jv.fetch("isPrerelease", false),
+        .is_launchable = jv.fetch_as_boolean("isLaunchable", false),
+        .is_prerelease = jv.fetch_as_boolean("isPrerelease", false),
     };
     vss.emplace_back(std::move(vs));
   }
