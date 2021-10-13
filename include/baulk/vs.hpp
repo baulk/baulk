@@ -81,7 +81,7 @@ inline std::optional<vs_instances> vs_instances_lookup(bela::error_code &ec) {
   }
   bela::process::Process process;
   // Force -utf8 convert to UTF8: include -prerelease
-  if (process.Capture(*vswhere, L"-format", L"json", L"-utf8", L"-prerelease") == 0) {
+  if (process.Capture(*vswhere, L"-format", L"json", L"-utf8", L"-sort", L"-prerelease") == 0) {
     return decode_vs_instances(process.Out(), ec);
   }
   if (ec = process.ErrorCode(); !ec) {
