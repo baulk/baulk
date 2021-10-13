@@ -551,10 +551,10 @@ inline uint128 &uint128::operator=(int128 v) { return *this = uint128(v); }
 
 // Arithmetic operators.
 
-uint128 operator<<(uint128 lhs, int amount);
-uint128 operator>>(uint128 lhs, int amount);
-uint128 operator+(uint128 lhs, uint128 rhs);
-uint128 operator-(uint128 lhs, uint128 rhs);
+constexpr uint128 operator<<(uint128 lhs, int amount);
+constexpr uint128 operator>>(uint128 lhs, int amount);
+constexpr uint128 operator+(uint128 lhs, uint128 rhs);
+constexpr uint128 operator-(uint128 lhs, uint128 rhs);
 uint128 operator*(uint128 lhs, uint128 rhs);
 uint128 operator/(uint128 lhs, uint128 rhs);
 uint128 operator%(uint128 lhs, uint128 rhs);
@@ -718,7 +718,7 @@ inline uint128::operator long double() const {
 
 // Comparison operators.
 
-inline bool operator==(uint128 lhs, uint128 rhs) {
+constexpr bool operator==(uint128 lhs, uint128 rhs) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return static_cast<unsigned __int128>(lhs) == static_cast<unsigned __int128>(rhs);
 #else
@@ -726,9 +726,9 @@ inline bool operator==(uint128 lhs, uint128 rhs) {
 #endif
 }
 
-inline bool operator!=(uint128 lhs, uint128 rhs) { return !(lhs == rhs); }
+constexpr bool operator!=(uint128 lhs, uint128 rhs) { return !(lhs == rhs); }
 
-inline bool operator<(uint128 lhs, uint128 rhs) {
+constexpr bool operator<(uint128 lhs, uint128 rhs) {
 #ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) < static_cast<unsigned __int128>(rhs);
 #else
@@ -737,11 +737,11 @@ inline bool operator<(uint128 lhs, uint128 rhs) {
 #endif
 }
 
-inline bool operator>(uint128 lhs, uint128 rhs) { return rhs < lhs; }
+constexpr bool operator>(uint128 lhs, uint128 rhs) { return rhs < lhs; }
 
-inline bool operator<=(uint128 lhs, uint128 rhs) { return !(rhs < lhs); }
+constexpr bool operator<=(uint128 lhs, uint128 rhs) { return !(rhs < lhs); }
 
-inline bool operator>=(uint128 lhs, uint128 rhs) { return !(lhs < rhs); }
+constexpr bool operator>=(uint128 lhs, uint128 rhs) { return !(lhs < rhs); }
 
 // Unary operators.
 
@@ -749,7 +749,7 @@ constexpr uint128 operator+(uint128 val) { return val; }
 
 constexpr int128 operator+(int128 val) { return val; }
 
-inline uint128 operator-(uint128 val) {
+constexpr uint128 operator-(uint128 val) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return -static_cast<unsigned __int128>(val);
 #else
@@ -761,7 +761,7 @@ inline uint128 operator-(uint128 val) {
 #endif
 }
 
-inline bool operator!(uint128 val) {
+constexpr inline bool operator!(uint128 val) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return !static_cast<unsigned __int128>(val);
 #else
@@ -771,7 +771,7 @@ inline bool operator!(uint128 val) {
 
 // Logical operators.
 
-inline uint128 operator~(uint128 val) {
+constexpr inline uint128 operator~(uint128 val) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return ~static_cast<unsigned __int128>(val);
 #else
@@ -779,7 +779,7 @@ inline uint128 operator~(uint128 val) {
 #endif
 }
 
-inline uint128 operator|(uint128 lhs, uint128 rhs) {
+constexpr inline uint128 operator|(uint128 lhs, uint128 rhs) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return static_cast<unsigned __int128>(lhs) | static_cast<unsigned __int128>(rhs);
 #else
@@ -787,7 +787,7 @@ inline uint128 operator|(uint128 lhs, uint128 rhs) {
 #endif
 }
 
-inline uint128 operator&(uint128 lhs, uint128 rhs) {
+constexpr inline uint128 operator&(uint128 lhs, uint128 rhs) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return static_cast<unsigned __int128>(lhs) & static_cast<unsigned __int128>(rhs);
 #else
@@ -820,7 +820,7 @@ inline uint128 &uint128::operator^=(uint128 other) {
 
 // Arithmetic operators.
 
-inline uint128 operator<<(uint128 lhs, int amount) {
+constexpr inline uint128 operator<<(uint128 lhs, int amount) {
 #ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) << amount;
 #else
@@ -837,7 +837,7 @@ inline uint128 operator<<(uint128 lhs, int amount) {
 #endif
 }
 
-inline uint128 operator>>(uint128 lhs, int amount) {
+constexpr inline uint128 operator>>(uint128 lhs, int amount) {
 #ifdef BELA_HAVE_INTRINSIC_INT128
   return static_cast<unsigned __int128>(lhs) >> amount;
 #else
@@ -854,7 +854,7 @@ inline uint128 operator>>(uint128 lhs, int amount) {
 #endif
 }
 
-inline uint128 operator+(uint128 lhs, uint128 rhs) {
+constexpr inline uint128 operator+(uint128 lhs, uint128 rhs) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return static_cast<unsigned __int128>(lhs) + static_cast<unsigned __int128>(rhs);
 #else
@@ -866,7 +866,7 @@ inline uint128 operator+(uint128 lhs, uint128 rhs) {
 #endif
 }
 
-inline uint128 operator-(uint128 lhs, uint128 rhs) {
+constexpr inline uint128 operator-(uint128 lhs, uint128 rhs) {
 #if defined(BELA_HAVE_INTRINSIC_INT128)
   return static_cast<unsigned __int128>(lhs) - static_cast<unsigned __int128>(rhs);
 #else
@@ -956,16 +956,16 @@ inline int128 &int128::operator=(unsigned long long v) { return *this = int128(v
 
 // Arithmetic operators.
 
-int128 operator+(int128 lhs, int128 rhs);
-int128 operator-(int128 lhs, int128 rhs);
-int128 operator*(int128 lhs, int128 rhs);
-int128 operator/(int128 lhs, int128 rhs);
-int128 operator%(int128 lhs, int128 rhs);
-int128 operator|(int128 lhs, int128 rhs);
-int128 operator&(int128 lhs, int128 rhs);
-int128 operator^(int128 lhs, int128 rhs);
-int128 operator<<(int128 lhs, int amount);
-int128 operator>>(int128 lhs, int amount);
+constexpr int128 operator+(int128 lhs, int128 rhs);
+constexpr int128 operator-(int128 lhs, int128 rhs);
+inline int128 operator*(int128 lhs, int128 rhs);
+inline int128 operator/(int128 lhs, int128 rhs);
+inline int128 operator%(int128 lhs, int128 rhs);
+constexpr int128 operator|(int128 lhs, int128 rhs);
+constexpr int128 operator&(int128 lhs, int128 rhs);
+constexpr int128 operator^(int128 lhs, int128 rhs);
+constexpr int128 operator<<(int128 lhs, int amount);
+constexpr int128 operator>>(int128 lhs, int amount);
 
 inline int128 &int128::operator+=(int128 other) {
   *this = *this + other;
