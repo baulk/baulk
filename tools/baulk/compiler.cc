@@ -74,7 +74,7 @@ std::optional<VisualStudioInstance> LookupVisualStudioInstance(bela::error_code 
   }
   bela::process::Process process;
   // Force -utf8 convert to UTF8
-  if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8") != 0) {
+  if (process.Capture(*vswhere_exe, L"-format", L"json", L"-utf8", L"-sort") != 0) {
     if (ec = process.ErrorCode(); !ec) {
       ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ", process.ExitCode());
     }
