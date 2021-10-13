@@ -9,6 +9,20 @@
 #include <ShlObj.h>
 
 namespace baulk::vfs {
+// Use: bela::RealPathEx support decode AppLink
+std::optional<std::wstring> ExecutableFinalPathParent(bela::error_code &ec) {
+  auto exe = bela::Executable(ec);
+  if (!exe) {
+    return std::nullopt;
+  }
+  auto parent = bela::RealPathEx(*exe, ec);
+  if (!parent) {
+    return std::nullopt;
+  }
+  bela::PathStripName(*parent);
+  return parent;
+}
+
 std::optional<std::wstring> PackageFamilyName() {
   UINT32 len = 0;
   auto rc = GetCurrentPackageFamilyName(&len, 0);
@@ -59,15 +73,15 @@ std::wstring_view GetAppBasePath() {
 }
 
 std::optional<std::wstring> searchBaulkPortableRoot(bela::error_code &ec) {
-  auto exepath = bela::ExecutableFinalPathParent(ec);
-  if (!exepath) {
+  auto parent = bela::ExecutableFinalPathParent(ec);
+  if (!parent) {
     return std::nullopt;
   }
-  auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
+  auto baulkexe = bela::StringCat(*parent, L"\\baulk.exe");
   if (bela::PathFileIsExists(baulkexe)) {
-    return std::make_optional<std::wstring>(bela::DirName(*exepath));
+    return std::make_optional<std::wstring>(bela::DirName(*parent));
   }
-  std::wstring_view portableRoot(*exepath);
+  std::wstring_view portableRoot(*parent);
   for (size_t i = 0; i < 5; i++) {
     if (portableRoot == L".") {
       break;
