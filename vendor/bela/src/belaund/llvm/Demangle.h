@@ -11,7 +11,6 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 
 namespace llvm {
 /// This is a llvm local version of __cxa_demangle. Other than the name and
