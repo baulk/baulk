@@ -1,11 +1,13 @@
 //
 #ifndef BAULK_DETAILS_NET_INTERNAL_HPP
 #define BAULK_DETAILS_NET_INTERNAL_HPP
+#include <bela/base.hpp>
 #include <bela/match.hpp>
 #include <bela/ascii.hpp>
 #include <bela/phmap.hpp>
 
 namespace baulk::net::net_internal {
+// hasher
 struct StringCaseInsensitiveHash {
   using is_transparent = void;
   std::size_t operator()(std::wstring_view wsv) const noexcept {
@@ -36,6 +38,16 @@ struct StringCaseInsensitiveEq {
   bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
 using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
+
+
+inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
+  bela::error_code ec;
+  ec.code = GetLastError();
+  ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
+  return ec;
+}
+
+
 } // namespace baulk::net::net_internal
 
 #endif
