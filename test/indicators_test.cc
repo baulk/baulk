@@ -1,4 +1,4 @@
-#include "indicators.hpp"
+#include <baulk/indicators.hpp>
 
 void NoMaximum(const wchar_t *filename) {
   baulk::ProgressBar bar;

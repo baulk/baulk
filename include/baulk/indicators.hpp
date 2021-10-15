@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 #include <bela/terminal.hpp>
-#include <baulkmisc.hpp>
 
 namespace baulk {
 [[maybe_unused]] constexpr uint32_t MAX_BARLENGTH = 256;

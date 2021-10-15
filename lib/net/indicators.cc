@@ -5,8 +5,53 @@
 #include <bela/escapeargv.hpp>
 #include <bela/process.hpp>
 #include <baulk/indicators.hpp>
+// #include <format> Waiting C++20 <format> final
 
 namespace baulk {
+[[maybe_unused]] constexpr uint64_t KB = 1024ULL;
+[[maybe_unused]] constexpr uint64_t MB = KB * 1024;
+[[maybe_unused]] constexpr uint64_t GB = MB * 1024;
+[[maybe_unused]] constexpr uint64_t TB = GB * 1024;
+
+// template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
+//   if (x >= TB) {
+//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / TB);
+//     return;
+//   }
+//   if (x >= GB) {
+//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / GB);
+//     return;
+//   }
+//   if (x >= MB) {
+//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / MB);
+//     return;
+//   }
+//   if (x > 10 * KB) {
+//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / KB);
+//     return;
+//   }
+//   std::format_to(std::back_inserter(buf), L"{}B", x);
+// }
+
+template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
+  if (x >= TB) {
+    _snwprintf_s(buf, N, L"%.2fT", (double)x / TB);
+    return;
+  }
+  if (x >= GB) {
+    _snwprintf_s(buf, N, L"%.2fG", (double)x / GB);
+    return;
+  }
+  if (x >= MB) {
+    _snwprintf_s(buf, N, L"%.2fM", (double)x / MB);
+    return;
+  }
+  if (x > 10 * KB) {
+    _snwprintf_s(buf, N, L"%.2fK", (double)x / KB);
+    return;
+  }
+  _snwprintf_s(buf, N, L"%lldB", x);
+}
 
 // CygwinTerminalSize resolve cygwin terminal size use stty,
 // When running under Cygwin terminal, stty should be available
@@ -61,11 +106,11 @@ void ProgressBar::Draw() {
   auto total_ = static_cast<uint64_t>(total);
   //' 1024.00K 1024.00K/s' 20
 
-  baulk::misc::EncodeRate(strtotal, total_);
+  EncodeRate(strtotal, total_);
   if (tick % 10 == 0) {
     auto delta = (total_ - previous); // cycle 50/1000 s
     previous = total_;
-    baulk::misc::EncodeRate(speed, delta);
+    EncodeRate(speed, delta);
   }
   tick++;
   auto maximum_ = static_cast<std::uint64_t>(maximum);
