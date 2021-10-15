@@ -7,7 +7,7 @@
 #include <jsonex.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "net.hpp"
 #include "decompress.hpp"
 

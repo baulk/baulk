@@ -3,7 +3,7 @@
 #include "baulk.hpp"
 #include "bucket.hpp"
 #include "commands.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk::commands {
 // lldb/kali-rolling 1:9.0-49.1 amd64

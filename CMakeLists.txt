@@ -106,7 +106,10 @@ include_directories("${CMAKE_BINARY_DIR}/include" "./include" "./vendor/bela/inc
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)
-install(FILES "res/screw-driver.ico" DESTINATION "share/baulk" RENAME baulk.ico)
+install(
+  FILES "res/screw-driver.ico"
+  DESTINATION "share/baulk"
+  RENAME baulk.ico)
 
 install(FILES "script/Fragments.ps1" DESTINATION script)
 install(FILES "script/Fragments.bat" DESTINATION script)

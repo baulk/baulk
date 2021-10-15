@@ -11,7 +11,7 @@
 #include "pkg.hpp"
 #include "net.hpp"
 #include "hash.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "decompress.hpp"
 
 namespace baulk::package {

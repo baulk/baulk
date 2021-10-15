@@ -4,7 +4,7 @@
 #include <bela/datetime.hpp>
 #include <jsonex.hpp>
 #include "commands.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "baulk.hpp"
 
 namespace baulk::commands {

@@ -5,7 +5,7 @@
 #include <jsonex.hpp>
 #include "compiler.hpp"
 #include "baulk.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 // C:\Program Files (x86)\Microsoft Visual
 // Studio\2019\Community\VC\Auxiliary\Build

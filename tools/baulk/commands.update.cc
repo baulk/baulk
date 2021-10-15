@@ -8,7 +8,7 @@
 #include <jsonex.hpp>
 #include "net.hpp"
 #include "bucket.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "commands.hpp"
 
 namespace baulk::commands {

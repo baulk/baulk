@@ -1,7 +1,7 @@
 #include <bela/path.hpp>
 #include "baulk.hpp"
 #include "decompress.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk {
 

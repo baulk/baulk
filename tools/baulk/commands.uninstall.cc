@@ -1,7 +1,7 @@
 //
 #include <bela/path.hpp>
 #include "baulk.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "pkg.hpp"
 #include "launcher.hpp"
 #include "commands.hpp"

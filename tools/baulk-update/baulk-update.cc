@@ -8,11 +8,11 @@
 #include <bela/process.hpp>
 #include <bela/parseargv.hpp>
 #include <bela/str_split_narrow.hpp>
-#include <jsonex.hpp>
 #include <zip.hpp>
-#include "indicators.hpp"
-#include "fs.hpp"
-#include "net.hpp"
+#include <baulk/indicators.hpp>
+#include <baulk/net.hpp>
+#include <baulk/json_utils.hpp>
+#include <baulk/fs.hpp>
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables
 // https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c

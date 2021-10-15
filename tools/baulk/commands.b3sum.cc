@@ -2,7 +2,7 @@
 #include <bela/terminal.hpp>
 #include "commands.hpp"
 #include "hash.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk::commands {
 

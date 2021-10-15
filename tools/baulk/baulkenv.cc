@@ -7,7 +7,7 @@
 #include <regutils.hpp>
 #include <jsonex.hpp>
 #include "baulk.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk {
 // https://github.com/baulk/bucket/commits/master.atom

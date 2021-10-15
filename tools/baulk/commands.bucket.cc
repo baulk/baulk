@@ -8,7 +8,7 @@
 #include "baulkargv.hpp"
 #include "commands.hpp"
 #include "hash.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk::commands {
 // Bucket Modifier

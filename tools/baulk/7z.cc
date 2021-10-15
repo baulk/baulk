@@ -3,7 +3,7 @@
 #include <bela/process.hpp>
 #include <bela/simulator.hpp>
 #include <bela/strip.hpp>
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 
 namespace baulk::sevenzip {
 constexpr auto ok = ERROR_SUCCESS;

@@ -5,7 +5,7 @@
 #include <tar.hpp>
 #include "baulk.hpp"
 #include "decompress.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "indicators.hpp"
 
 namespace baulk::tar {

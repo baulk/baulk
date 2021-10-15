@@ -2,7 +2,7 @@
 #include <bela/terminal.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "launcher.hpp"
 
 namespace baulk::commands {

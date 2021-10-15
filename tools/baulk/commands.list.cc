@@ -1,6 +1,6 @@
 //
 #include "baulk.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
 #include "bucket.hpp"
 #include "commands.hpp"
 
