@@ -85,7 +85,7 @@ set(CPACK_PACKAGE_CONTACT "Baulk contributors")
 
 include(CPack)
 # Generate version code
-configure_file(${CMAKE_SOURCE_DIR}/include/baulkversion.h.cmake ${CMAKE_BINARY_DIR}/include/baulkversion.h)
+configure_file(${CMAKE_SOURCE_DIR}/include/revision.h.cmake ${CMAKE_BINARY_DIR}/include/revision.h)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
