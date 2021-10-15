@@ -8,7 +8,7 @@
 #include <regutils.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
-#include <pwsh.hpp>
+#include <baulk/pwsh.hpp>
 #include "baulkterminal.hpp"
 
 namespace baulkterminal {

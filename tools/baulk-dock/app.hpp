@@ -1,7 +1,6 @@
 //
 #ifndef BAULK_DOCK_UI_HPP
 #define BAULK_DOCK_UI_HPP
-
 #include <atlbase.h>
 #include <atlwin.h>
 #include <atlctl.h>

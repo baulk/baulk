@@ -8,7 +8,7 @@
 #include <bela/pe.hpp>
 #include <baulkenv.hpp>
 #include <baulkrev.hpp>
-#include <pwsh.hpp>
+#include <baulk/pwsh.hpp>
 #include "baulk-exec.hpp"
 
 namespace baulk::exec {

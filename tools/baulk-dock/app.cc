@@ -1,4 +1,10 @@
 ///
+#ifndef UNICODE
+#define UNICODE 1
+#endif
+#ifndef _UNICODE
+#define _UNICODE 1
+#endif
 #include <bela/base.hpp>
 #include <Windowsx.h>
 #include <cassert>
