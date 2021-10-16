@@ -3,14 +3,26 @@
 #include "types.hpp"
 
 namespace baulk::net {
+class Response : private minimal_response {
+public:
+  Response() = default;
+  Response(minimal_response &&mr, std::vector<char> &&b, size_t sz) {
+    version = mr.version;
+    headers = std::move(mr.headers);
+    status_code = mr.status_code;
+    status_text = std::move(mr.status_text);
+    body_ = std::move(b);
+    size_ = sz;
+  }
+  auto &Headers() const { return headers; }
+  auto StatusCode() const { return status_code; }
+  std::wstring_view StatusLine() const { return status_text; }
+  auto Version() const { return version; }
+  std::string_view Content() const { return {body_.data(), size_}; }
 
-enum class Protocol { HTTP11, HTTP20, HTTP30 };
-struct Response {
-  net_internal::headers_t hkv;
-  std::string body;
-  long statuscode{0};
-  Protocol protocol{Protocol::HTTP11};
-  [[nodiscard]] bool IsSuccessStatusCode() const { return statuscode >= 200 && statuscode <= 299; }
+private:
+  std::vector<char> body_;
+  size_t size_{0};
 };
 
 class HttpClient {
@@ -26,7 +38,7 @@ public:
     cookies.emplace_back(cookie);
     return *this;
   }
-  std::optional<Response> WinRest(std::wstring_view method, std::wstring_view url, std::wstring_view contenttype,
+  std::optional<Response> WinRest(std::wstring_view method, std::wstring_view url, std::wstring_view content_type,
                                   std::wstring_view body, bela::error_code &ec);
   std::optional<Response> Get(std::wstring_view url, bela::error_code &ec) {
     return WinRest(L"GET", url, L"", L"", ec);
@@ -38,8 +50,10 @@ public:
   std::wstring_view UserAgent() const { return userAgent; }
   bool IsInsecureMode() const { return insecureMode; }
   bool &InsecureMode() { return insecureMode; }
-  bool IsTlsVersion13() const { return tlsVersion13; }
-  bool &TlsVersion13() { return tlsVersion13; }
+  bool IsDebugMode() { return debugMode; }
+  bool &DebugMode() { return debugMode; }
+  size_t DirectMaxBodySize() const { return direct_max_body_size; }
+  size_t &DirectMaxBodySize() { return direct_max_body_size; }
   bool IsRangeAccepted() const { return rangeAccepted; }
   bool &RangeAccepted() { return rangeAccepted; }
   bool InitializeProxyFromEnv();
@@ -52,13 +66,14 @@ public:
   }
 
 private:
-  net_internal::headers_t hkv;
+  headers_t hkv;
   std::vector<std::wstring> cookies;
   std::wstring userAgent{L"Wget/7.0 (Baulk)"};
   std::vector<std::wstring> noProxy;
   std::wstring proxyURL;
+  size_t direct_max_body_size{128 * 1024 * 1024};
   bool insecureMode{false};
-  bool tlsVersion13{false};
+  bool debugMode{false};
   bool rangeAccepted{false};
 };
 

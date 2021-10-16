@@ -6,7 +6,9 @@
 #include <bela/ascii.hpp>
 #include <bela/phmap.hpp>
 
-namespace baulk::net::net_internal {
+namespace baulk::net {
+
+namespace net_internal {
 // hasher
 struct StringCaseInsensitiveHash {
   using is_transparent = void;
@@ -37,8 +39,6 @@ struct StringCaseInsensitiveEq {
   using is_transparent = void;
   bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
-using headers_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
-
 
 inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
   bela::error_code ec;
@@ -46,8 +46,19 @@ inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
   ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
   return ec;
 }
+} // namespace net_internal
+using headers_t = bela::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
+                                      net_internal::StringCaseInsensitiveEq>;
 
-
-} // namespace baulk::net::net_internal
+enum class protocol_version { HTTP11, HTTP2, HTTP3 };
+struct minimal_response {
+  headers_t headers;
+  unsigned long status_code{0};
+  protocol_version version{protocol_version::HTTP11};
+  std::wstring status_text;
+  [[nodiscard]] bool IsSuccessStatusCode() const { return status_code >= 200 && status_code <= 299; }
+};
+std::wstring url_decode(std::wstring_view str);
+} // namespace baulk::net
 
 #endif
