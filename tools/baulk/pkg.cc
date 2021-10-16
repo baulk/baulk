@@ -10,8 +10,8 @@
 #include "launcher.hpp"
 #include "pkg.hpp"
 #include "net.hpp"
-#include "hash.hpp"
 #include <baulk/fs.hpp>
+#include <baulk/hash.hpp>
 #include "decompress.hpp"
 
 namespace baulk::package {
@@ -198,7 +198,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     if (!bela::EqualsIgnoreCase(fn, rfn)) {
       auto expnadfile = bela::StringCat(pkgdir, L"/", fn);
       auto target = bela::StringCat(pkgdir, L"/", rfn);
-      if (MoveFileEx(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
+      if (MoveFileExW(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
         ec = bela::make_system_error_code();
         bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target,
                       ec.message);

@@ -24,7 +24,6 @@ add_executable(
   commands.version.cc
   compiler.cc
   decompress.cc
-  hash.cc
   indicators.cc
   launcher.cc
   msi.cc

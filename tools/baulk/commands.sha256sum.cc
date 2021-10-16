@@ -1,8 +1,8 @@
 //
 #include <bela/terminal.hpp>
-#include "commands.hpp"
-#include "hash.hpp"
+#include <baulk/hash.hpp>
 #include <baulk/fs.hpp>
+#include "commands.hpp"
 
 namespace baulk::commands {
 void usage_sha256sum() {

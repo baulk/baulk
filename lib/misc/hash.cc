@@ -4,7 +4,7 @@
 #include <bela/match.hpp>
 #include <bela/hash.hpp>
 #include <bela/ascii.hpp>
-#include "hash.hpp"
+#include <baulk/hash.hpp>
 
 namespace baulk::hash {
 
@@ -114,12 +114,12 @@ constexpr HashPrefix hnmaps[] = {
     {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
     {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
 };
-bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_code &ec) {
-  std::wstring_view value = hashvalue;
+bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error_code &ec) {
+  std::wstring_view value = hash_value;
   auto m = hash_t::SHA256;
-  if (auto pos = hashvalue.find(':'); pos != std::wstring_view::npos) {
-    value = hashvalue.substr(pos + 1);
-    auto prefix = bela::AsciiStrToUpper(hashvalue.substr(0, pos));
+  if (auto pos = hash_value.find(':'); pos != std::wstring_view::npos) {
+    value = hash_value.substr(pos + 1);
+    auto prefix = bela::AsciiStrToUpper(hash_value.substr(0, pos));
     auto fn = [&]() {
       for (const auto &h : hnmaps) {
         if (h.prefix == prefix) {

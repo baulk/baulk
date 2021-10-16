@@ -3,12 +3,12 @@
 #include <bela/base.hpp>
 #include <bela/io.hpp>
 #include <bela/strip.hpp>
+#include <baulk/hash.hpp>
+#include <baulk/fs.hpp>
 #include <json.hpp>
 #include "baulk.hpp"
 #include "baulkargv.hpp"
 #include "commands.hpp"
-#include "hash.hpp"
-#include <baulk/fs.hpp>
 
 namespace baulk::commands {
 // Bucket Modifier

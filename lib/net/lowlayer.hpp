@@ -1,7 +1,6 @@
 #ifndef BAULK_NET_LOWLAYER_HPP
 #define BAULK_NET_LOWLAYER_HPP
 #include <bela/env.hpp>
-#include <bela/path.hpp>
 #include <bela/strip.hpp>
 #include <baulk/net/types.hpp>
 #include <schannel.h>
@@ -297,14 +296,6 @@ struct url {
   int nScheme{INTERNET_SCHEME_HTTPS};
   inline DWORD TlsFlag() const { return nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0; }
 };
-
-inline std::wstring url_path_name(std::wstring_view urlpath) {
-  std::vector<std::wstring_view> pv = bela::SplitPath(urlpath);
-  if (pv.empty()) {
-    return L"index.html";
-  }
-  return std::wstring(pv.back());
-}
 
 inline std::optional<url> crack_url(std::wstring_view us, bela::error_code &ec) {
   URL_COMPONENTSW uc;

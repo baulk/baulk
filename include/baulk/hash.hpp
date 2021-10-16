@@ -16,7 +16,7 @@ enum class hash_t {
   SHA3_512, //
   BLAKE3
 };
-bool HashEqual(std::wstring_view file, std::wstring_view hashvalue, bela::error_code &ec);
+bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error_code &ec);
 std::optional<std::wstring> FileHash(std::wstring_view file, hash_t method, bela::error_code &ec);
 } // namespace baulk::hash
 
