@@ -56,7 +56,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   if (insecureMode) {
     req->set_insecure_mode();
   }
-  if (!req->write_headers(hkv, cookies, ec)) {
+  if (!req->write_headers(hkv, cookies, 0, 0, ec)) {
     return std::nullopt;
   }
   if (!req->write_body(body, content_type, ec)) {
@@ -75,6 +75,40 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
 }
 std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstring_view workdir, bool forceoverwrite,
                                                bela::error_code &ec) {
+  auto u = native::crack_url(url, ec);
+  if (!u) {
+    return std::nullopt;
+  }
+  auto session = native::make_session(userAgent, ec);
+  if (!session) {
+    return std::nullopt;
+  }
+  if (!IsNoProxy(u->host)) {
+    session->set_proxy_url(proxyURL);
+  }
+  session->protocol_enable();
+  auto conn = session->connect(u->host, u->nPort, ec);
+  if (!conn) {
+    return std::nullopt;
+  }
+  auto req = conn->open_request(L"GET", u->uri, u->TlsFlag(), ec);
+  if (!req) {
+    return std::nullopt;
+  }
+  if (insecureMode) {
+    req->set_insecure_mode();
+  }
+  // detect part download
+  if (!req->write_headers(hkv, cookies, 0, 0, ec)) {
+    return std::nullopt;
+  }
+  if (!req->write_body(L"", L"", ec)) {
+    return std::nullopt;
+  }
+  auto mr = req->recv_minimal_response(ec);
+  if (!mr) {
+    return std::nullopt;
+  }
   return std::nullopt;
 }
 } // namespace baulk::net

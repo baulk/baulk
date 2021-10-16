@@ -102,14 +102,20 @@ public:
     return std::nullopt;
   }
   // fill header
-  bool write_headers(const headers_t &hkv, const std::vector<std::wstring> &cookies, bela::error_code &ec) {
+  bool write_headers(const headers_t &hkv, const std::vector<std::wstring> &cookies, int64_t position, int64_t length,
+                     bela::error_code &ec) {
     std::wstring flattened_headers;
     for (const auto &[key, value] : hkv) {
       bela::StrAppend(&flattened_headers, key, L": ", value, L"\r\n");
     }
+    // part download
+    if (position > 0) {
+      bela::StrAppend(&flattened_headers, L"Range: bytes=", position, L"-", length - 1);
+    }
     if (!cookies.empty()) {
       bela::StrAppend(&flattened_headers, L"Cookie: ", bela::StrJoin(cookies, L"; "), L"\r\n");
     }
+
     if (flattened_headers.empty()) {
       return true;
     }
