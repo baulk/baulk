@@ -8,24 +8,19 @@
 #include <bela/process.hpp>
 #include <bela/parseargv.hpp>
 #include <bela/str_split_narrow.hpp>
-#include <zip.hpp>
-#include <baulk/indicators.hpp>
 #include <baulk/net.hpp>
 #include <baulk/json_utils.hpp>
 #include <baulk/fs.hpp>
+#include "baulk-update.hpp"
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables
 // https://stackoverflow.com/questions/10319526/understanding-a-self-deleting-program-in-c
 
-namespace baulk {
+namespace baulk::update {
 bool IsDebugMode = false;
 bool IsForceMode = false;
-bool IsInsecureMode = false;
-constexpr size_t UerAgentMaximumLength = 256;
-wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/5.0 (Baulk)";
+
 std::wstring BaulkRoot;
-std::wstring locale;
-std::wstring_view BaulkLocale() { return locale; }
 void InitializeBaulk() {
   bela::error_code ec;
   if (auto exedir = bela::ExecutableParent(ec); exedir) {
@@ -35,61 +30,6 @@ void InitializeBaulk() {
     bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
     BaulkRoot = L".";
   }
-  locale.resize(64);
-  if (auto n = GetUserDefaultLocaleName(locale.data(), 64); n != 0 && n < 64) {
-    locale.resize(n);
-    return;
-  }
-  locale.clear();
-}
-
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  const bela::format_internal::FormatArg arg_array[] = {args...};
-  std::wstring str;
-  str.append(L"\x1b[33m* ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
-  if (str.back() == '\n') {
-    str.pop_back();
-  }
-  str.append(L"\x1b[0m\n");
-  return bela::terminal::WriteAuto(stderr, str);
-}
-inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  std::wstring_view msg(fmt);
-  if (!msg.empty() && msg.back() == '\n') {
-    msg.remove_suffix(1);
-  }
-  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
-}
-
-template <typename... Args> bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt, const Args &...args) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  const bela::format_internal::FormatArg arg_array[] = {args...};
-  auto str = bela::StringCat(L"\x1b[32m* ", prefix, L" ");
-  bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
-  if (str.back() == '\n') {
-    str.pop_back();
-  }
-  str.append(L"\x1b[0m\n");
-  return bela::terminal::WriteAuto(stderr, str);
-}
-inline bela::ssize_t DbgPrintEx(char32_t prefix, const wchar_t *fmt) {
-  if (!IsDebugMode) {
-    return 0;
-  }
-  std::wstring_view msg(fmt);
-  if (!msg.empty() && msg.back() == '\n') {
-    msg.remove_suffix(1);
-  }
-  return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[32m", prefix, L" ", msg, L"\x1b[0m\n"));
 }
 
 constexpr const std::wstring_view archfilesuffix() {
@@ -105,143 +45,6 @@ constexpr const std::wstring_view archfilesuffix() {
   return L"unknown cpu architecture";
 #endif
 }
-
-namespace zip {
-using baulk::archive::zip::File;
-using baulk::archive::zip::Reader;
-using bela::os::FileMode;
-
-class Extractor {
-public:
-  Extractor() noexcept {
-    if (bela::terminal::IsSameTerminal(stderr)) {
-      if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
-        CygwinTerminalSize(termsz);
-      } else {
-        bela::terminal::TerminalSize(stderr, termsz);
-      }
-    }
-  }
-  Extractor(const Extractor &) = delete;
-  Extractor &operator=(const Extractor &) = delete;
-  std::wstring &Destination() { return destination; }
-  bool OpenReader(std::wstring_view file, std::wstring_view dest, bela::error_code &ec) {
-    auto zipfile = bela::PathAbsolute(file);
-    destination = bela::PathAbsolute(dest);
-    return reader.OpenReader(zipfile, ec);
-  }
-  bool Extract(bela::error_code &ec) {
-    destsize = destination.size() + 1;
-    for (const auto &file : reader.Files()) {
-      if (!extractFile(file, ec)) {
-        return false;
-      }
-    }
-    bela::FPrintF(stderr, L"\n");
-    return true;
-  }
-
-private:
-  Reader reader;
-  std::wstring destination;
-  bela::terminal::terminal_size termsz{0};
-  size_t destsize{0};
-  bool owfile{true};
-  bool extractFile(const File &file, bela::error_code &ec);
-  bool extractDir(const File &file, std::wstring_view dir, bela::error_code &ec);
-  bool extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec);
-  void showProgress(std::wstring_view filename) {
-    auto suglen = static_cast<size_t>(termsz.columns) - 8;
-    if (auto n = bela::string_width<wchar_t>(filename); n <= suglen) {
-      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
-      return;
-    }
-    auto basename = bela::BaseName(filename);
-    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", basename);
-  }
-};
-
-bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bela::error_code &ec) {
-  std::string linkname;
-  auto ret = reader.Decompress(
-      file,
-      [&](const void *data, size_t len) {
-        linkname.append(reinterpret_cast<const char *>(data), len);
-        return true;
-      },
-      ec);
-  if (!ret) {
-    return false;
-  }
-  auto wn = bela::ToWide(linkname);
-  if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
-    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
-    return false;
-  }
-  return true;
-}
-
-bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_code &ec) {
-  if (bela::PathExists(dir, bela::FileAttribute::Dir)) {
-    return true;
-  }
-  std::error_code e;
-  if (!std::filesystem::create_directories(dir, e)) {
-    ec = bela::from_std_error_code(e, L"mkdir ");
-    return false;
-  }
-  baulk::archive::SetFileTimeEx(dir, file.time, ec);
-  return true;
-}
-
-bool Extractor::extractFile(const File &file, bela::error_code &ec) {
-  auto dest = baulk::archive::zip::JoinSanitizePath(destination, file);
-  if (!dest) {
-    bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
-    return true;
-  }
-  auto showName = std::wstring_view(dest->data() + destsize, dest->size() - destsize);
-  if (termsz.columns != 0) {
-    showProgress(showName);
-  }
-  if (file.IsSymlink()) {
-    return extractSymlink(file, *dest, ec);
-  }
-  if (file.IsDir()) {
-    return extractDir(file, *dest, ec);
-  }
-  auto fd = baulk::archive::NewFD(*dest, ec, owfile);
-  if (!fd) {
-    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec.message);
-    return false;
-  }
-  if (!fd->SetTime(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec.message);
-    return false;
-  }
-  bela::error_code ec2;
-  auto ret = reader.Decompress(
-      file,
-      [&](const void *data, size_t len) {
-        //
-        return fd->Write(data, len, ec2);
-      },
-      ec);
-  if (!ret) {
-    bela::FPrintF(stderr, L"unable decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
-    return false;
-  }
-  return true;
-}
-
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
-  Extractor extractor;
-  if (!extractor.OpenReader(src, outdir, ec)) {
-    return false;
-  }
-  return extractor.Extract(ec);
-}
-} // namespace zip
 
 bool ResolveBaulkRev(std::wstring &releasename) {
   bela::process::Process ps;
@@ -324,13 +127,13 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   }
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
   if (!bela::StartsWith(releasename, releaseprefix)) {
-    baulk::DbgPrint(L"baulk refname '%s' not public release", releasename);
-    if (!baulk::IsForceMode) {
+    DbgPrint(L"baulk refname '%s' not public release", releasename);
+    if (!IsForceMode) {
       return false;
     }
   }
   auto oldver = bela::StripPrefix(releasename, releaseprefix);
-  baulk::DbgPrint(L"detect current version %s", oldver);
+  DbgPrint(L"detect current version %s", oldver);
   bela::error_code ec;
   auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
   if (!resp) {
@@ -369,20 +172,20 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
 bool UpdateFile(std::wstring_view src, std::wstring_view target) {
   if (!bela::PathExists(src)) {
     // ignore
-    baulk::DbgPrint(L"%s not exists", src);
+    DbgPrint(L"%s not exists", src);
     return true;
   }
   bela::error_code ec;
   if (!baulk::fs::MakeParentDir(target, ec)) {
-    baulk::DbgPrint(L"failed MakeParentDir %s", ec.message);
+    DbgPrint(L"failed MakeParentDir %s", ec.message);
     return false;
   }
   if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
-    if (!baulk::IsDebugMode) {
+    if (!IsDebugMode) {
       bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mupdate %s done\x1b[0m", target);
       return true;
     }
-    baulk::DbgPrint(L"update %s done", target);
+    DbgPrint(L"update %s done", target);
     return true;
   }
   ec = bela::make_system_error_code();
@@ -391,7 +194,7 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
 
 int ExecuteInternal(wchar_t *cmdline) {
   // run a new process and wait
-  auto cwd = bela::StringCat(baulk::BaulkRoot, L"\\bin");
+  auto cwd = bela::StringCat(BaulkRoot, L"\\bin");
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
@@ -430,9 +233,9 @@ inline std::wstring UnarchivePath(std::wstring_view path) {
 
 bool BaulkExecUpdate(std::wstring_view baulkexecNew) {
   bela::error_code ec;
-  auto baulkexec = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.exe");
-  auto baulkexecdel = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.del");
-  auto baulkexecTemp = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-exec.new");
+  auto baulkexec = bela::StringCat(BaulkRoot, L"\\bin\\baulk-exec.exe");
+  auto baulkexecdel = bela::StringCat(BaulkRoot, L"\\bin\\baulk-exec.del");
+  auto baulkexecTemp = bela::StringCat(BaulkRoot, L"\\bin\\baulk-exec.new");
   if (bela::PathFileIsExists(baulkexec)) {
     if (MoveFileExW(baulkexec.data(), baulkexecdel.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
       if (MoveFileExW(baulkexecNew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
@@ -455,7 +258,6 @@ bool BaulkExecUpdate(std::wstring_view baulkexecNew) {
     bela::FPrintF(stderr, L"baulk-update: update apply baulk-exec.new: %s\n", ec.message);
     return true;
   }
-
   return true;
 }
 
@@ -468,7 +270,7 @@ int BaulkUpdate() {
   auto filename = baulk::net::url_path_name(url);
   bela::FPrintF(stderr, L"\x1b[32mNew release url %s\x1b[0m\n", url);
 
-  auto pkgtmpdir = bela::StringCat(baulk::BaulkRoot, L"\\bin\\pkgs\\.pkgtmp");
+  auto pkgtmpdir = bela::StringCat(BaulkRoot, L"\\bin\\pkgs\\.pkgtmp");
   bela::error_code ec;
   if (!baulk::fs::MakeDir(pkgtmpdir, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir, ec.message);
@@ -483,8 +285,8 @@ int BaulkUpdate() {
   if (bela::PathExists(outdir)) {
     bela::fs::RemoveAll(outdir, ec);
   }
-  baulk::DbgPrint(L"Decompress %s to %s\n", filename, outdir);
-  if (!baulk::zip::Decompress(*baulkfile, outdir, ec)) {
+  DbgPrint(L"Decompress %s to %s\n", filename, outdir);
+  if (!zip::Decompress(*baulkfile, outdir, ec)) {
     bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec.message);
     return 1;
   }
@@ -504,16 +306,16 @@ int BaulkUpdate() {
     // skip all config
 
     DbgPrint(L"found %s", relativepath);
-    auto target = bela::StringCat(baulk::BaulkRoot, L"\\", relativepath);
+    auto target = bela::StringCat(BaulkRoot, L"\\", relativepath);
     if (bela::EqualsIgnoreCase(relativepath, L"config\\baulk.json") && bela::PathExists(target)) {
       continue;
     }
     UpdateFile(p.path().wstring(), target);
   }
-  if (!baulk::IsDebugMode) {
+  if (!IsDebugMode) {
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mbaulk has been upgraded to %s\x1b[0m\n", version);
   }
-  auto olddir = bela::StringCat(baulk::BaulkRoot, L"\\old");
+  auto olddir = bela::StringCat(BaulkRoot, L"\\old");
   baulk::fs::MakeDir(olddir, ec);
 
   auto baulkexecNew = bela::StringCat(outdir, L"\\bin\\baulk-exec.exe");
@@ -522,8 +324,8 @@ int BaulkUpdate() {
   }
   auto baulkupdate = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(baulkupdate)) {
-    auto baulkupdatenew = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update.exe");
-    auto baulkupdateold = bela::StringCat(baulk::BaulkRoot, L"\\bin\\baulk-update.del");
+    auto baulkupdatenew = bela::StringCat(BaulkRoot, L"\\bin\\baulk-update.exe");
+    auto baulkupdateold = bela::StringCat(BaulkRoot, L"\\bin\\baulk-update.del");
     if (MoveFileExW(baulkupdatenew.data(), baulkupdateold.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
         TRUE) {
     }
@@ -535,7 +337,7 @@ int BaulkUpdate() {
   return 0;
 }
 
-} // namespace baulk
+} // namespace baulk::update
 
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-update - Baulk self update utility
@@ -572,6 +374,7 @@ bool ParseArgv(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto result = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
+        using baulk::net::HttpClient;
         switch (val) {
         case 'h':
           Usage();
@@ -580,20 +383,20 @@ bool ParseArgv(int argc, wchar_t **argv) {
           Version();
           exit(0);
         case 'V':
-          baulk::IsDebugMode = true;
+          baulk::update::IsDebugMode = true;
+          HttpClient::DefaultClient().DebugMode() = true;
           break;
         case 'f':
           [[fallthrough]];
         case 'F':
-          baulk::IsForceMode = true;
+          baulk::update::IsForceMode = true;
           break;
         case 'k':
-          baulk::IsInsecureMode = true;
+          HttpClient::DefaultClient().InsecureMode() = true;
           break;
         case 'A':
-          if (auto len = wcslen(oa); len < 64) {
-            wmemcpy_s(baulk::UserAgent, baulk::UerAgentMaximumLength, oa, len);
-            baulk::UserAgent[len] = 0;
+          if (wcslen(oa) != 0) {
+            HttpClient::DefaultClient().UserAgent() = oa;
           }
           break;
         case 1001:
@@ -616,6 +419,6 @@ int wmain(int argc, wchar_t **argv) {
   if (!ParseArgv(argc, argv)) {
     return 1;
   }
-  baulk::InitializeBaulk();
-  return baulk::BaulkUpdate();
+  baulk::update::InitializeBaulk();
+  return baulk::update::BaulkUpdate();
 }
