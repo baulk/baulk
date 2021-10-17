@@ -229,6 +229,8 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
       return std::nullopt;
     }
     // else:  // part download support
+  } else {
+    DbgPrint(L"%s download from bytes: %d", u->filename, filePart->CurrentBytes());
   }
   // Pare progress bar
   baulk::ProgressBar bar;
