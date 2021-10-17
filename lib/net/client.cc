@@ -142,13 +142,13 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     ec = bela::make_error_code(bela::ErrGeneral, L"response: ", mr->status_code, L" status: ", mr->status_text);
     return std::nullopt;
   }
-  if (mr->status_code == 206) {
-    /// DEBUG for
-  } else {
+  if (mr->status_code != 206) {
     if (!filePart->Truncated(ec)) {
       return std::nullopt;
     }
+    // else:  // part download support
   }
+  // Pare progress bar
   baulk::ProgressBar bar;
   if (total_size > 0) {
     bar.Maximum(static_cast<uint64_t>(total_size));
@@ -170,6 +170,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     bela::error_code discard_ec;
     filePart->SaveOverlayData(hash_value, total_size, current_bytes, discard_ec);
   };
+  // recv data
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(req->addressof(), &dwSize) != TRUE) {
