@@ -1,21 +1,17 @@
 //
 #include <bela/fs.hpp>
-
+#include <bela/terminal.hpp>
 namespace bela::fs {
-constexpr auto nohideflags = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY;
-bool Remove(std::wstring_view path, bela::error_code &ec) {
-  constexpr auto flags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT;
-  constexpr auto shm = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-  // 0x00010000
-  auto FileHandle = CreateFileW(path.data(), DELETE, shm, nullptr, OPEN_EXISTING, flags, nullptr);
-  if (FileHandle == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code(L"CreateFileW ");
-    if (ec.code == ERROR_FILE_NOT_FOUND) {
-      return true;
-    }
+inline bool remove_file_hide_attribute(HANDLE FileHandle) {
+  FILE_BASIC_INFO bi;
+  if (GetFileInformationByHandleEx(FileHandle, FileBasicInfo, &bi, sizeof(bi)) != TRUE) {
     return false;
   }
-  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  bi.FileAttributes = bi.FileAttributes & ~(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
+  return SetFileInformationByHandle(FileHandle, FileBasicInfo, &bi, sizeof(bi));
+}
+
+bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec) {
   struct _File_disposition_info_ex {
     DWORD _Flags;
   };
@@ -26,7 +22,7 @@ bool Remove(std::wstring_view path, bela::error_code &ec) {
     return true;
   }
   if (e = GetLastError(); e == ERROR_ACCESS_DENIED) {
-    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~nohideflags);
+    remove_file_hide_attribute(FileHandle);
     if (SetFileInformationByHandle(FileHandle, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex)) == TRUE) {
       return true;
     }
@@ -49,7 +45,7 @@ bool Remove(std::wstring_view path, bela::error_code &ec) {
   }
 
   if (e = GetLastError(); e == ERROR_ACCESS_DENIED) {
-    SetFileAttributesW(path.data(), GetFileAttributesW(path.data()) & ~nohideflags);
+    remove_file_hide_attribute(FileHandle);
     if (SetFileInformationByHandle(FileHandle, FileDispositionInfo, &_Info, sizeof(_Info)) == TRUE) {
       return true;
     }
@@ -59,7 +55,32 @@ bool Remove(std::wstring_view path, bela::error_code &ec) {
   return false;
 }
 
-bool remove_all_dir(std::wstring_view path, bela::error_code &ec) {
+bool ForceDeleteFile(std::wstring_view path, bela::error_code &ec) {
+  constexpr auto flags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT;
+  constexpr auto shm = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+  constexpr auto openflags = FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES | DELETE;
+  // 0x00010000
+  auto FileHandle = CreateFileW(path.data(), openflags, shm, nullptr, OPEN_EXISTING, flags, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    auto e = GetLastError();
+    if (ec.code == ERROR_FILE_NOT_FOUND) {
+      return true;
+    }
+    if (ec.code != ERROR_ACCESS_DENIED) {
+      ec = bela::from_system_error_code(e);
+      return false;
+    }
+    if (FileHandle = CreateFileW(path.data(), DELETE, shm, nullptr, OPEN_EXISTING, flags, nullptr);
+        FileHandle == INVALID_HANDLE_VALUE) {
+      ec = bela::make_system_error_code(L"CreateFileW ");
+      return false;
+    }
+  }
+  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  return ForceDeleteFile(FileHandle, ec);
+}
+
+bool force_delete_folders(std::wstring_view path, bela::error_code &ec) {
   Finder finder;
   if (!finder.First(path, L"*", ec)) {
     return false;
@@ -70,27 +91,27 @@ bool remove_all_dir(std::wstring_view path, bela::error_code &ec) {
     }
     auto child = bela::StringCat(path, L"\\", finder.Name());
     if (finder.IsDir() && !finder.IsReparsePoint()) { // only normal dir remove it. symlink not
-      if (!remove_all_dir(child, ec)) {
+      if (!force_delete_folders(child, ec)) {
         return false;
       }
       continue;
     }
-    if (!bela::fs::Remove(child, ec)) {
+    if (!bela::fs::ForceDeleteFile(child, ec)) {
       return false;
     }
   } while (finder.Next());
-  if (!bela::fs::Remove(path, ec)) {
+  if (!bela::fs::ForceDeleteFile(path, ec)) {
     return false;
   }
   return true;
 }
 
-bool RemoveAll(std::wstring_view path, bela::error_code &ec) {
-  if (Remove(path, ec)) {
+bool ForceDeleteFolders(std::wstring_view path, bela::error_code &ec) {
+  if (ForceDeleteFile(path, ec)) {
     return true;
   }
   if (ec.code == ERROR_DIR_NOT_EMPTY) {
-    return remove_all_dir(path, ec);
+    return force_delete_folders(path, ec);
   }
   return false;
 }

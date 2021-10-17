@@ -107,7 +107,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   }
   auto deleter = bela::finally([&] {
     bela::error_code ec_;
-    bela::fs::Remove(*outfile, ec_);
+    bela::fs::ForceDeleteFile(*outfile, ec_);
   });
   auto decompressdir = bela::StringCat(outdir, L"\\", bucket.name);
   if (!baulk::zip::Decompress(*outfile, decompressdir, ec)) {
@@ -116,7 +116,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   baulk::standard::Regularize(decompressdir);
   auto bucketdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
   if (bela::PathExists(bucketdir)) {
-    bela::fs::RemoveAll(bucketdir, ec);
+    bela::fs::ForceDeleteFolders(bucketdir, ec);
   }
   if (MoveFileW(decompressdir.data(), bucketdir.data()) != TRUE) {
     ec = bela::make_system_error_code();

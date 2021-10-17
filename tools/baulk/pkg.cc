@@ -73,7 +73,7 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
     auto realdir = sim.PathExpand(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
     bela::error_code ec2;
-    if (bela::fs::RemoveAll(realdir, ec2)) {
+    if (bela::fs::ForceDeleteFolders(realdir, ec2)) {
       bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
     }
   }
@@ -129,7 +129,7 @@ int PackageMakeLinks(const baulk::Package &pkg) {
 
 inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela::error_code &ec) {
   if (bela::PathExists(target)) {
-    bela::fs::RemoveAll(target, ec);
+    bela::fs::ForceDeleteFolders(target, ec);
   }
   DbgPrint(L"lpExistingFileName %s lpNewFileName %s", source, target);
   if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
@@ -162,7 +162,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   baulk::DbgPrint(L"Decompress %s to %s\n", pkg.name, outdir);
   bela::error_code ec;
   if (bela::PathExists(outdir)) {
-    bela::fs::RemoveAll(outdir, ec);
+    bela::fs::ForceDeleteFolders(outdir, ec);
   }
   if (!h->decompress(pkgfile, outdir, ec)) {
     bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec.message);
@@ -206,7 +206,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     }
   }
   if (!pkgold.empty()) {
-    bela::fs::RemoveAll(pkgold, ec);
+    bela::fs::ForceDeleteFolders(pkgold, ec);
   }
   // create a links
   if (!PackageLocalMetaWrite(pkg, ec)) {

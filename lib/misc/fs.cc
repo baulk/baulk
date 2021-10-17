@@ -101,7 +101,7 @@ bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::
     auto newpath = destpath / p.path().filename();
     std::filesystem::rename(p.path(), newpath, e);
   }
-  if (!bela::fs::RemoveAll(*subfirst, ec)) {
+  if (!bela::fs::ForceDeleteFolders(*subfirst, ec)) {
     return false;
   }
   return true;
