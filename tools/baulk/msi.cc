@@ -237,7 +237,7 @@ inline void DecompressClear(std::wstring_view dir) {
 bool Regularize(std::wstring_view path) {
   DecompressClear(path);
   bela::error_code ec;
-  bela::fs::RemoveAll(bela::StringCat(path, L"\\Windows"), ec); //
+  bela::fs::ForceDeleteFolders(bela::StringCat(path, L"\\Windows"), ec); //
   constexpr std::wstring_view destdirs[] = {L"\\Program Files", L"\\ProgramFiles64", L"\\PFiles", L"\\Files"};
   for (auto d : destdirs) {
     auto sd = bela::StringCat(path, d);
@@ -246,7 +246,7 @@ bool Regularize(std::wstring_view path) {
     }
     if (baulk::fs::FlatPackageInitialize(sd, path, ec)) {
       bela::error_code ec2;
-      bela::fs::RemoveAll(sd, ec2);
+      bela::fs::ForceDeleteFolders(sd, ec2);
       return !ec;
     }
   }

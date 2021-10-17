@@ -2,6 +2,16 @@
 #ifndef BELA_FS_HPP
 #define BELA_FS_HPP
 #include "base.hpp"
+#include <stdio.h>
+
+#ifdef BELA_FS_DISABLE_DEPRECATED_WARNING
+#define BELA_FS_DEPRECATE_REMOVE
+#define BELA_FS_DEPRECATE_REMOVE_ALL
+#else
+#define BELA_FS_DEPRECATE_REMOVE [[deprecated("bela::fs::Remove is deprecated. Please use bela::fs::ForceDeleteFile")]]
+#define BELA_FS_DEPRECATE_REMOVE_ALL                                                                                   \
+  [[deprecated("bela::fs::RemoveAll is deprecated. Please use bela::fs::ForceDeleteFolders")]]
+#endif
 
 namespace bela::fs {
 constexpr bool DirSkipFaster(const wchar_t *dir) {
@@ -53,8 +63,15 @@ private:
   WIN32_FIND_DATAW wfd;
 };
 // Remove remove file force
-bool Remove(std::wstring_view path, bela::error_code &ec);
-bool RemoveAll(std::wstring_view path, bela::error_code &ec);
+bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec);
+bool ForceDeleteFile(std::wstring_view path, bela::error_code &ec);
+inline BELA_FS_DEPRECATE_REMOVE bool Remove(std::wstring_view path, bela::error_code &ec) {
+  return ForceDeleteFile(path, ec);
+}
+bool ForceDeleteFolders(std::wstring_view path, bela::error_code &ec);
+inline BELA_FS_DEPRECATE_REMOVE_ALL bool RemoveAll(std::wstring_view path, bela::error_code &ec) {
+  return ForceDeleteFolders(path, ec);
+}
 } // namespace bela::fs
 
 #endif

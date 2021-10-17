@@ -25,9 +25,9 @@ int uninstallone(std::wstring_view pkgname) {
   if (!baulk::BaulkRemovePkgLinks(pkgname, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgname, ec.message);
   }
-  bela::fs::RemoveAll(lockfile, ec);
+  bela::fs::ForceDeleteFolders(lockfile, ec);
   auto pkgdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkgs\\", pkgname);
-  if (!bela::fs::RemoveAll(pkgdir, ec)) {
+  if (!bela::fs::ForceDeleteFolders(pkgdir, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n", pkgname, ec.message);
     return 1;
   }

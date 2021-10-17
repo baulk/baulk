@@ -239,7 +239,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
     return false;
   }
   auto bucketDir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
-  bela::fs::RemoveAll(bucketDir, ec);
+  bela::fs::ForceDeleteFolders(bucketDir, ec);
   return true;
 }
 
