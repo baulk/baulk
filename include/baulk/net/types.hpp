@@ -49,7 +49,78 @@ inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
   return ec;
 }
 
+constexpr int hexval_table[] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0~0f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 10~1f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 20~2f
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1, -1, -1, -1, -1, // 30~3f
+    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 40~4f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 50~5f
+    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 60~6f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 70~7f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 80~8f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 90~9f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // a0~af
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // b0~bf
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // c0~cf
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // d0~df
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // e0~ef
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  // f0~ff
+};
+
+constexpr int decode_byte_couple(uint8_t a, uint8_t b) {
+  auto a1 = hexval_table[a];
+  auto b1 = hexval_table[b];
+  if (a1 < 0 || b1 < 0) {
+    return -1;
+  }
+  return ((a1 << 4) | b1);
+}
+
 } // namespace net_internal
+
+constexpr bool hash_decode(const char *hash_text, size_t length, uint8_t *buffer, size_t size) {
+  auto ms = (std::min)(length / 2, size);
+  for (size_t i = 0; i < ms; i++) {
+    auto b = net_internal::decode_byte_couple(static_cast<uint8_t>(hash_text[i * 2]),
+                                              static_cast<uint8_t>(hash_text[i * 2 + 1]));
+    if (b < 0) {
+      return false;
+    }
+    buffer[i] = static_cast<uint8_t>(b);
+  }
+  return true;
+}
+
+constexpr bool hash_decode(const wchar_t *hash_text, size_t length, uint8_t *buffer, size_t size) {
+  auto ms = (std::min)(length / 2, size);
+  for (size_t i = 0; i < ms; i++) {
+    auto b = net_internal::decode_byte_couple(static_cast<uint8_t>(hash_text[i * 2]),
+                                              static_cast<uint8_t>(hash_text[i * 2 + 1]));
+    if (b < 0) {
+      return false;
+    }
+    buffer[i] = static_cast<uint8_t>(b);
+  }
+  return true;
+}
+
+constexpr bool hash_decode(std::string_view hash_text, uint8_t *buffer, size_t size) {
+  return hash_decode(hash_text.data(), hash_text.size(), buffer, size);
+}
+
+constexpr bool hash_decode(std::wstring_view hash_text, uint8_t *buffer, size_t size) {
+  return hash_decode(hash_text.data(), hash_text.size(), buffer, size);
+}
+
+template <size_t N> bool hash_decode(std::wstring_view hash_text, uint8_t (&buffer)[N]) {
+  return hash_decode(hash_text.data(), hash_text.size(), buffer, N);
+}
+
+template <typename T, typename U, size_t N> bool bytes_equal(const T (&a)[N], const U (&b)[N]) {
+  return std::equal(a, a + N, b);
+}
+
 using headers_t = bela::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
                                       net_internal::StringCaseInsensitiveEq>;
 

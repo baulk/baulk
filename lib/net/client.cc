@@ -160,9 +160,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     bar.Finish();
   });
   int64_t current_bytes = filePart->CurrentBytes();
-  std::vector<char> buffer;
-  buffer.reserve(64 * 1024);
-  DWORD dwSize = 0;
+
   auto save_part_overlay = [&] {
     if (!part_support) {
       return;
@@ -171,6 +169,9 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     filePart->SaveOverlayData(hash_value, total_size, current_bytes, discard_ec);
   };
   // recv data
+  std::vector<char> buffer;
+  buffer.reserve(64 * 1024);
+  DWORD dwSize = 0;
   do {
     DWORD downloaded_size = 0;
     if (WinHttpQueryDataAvailable(req->addressof(), &dwSize) != TRUE) {

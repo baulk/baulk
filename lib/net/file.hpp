@@ -6,7 +6,7 @@
 #include <bela/io.hpp>
 
 namespace baulk::net::net_internal {
-enum class hash_t : uint32_t {
+enum class hash_t : uint16_t {
   NONE = 0,
   SHA224 = 1, //
   SHA256,     //
@@ -26,6 +26,7 @@ constexpr uint8_t part_magic[] = {'P', 'A', 'R', 'T'};
 struct part_overlay_data {
   uint8_t magic[4];
   hash_t method{hash_t::NONE};
+  uint16_t hashsz{0};
   uint8_t hash[64];
   int64_t total_bytes{0};
   int64_t current_bytes{0};
@@ -33,37 +34,28 @@ struct part_overlay_data {
 };
 #pragma pack(pop)
 
-inline constexpr int hex_digit_to_int(wchar_t c) {
-  static_assert('0' == 0x30 && 'A' == 0x41 && 'a' == 0x61, "Character set must be ASCII.");
-  // assert(bela::ascii_isxdigit(c));
-  int x = static_cast<unsigned char>(c);
-  if (x > '9') {
-    x += 9;
-  }
-  return x & 0xf;
-}
-
 struct HashPrefix {
   const std::wstring_view prefix;
   hash_t method;
+  uint16_t hashsz;
 };
 constexpr HashPrefix hnmaps[] = {
-    {L"BLAKE3", hash_t::BLAKE3},     // BLAKE3
-    {L"SHA224", hash_t::SHA224},     // SHA224
-    {L"SHA256", hash_t::SHA256},     // SHA256
-    {L"SHA384", hash_t::SHA384},     // SHA384
-    {L"SHA512", hash_t::SHA512},     // SHA512
-    {L"SHA3-224", hash_t::SHA3_224}, // SHA3-224
-    {L"SHA3-256", hash_t::SHA3_256}, // SHA3-256
-    {L"SHA3-384", hash_t::SHA3_384}, // SHA3-384
-    {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
-    {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
+    {L"BLAKE3", hash_t::BLAKE3, 32},     // BLAKE3
+    {L"SHA224", hash_t::SHA224, 28},     // SHA224
+    {L"SHA256", hash_t::SHA256, 32},     // SHA256
+    {L"SHA384", hash_t::SHA384, 48},     // SHA384
+    {L"SHA512", hash_t::SHA512, 64},     // SHA512
+    {L"SHA3-224", hash_t::SHA3_224, 28}, // SHA3-224
+    {L"SHA3-256", hash_t::SHA3_256, 32}, // SHA3-256
+    {L"SHA3-384", hash_t::SHA3_384, 48}, // SHA3-384
+    {L"SHA3-512", hash_t::SHA3_512, 64}, // SHA3-512
+    {L"SHA3", hash_t::SHA3, 32},         // SHA3 alias for SHA3-256
 };
 
 inline bool hash_construct(std::wstring_view hash_value, part_overlay_data &overlay_data, bela::error_code &ec) {
-
   std::wstring_view value = hash_value;
   overlay_data.method = hash_t::SHA256;
+  overlay_data.hashsz = 32;
   if (auto pos = hash_value.find(':'); pos != std::wstring_view::npos) {
     value = hash_value.substr(pos + 1);
     auto prefix = bela::AsciiStrToUpper(hash_value.substr(0, pos));
@@ -71,6 +63,7 @@ inline bool hash_construct(std::wstring_view hash_value, part_overlay_data &over
       for (const auto &h : hnmaps) {
         if (h.prefix == prefix) {
           overlay_data.method = h.method;
+          overlay_data.hashsz = h.hashsz;
           return true;
         }
       }
@@ -82,11 +75,9 @@ inline bool hash_construct(std::wstring_view hash_value, part_overlay_data &over
     }
   }
   memset(overlay_data.hash, 0, sizeof(overlay_data.hash));
-  auto hlen = value.size() / 2;
-  for (size_t i = 0; i < (std::min)(hlen, sizeof(overlay_data.hash)); i++) {
-    auto a = hex_digit_to_int(value[i * 2]);
-    auto b = hex_digit_to_int(value[i * 2 + 1]);
-    overlay_data.hash[i] = static_cast<uint8_t>((a << 4) | b);
+  if (!hash_decode(value, overlay_data.hash)) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"unsupport hash text '", value, L"'");
+    return false;
   }
   return true;
 }
@@ -105,8 +96,9 @@ inline bool disposition_file_handle(HANDLE fh) {
                                  sizeof(_Info_ex))) {
     return true;
   }
+  auto ec = bela::make_system_error_code(L"SetFileInformationByHandle() ");
 
-  switch (GetLastError()) {
+  switch (ec.code) {
   case ERROR_INVALID_PARAMETER: // Older Windows versions
     [[fallthrough]];
   case ERROR_INVALID_FUNCTION: // Windows 10 1607
@@ -116,6 +108,7 @@ inline bool disposition_file_handle(HANDLE fh) {
   case ERROR_ACCESS_DENIED: // This might be due to the read-only bit, try to clear it and try again
     [[fallthrough]];
   default:
+    bela::FPrintF(stderr, L"Disposition: %s\n", ec.message);
     return false;
   }
 
@@ -135,15 +128,11 @@ inline bool truncated_file(HANDLE fh, int64_t pos, bela::error_code &ec) {
   if (!bela::io::Seek(fh, pos, ec)) {
     return false;
   }
-  if (!SetEndOfFile(fh) != TRUE) {
+  if (SetEndOfFile(fh) != TRUE) {
     ec = bela::make_system_error_code(L"SetEndOfFile() ");
     return false;
   }
   return true;
-}
-
-template <typename T, typename U, size_t N> bool ArrayEqual(const T (&a)[N], const U (&b)[N]) {
-  return std::equal(a, a + N, b);
 }
 
 class FilePart {
@@ -180,6 +169,7 @@ public:
     part_overlay_data overlay_data{
         .magic = {'P', 'A', 'R', 'T'},
         .method = hash_t::NONE,
+        .hashsz = {0},
         .hash = {0},
         .total_bytes = total_bytes,
         .current_bytes = current_bytes,
@@ -249,8 +239,10 @@ public:
   static std::optional<FilePart> MakeFilePart(std::wstring_view p, std::wstring_view hash_value, bela::error_code &ec) {
     auto pp = bela::PathAbsolute(p);
     auto part = bela::StringCat(pp, part_suffix);
-    auto fh = ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | DELETE, FILE_SHARE_READ, nullptr,
-                            OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    // https://devblogs.microsoft.com/oldnewthing/20170310-00/?p=95705
+    auto fh = ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
+                            FILE_SHARE_READ, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
+                            nullptr);
     if (fh == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
       return std::nullopt;
@@ -260,8 +252,14 @@ public:
       cleanup_close_file(fh);
       return std::nullopt;
     }
+    auto local_truncated = [&]() -> bool {
+      if (fileSize == 0) {
+        return true;
+      }
+      return truncated_file(fh, 0, ec);
+    };
     if (fileSize <= static_cast<int64_t>(sizeof(part_overlay_data)) || hash_value.empty()) {
-      if (truncated_file(fh, 0, ec)) {
+      if (!local_truncated()) {
         return std::nullopt;
       }
       return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
@@ -269,13 +267,14 @@ public:
     part_overlay_data overlayInput{
         .magic = {0},
         .method = hash_t::NONE,
+        .hashsz = {0},
         .hash = {0},
         .total_bytes = 0,
         .current_bytes = 0,
         .laste_time = 0,
     };
     if (!hash_construct(hash_value, overlayInput, ec)) {
-      if (truncated_file(fh, 0, ec)) {
+      if (!local_truncated()) {
         return std::nullopt;
       }
       return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
@@ -284,6 +283,7 @@ public:
     part_overlay_data overlayDisk{
         .magic = {0},
         .method = hash_t::NONE,
+        .hashsz = {0},
         .hash = {0},
         .total_bytes = 0,
         .current_bytes = 0,
@@ -291,19 +291,19 @@ public:
     };
     size_t outSize = 0;
     if (!bela::io::ReadAt(fh, &overlayDisk, sizeof(overlayDisk), seekTo, outSize, ec)) {
-      if (truncated_file(fh, 0, ec)) {
+      if (!local_truncated()) {
         return std::nullopt;
       }
       return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
     }
-    if (!ArrayEqual(overlayDisk.magic, part_magic) || !ArrayEqual(overlayInput.hash, overlayDisk.hash) ||
-        overlayDisk.method != overlayInput.method) {
-      if (truncated_file(fh, 0, ec)) {
+    if (!bytes_equal(overlayDisk.magic, part_magic) || !bytes_equal(overlayInput.hash, overlayDisk.hash) ||
+        overlayDisk.method != overlayInput.method || overlayDisk.hashsz != overlayInput.hashsz) {
+      if (!local_truncated()) {
         return std::nullopt;
       }
       return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
     }
-    if (truncated_file(fh, seekTo, ec)) {
+    if (!truncated_file(fh, seekTo, ec)) {
       return std::nullopt;
     }
     // current_bytes part found

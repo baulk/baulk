@@ -281,18 +281,19 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version, std::
   }
   constexpr std::string_view urlprefix = "/baulk/baulk/releases/download/";
   size_t index = 0;
+  auto content = resp->Content();
   for (;;) {
-    auto pos = resp->body.find(urlprefix, index);
+    auto pos = content.find(urlprefix, index);
     if (pos == std::wstring::npos) {
       bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m\n", oldver);
       return false;
     }
-    auto pos2 = resp->body.find('"', pos);
+    auto pos2 = content.find('"', pos);
     if (pos2 == std::wstring::npos) {
       bela::FPrintF(stderr, L"baulk upgrade get %s: \x1b[31minvalid html url\x1b[0m\n", oldver);
       return false;
     }
-    std::wstring filename = bela::ToWide(resp->body.data() + pos, pos2 - pos);
+    auto filename = bela::encode_into<char, wchar_t>({content.data() + pos, pos2 - pos});
 
     index = pos2 + 1;
     std::vector<std::wstring_view> svv = bela::StrSplit(filename, bela::ByChar('/'), bela::SkipEmpty());
@@ -338,8 +339,8 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   }
   try {
     /* code */
-    auto obj = nlohmann::json::parse(resp->body, nullptr, true, true);
-    auto tagname = bela::ToWide(obj["tag_name"].get<std::string_view>());
+    auto obj = nlohmann::json::parse(resp->Content(), nullptr, true, true);
+    auto tagname = bela::encode_into<char, wchar_t>(obj["tag_name"].get<std::string_view>());
     if (oldver == tagname) {
       bela::FPrintF(stderr, L"\x1b[33mbaulk/%s is up to date\x1b[0m", oldver);
       return false;
@@ -351,11 +352,11 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
       return false;
     }
     for (const auto &p : it.value()) {
-      auto name = bela::ToWide(p["name"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(p["name"].get<std::string_view>());
       if (!bela::EndsWithIgnoreCase(name, archfilesuffix())) {
         continue;
       }
-      url = bela::ToWide(p["browser_download_url"].get<std::string_view>());
+      url = bela::encode_into<char, wchar_t>(p["browser_download_url"].get<std::string_view>());
       return true;
     }
     //
@@ -464,7 +465,7 @@ int BaulkUpdate() {
   if (!ReleaseIsUpgradable(url, version)) {
     return 0;
   }
-  auto filename = baulk::net::UrlFileName(url);
+  auto filename = baulk::net::url_path_name(url);
   bela::FPrintF(stderr, L"\x1b[32mNew release url %s\x1b[0m\n", url);
 
   auto pkgtmpdir = bela::StringCat(baulk::BaulkRoot, L"\\bin\\pkgs\\.pkgtmp");
@@ -473,7 +474,7 @@ int BaulkUpdate() {
     bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir, ec.message);
     return 1;
   }
-  auto baulkfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
+  auto baulkfile = baulk::net::WinGet(url, pkgtmpdir, L"", true, ec);
   if (!baulkfile) {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     return 1;

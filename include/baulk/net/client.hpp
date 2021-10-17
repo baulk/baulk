@@ -81,7 +81,7 @@ inline std::optional<Response> RestGet(std::wstring_view url, bela::error_code &
 // WinGet download file
 inline std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view cwd, std::wstring_view hash_value,
                                           bool force_overwrite, bela::error_code &ec) {
-  HttpClient::DefaultClient().WinGet(url, cwd, hash_value, force_overwrite, ec);
+  return HttpClient::DefaultClient().WinGet(url, cwd, hash_value, force_overwrite, ec);
 }
 
 } // namespace baulk::net

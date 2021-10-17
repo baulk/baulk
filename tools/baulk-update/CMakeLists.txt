@@ -1,10 +1,11 @@
 #
 
-add_executable(baulk-update baulk-update.cc baulk-update.rc baulk.manifest)
+add_executable(baulk-update baulk-update.cc baulk-update.rc baulk-update.manifest)
 
 target_link_libraries(
   baulk-update
   baulk.archive
+  baulk.net
   baulk.misc
   belawin
   belatime
