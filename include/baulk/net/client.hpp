@@ -1,6 +1,7 @@
 #ifndef BAULK_NET_CLIENT_HPP
 #define BAULK_NET_CLIENT_HPP
 #include "types.hpp"
+#include <bela/terminal.hpp>
 
 namespace baulk::net {
 class Response : private minimal_response {
@@ -60,6 +61,31 @@ public:
   static HttpClient &DefaultClient() {
     static HttpClient client;
     return client;
+  }
+
+  template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
+    if (!debugMode) {
+      return 0;
+    }
+    const bela::format_internal::FormatArg arg_array[] = {args...};
+    std::wstring str;
+    str.append(L"\x1b[33m* ");
+    bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
+    if (str.back() == '\n') {
+      str.pop_back();
+    }
+    str.append(L"\x1b[0m\n");
+    return bela::terminal::WriteAuto(stderr, str);
+  }
+  bela::ssize_t DbgPrint(const wchar_t *fmt) {
+    if (!debugMode) {
+      return 0;
+    }
+    std::wstring_view msg(fmt);
+    if (!msg.empty() && msg.back() == '\n') {
+      msg.remove_suffix(1);
+    }
+    return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
   }
 
 private:

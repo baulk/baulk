@@ -6,6 +6,67 @@
 #include "file.hpp"
 
 namespace baulk::net {
+
+inline std::optional<std::wstring> query_remote_address(HINTERNET hRequest) {
+  WINHTTP_CONNECTION_INFO coninfo;
+  DWORD dwSize = sizeof(WINHTTP_CONNECTION_INFO);
+  if (WinHttpQueryOption(hRequest, WINHTTP_OPTION_CONNECTION_INFO, &coninfo, &dwSize) != TRUE) {
+    return std::nullopt;
+  }
+  wchar_t addrw[256];
+  if (coninfo.RemoteAddress.ss_family == AF_INET) {
+    auto addr = reinterpret_cast<const struct sockaddr_in *>(&coninfo.RemoteAddress);
+    if (InetNtopW(AF_INET, &addr->sin_addr, addrw, sizeof(addrw) * 2) == nullptr) {
+      return std::nullopt;
+    }
+    return std::make_optional<std::wstring>(addrw);
+  }
+  if (coninfo.RemoteAddress.ss_family == AF_INET6) {
+    auto addr = reinterpret_cast<const struct sockaddr_in6 *>(&coninfo.RemoteAddress);
+    if (InetNtopW(AF_INET6, &addr->sin6_addr, addrw, sizeof(addrw) * 2) == nullptr) {
+      return std::nullopt;
+    }
+    return std::make_optional<std::wstring>(addrw);
+  }
+  return std::nullopt;
+}
+
+void connect_trace(HINTERNET hRequest) {
+  WINHTTP_SECURITY_INFO_X si;
+  DWORD dwSize = sizeof(si);
+  if (WinHttpQueryOption(hRequest, WINHTTP_OPTION_SECURITY_INFO, &si, &dwSize) != TRUE) {
+    return;
+  }
+  if ((si.ConnectionInfo.dwProtocol & SP_PROT_TLS1_2_CLIENT) != 0) {
+    bela::FPrintF(stderr, L"\x1b[33m* SSL connection using TLSv1.2 / %s\x1b[0m\n", si.CipherInfo.szCipherSuite);
+  }
+  if ((si.ConnectionInfo.dwProtocol & SP_PROT_TLS1_3_CLIENT) != 0) {
+    bela::FPrintF(stderr, L"\x1b[33m* SSL connection using TLSv1.3 / %s\x1b[0m\n", si.CipherInfo.szCipherSuite);
+  }
+}
+
+void response_trace(minimal_response &resp) {
+  int color = 31;
+  if (resp.status_code < 200) {
+    color = 33;
+  } else if (resp.status_code < 300) {
+    color = 35;
+  } else if (resp.status_code < 400) {
+    color = 36;
+  }
+  std::wstring_view version = L"\x1b[33m1.1";
+  if (resp.version == protocol_version::HTTP2) {
+    version = L"\x1b[33m2.0";
+  } else if (resp.version == protocol_version::HTTP3) {
+    version = L"\x1b[36m3.0";
+  }
+  bela::FPrintF(stderr, L"\x1b[33m< \x1b[34mHTTP\x1b[37m/%s \x1b[36m%d \x1b[%dm%s\x1b[0m\n", version, resp.status_code,
+                color, resp.status_text);
+  for (auto &[k, v] : resp.headers) {
+    bela::FPrintF(stderr, L"\x1b[33m< \x1b[36m%s: \x1b[34m%s\x1b[0m\n", k, v);
+  }
+}
+
 using baulk::net::net_internal::make_net_error_code;
 bool HttpClient::IsNoProxy(std::wstring_view host) const {
   for (const auto &u : noProxy) {
@@ -64,9 +125,19 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   if (!req->write_body(body, content_type, ec)) {
     return std::nullopt;
   }
+  if (debugMode) {
+    if (auto addr = query_remote_address(req->addressof()); addr) {
+      bela::FPrintF(stderr, L"\x1b[33mConnecting to %s (%s) %s|:%d connected.\x1b[0m\n", u->host, u->host, *addr,
+                    u->nPort);
+    }
+    connect_trace(req->addressof());
+  }
   auto mr = req->recv_minimal_response(ec);
   if (!mr) {
     return std::nullopt;
+  }
+  if (debugMode) {
+    response_trace(*mr);
   }
   std::vector<char> buffer;
   int64_t recv_size = -1;
@@ -117,9 +188,19 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
   if (!req->write_body(L"", L"", ec)) {
     return std::nullopt;
   }
+  if (debugMode) {
+    if (auto addr = query_remote_address(req->addressof()); addr) {
+      bela::FPrintF(stderr, L"\x1b[33mConnecting to %s (%s) %s|:%d connected.\x1b[0m\n", u->host, u->host, *addr,
+                    u->nPort);
+    }
+    connect_trace(req->addressof());
+  }
   auto mr = req->recv_minimal_response(ec);
   if (!mr) {
     return std::nullopt;
+  }
+  if (debugMode) {
+    response_trace(*mr);
   }
   if (auto newName = native::extract_filename(mr->headers); newName) {
     destination = bela::PathCat(cwd, *newName);
@@ -138,6 +219,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
 
   int64_t total_size = native::content_length(mr->headers);
   bool part_support = !hash_value.empty() && native::enable_part_download(mr->headers) && total_size > 0;
+  DbgPrint(L"%s support part download: %v", u->filename, part_support);
   if (!mr->IsSuccessStatusCode()) {
     ec = bela::make_error_code(bela::ErrGeneral, L"response: ", mr->status_code, L" status: ", mr->status_text);
     return std::nullopt;
@@ -167,6 +249,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     }
     bela::error_code discard_ec;
     filePart->SaveOverlayData(hash_value, total_size, current_bytes, discard_ec);
+    DbgPrint(L"%s download broken for bytes: %d-%d", u->filename, current_bytes, total_size);
   };
   // recv data
   std::vector<char> buffer;

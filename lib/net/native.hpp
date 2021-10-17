@@ -110,7 +110,7 @@ public:
       WinHttpCloseHandle(h);
     }
   }
-  auto addressof() { return h; }
+  auto addressof() const { return h; }
   bool set_proxy_url(std::wstring &url) {
     WINHTTP_PROXY_INFOW proxy;
     proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
