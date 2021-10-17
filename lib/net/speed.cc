@@ -1,18 +1,19 @@
 //
 #include <baulk/net.hpp>
-#include "include.hpp"
+#include <baulk/net/tcp.hpp>
+#include "native.hpp"
 
 namespace baulk::net {
 constexpr auto MaximumTime = (std::numeric_limits<std::uint64_t>::max)();
 
 std::uint64_t UrlResponseTime(std::wstring_view url) {
-  UrlComponets uc;
-  if (!CrackUrl(url, uc)) {
+  bela::error_code ec;
+  auto u = native::crack_url(url, ec);
+  if (!u) {
     return MaximumTime;
   }
   auto begin = std::chrono::steady_clock::now();
-  bela::error_code ec;
-  if (auto conn = baulk::net::DialTimeout(uc.host, uc.nPort, 10000, ec); !conn) {
+  if (auto conn = baulk::net::DialTimeout(u->host, u->nPort, 10000, ec); !conn) {
     return MaximumTime;
   }
   auto cur = std::chrono::steady_clock::now();

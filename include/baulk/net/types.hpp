@@ -48,6 +48,7 @@ inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
   ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
   return ec;
 }
+
 } // namespace net_internal
 using headers_t = bela::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
                                       net_internal::StringCaseInsensitiveEq>;
@@ -60,6 +61,7 @@ struct minimal_response {
   std::wstring status_text;
   [[nodiscard]] bool IsSuccessStatusCode() const { return status_code >= 200 && status_code <= 299; }
 };
+
 std::wstring url_decode(std::wstring_view str);
 
 inline std::wstring url_path_name(std::wstring_view urlpath) {

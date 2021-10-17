@@ -5,7 +5,6 @@
 namespace baulk::net {
 class Response : private minimal_response {
 public:
-  Response() = default;
   Response(minimal_response &&mr, std::vector<char> &&b, size_t sz) {
     version = mr.version;
     headers = std::move(mr.headers);
@@ -43,8 +42,8 @@ public:
   std::optional<Response> Get(std::wstring_view url, bela::error_code &ec) {
     return WinRest(L"GET", url, L"", L"", ec);
   }
-  std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir, bool forceoverwrite,
-                                     bela::error_code &ec);
+  std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view cwd, std::wstring_view hash_value,
+                                     bool force_overwrite, bela::error_code &ec);
   //
   std::wstring &UserAgent() { return userAgent; }
   std::wstring_view UserAgent() const { return userAgent; }
@@ -54,8 +53,6 @@ public:
   bool &DebugMode() { return debugMode; }
   size_t DirectMaxBodySize() const { return direct_max_body_size; }
   size_t &DirectMaxBodySize() { return direct_max_body_size; }
-  bool IsRangeAccepted() const { return rangeAccepted; }
-  bool &RangeAccepted() { return rangeAccepted; }
   bool InitializeProxyFromEnv();
   std::wstring &ProxyURL() { return proxyURL; }
   std::wstring_view ProxyURL() const { return proxyURL; }
@@ -74,16 +71,17 @@ private:
   size_t direct_max_body_size{128 * 1024 * 1024};
   bool insecureMode{false};
   bool debugMode{false};
-  bool rangeAccepted{false};
 };
 
+// HTTP rest api
 inline std::optional<Response> RestGet(std::wstring_view url, bela::error_code &ec) {
   return HttpClient::DefaultClient().WinRest(L"GET", url, L"", L"", ec);
 }
-// Download to file
-inline std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view workdir, bool forceoverwrite,
-                                          bela::error_code &ec) {
-  HttpClient::DefaultClient().WinGet(url, workdir, forceoverwrite, ec);
+
+// WinGet download file
+inline std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view cwd, std::wstring_view hash_value,
+                                          bool force_overwrite, bela::error_code &ec) {
+  HttpClient::DefaultClient().WinGet(url, cwd, hash_value, force_overwrite, ec);
 }
 
 } // namespace baulk::net

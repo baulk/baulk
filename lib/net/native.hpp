@@ -1,5 +1,5 @@
-#ifndef BAULK_NET_LOWLAYER_HPP
-#define BAULK_NET_LOWLAYER_HPP
+#ifndef BAULK_NET_NATIVE_HPP
+#define BAULK_NET_NATIVE_HPP
 #include <bela/env.hpp>
 #include <bela/strip.hpp>
 #include <baulk/net/types.hpp>
@@ -25,9 +25,84 @@ struct WINHTTP_SECURITY_INFO_X {
 #endif
 
 namespace baulk::net::native {
+using baulk::net::net_internal::make_net_error_code;
+struct url {
+  std::wstring host;
+  std::wstring filename;
+  std::wstring uri;
+  int nPort{80};
+  int nScheme{INTERNET_SCHEME_HTTPS};
+  inline DWORD TlsFlag() const { return nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0; }
+};
+
+inline std::optional<url> crack_url(std::wstring_view us, bela::error_code &ec) {
+  URL_COMPONENTSW uc;
+  ZeroMemory(&uc, sizeof(uc));
+  uc.dwStructSize = sizeof(uc);
+  uc.dwSchemeLength = (DWORD)-1;
+  uc.dwHostNameLength = (DWORD)-1;
+  uc.dwUrlPathLength = (DWORD)-1;
+  uc.dwExtraInfoLength = (DWORD)-1;
+  if (WinHttpCrackUrl(us.data(), static_cast<DWORD>(us.size()), 0, &uc) != TRUE) {
+    ec = make_net_error_code();
+    return std::nullopt;
+  }
+  std::wstring_view urlpath{uc.lpszUrlPath, uc.dwUrlPathLength};
+  return std::make_optional(
+      url{.host = {uc.lpszHostName, uc.dwHostNameLength},
+          .filename = url_path_name(urlpath),
+          .uri = bela::StringCat(urlpath, std::wstring_view{uc.lpszExtraInfo, uc.dwExtraInfoLength}),
+          .nPort = uc.nPort,
+          .nScheme = uc.nScheme});
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+// https://www.rfc-editor.org/rfc/rfc6266#section-5
+inline std::optional<std::wstring> extract_filename(const headers_t &hkv) {
+  auto it = hkv.find(L"Content-Disposition");
+  if (it == hkv.end()) {
+    return std::nullopt;
+  }
+  std::vector<std::wstring_view> pvv = bela::StrSplit(it->second, bela::ByChar(';'), bela::SkipEmpty());
+  constexpr std::wstring_view fns = L"filename=";
+  constexpr std::wstring_view fnsu = L"filename*=";
+  for (auto e : pvv) {
+    auto s = bela::StripAsciiWhitespace(e);
+    if (bela::ConsumePrefix(&s, fns)) {
+      bela::ConsumePrefix(&s, L"\"");
+      bela::ConsumeSuffix(&s, L"\"");
+      return std::make_optional<>(url_path_name(s));
+    }
+    if (bela::ConsumePrefix(&s, fnsu)) {
+      bela::ConsumePrefix(&s, L"\"");
+      bela::ConsumeSuffix(&s, L"\"");
+      return std::make_optional<>(url_decode(url_path_name(s)));
+    }
+  }
+  return std::nullopt;
+}
+
+// content_length
+inline int64_t content_length(const headers_t &hkv) {
+  if (auto it = hkv.find(L"Content-Length"); it != hkv.end()) {
+    if (int64_t len = 0; bela::SimpleAtoi(bela::StripAsciiWhitespace(it->second), &len)) {
+      return len;
+    }
+  }
+  return -1;
+}
+
+inline bool enable_part_download(const headers_t &hkv) {
+  if (auto it = hkv.find(L"Accept-Ranges"); it != hkv.end()) {
+    return bela::EqualsIgnoreCase(bela::StripAsciiWhitespace(it->second), L"bytes");
+  }
+  return false;
+}
+
 class handle {
 public:
   handle() = default;
+  handle(HINTERNET h_) : h(h_) {}
   handle(const handle &) = delete;
   handle &operator=(const handle &) = delete;
   ~handle() {
@@ -36,17 +111,6 @@ public:
     }
   }
   auto addressof() { return h; }
-  int64_t content_length() const {
-    wchar_t conlen[32];
-    DWORD dwXsize = sizeof(conlen);
-    int64_t len = -1;
-    if (WinHttpQueryHeaders(h, WINHTTP_QUERY_CONTENT_LENGTH, WINHTTP_HEADER_NAME_BY_INDEX, conlen, &dwXsize,
-                            WINHTTP_NO_HEADER_INDEX) == TRUE &&
-        bela::SimpleAtoi(bela::StripAsciiWhitespace({conlen, dwXsize / 2}), &len)) {
-      return len;
-    }
-    return -1;
-  }
   bool set_proxy_url(std::wstring &url) {
     WINHTTP_PROXY_INFOW proxy;
     proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
@@ -73,33 +137,6 @@ public:
     DWORD dwFlags = SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE |
                     SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
     WinHttpSetOption(h, WINHTTP_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
-  }
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
-  // https://www.rfc-editor.org/rfc/rfc6266#section-5
-  std::optional<std::wstring> extract_filename() {
-    wchar_t diposition[MAX_PATH + 4];
-    DWORD dwXsize = sizeof(diposition);
-    if (WinHttpQueryHeaders(h, WINHTTP_QUERY_CUSTOM, L"Content-Disposition", diposition, &dwXsize,
-                            WINHTTP_NO_HEADER_INDEX) != TRUE) {
-      return std::nullopt;
-    }
-    std::vector<std::wstring_view> pvv = bela::StrSplit(diposition, bela::ByChar(';'), bela::SkipEmpty());
-    constexpr std::wstring_view fns = L"filename=";
-    constexpr std::wstring_view fnsu = L"filename*=";
-    for (auto e : pvv) {
-      auto s = bela::StripAsciiWhitespace(e);
-      if (bela::ConsumePrefix(&s, fns)) {
-        bela::ConsumePrefix(&s, L"\"");
-        bela::ConsumeSuffix(&s, L"\"");
-        return std::make_optional<>(url_path_name(s));
-      }
-      if (bela::ConsumePrefix(&s, fnsu)) {
-        bela::ConsumePrefix(&s, L"\"");
-        bela::ConsumeSuffix(&s, L"\"");
-        return std::make_optional<>(url_decode(url_path_name(s)));
-      }
-    }
-    return std::nullopt;
   }
   // fill header
   bool write_headers(const headers_t &hkv, const std::vector<std::wstring> &cookies, int64_t position, int64_t length,
@@ -164,7 +201,7 @@ public:
     }
     std::wstring status;
     status.resize(128);
-    dwSize = status.size() * 2;
+    dwSize = static_cast<DWORD>(status.size() * 2);
     if (WinHttpQueryHeaders(h, WINHTTP_QUERY_STATUS_TEXT, nullptr, status.data(), &dwSize, nullptr) == TRUE) {
       status.resize(dwSize / 2);
     }
@@ -206,14 +243,14 @@ public:
                                                .status_text = std::move(status)});
   }
   //
-  int64_t recv_completely(std::vector<char> &buffer, size_t max_body_size, bela::error_code &ec) {
-    auto l = content_length();
-    if (l == 0) {
+  int64_t recv_completely(int64_t len, std::vector<char> &buffer, size_t max_body_size, bela::error_code &ec) {
+    if (len == 0) {
       return 0;
     }
     // content-length
-    if (l > 0) {
-      auto total_size = static_cast<size_t>((std::min)(static_cast<uint64_t>(max_body_size), static_cast<uint64_t>(l)));
+    if (len > 0) {
+      auto total_size =
+          static_cast<size_t>((std::min)(static_cast<uint64_t>(max_body_size), static_cast<uint64_t>(len)));
       buffer.resize(total_size);
       size_t download_size = 0;
       auto buf = buffer.data();
@@ -278,7 +315,6 @@ public:
   }
 
 private:
-  handle(HINTERNET h_) : h(h_) {}
   friend std::optional<handle> make_session(std::wstring_view ua, bela::error_code &ec);
   HINTERNET h{nullptr};
 };
@@ -292,36 +328,6 @@ inline std::optional<handle> make_session(std::wstring_view ua, bela::error_code
     return std::nullopt;
   }
   return std::make_optional<handle>(hSession);
-}
-
-struct url {
-  std::wstring host;
-  std::wstring filename;
-  std::wstring uri;
-  int nPort{80};
-  int nScheme{INTERNET_SCHEME_HTTPS};
-  inline DWORD TlsFlag() const { return nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0; }
-};
-
-inline std::optional<url> crack_url(std::wstring_view us, bela::error_code &ec) {
-  URL_COMPONENTSW uc;
-  ZeroMemory(&uc, sizeof(uc));
-  uc.dwStructSize = sizeof(uc);
-  uc.dwSchemeLength = (DWORD)-1;
-  uc.dwHostNameLength = (DWORD)-1;
-  uc.dwUrlPathLength = (DWORD)-1;
-  uc.dwExtraInfoLength = (DWORD)-1;
-  if (WinHttpCrackUrl(us.data(), static_cast<DWORD>(us.size()), 0, &uc) != TRUE) {
-    ec = make_net_error_code();
-    return std::nullopt;
-  }
-  std::wstring_view urlpath{uc.lpszUrlPath, uc.dwUrlPathLength};
-  return std::make_optional(
-      url{.host = {uc.lpszHostName, uc.dwHostNameLength},
-          .filename = url_path_name(urlpath),
-          .uri = bela::StringCat(urlpath, std::wstring_view{uc.lpszExtraInfo, uc.dwExtraInfoLength}),
-          .nPort = uc.nPort,
-          .nScheme = uc.nScheme});
 }
 
 } // namespace baulk::net::native
