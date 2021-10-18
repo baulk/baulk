@@ -21,15 +21,15 @@ bool IsDebugMode = false;
 bool IsForceMode = false;
 
 std::wstring BaulkRoot;
-void InitializeBaulk() {
+void initialize_baulk() {
   bela::error_code ec;
   if (auto exedir = bela::ExecutableParent(ec); exedir) {
     BaulkRoot.assign(std::move(*exedir));
     bela::PathStripName(BaulkRoot);
-  } else {
-    bela::FPrintF(stderr, L"unable find executable path: %s\n", ec.message);
-    BaulkRoot = L".";
+    return;
   }
+  bela::FPrintF(stderr, L"baulk-update error unable find executable folder: %s\n", ec.message);
+  BaulkRoot = L".";
 }
 
 constexpr const std::wstring_view archfilesuffix() {
@@ -46,7 +46,7 @@ constexpr const std::wstring_view archfilesuffix() {
 #endif
 }
 
-bool ResolveBaulkRev(std::wstring &releasename) {
+bool detect_baulk_revision(std::wstring &releasename) {
   bela::process::Process ps;
   auto baulkexe = bela::StringCat(BaulkRoot, L"\\bin\\baulk.exe");
   if (ps.Capture(baulkexe, L"--version") != 0) {
@@ -57,16 +57,14 @@ bool ResolveBaulkRev(std::wstring &releasename) {
     return false;
   }
 
+  constexpr std::string_view releaseprefix = "Release:";
   std::vector<std::string_view> lines =
       bela::narrow::StrSplit(ps.Out(), bela::narrow::ByChar('\n'), bela::narrow::SkipEmpty());
-  constexpr std::string_view releaseprefix = "Release:";
   for (auto line : lines) {
-    line = bela::StripAsciiWhitespace(line);
-    if (!bela::StartsWith(line, releaseprefix)) {
+    if (line = bela::StripAsciiWhitespace(line); !bela::StartsWith(line, releaseprefix)) {
       continue;
     }
-    auto relname = bela::StripAsciiWhitespace(line.substr(releaseprefix.size()));
-    releasename = bela::ToWide(relname);
+    releasename = bela::encode_into<char, wchar_t>(bela::StripAsciiWhitespace(line.substr(releaseprefix.size())));
     return true;
   }
   releasename.assign(BAULK_REFNAME);
@@ -76,13 +74,13 @@ bool ResolveBaulkRev(std::wstring &releasename) {
 bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version, std::wstring_view oldver) {
   // https://github.com/baulk/baulk/releases/latest
   constexpr std::wstring_view latest = L"https://github.com/baulk/baulk/releases/latest";
+  constexpr std::string_view urlprefix = "/baulk/baulk/releases/download/";
   bela::error_code ec;
   auto resp = baulk::net::RestGet(latest, ec);
   if (!resp) {
     bela::FPrintF(stderr, L"baulk upgrade get latest: \x1b[31m%s\x1b[0m\n", ec.message);
     return false;
   }
-  constexpr std::string_view urlprefix = "/baulk/baulk/releases/download/";
   size_t index = 0;
   auto content = resp->Content();
   for (;;) {
@@ -122,7 +120,7 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version, std::
 // https://api.github.com/repos/baulk/baulk/releases/latest todo
 bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   std::wstring releasename;
-  if (!ResolveBaulkRev(releasename)) {
+  if (!detect_baulk_revision(releasename)) {
     bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n", releasename);
   }
   constexpr std::wstring_view releaseprefix = L"refs/tags/";
@@ -169,6 +167,10 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   return false;
 }
 
+inline bool move_file(std::wstring_view src, std::wstring_view target) {
+  return MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE;
+}
+
 bool UpdateFile(std::wstring_view src, std::wstring_view target) {
   if (!bela::PathExists(src)) {
     // ignore
@@ -180,16 +182,16 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
     DbgPrint(L"failed MakeParentDir %s", ec.message);
     return false;
   }
-  if (MoveFileExW(src.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
-    if (!IsDebugMode) {
-      bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mupdate %s done\x1b[0m", target);
-      return true;
-    }
-    DbgPrint(L"update %s done", target);
+  if (!move_file(src, target)) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
+  if (!IsDebugMode) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mupdate %s done\x1b[0m", target);
     return true;
   }
-  ec = bela::make_system_error_code();
-  return false;
+  DbgPrint(L"update %s done", target);
+  return true;
 }
 
 int ExecuteInternal(wchar_t *cmdline) {
@@ -419,6 +421,6 @@ int wmain(int argc, wchar_t **argv) {
   if (!ParseArgv(argc, argv)) {
     return 1;
   }
-  baulk::update::InitializeBaulk();
+  baulk::update::initialize_baulk();
   return baulk::update::BaulkUpdate();
 }

@@ -1,6 +1,6 @@
 #include <bela/path.hpp>
+#include <baulk/argv.hpp>
 #include "baulk.hpp"
-#include "baulkargv.hpp"
 #include "commands.hpp"
 
 namespace baulk {
@@ -29,9 +29,9 @@ struct command_map_t {
 };
 
 bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
-  baulk::cli::BaulkArgv ba(argc - 1, argv + 1);
+  baulk::cli::ParseArgv pa(argc - 1, argv + 1);
   std::wstring_view profile;
-  ba.Add(L"help", baulk::cli::no_argument, 'h')
+  pa.Add(L"help", baulk::cli::no_argument, 'h')
       .Add(L"version", baulk::cli::no_argument, 'v')
       .Add(L"verbose", baulk::cli::no_argument, 'V')
       .Add(L"quiet", baulk::cli::no_argument, 'Q')
@@ -47,7 +47,7 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
       .Add(L"untar");
 
   bela::error_code ec;
-  auto result = ba.Execute(
+  auto result = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
@@ -101,14 +101,14 @@ bool ParseArgv(int argc, wchar_t **argv, baulkcommand_t &cmd) {
     bela::FPrintF(stderr, L"\x1b[33mbaulk warning: --verbose --quiet is set at the same time, "
                           L"quiet mode is turned off\x1b[0m\n");
   }
-  if (ba.Argv().empty()) {
+  if (pa.Argv().empty()) {
     bela::FPrintF(stderr, L"baulk no command input\n");
     return false;
   }
   // Initialize baulk env
   baulk::InitializeBaulkEnv(argc, argv, profile);
-  auto subcmd = ba.Argv().front();
-  cmd.argv.assign(ba.Argv().begin() + 1, ba.Argv().end());
+  auto subcmd = pa.Argv().front();
+  cmd.argv.assign(pa.Argv().begin() + 1, pa.Argv().end());
   constexpr command_map_t cmdmaps[] = {
       {L"help", baulk::commands::cmd_help},
       {L"h", baulk::commands::cmd_help}, // help alias

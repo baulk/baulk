@@ -5,9 +5,9 @@
 #include <bela/strip.hpp>
 #include <baulk/hash.hpp>
 #include <baulk/fs.hpp>
+#include <baulk/argv.hpp>
 #include <json.hpp>
 #include "baulk.hpp"
-#include "baulkargv.hpp"
 #include "commands.hpp"
 
 namespace baulk::commands {
@@ -321,8 +321,8 @@ int cmd_bucket(const argv_t &argv) {
   if (argv.empty()) {
     return bm.List();
   }
-  baulk::cli::BaulkArgv ba(argv);
-  ba.Add(L"verbose", baulk::cli::no_argument, L'V')
+  baulk::cli::ParseArgv pa(argv);
+  pa.Add(L"verbose", baulk::cli::no_argument, L'V')
       .Add(L"name", baulk::cli::required_argument, L'N')
       .Add(L"url", baulk::cli::required_argument, L'U')
       .Add(L"weights", baulk::cli::required_argument, L'W')
@@ -334,7 +334,7 @@ int cmd_bucket(const argv_t &argv) {
   bela::error_code ec;
   bool replace{false};
   bool forcemode{false};
-  auto ret = ba.Execute(
+  auto ret = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case L'V':
@@ -386,7 +386,7 @@ int cmd_bucket(const argv_t &argv) {
     bela::FPrintF(stderr, L"baulk bucket: parse argv error \x1b[31m%s\x1b[0m\n", ec.message);
     return 1;
   }
-  const auto ua = ba.Argv();
+  const auto ua = pa.Argv();
   if (ua.empty()) {
     return bm.List(bucket.name);
   }
