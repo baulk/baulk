@@ -67,10 +67,7 @@ public:
     return dv;
   }
   // fetch path array
-  template <typename T, typename Allocator = std::allocator<T>>
-  requires bela::wide_character<T>
-  bool fetch_paths_checked(std::string_view name,
-                           std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &paths) {
+  template <typename T> bool fetch_paths_checked(std::string_view name, std::vector<T> &paths) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it.value().is_string()) {
         paths.emplace_back(FromSlash(bela::encode_into<char, wchar_t>(it->get<std::string_view>())));

@@ -3,8 +3,9 @@
 #include <bela/process.hpp>
 #include <bela/str_split_narrow.hpp>
 #include <bela/semver.hpp>
+#include <baulk/json_utils.hpp>
 #include <xml.hpp>
-#include <jsonex.hpp>
+
 #include "baulk.hpp"
 #include "bucket.hpp"
 #include <baulk/fs.hpp>
@@ -127,88 +128,82 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
 
 std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstring_view pkgname,
                                           std::wstring_view bucket, bela::error_code &ec) {
-  if (!bela::PathExists(pkgmeta)) {
+  auto pkj = baulk::json::parse_file(pkgmeta, ec);
+  if (!pkj) {
     return std::nullopt;
   }
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, pkgmeta.data(), L"rb"); en != 0) {
-    ec = bela::make_stdc_error_code(en);
-    return std::nullopt;
-  }
-  auto closer = bela::finally([&] { fclose(fd); });
-  baulk::Package pkg;
-  pkg.name = pkgname;
-  pkg.bucket = bucket;
-  try {
-    auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    baulk::json::JsonAssignor ja(j);
-    pkg.description = ja.get("description");
-    pkg.version = ja.get("version");
-    pkg.homepage = ja.get("homepage");
-    pkg.license = ja.get("license");
-    pkg.notes = ja.get("notes");
-    ja.get("suggest", pkg.suggest);
-    ja.patharray("force_delete", pkg.forceDeletes);
-    // to lower
-    pkg.extension = bela::AsciiStrToLower(ja.get("extension"));
-    pkg.rename = ja.get("rename");
-    // load version
+  auto jv = pkj->view();
+  Package pkg{
+      .name = std::wstring{pkgname},
+      .description = jv.fetch("description"),
+      .version = jv.fetch("version"),
+      .bucket = std::wstring{bucket},
+      .extension = bela::AsciiStrToLower(jv.fetch("extension")), // to lower
+      .rename = jv.fetch("rename"),
+      .homepage = jv.fetch("homepage"),
+      .notes = jv.fetch("notes"),
+      .license = jv.fetch("license"),
+  };
+  jv.fetch_strings_checked("suggest", pkg.suggest);
+  jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
+
 #if defined(_M_X64)
-    // AMD64 support
-    if (ja.get("url64", pkg.urls)) {
-      pkg.checksum = ja.get("url64.hash");
-    } else if (ja.get("url", pkg.urls)) {
-      pkg.checksum = ja.get("url.hash");
-    } else {
-      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
-      return std::nullopt;
-    }
-    if (!ja.patharray("links64", pkg.links)) {
-      ja.patharray("links", pkg.links);
-    }
-    if (!ja.patharray("launchers64", pkg.launchers)) {
-      ja.patharray("launchers", pkg.launchers);
-    }
-#elif defined(_M_ARM64)
-    // ARM64 support
-    if (ja.get("urlarm64", pkg.urls)) {
-      pkg.checksum = ja.get("urlarm64.hash");
-    } else if (ja.get("url", pkg.urls)) {
-      pkg.checksum = ja.get("url.hash");
-    } else {
-      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
-      return std::nullopt;
-    }
-    if (!ja.patharray("linksarm64", pkg.links)) {
-      ja.patharray("links", pkg.links);
-    }
-    if (!ja.patharray("launchersarm64", pkg.launchers)) {
-      ja.patharray("launchers", pkg.launchers);
-    }
-#else
-    if (ja.get("url", pkg.urls)) {
-      pkg.checksum = ja.get("url.hash");
-    } else {
-      ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
-      return std::nullopt;
-    }
-    ja.patharray("links", pkg.links);
-    ja.patharray("launchers", pkg.launchers);
-#endif
-    if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
-      DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
-      baulk::json::JsonAssignor jea(it.value());
-      pkg.venv.category = jea.get("category");
-      jea.array("path", pkg.venv.paths);
-      jea.array("include", pkg.venv.includes);
-      jea.array("lib", pkg.venv.libs);
-      jea.array("env", pkg.venv.envs);
-      jea.array("dependencies", pkg.venv.dependencies);
-      jea.array("mkdir", pkg.venv.mkdirs);
-    }
-  } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"parse package meta json: ", bela::ToWide(e.what()));
+  // x64
+  if (jv.fetch_strings_checked("url64", pkg.urls)) {
+    pkg.checksum = jv.fetch("url64.hash");
+  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
+    pkg.checksum = jv.fetch("url.hash");
+  } else {
+    ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet port to x64 platform.");
     return std::nullopt;
+  }
+  if (!jv.fetch_paths_checked("links64", pkg.links)) {
+    jv.fetch_paths_checked("links", pkg.links);
+  }
+  if (!jv.fetch_paths_checked("launchers64", pkg.launchers)) {
+    jv.fetch_paths_checked("launchers", pkg.launchers);
+  }
+#elif defined(_M_ARM64)
+  // ARM64 support
+  if (jv.fetch_strings_checked("urlarm64", pkg.urls)) {
+    pkg.checksum = jv.fetch("urlarm64.hash");
+  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
+    pkg.checksum = jv.fetch("url.hash");
+  } else if (jv.fetch_strings_checked("url64", pkg.urls)) {
+    pkg.checksum = jv.fetch("url64.hash");
+  } else {
+    ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet port to ARM64 platform.");
+    return std::nullopt;
+  }
+  if (!jv.fetch_paths_checked("linksarm64", pkg.links)) {
+    if (!jv.fetch_paths_checked("links", pkg.links)) {
+      jv.fetch_paths_checked("links64", pkg.links);
+    }
+  }
+  if (!jv.fetch_paths_checked("launchersarm64", pkg.launchers)) {
+    if (!jv.fetch_paths_checked("launchers", pkg.launchers)) {
+      jv.fetch_paths_checked("launchers", pkg.links);
+    }
+  }
+#else
+  if (jv.fetch_strings_checked("url", pkg.urls)) {
+    pkg.checksum = jv.fetch("url.hash");
+  } else {
+    ec = bela::make_error_code(bela::ErrGeneral, pkgmeta, L" not yet ported.");
+    return std::nullopt;
+  }
+  jv.fetch_paths_checked("links", pkg.links);
+  jv.fetch_paths_checked("launchers", pkg.launchers);
+#endif
+  if (auto sv = jv.subview("venv"); sv) {
+    DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
+    pkg.venv.category = sv->fetch("category");
+    sv->fetch_paths_checked("path", pkg.venv.paths);
+    sv->fetch_paths_checked("include", pkg.venv.includes);
+    sv->fetch_paths_checked("lib", pkg.venv.libs);
+    sv->fetch_paths_checked("mkdir", pkg.venv.mkdirs);
+    sv->fetch_strings_checked("env", pkg.venv.envs);
+    sv->fetch_strings_checked("dependencies", pkg.venv.dependencies);
   }
   return std::make_optional(std::move(pkg));
 }
@@ -216,31 +211,21 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgmeta, std::wstrin
 // installed package meta;
 std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgname, bela::error_code &ec) {
   auto pkglock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", pkgname, L".json");
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, pkglock.data(), L"rb"); en != 0) {
-    ec = bela::make_stdc_error_code(en);
+  auto pkj = baulk::json::parse_file(pkglock, ec);
+  if (!pkj) {
     return std::nullopt;
   }
-  auto closer = bela::finally([&] { fclose(fd); });
-  baulk::Package pkg;
-  pkg.name = pkgname;
-  try {
-    auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    baulk::json::JsonAssignor ja(j);
-    pkg.version = ja.get("version");
-    pkg.bucket = ja.get("bucket");
-    ja.patharray("force_delete", pkg.forceDeletes);
-    if (auto it = j.find("venv"); it != j.end()) {
-      if (auto it_ = it.value().find("category"); it_ != it.value().end() && it_.value().is_string()) {
-        pkg.venv.category = bela::ToWide(it_.value().get<std::string_view>());
-      }
-    }
-    // must get bucket name
-    pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
-  } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
-    return std::nullopt;
+  auto jv = pkj->view();
+  Package pkg{
+      .name = std::wstring(pkgname),
+      .version = jv.fetch("version"),
+      .bucket = jv.fetch("bucket"),
+  };
+  jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
+  if (auto sv = jv.subview("venv"); sv) {
+    pkg.venv.category = sv->fetch("category");
   }
+  pkg.weights = baulk::BaulkBucketWeights(pkg.bucket);
   return std::make_optional(std::move(pkg));
 }
 

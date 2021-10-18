@@ -6,7 +6,7 @@
 #include <baulk/hash.hpp>
 #include <baulk/fs.hpp>
 #include <baulk/argv.hpp>
-#include <json.hpp>
+#include <baulk/json_utils.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
 

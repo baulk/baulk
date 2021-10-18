@@ -171,12 +171,12 @@ struct Package {
   std::wstring description;
   std::wstring version;
   std::wstring bucket;
-  std::wstring checksum;
   std::wstring extension;
   std::wstring rename; // only exe extension support rename feature
   std::wstring homepage;
   std::wstring notes;
   std::wstring license;
+  std::wstring checksum;
   std::vector<std::wstring> urls;
   std::vector<std::wstring> forceDeletes; // uninstall delete dirs
   std::vector<std::wstring> suggest;
