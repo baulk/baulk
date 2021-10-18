@@ -29,8 +29,8 @@ std::wstring_view AppBinLocation() { return PathFs::Instance().Table().binlocati
 std::wstring AppPackagePath(std::wstring_view packageName) {
   return bela::StringCat(PathFs::Instance().Table().pakcage_root, L"\\", packageName);
 }
-// AppPIDFile pid file
-std::wstring AppPIDFile() { return bela::StringCat(PathFs::Instance().Table().temp, L"\\baulk.pid"); }
+// AppFsMutexPath pid file path
+std::wstring AppFsMutexPath() { return bela::StringCat(PathFs::Instance().Table().temp, L"\\baulk.pid"); }
 // AppDefaultProfile
 std::wstring AppDefaultProfile() {
   return bela::StringCat(PathFs::Instance().Table().basePath, L"\\config\\baulk.json");

@@ -50,7 +50,7 @@ private:
   HANDLE FileHandle{INVALID_HANDLE_VALUE};
 };
 
-std::optional<FsMutex> MakeFsMutex(std::wstring_view pidfile, bela::error_code &ec) {
+inline std::optional<FsMutex> MakeFsMutex(std::wstring_view pidfile, bela::error_code &ec) {
   if (auto line = bela::io::ReadLine(pidfile, ec); line) {
     DWORD pid = 0;
     if (bela::SimpleAtoi(*line, &pid) && mutex_internal::process_is_running(pid)) {

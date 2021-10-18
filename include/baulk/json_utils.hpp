@@ -96,6 +96,21 @@ public:
     }
     return std::make_optional<json_view>(it.value());
   }
+  [[nodiscard]] std::vector<json_view> subviews(std::string_view name) const {
+    std::vector<json_view> jvs;
+    if (auto it = obj.find(name); it != obj.end()) {
+      if (it->is_object()) {
+        jvs.emplace_back(it.value());
+        return jvs;
+      }
+      if (it->is_array()) {
+        for (const auto &o : it.value()) {
+          jvs.emplace_back(o);
+        }
+      }
+    }
+    return jvs;
+  }
 
 private:
   const nlohmann::json &obj;

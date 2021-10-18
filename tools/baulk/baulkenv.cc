@@ -36,7 +36,6 @@ public:
   std::wstring_view BaulkRoot() const { return root; }
   std::wstring_view Profile() const { return profile; }
   std::wstring_view Locale() const { return locale; }
-  std::wstring_view Git() const { return git; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
   Buckets &BaulkBuckets() { return buckets; }
   int BaulkBucketWeights(std::wstring_view bucket) {
@@ -59,7 +58,6 @@ public:
 private:
   BaulkEnv() = default;
   std::wstring root;
-  std::wstring git;
   std::wstring profile;
   std::wstring locale; // mirrors
   Buckets buckets;
@@ -166,9 +164,6 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
   baulk::DbgPrint(L"Baulk locale name %s\n", locale);
   profile = ProfileResolve(profile_, root);
   baulk::DbgPrint(L"Expand profile to '%s'", profile);
-  if (!InitializeGitPath(git)) {
-    git.clear();
-  }
   FILE *fd = nullptr;
   if (auto eo = _wfopen_s(&fd, profile.data(), L"rb"); eo != 0) {
     auto ec = bela::make_stdc_error_code(eo);
@@ -219,7 +214,6 @@ bool BaulkInitializeExecutor(bela::error_code &ec) { return BaulkEnv::Instance()
 
 std::wstring_view BaulkRoot() { return BaulkEnv::Instance().BaulkRoot(); }
 Buckets &BaulkBuckets() { return BaulkEnv::Instance().BaulkBuckets(); }
-std::wstring_view BaulkGit() { return BaulkEnv::Instance().Git(); }
 std::wstring_view BaulkProfile() { return BaulkEnv::Instance().Profile(); }
 std::wstring_view BaulkLocale() { return BaulkEnv::Instance().Locale(); }
 baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }

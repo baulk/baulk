@@ -131,7 +131,6 @@ std::wstring_view BaulkRoot();
 std::wstring_view BaulkLocale();
 Buckets &BaulkBuckets();
 int BaulkBucketWeights(std::wstring_view bucket);
-std::wstring_view BaulkGit();
 baulk::compiler::Executor &BaulkExecutor();
 bool BaulkInitializeExecutor(bela::error_code &ec);
 // package base

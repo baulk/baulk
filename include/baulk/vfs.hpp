@@ -19,7 +19,7 @@ std::wstring_view AppBuckets();
 std::wstring_view AppBinLocation();
 // cat ..
 std::wstring AppPackagePath(std::wstring_view packageName);
-std::wstring AppPIDFile();
+std::wstring AppFsMutexPath();
 std::wstring AppDefaultProfile();
 
 } // namespace baulk::vfs
