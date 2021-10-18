@@ -55,7 +55,7 @@ bool BucketUpdater::Initialize() {
       auto name = a["name"].get<std::string_view>();
       auto latest = a["latest"].get<std::string_view>();
       auto time = a["time"].get<std::string_view>();
-      status.emplace(bela::ToWide(name), bucket_metadata{bela::ToWide(latest), std::string(time)});
+      status.emplace(bela::encode_into<char, wchar_t>(name), bucket_metadata{bela::encode_into<char, wchar_t>(latest), std::string(time)});
     }
   } catch (const std::exception &e) {
     bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
@@ -73,8 +73,8 @@ bool BucketUpdater::Immobilized() {
     nlohmann::json j;
     for (const auto &b : status) {
       nlohmann::json o;
-      o["name"] = bela::ToNarrow(b.first);
-      o["latest"] = bela::ToNarrow(b.second.latest);
+      o["name"] = bela::encode_into<wchar_t, char>(b.first);
+      o["latest"] = bela::encode_into<wchar_t, char>(b.second.latest);
       o["time"] = b.second.updated;
       j.push_back(std::move(o));
     }

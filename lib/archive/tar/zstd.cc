@@ -35,7 +35,8 @@ bool Reader::decompress(bela::error_code &ec) {
     ZSTD_outBuffer out{outb.data(), outb.capacity(), 0};
     auto result = ZSTD_decompressStream(zds, &out, &in);
     if (ZSTD_isError(result) != 0) {
-      ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
+      ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ",
+                                 bela::encode_into<char, wchar_t>(ZSTD_getErrorName(result)));
       return false;
     }
     outb.pos() = 0;

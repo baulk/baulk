@@ -93,7 +93,7 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, Env
   constexpr std::wstring_view space = L"                ";
   try {
     auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    auto version = bela::ToWide(j["version"].get<std::string_view>());
+    auto version = bela::encode_into<char, wchar_t>(j["version"].get<std::string_view>());
     if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
       node.Value = pkgname;
       node.Desc = pkgname;
@@ -104,7 +104,7 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, Env
       return true;
     }
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"parse package '", lockfile, L"' json: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"parse package '", lockfile, L"' json: ", bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   return false;

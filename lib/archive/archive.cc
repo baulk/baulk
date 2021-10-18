@@ -96,7 +96,7 @@ bool FD::Write(const void *data, size_t bytes, bela::error_code &ec) {
 }
 
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child) {
-  auto path = bela::PathCat(root, bela::ToWide(child));
+  auto path = bela::PathCat(root, bela::encode_into<char, wchar_t>(child));
   if (path == L"." || !path.starts_with(root) || root.size() == path.size()) {
     return std::nullopt;
   }

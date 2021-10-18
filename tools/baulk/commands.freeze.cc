@@ -39,7 +39,7 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   try {
     json = nlohmann::json::parse(fd, nullptr, true, true);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   return true;
@@ -67,7 +67,7 @@ int cmd_freeze(const argv_t &argv) {
   }
   std::vector<std::string> pkgs;
   for (auto p : argv) {
-    pkgs.emplace_back(bela::ToNarrow(p));
+    pkgs.emplace_back(bela::encode_into<wchar_t, char>(p));
   }
   auto contains = [&](std::string_view p_) {
     for (const auto &p : pkgs) {
@@ -119,7 +119,7 @@ int cmd_unfreeze(const argv_t &argv) {
     return 1;
   }
   auto contains = [&](std::string_view p) {
-    auto w = bela::ToWide(p);
+    auto w = bela::encode_into<char, wchar_t>(p);
     for (auto a : argv) {
       if (a == w) {
         return true;

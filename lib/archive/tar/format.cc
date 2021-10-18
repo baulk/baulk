@@ -100,7 +100,7 @@ bool parsePAXTime(std::string_view p, bela::Time &t, bela::error_code &ec) {
   int64_t sec = 0;
   auto res = std::from_chars(ss.data(), ss.data() + ss.size(), sec);
   if (res.ec != std::errc{}) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"unable parse number '", bela::ToWide(ss), L"'");
+    ec = bela::make_error_code(bela::ErrGeneral, L"unable parse number '", bela::encode_into<char, wchar_t>(ss), L"'");
     return false;
   }
   if (sn.empty()) {
@@ -139,7 +139,8 @@ bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec) {
       int64_t id{0};
       auto res = std::from_chars(v.data(), v.data() + v.size(), id);
       if (res.ec != std::errc{}) {
-        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse uid number '", bela::ToWide(v), L"'");
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse uid number '", bela::encode_into<char, wchar_t>(v),
+                                   L"'");
         return false;
       }
       h.UID = static_cast<int>(id);
@@ -149,7 +150,8 @@ bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec) {
       int64_t id{0};
       auto res = std::from_chars(v.data(), v.data() + v.size(), id);
       if (res.ec != std::errc{}) {
-        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse gid number '", bela::ToWide(v), L"'");
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse gid number '", bela::encode_into<char, wchar_t>(v),
+                                   L"'");
         return false;
       }
       h.GID = static_cast<int>(id);
@@ -177,7 +179,8 @@ bool mergePAX(Header &h, pax_records_t &paxHdrs, bela::error_code &ec) {
       int64_t size{0};
       auto res = std::from_chars(v.data(), v.data() + v.size(), size);
       if (res.ec != std::errc{}) {
-        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse size number '", bela::ToWide(v), L"'");
+        ec = bela::make_error_code(bela::ErrGeneral, L"unable parse size number '", bela::encode_into<char, wchar_t>(v),
+                                   L"'");
         return false;
       }
       h.Size = size;
@@ -209,7 +212,8 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
   }
   int n = 0;
   if (auto res = std::from_chars(sv->data(), sv->data() + pos, n); res.ec != std::errc{} || n > sv->size()) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"invalid number '", bela::ToWide(sv->substr(0, pos)), L"'");
+    ec = bela::make_error_code(bela::ErrGeneral, L"invalid number '",
+                               bela::encode_into<char, wchar_t>(sv->substr(0, pos)), L"'");
     return false;
   }
   if (pos >= n) {

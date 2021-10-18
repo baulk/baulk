@@ -31,9 +31,9 @@ std::optional<std::wstring> BucketNewestWithGithub(std::wstring_view bucketurl, 
   auto entry = doc->child("feed").child("entry");
   std::string_view id{entry.child("id").text().as_string()};
   if (auto pos = id.find('/'); pos != std::string_view::npos) {
-    return std::make_optional(bela::ToWide(id.substr(pos + 1)));
+    return std::make_optional(bela::encode_into<char, wchar_t>(id.substr(pos + 1)));
   }
-  ec = bela::make_error_code(bela::ErrGeneral, L"bucket invaild id: ", bela::ToWide(id));
+  ec = bela::make_error_code(bela::ErrGeneral, L"bucket invaild id: ", bela::encode_into<char, wchar_t>(id));
   return std::nullopt;
 }
 // git ls-remote filter HEAD
@@ -52,7 +52,7 @@ std::optional<std::wstring> BucketRepoNewest(std::wstring_view giturl, bela::err
     std::vector<std::string_view> kv =
         bela::narrow::StrSplit(line, bela::narrow::ByAnyChar("\t "), bela::narrow::SkipEmpty());
     if (kv.size() == 2 && kv[1] == head) {
-      return std::make_optional(bela::ToWide(kv[0]));
+      return std::make_optional(bela::encode_into<char, wchar_t>(kv[0]));
     }
   }
   ec = bela::make_error_code(bela::ErrGeneral, L"not found HEAD: ", giturl);

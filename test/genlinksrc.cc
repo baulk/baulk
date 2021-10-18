@@ -155,7 +155,7 @@ void FlushFile(std::wstring_view str, std::wstring_view fn) {
   if (_wfopen_s(&fd, fn.data(), L"w+") != 0) {
     return;
   }
-  auto us = bela::ToNarrow(str);
+  auto us = bela::encode_into<wchar_t, char>(str);
   fwrite(us.data(), 1, us.size(), fd);
   fclose(fd);
 }

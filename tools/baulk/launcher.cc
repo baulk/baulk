@@ -45,14 +45,14 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, 
       }
     }
     for (const auto &lm : metas) {
-      auto meta = bela::ToNarrow(bela::StringCat(pkg.name, L"@", lm.path, L"@", pkg.version));
-      newlinks[bela::ToNarrow(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
+      auto meta = bela::encode_into<wchar_t, char>(bela::StringCat(pkg.name, L"@", lm.path, L"@", pkg.version));
+      newlinks[bela::encode_into<wchar_t, char>(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
     }
     obj["links"] = newlinks;
     obj["updated"] = bela::FormatTime<char>(bela::Now());
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   if (newjson.empty()) {
@@ -87,7 +87,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     auto linksobj = it.value();
     for (auto oit = linksobj.begin(); oit != linksobj.end(); ++oit) {
       auto raw = oit.value().get<std::string>();
-      auto value = bela::ToWide(raw);
+      auto value = bela::encode_into<char, wchar_t>(raw);
       std::vector<std::wstring_view> mv = bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
       if (mv.size() < 2) {
         continue;
@@ -96,7 +96,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
         newlinkobj[oit.key()] = raw;
         continue;
       }
-      auto file = bela::StringCat(linkbindir, L"\\", bela::ToWide(oit.key()));
+      auto file = bela::StringCat(linkbindir, L"\\", bela::encode_into<char, wchar_t>(oit.key()));
       if (!std::filesystem::remove(file, e)) {
         auto le = bela::from_std_error_code(e);
         baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, le.message);
@@ -106,7 +106,7 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     obj["links"] = newlinkobj;
     newjson = obj.dump(4);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   if (newjson.empty()) {

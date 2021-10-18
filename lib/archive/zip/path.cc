@@ -65,7 +65,7 @@ inline std::wstring fromcodePage(std::string_view name, int codePage = CP_ACP) {
 
 inline std::wstring PathConvert(const File &file, bool autocvt) {
   if (file.IsFileNameUTF8()) {
-    return bela::ToWide(file.name);
+    return bela::encode_into<char, wchar_t>(file.name);
   }
   if (!autocvt) {
     return fromcodePage(file.name);

@@ -39,7 +39,7 @@ struct VisualStudioInstance {
       isLaunchable = ja.boolean("isLaunchable");
       isPrerelease = ja.boolean("isPrerelease");
     } catch (const std::exception &e) {
-      ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+      ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
       return false;
     }
     return true;

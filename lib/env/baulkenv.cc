@@ -39,7 +39,7 @@ bool VisualStudioResultEncode(const std::string_view result, std::vector<VisualS
       vsis.emplace_back(std::move(vsi));
     }
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   return true;

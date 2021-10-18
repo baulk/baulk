@@ -180,13 +180,13 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
     auto json = nlohmann::json::parse(fd, nullptr, true, true);
     // overload locale
     if (auto it = json.find("locale"); it != json.end() && it.value().is_string()) {
-      locale = bela::ToWide(it.value().get<std::string_view>());
+      locale = bela::encode_into<char, wchar_t>(it.value().get<std::string_view>());
     }
     const auto &bks = json["bucket"];
     for (auto &b : bks) {
-      auto desc = bela::ToWide(b["description"].get<std::string_view>());
-      auto name = bela::ToWide(b["name"].get<std::string_view>());
-      auto url = bela::ToWide(b["url"].get<std::string_view>());
+      auto desc = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
+      auto url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
       int weights = 100;
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
@@ -202,7 +202,7 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
     }
     if (auto it = json.find("freeze"); it != json.end()) {
       for (const auto &freeze : it.value()) {
-        freezepkgs.emplace_back(bela::ToWide(freeze.get<std::string_view>()));
+        freezepkgs.emplace_back(bela::encode_into<char, wchar_t>(freeze.get<std::string_view>()));
         DbgPrint(L"Freeze package %s", freezepkgs.back());
       }
     }

@@ -20,7 +20,7 @@ inline void AddArray(nlohmann::json &root, const char *name, const std::vector<s
   if (!av.empty()) {
     nlohmann::json jea;
     for (const auto &a : av) {
-      jea.emplace_back(bela::ToNarrow(a));
+      jea.emplace_back(bela::encode_into<wchar_t, char>(a));
     }
     root[name] = std::move(jea);
   }
@@ -29,14 +29,14 @@ inline void AddArray(nlohmann::json &root, const char *name, const std::vector<s
 bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
   try {
     nlohmann::json j;
-    j["version"] = bela::ToNarrow(pkg.version);
-    j["bucket"] = bela::ToNarrow(pkg.bucket);
+    j["version"] = bela::encode_into<wchar_t, char>(pkg.version);
+    j["bucket"] = bela::encode_into<wchar_t, char>(pkg.bucket);
     j["date"] = bela::FormatTime<char>(bela::Now());
     AddArray(j, "force_delete", pkg.forceDeletes);
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
       if (!pkg.venv.category.empty()) {
-        venv["category"] = bela::ToNarrow(pkg.venv.category);
+        venv["category"] = bela::encode_into<wchar_t, char>(pkg.venv.category);
       }
       AddArray(venv, "path", pkg.venv.paths);
       AddArray(venv, "include", pkg.venv.includes);
@@ -52,7 +52,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
     return bela::io::WriteTextAtomic(j.dump(4), file, ec);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
   }
   return false;
 }

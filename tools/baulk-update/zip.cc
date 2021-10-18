@@ -71,7 +71,7 @@ bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bel
   if (!ret) {
     return false;
   }
-  auto wn = bela::ToWide(linkname);
+  auto wn = bela::encode_into<char, wchar_t>(linkname);
   if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
     ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
     return false;

@@ -42,7 +42,7 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
 }
 
 bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
-  auto wn = bela::ToWide(linkname);
+  auto wn = bela::encode_into<char, wchar_t>(linkname);
   if (!baulk::archive::NewSymlink(filename, wn, ec, true)) {
     ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
     return false;

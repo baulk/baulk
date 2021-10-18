@@ -9,7 +9,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
   if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
-    ec = bela::make_error_code(ErrGeneral, bela::ToWide(zError(zerr)));
+    ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
     return false;
   }
   auto closer = bela::finally([&] { inflateEnd(&zs); });
@@ -40,7 +40,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
       case Z_DATA_ERROR:
         [[fallthrough]];
       case Z_MEM_ERROR:
-        ec = bela::make_error_code(ret, bela::ToWide(zError(ret)));
+        ec = bela::make_error_code(ret, bela::encode_into<char, wchar_t>(zError(ret)));
         return false;
       default:
         break;

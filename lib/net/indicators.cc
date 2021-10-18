@@ -62,7 +62,7 @@ bool CygwinTerminalSize(bela::terminal::terminal_size &termsz) {
     bela::FPrintF(stderr, L"stty %d: %s\n", exitcode, ps.ErrorCode().message);
     return false;
   }
-  auto out = bela::ToWide(ps.Out());
+  auto out = bela::encode_into<char, wchar_t>(ps.Out());
   std::vector<std::wstring_view> ss =
       bela::StrSplit(bela::StripTrailingAsciiWhitespace(out), bela::ByChar(' '), bela::SkipEmpty());
   if (ss.size() != 2) {

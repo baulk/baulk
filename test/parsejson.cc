@@ -69,16 +69,16 @@ struct VisualStudioInstance {
       }
       auto &j = j0[0];
       if (auto it = j.find("installationPath"); it != j.end()) {
-        installationPath = bela::ToWide(it->get_ref<const std::string &>());
+        installationPath = bela::encode_into<char, wchar_t>(it->get_ref<const std::string &>());
       }
       if (auto it = j.find("installationVersion"); it != j.end()) {
-        installationVersion = bela::ToWide(it->get_ref<const std::string &>());
+        installationVersion = bela::encode_into<char, wchar_t>(it->get_ref<const std::string &>());
       }
       if (auto it = j.find("instanceId"); it != j.end()) {
-        instanceId = bela::ToWide(it->get_ref<const std::string &>());
+        instanceId = bela::encode_into<char, wchar_t>(it->get_ref<const std::string &>());
       }
       if (auto it = j.find("productId"); it != j.end()) {
-        productId = bela::ToWide(it->get_ref<const std::string &>());
+        productId = bela::encode_into<char, wchar_t>(it->get_ref<const std::string &>());
       }
       if (auto it = j.find("isLaunchable"); it != j.end()) {
         isLaunchable = it->get<bool>();
@@ -87,7 +87,7 @@ struct VisualStudioInstance {
         isPrerelease = it->get<bool>();
       }
     } catch (const std::exception &e) {
-      ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+      ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
       return false;
     }
     return true;

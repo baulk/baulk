@@ -40,7 +40,7 @@ bool BucketModifier::Initialize() {
   try {
     meta = nlohmann::json::parse(fd, nullptr, true, true);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   return true;
@@ -55,13 +55,13 @@ bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &buck
   try {
     const auto &bks = meta["bucket"];
     for (auto &b : bks) {
-      auto name = bela::ToWide(b["name"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       if (!bela::EqualsIgnoreCase(bucketName, name)) {
         continue;
       }
       bucket.name = name;
-      bucket.description = bela::ToWide(b["description"].get<std::string_view>());
-      bucket.url = bela::ToWide(b["url"].get<std::string_view>());
+      bucket.description = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
+      bucket.url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
       int weights = 100;
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
@@ -97,9 +97,9 @@ int BucketModifier::List(std::wstring_view bucketName) {
   try {
     const auto &bks = meta["bucket"];
     for (auto &b : bks) {
-      auto desc = bela::ToWide(b["description"].get<std::string_view>());
-      auto name = bela::ToWide(b["name"].get<std::string_view>());
-      auto url = bela::ToWide(b["url"].get<std::string_view>());
+      auto desc = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
+      auto url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
       int weights = 100;
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
@@ -175,16 +175,16 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
       for (const auto &bk : it.value()) {
-        auto name = bela::ToWide(bk["name"].get<std::string_view>());
+        auto name = bela::encode_into<char, wchar_t>(bk["name"].get<std::string_view>());
         if (!bela::EqualsIgnoreCase(name, nbk.name)) {
           buckets.push_back(bk);
         }
       }
     }
     nlohmann::json jbk;
-    jbk["description"] = bela::ToNarrow(nbk.description);
-    jbk["name"] = bela::ToNarrow(nbk.name);
-    jbk["url"] = bela::ToNarrow(nbk.url);
+    jbk["description"] = bela::encode_into<wchar_t, char>(nbk.description);
+    jbk["name"] = bela::encode_into<wchar_t, char>(nbk.name);
+    jbk["url"] = bela::encode_into<wchar_t, char>(nbk.url);
     jbk["mode"] = static_cast<int>(nbk.mode);
     jbk["weights"] = nbk.weights;
     buckets.emplace_back(std::move(jbk));
@@ -222,7 +222,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
           continue;
         }
         auto name = a["name"].get<std::string_view>();
-        if (!bela::EqualsIgnoreCase(bucket.name, bela::ToWide(name))) {
+        if (!bela::EqualsIgnoreCase(bucket.name, bela::encode_into<char, wchar_t>(name))) {
           newjson.push_back(a);
         }
       }
@@ -253,7 +253,7 @@ int BucketModifier::Del(const baulk::Bucket &bucket, bool forcemode) {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
       for (const auto &bk : it.value()) {
-        auto name = bela::ToWide(bk["name"].get<std::string_view>());
+        auto name = bela::encode_into<char, wchar_t>(bk["name"].get<std::string_view>());
         if (bela::EqualsIgnoreCase(name, bucket.name)) {
           deleted = true;
           continue;

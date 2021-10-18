@@ -69,7 +69,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
     auto closer = bela::finally([&] { fclose(fd); });
     auto j0 = nlohmann::json::parse(fd, nullptr, true, true);
     auto links = j0.at("links");
-    auto metadata = bela::ToWide(links.at(bela::ToNarrow(launcher)).get<std::string>());
+    auto metadata = bela::encode_into<char, wchar_t>(links.at(bela::encode_into<wchar_t, char>(launcher)).get<std::string>());
     std::vector<std::wstring_view> tv = bela::StrSplit(metadata, bela::ByChar('@'), bela::SkipEmpty());
     if (tv.size() < 2) {
       ec = bela::make_error_code(bela::ErrGeneral, L"baulk launcher: '", launcher, L"' invaild metadata: ", metadata);
@@ -79,7 +79,7 @@ std::optional<std::wstring> ResolveTarget(std::wstring_view arg0, bela::error_co
     auto target = bela::StringCat(baulkroot, L"\\pkgs\\", tv[0], L"\\", tv[1]);
     return std::make_optional(std::move(target));
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"baulk.links.json exception: ", bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"baulk.links.json exception: ", bela::encode_into<char, wchar_t>(e.what()));
   }
   return std::nullopt;
 }
