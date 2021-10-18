@@ -127,6 +127,7 @@ inline std::optional<json> parse_file(const std::wstring_view file, bela::error_
     ec = bela::make_stdc_error_code(eno);
     return std::nullopt;
   }
+  auto closer = bela::finally([&] { fclose(fd); });
   try {
     // comments support
     return std::make_optional(json{.obj = nlohmann::json::parse(fd, nullptr, true, true)});
