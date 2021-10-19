@@ -79,7 +79,7 @@ inline bela::error_code make_error_code(long code, const AlphaNum &a, const Alph
 }
 template <typename... AV>
 bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
-                                 AV... av) {
+                                 const AV &...av) {
   bela::error_code ec;
   ec.code = code;
   ec.message = strings_internal::CatPieces(

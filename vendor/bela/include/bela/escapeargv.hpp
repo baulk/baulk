@@ -42,7 +42,7 @@ public:
   using string_view_t = std::basic_string_view<charT>;
   using string_t = std::basic_string<charT, std::char_traits<charT>, Allocator>;
   static constexpr auto string_empty_escape = argv_internal::Literal<charT>::Empty;
-  template <typename... Args> basic_escape_argv(string_view_t arg0, Args... arg) {
+  template <typename... Args> basic_escape_argv(string_view_t arg0, const Args &...arg) {
     string_view_t svv[] = {arg0, arg...};
     AssignFull(svv);
   }

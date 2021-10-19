@@ -31,7 +31,6 @@ enum : int {
 char *itaniumDemangle(const std::string_view mangled_name, char *buf, size_t *n,
                       int *status);
 
-
 enum MSDemangleFlags {
   MSDF_None = 0,
   MSDF_DumpBackrefs = 1 << 0,
@@ -39,6 +38,7 @@ enum MSDemangleFlags {
   MSDF_NoCallingConvention = 1 << 2,
   MSDF_NoReturnType = 1 << 3,
   MSDF_NoMemberType = 1 << 4,
+  MSDF_NoVariableType = 1 << 5,
 };
 
 /// Demangles the Microsoft symbol pointed at by mangled_name and returns it.
@@ -66,6 +66,8 @@ char *rustDemangle(const std::string_view MangledName, char *Buf, size_t *N, int
 /// \returns - the demangled string, or a copy of the input string if no
 /// demangling occurred.
 std::string demangle(const std::string_view MangledName);
+
+bool nonMicrosoftDemangle(const std::string_view MangledName,std::string &Result);
 
 /// "Partial" demangler. This supports demangling a string into an AST
 /// (typically an intermediate stage in itaniumDemangle) and querying certain
@@ -118,6 +120,7 @@ struct ItaniumPartialDemangler {
   bool isSpecialName() const;
 
   ~ItaniumPartialDemangler();
+
 private:
   void *RootNode;
   void *Context;

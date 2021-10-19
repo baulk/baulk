@@ -39,7 +39,7 @@ Bela 目前提供了一个类型安全简单的 `StrFormat`, `StrFormat` 基于 
 
 ```c++
 template <typename... Args>
-ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, Args... args)
+ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, const Args& ... args)
 ```
 
 ## 示例

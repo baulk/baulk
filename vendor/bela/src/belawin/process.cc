@@ -20,7 +20,7 @@ int Process::ExecuteInternal(std::wstring_view file, wchar_t *cmdline) {
   }
   if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                      reinterpret_cast<LPVOID>(string_nullable(env)), string_nullable(cwd), &si, &pi) != TRUE) {
-    ec = bela::make_system_error_code();
+    ec = bela::make_system_error_code(bela::StringCat(L"run command '", cmdline, L"': "));
     return -1;
   }
   CloseHandle(pi.hThread);
@@ -62,7 +62,7 @@ struct process_capture_helper {
     saAttr.lpSecurityDescriptor = NULL;
     // Create a pipe for the child process's STDOUT.
     if (CreatePipe(&fdout, &si.hStdOutput, &saAttr, 0) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = bela::make_system_error_code(bela::StringCat(L"run command '", cmdline, L"' CreatePipe: "));
       return false;
     }
     // Ensure the read handle to the pipe for STDOUT is not inherited.
@@ -83,7 +83,7 @@ struct process_capture_helper {
     }
     if (CreateProcessW(string_nullable(path), cmdline, nullptr, nullptr, TRUE, CREATE_UNICODE_ENVIRONMENT,
                        string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
-      ec = bela::make_system_error_code();
+      ec = bela::make_system_error_code(bela::StringCat(L"run command '", cmdline, L"': "));
       Free(fdout);
       Free(si.hStdOutput);
       return false;

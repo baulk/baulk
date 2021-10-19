@@ -13,32 +13,39 @@
 #include "Demangle.h"
 #include <string_view>
 #include <cstdlib>
+#include <cstring>
 
 static bool isItaniumEncoding(std::string_view MangledName) {
-  size_t Pos = MangledName.find_first_not_of('_');
-  // A valid Itanium encoding requires 1-4 leading underscores, followed by 'Z'.
-  return Pos > 0 && Pos <= 4 && MangledName[Pos] == 'Z';
+  return MangledName.starts_with("_Z") || MangledName.starts_with("___Z");
 }
 
-static bool isRustEncoding(std::string_view MangledName) {
-  return MangledName.size() >= 2 && MangledName[0] == '_' &&
-         MangledName[1] == 'R';
-}
+static bool isRustEncoding(std::string_view MangledName) { return MangledName.starts_with("_R"); }
 
 std::string llvm::demangle(const std::string_view MangledName) {
-  char *Demangled;
+  std::string Result;
+  if (nonMicrosoftDemangle(MangledName, Result))
+    return Result;
+  if (MangledName[0] == '_' && nonMicrosoftDemangle(MangledName.substr(1), Result))
+    return Result;
+  if (char *Demangled = microsoftDemangle(MangledName, nullptr, nullptr, nullptr, nullptr)) {
+    Result = Demangled;
+    std::free(Demangled);
+    return Result;
+  }
+  return std::string(MangledName);
+}
+
+bool llvm::nonMicrosoftDemangle(const std::string_view MangledName, std::string &Result) {
+  char *Demangled = nullptr;
   if (isItaniumEncoding(MangledName))
     Demangled = itaniumDemangle(MangledName, nullptr, nullptr, nullptr);
   else if (isRustEncoding(MangledName))
     Demangled = rustDemangle(MangledName, nullptr, nullptr, nullptr);
-  else
-    Demangled = microsoftDemangle(MangledName, nullptr, nullptr,
-                                  nullptr, nullptr);
 
   if (!Demangled)
-    return std::string(MangledName);
+    return false;
 
-  std::string Ret = Demangled;
+  Result = Demangled;
   std::free(Demangled);
-  return Ret;
+  return true;
 }
