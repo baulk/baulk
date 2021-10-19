@@ -231,7 +231,7 @@ bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, 
       rcwrited = false;
     }
   }
-  DbgPrint(L"compile %s", cxxsrcname);
+  DbgPrint(L"compile %s [%s]", cxxsrcname, baulktemp);
   if (baulk::BaulkExecutor().Execute(baulktemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os", cxxsrcname) != 0) {
     ec = baulk::BaulkExecutor().LastErrorCode();
     return false;
@@ -282,7 +282,7 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
     auto source = bela::PathCat(pkgroot, L"\\", lm.path);
     DbgPrint(L"make launcher %s", source);
     if (!executor.Compile(pkg, source, linkdir, lm, ec)) {
-      bela::FPrintF(stderr, L"'%s' unable create launcher: \x1b[31m%s\x1b[0m\n", source, ec.message);
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec.message);
     }
   }
   if (!BaulkLinkMetaStore(executor.LinkMetas(), pkg, ec)) {

@@ -9,7 +9,7 @@ int wmain() {
   bela::env::Simulator sim;
   sim.InitializeCleanupEnv();
   bela::error_code ec;
-  if (!baulk::env::InitializeVisualStudioEnv(sim, L"arm64", true, ec)) {
+  if (!baulk::env::InitializeVisualStudioEnv(sim, L"x64", true, ec)) {
     bela::FPrintF(stderr, L"error %s\n", ec.message);
     return 1;
   }

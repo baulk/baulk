@@ -22,13 +22,7 @@ public:
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", DefaultBucket);
     return true;
   }
-  bool InitializeExecutor(bela::error_code &ec) {
-    if (!executor.Initialize()) {
-      ec = executor.LastErrorCode();
-      return false;
-    }
-    return true;
-  }
+  bool InitializeExecutor(bela::error_code &ec) { return executor.Initialize(ec); }
   static BaulkEnv &Instance() {
     static BaulkEnv baulkEnv;
     return baulkEnv;

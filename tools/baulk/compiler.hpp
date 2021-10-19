@@ -4,6 +4,7 @@
 #include <bela/process.hpp>
 #include <bela/path.hpp>
 #include <bela/simulator.hpp>
+#include <atomic>
 
 namespace baulk::compiler {
 class Executor {
@@ -11,13 +12,13 @@ public:
   Executor() = default;
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
-  bool Initialize();
-  template <typename... Args> int Execute(std::wstring_view cwd, std::wstring_view cmd, Args... args) {
+  bool Initialize(bela::error_code &ec);
+  template <typename... Args> int Execute(std::wstring_view cwd, std::wstring_view cmd, const Args &...args) {
     ec.message.clear();
     ec.code = 0;
     bela::process::Process process(&simulator);
     process.Chdir(cwd); // change cwd
-    if (auto exitcode = process.Execute(cmd, std::forward<Args>(args)...); exitcode != 0) {
+    if (auto exitcode = process.Execute(cmd, std::forward<const Args &>(args)...); exitcode != 0) {
       ec = process.ErrorCode();
       return exitcode;
     }
@@ -29,7 +30,7 @@ public:
 private:
   bela::env::Simulator simulator;
   bela::error_code ec;
-  bool initialized{false};
+  std::atomic_bool initialized{false};
 };
 } // namespace baulk::compiler
 

@@ -7,7 +7,7 @@ struct Helper {
 };
 
 namespace baulk {
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   const bela::format_internal::FormatArg arg_array[] = {args...};
   std::wstring str;
   str.append(L"\x1b[33m* ");

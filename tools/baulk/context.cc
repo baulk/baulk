@@ -5,14 +5,14 @@
 
 namespace baulk {
 namespace baulk_internal {
-inline std::wstring PathExpand(std::wstring_view p) {
+inline std::wstring path_expand(std::wstring_view p) {
   if (p.find(L'$') != std::wstring_view::npos) {
     return bela::env::PathExpand(p);
   }
   return bela::WindowsExpandEnv(p);
 }
 
-inline std::wstring BaulkLocaleName() {
+inline std::wstring default_locale_name() {
   std::wstring s;
   s.resize(64);
   if (auto n = GetUserDefaultLocaleName(s.data(), 64); n != 0 && n < 64) {
@@ -78,19 +78,17 @@ bool Context::Initialize(std::wstring_view profile_, bela::error_code &ec) {
     return false;
   }
   DbgPrint(L"Baulk root '%s'", baulk::vfs::AppBasePath());
-  localeName = baulk_internal::BaulkLocaleName();
+  localeName = baulk_internal::default_locale_name();
   baulk::DbgPrint(L"Baulk locale name %s", localeName);
   if (profile_.empty()) {
     return initializeInternal(baulk::vfs::AppDefaultProfile(), ec);
   }
-  return initializeInternal(baulk_internal::PathExpand(profile_), ec);
+  return initializeInternal(baulk_internal::path_expand(profile_), ec);
 }
 
-bool Context::InitializeExecutor(bela::error_code &ec) {
-  //
-  return false;
-}
+bool Context::InitializeExecutor(bela::error_code &ec) { return executor.Initialize(ec); }
 
+// global functions
 bool InitializeContext(std::wstring_view profile_, bela::error_code &ec) {
   return Context::Instance().Initialize(profile_, ec);
 }
