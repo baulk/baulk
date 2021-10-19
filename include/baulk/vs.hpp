@@ -4,7 +4,7 @@
 #include <bela/io.hpp>
 #include <bela/process.hpp>
 #include <filesystem>
-#include "../regutils.hpp"
+#include "registry.hpp"
 #include "json_utils.hpp"
 
 namespace baulk::env {
@@ -181,7 +181,7 @@ inline void vs_env_builder::flush() {
 
 // initialize windows sdk
 inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch, bela::error_code &ec) {
-  auto winsdk = baulk::regutils::LookupWindowsSDK(ec);
+  auto winsdk = baulk::registry::LookupWindowsSDK(ec);
   if (!winsdk) {
     return false;
   }

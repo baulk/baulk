@@ -1,9 +1,9 @@
 //
-#ifndef BAULK_REGUTILS_HPP
-#define BAULK_REGUTILS_HPP
+#ifndef BAULK_REGISTRY_HPP
+#define BAULK_REGISTRY_HPP
 #include <bela/base.hpp>
 
-namespace baulk::regutils {
+namespace baulk::registry {
 struct WindowsSDK {
   std::wstring InstallationFolder;
   std::wstring ProductVersion;
@@ -81,6 +81,6 @@ inline std::optional<WindowsSDK> LookupWindowsSDK(bela::error_code &ec) {
   return std::make_optional(std::move(winsdk));
 }
 
-} // namespace baulk::regutils
+} // namespace baulk::registry
 
 #endif

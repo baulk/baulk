@@ -4,7 +4,7 @@
 #include <bela/path.hpp>
 #include <list>
 #include <filesystem>
-#include <regutils.hpp>
+#include <baulk/registry.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
 

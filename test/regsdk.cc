@@ -3,7 +3,7 @@
 #include <bela/io.hpp>
 #include <bela/match.hpp>
 #include <filesystem>
-#include <regutils.hpp>
+#include <baulk/registry.hpp>
 #include <jsonex.hpp>
 
 bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
@@ -31,7 +31,7 @@ std::optional<std::wstring> LookupVisualCppVersion(std::wstring_view vsdir, bela
 int wmain(int argc, wchar_t **argv) {
   //
   bela::error_code ec;
-  auto winsdk = baulk::regutils::LookupWindowsSDK(ec);
+  auto winsdk = baulk::registry::LookupWindowsSDK(ec);
   if (!winsdk) {
     bela::FPrintF(stderr, L"unable to find windows sdk %s\n", ec.message);
     return 1;

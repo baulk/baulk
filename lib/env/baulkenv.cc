@@ -4,7 +4,7 @@
 #include <bela/process.hpp> // run vswhere
 #include <bela/path.hpp>
 #include <filesystem>
-#include <regutils.hpp>
+#include <baulk/registry.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
 
@@ -149,7 +149,7 @@ bool SDKSearchVersion(std::wstring_view sdkroot, std::wstring_view sdkver, std::
 }
 
 bool Searcher::InitializeWindowsKitEnv(bela::error_code &ec) {
-  auto winsdk = baulk::regutils::LookupWindowsSDK(ec);
+  auto winsdk = baulk::registry::LookupWindowsSDK(ec);
   if (!winsdk) {
     return false;
   }
@@ -320,7 +320,7 @@ bool Searcher::InitializeGit(bool cleanup, bela::error_code &ec) {
     }
     return true;
   }
-  auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
+  auto installPath = baulk::registry::GitForWindowsInstallPath(ec);
   if (!installPath) {
     return false;
   }

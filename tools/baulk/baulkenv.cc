@@ -4,7 +4,7 @@
 #include <bela/io.hpp>
 #include <bela/str_cat_narrow.hpp>
 #include <filesystem>
-#include <regutils.hpp>
+#include <baulk/registry.hpp>
 #include <jsonex.hpp>
 #include "baulk.hpp"
 #include <baulk/fs.hpp>
@@ -114,7 +114,7 @@ bool InitializeGitPath(std::wstring &git) {
     return true;
   }
   bela::error_code ec;
-  auto installPath = baulk::regutils::GitForWindowsInstallPath(ec);
+  auto installPath = baulk::registry::GitForWindowsInstallPath(ec);
   if (!installPath) {
     return false;
   }

@@ -5,7 +5,7 @@
 #include <bela/match.hpp>
 #include <bela/strip.hpp>
 #include <filesystem>
-#include <regutils.hpp>
+#include <baulk/registry.hpp>
 #include <jsonex.hpp>
 #include <baulkenv.hpp>
 #include <baulk/pwsh.hpp>
@@ -42,7 +42,7 @@ bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
   if (NameEquals(shell, L"bash")) {
     // git for windows
     bela::error_code ec;
-    if (auto gw = baulk::regutils::GitForWindowsInstallPath(ec); gw) {
+    if (auto gw = baulk::registry::GitForWindowsInstallPath(ec); gw) {
       if (auto bash = bela::StringCat(*gw, L"\\bin\\bash.exe"); bela::PathExists(bash)) {
         ea.Append(bash).Append(L"-i").Append(L"-l");
         DbgPrint(L"Use bash: %s", bash);
