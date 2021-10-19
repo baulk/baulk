@@ -67,14 +67,14 @@ template <typename... T> std::wstring JoinEnv(const std::tuple<T...> &value) {
   return bela::strings_internal::JoinAlgorithm(value, Separators, AlphaNumFormatter());
 }
 
-template <typename... Args> std::wstring InsertEnv(std::wstring_view key, Args... arg) {
+template <typename... Args> std::wstring InsertEnv(std::wstring_view key, const Args &...arg) {
   std::wstring_view svv[] = {arg...};
   auto prepend = bela::JoinEnv(svv);
   auto val = bela::GetEnv(key);
   return bela::StringCat(prepend, Separators, val);
 }
 
-template <typename... Args> std::wstring AppendEnv(std::wstring_view key, Args... arg) {
+template <typename... Args> std::wstring AppendEnv(std::wstring_view key, const Args &...arg) {
   std::wstring_view svv[] = {arg...};
   auto ended = bela::JoinEnv(svv);
   auto val = bela::GetEnv(key);

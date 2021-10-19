@@ -28,17 +28,17 @@ public:
   const bela::error_code &ErrorCode() const { return ec; }
   const DWORD ExitCode() const { return exitcode; }
   std::string_view Out() const { return out; } // when call Capture
-  template <typename... Args> int Execute(std::wstring_view cmd, Args... args) {
+  template <typename... Args> int Execute(std::wstring_view cmd, const Args &...args) {
     bela::EscapeArgv ea(cmd, args...);
     exitcode = ExecuteInternal(cmd, ea.data());
     return exitcode;
   }
-  template <typename... Args> int Capture(std::wstring_view cmd, Args... args) {
+  template <typename... Args> int Capture(std::wstring_view cmd, const Args &...args) {
     bela::EscapeArgv ea(cmd, args...);
     exitcode = CaptureInternal(cmd, ea.data(), CAPTURE_OUT);
     return exitcode;
   }
-  template <typename... Args> int CaptureWithMode(DWORD flags, std::wstring_view cmd, Args... args) {
+  template <typename... Args> int CaptureWithMode(DWORD flags, std::wstring_view cmd, const Args &...args) {
     bela::EscapeArgv ea(cmd, args...);
     exitcode = CaptureInternal(cmd, ea.data(), flags);
     return exitcode;
