@@ -32,7 +32,7 @@ private:
 
 bool BucketModifier::Initialize() {
   FILE *fd = nullptr;
-  if (auto eo = _wfopen_s(&fd, baulk::BaulkProfile().data(), L"rb"); eo != 0) {
+  if (auto eo = _wfopen_s(&fd, baulk::Profile().data(), L"rb"); eo != 0) {
     ec = bela::make_stdc_error_code(eo);
     return false;
   }
@@ -48,7 +48,7 @@ bool BucketModifier::Initialize() {
 
 bool BucketModifier::Apply() {
   auto jsontext = meta.dump(4);
-  return bela::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
+  return bela::io::WriteTextAtomic(jsontext, baulk::Profile(), ec);
 }
 
 bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket) {
@@ -314,7 +314,7 @@ Example:
 int cmd_bucket(const argv_t &argv) {
   BucketModifier bm;
   if (!bm.Initialize()) {
-    bela::FPrintF(stderr, L"baulk bucket: load %s error: \x1b[31m%s\x1b[0m\n", baulk::BaulkProfile(),
+    bela::FPrintF(stderr, L"baulk bucket: load %s error: \x1b[31m%s\x1b[0m\n", baulk::Profile(),
                   bm.ErrorCode().message);
     return 1;
   }

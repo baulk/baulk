@@ -31,7 +31,7 @@ Example:
 
 inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
   FILE *fd = nullptr;
-  if (auto eo = _wfopen_s(&fd, baulk::BaulkProfile().data(), L"rb"); eo != 0) {
+  if (auto eo = _wfopen_s(&fd, baulk::Profile().data(), L"rb"); eo != 0) {
     ec = bela::make_stdc_error_code(eo);
     return false;
   }
@@ -46,7 +46,7 @@ inline bool BaulkLoad(nlohmann::json &json, bela::error_code &ec) {
 }
 
 inline bool BaulkStore(std::string_view jsontext, bela::error_code &ec) {
-  return bela::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
+  return bela::io::WriteTextAtomic(jsontext, baulk::Profile(), ec);
 }
 
 int cmd_freeze(const argv_t &argv) {

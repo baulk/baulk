@@ -123,9 +123,9 @@ struct Bucket {
 
 using Buckets = std::vector<Bucket>;
 
-// Env functions
-bool InitializeBaulkEnv(int argc, wchar_t *const *argv, std::wstring_view profile);
-std::wstring_view BaulkProfile();
+// Initialize context
+bool InitializeContext(std::wstring_view profile, bela::error_code &ec);
+std::wstring_view Profile();
 bool BaulkIsFrozenPkg(std::wstring_view pkg);
 std::wstring_view BaulkRoot();
 std::wstring_view BaulkLocale();

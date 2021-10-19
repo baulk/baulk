@@ -37,15 +37,17 @@ public:
   bool InitializeExecutor(bela::error_code &ec);
   bool IsFrozened(std::wstring_view pkg) const { return std::find(fpkgs.begin(), fpkgs.end(), pkg) != fpkgs.end(); }
   std::wstring_view LocaleName() const { return localeName; }
+  std::wstring_view Profile() const { return profile; }
+  const auto &LinkExecutor() const { return executor; }
 
 private:
   bool initializeInternal(const std::wstring &profile_, bela::error_code &ec);
   Context() = default;
-  std::wstring profile;
   std::wstring localeName; // mirrors
+  std::wstring profile;
   Buckets buckets;
   std::vector<std::wstring> fpkgs;
-  baulk::compiler::Executor executor;
+  compiler::Executor executor;
 };
 
 bool Context::initializeInternal(const std::wstring &profile_, bela::error_code &ec) {
@@ -56,6 +58,7 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
     bela::FPrintF(stderr, L"Baulk parse profile %s error: \x1b[31m%s\x1b[0m, ignore profile.\n", profile_, ec.message);
     return true;
   }
+  profile = profile_;
   auto jv = jo->view();
   localeName = jv.fetch("locale", localeName);
   auto svs = jv.subviews("buckets");
@@ -89,10 +92,12 @@ bool Context::Initialize(std::wstring_view profile_, bela::error_code &ec) {
 bool Context::InitializeExecutor(bela::error_code &ec) { return executor.Initialize(ec); }
 
 // global functions
-bool InitializeContext(std::wstring_view profile_, bela::error_code &ec) {
-  return Context::Instance().Initialize(profile_, ec);
+bool InitializeContext(std::wstring_view profile, bela::error_code &ec) {
+  return Context::Instance().Initialize(profile, ec);
 }
 bool InitializeExecutor(bela::error_code &ec) { return Context::Instance().InitializeExecutor(ec); }
 std::wstring_view LocaleName() { return Context::Instance().LocaleName(); }
+std::wstring_view Profile() { return Context::Instance().Profile(); }
+const compiler::Executor &LinkExecutor() { return Context::Instance().LinkExecutor(); }
 
 } // namespace baulk

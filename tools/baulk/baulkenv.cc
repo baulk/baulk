@@ -17,7 +17,7 @@ class BaulkEnv {
 public:
   BaulkEnv(const BaulkEnv &) = delete;
   BaulkEnv &operator=(const BaulkEnv &) = delete;
-  bool Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_);
+  bool Initialize(std::wstring_view profile_, bela::error_code &ec);
   bool InitializeFallback() {
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", DefaultBucket);
     return true;
@@ -28,7 +28,6 @@ public:
     return baulkEnv;
   }
   std::wstring_view BaulkRoot() const { return root; }
-  std::wstring_view Profile() const { return profile; }
   std::wstring_view Locale() const { return locale; }
   baulk::compiler::Executor &BaulkExecutor() { return executor; }
   Buckets &BaulkBuckets() { return buckets; }
@@ -40,6 +39,7 @@ public:
     }
     return 0;
   }
+  std::wstring_view Profile() const { return profile; }
   bool IsFrozen(std::wstring_view pkg) const {
     for (const auto &p : freezepkgs) {
       if (pkg == p) {
@@ -151,7 +151,7 @@ inline std::wstring BaulkLocaleName() {
   return L"";
 }
 
-bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view profile_) {
+bool BaulkEnv::Initialize(std::wstring_view profile_, bela::error_code &ec) {
   root = BaulkRootPath();
   baulk::DbgPrint(L"Baulk root '%s'", root);
   locale = BaulkLocaleName();
@@ -200,15 +200,15 @@ bool BaulkEnv::Initialize(int argc, wchar_t *const *argv, std::wstring_view prof
   }
   return true;
 }
-
-bool InitializeBaulkEnv(int argc, wchar_t *const *argv, std::wstring_view profile) {
-  return BaulkEnv::Instance().Initialize(argc, argv, profile);
+bool InitializeContext(std::wstring_view profile, bela::error_code &ec) {
+  return BaulkEnv::Instance().Initialize(profile, ec);
 }
+std::wstring_view Profile() { return BaulkEnv::Instance().Profile(); }
+
 bool BaulkInitializeExecutor(bela::error_code &ec) { return BaulkEnv::Instance().InitializeExecutor(ec); }
 
 std::wstring_view BaulkRoot() { return BaulkEnv::Instance().BaulkRoot(); }
 Buckets &BaulkBuckets() { return BaulkEnv::Instance().BaulkBuckets(); }
-std::wstring_view BaulkProfile() { return BaulkEnv::Instance().Profile(); }
 std::wstring_view BaulkLocale() { return BaulkEnv::Instance().Locale(); }
 baulk::compiler::Executor &BaulkExecutor() { return BaulkEnv::Instance().BaulkExecutor(); }
 int BaulkBucketWeights(std::wstring_view bucket) { return BaulkEnv::Instance().BaulkBucketWeights(bucket); }

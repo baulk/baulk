@@ -132,12 +132,12 @@ std::wstring GenerateLinkSource(std::wstring_view target, bool isConsole) {
   return bela::Substitute(launcher_internal::windowstemplate, escapetarget);
 }
 
-class LinkExecutor {
+class Builder {
 public:
-  LinkExecutor() = default;
-  LinkExecutor(const LinkExecutor &) = delete;
-  LinkExecutor &operator=(const LinkExecutor &) = delete;
-  ~LinkExecutor() {
+  Builder() = default;
+  Builder(const Builder &) = delete;
+  Builder &operator=(const Builder &) = delete;
+  ~Builder() {
     if (!baulktemp.empty() && !baulk::IsTraceMode) {
       std::error_code ec;
       std::filesystem::remove_all(baulktemp, ec);
@@ -153,7 +153,7 @@ private:
   std::vector<LinkMeta> linkmetas;
 };
 
-bool LinkExecutor::Initialize(bela::error_code &ec) {
+bool Builder::Initialize(bela::error_code &ec) {
   auto bktemp = baulk::fs::BaulkMakeTempDir(ec);
   if (!bktemp) {
     return false;
@@ -183,8 +183,8 @@ inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
   }
 }
 
-bool LinkExecutor::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view linkdir,
-                           const baulk::LinkMeta &lm, bela::error_code &ec) {
+bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view linkdir,
+                      const baulk::LinkMeta &lm, bela::error_code &ec) {
   constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain", L"-ENTRY:wWinMain"};
   constexpr const std::wstring_view subsystemnane[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
   auto realexe = bela::RealPathEx(source, ec);
@@ -274,18 +274,18 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
   if (!baulk::fs::MakeDir(linkdir, ec)) {
     return false;
   }
-  LinkExecutor executor;
-  if (!executor.Initialize(ec)) {
+  Builder builder;
+  if (!builder.Initialize(ec)) {
     return false;
   }
   for (const auto &lm : pkg.launchers) {
     auto source = bela::PathCat(pkgroot, L"\\", lm.path);
     DbgPrint(L"make launcher %s", source);
-    if (!executor.Compile(pkg, source, linkdir, lm, ec)) {
+    if (!builder.Compile(pkg, source, linkdir, lm, ec)) {
       bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec.message);
     }
   }
-  if (!BaulkLinkMetaStore(executor.LinkMetas(), pkg, ec)) {
+  if (!BaulkLinkMetaStore(builder.LinkMetas(), pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
