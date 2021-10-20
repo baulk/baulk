@@ -4,6 +4,7 @@
 #include <bela/io.hpp>
 #include <bela/env.hpp>
 #include <bela/match.hpp>
+#include <bela/subsitute.hpp>
 #include <appmodel.h>
 #include <filesystem>
 #include <ShlObj.h>
@@ -95,6 +96,27 @@ bool PathFs::Initialize(bela::error_code &ec) {
     result = InitializeInternal(ec);
   });
   return result;
+}
+
+constexpr std::wstring_view envTemplate = LR"({
+    // Don't modified
+    "model": "$0"
+})";
+
+bool PathFs::NewFsPaths(bela::error_code &ec) {
+  std::error_code e;
+  if (!std::filesystem::create_directories(table.basePath, e)) {
+    ec = bela::from_std_error_code(e, L"create_directories: ");
+    return false;
+  }
+  auto baulkEnv = bela::StringCat(table.basePath, L"\\baulk.env");
+  if (!bela::PathFileIsExists(baulkEnv)) {
+    if (bela::io::WriteText(bela::Substitute(envTemplate, fsmodel), baulkEnv, ec)) {
+      return false;
+    }
+  }
+  std::filesystem::create_directories(table.appLinks, e);
+  return true;
 }
 
 bool PathFs::InitializeInternal(bela::error_code &ec) {

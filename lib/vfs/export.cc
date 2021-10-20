@@ -3,6 +3,13 @@
 
 namespace baulk::vfs {
 bool InitializePathFs(bela::error_code &ec) {
+  if(!PathFs::Instance().Initialize(ec)){
+    return false;
+  }
+  return PathFs::Instance().NewFsPaths(ec);
+}
+
+bool InitializeFastPathFs(bela::error_code &ec) {
   //
   return PathFs::Instance().Initialize(ec);
 }

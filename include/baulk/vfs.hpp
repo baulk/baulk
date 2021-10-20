@@ -7,6 +7,8 @@
 namespace baulk::vfs {
 // InitializePathFs: baulk initialize vfs PathFs
 bool InitializePathFs(bela::error_code &ec);
+// InitializeFastPathFs: call by baulk-exec and other tools
+bool InitializeFastPathFs(bela::error_code &ec);
 // Executable is packaged
 bool IsPackaged();
 // Baulk PathFsModel

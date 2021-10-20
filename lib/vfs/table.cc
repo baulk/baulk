@@ -5,27 +5,6 @@
 
 namespace baulk::vfs::vfs_internal {
 
-bool create_directories(std::wstring_view d, bela::error_code &ec) {
-  if (bela::PathExists(d, bela::FileAttribute::Dir)) {
-    return true;
-  }
-  std::error_code e;
-  if (!std::filesystem::create_directories(d, e)) {
-    ec = bela::from_std_error_code(e, L"create_directories: ");
-    return false;
-  }
-  return true;
-}
-
-bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec) {
-  if (!create_directories(table.appLinks, ec)) {
-    return false;
-  }
-  create_directories(table.temp, ec);
-  // TODO: create_directories others ?
-  return true;
-}
-
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   etc = bela::StringCat(basePath, L"\\etc");
@@ -36,7 +15,7 @@ bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   locks = bela::StringCat(basePath, L"\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");
   appLinks = bela::StringCat(basePath, L"\\local\\bin");
-  return pathFsNewBinLocation(*this, ec);
+  return true;
 }
 
 // Protable (baulk >=4.0)

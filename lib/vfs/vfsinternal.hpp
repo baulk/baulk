@@ -35,6 +35,7 @@ public:
   PathFs &operator=(const PathFs &) = delete;
   static PathFs &Instance();
   bool Initialize(bela::error_code &ec);
+  bool NewFsPaths(bela::error_code &ec);
   const auto &Table() { return table; }
   std::wstring_view Model() const { return fsmodel; }
   std::wstring Join(std::wstring_view child);
