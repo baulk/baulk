@@ -21,12 +21,12 @@ BEGIN
 BLOCK "000904b0"
 BEGIN
 VALUE "CompanyName", L"Baulk contributors"
-VALUE "FileDescription", L"baulk-lnk - Baulk extended launcher (CLI)"
+VALUE "FileDescription", L"baulk-winlnk - Baulk extended launcher (GUI)"
 VALUE "FileVersion", BAULK_VERSION
-VALUE "InternalName", L"baulk-lnk.exe"
+VALUE "InternalName", L"baulk-winlnk.exe"
 VALUE "LegalCopyright", BAULKUI_COPYRIGHT
-VALUE "OriginalFilename", L"baulk-lnk.exe"
-VALUE "ProductName", L"baulk-lnk - Baulk extended launcher (CLI)"
+VALUE "OriginalFilename", L"baulk-winlnk.exe"
+VALUE "ProductName", L"baulk-winlnk - Baulk extended launcher (GUI)"
 VALUE "ProductVersion", BAULK_VERSION
 END
 END

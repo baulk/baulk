@@ -124,7 +124,7 @@ struct json {
 inline std::optional<json> parse_file(const std::wstring_view file, bela::error_code &ec) {
   FILE *fd = nullptr;
   if (auto eno = _wfopen_s(&fd, file.data(), L"rb"); eno != 0) {
-    ec = bela::make_stdc_error_code(eno);
+    ec = bela::make_stdc_error_code(eno, bela::StringCat(L"open json file '", bela::BaseName(file), L"' "));
     return std::nullopt;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -132,7 +132,8 @@ inline std::optional<json> parse_file(const std::wstring_view file, bela::error_
     // comments support
     return std::make_optional(json{.obj = nlohmann::json::parse(fd, nullptr, true, true)});
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, L"parse json file '", bela::BaseName(file), L"' error: ",
+                               bela::encode_into<char, wchar_t>(e.what()));
   }
   return std::nullopt;
 }

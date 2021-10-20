@@ -5,8 +5,7 @@ class dot_global_initializer {
 public:
   dot_global_initializer() {
     if (FAILED(::CoInitialize(nullptr))) {
-      ::MessageBoxW(nullptr, L"CoInitialize() failed", L"COM initialize failed",
-                    MB_OK | MB_ICONERROR);
+      ::MessageBoxW(nullptr, L"CoInitialize() failed", L"COM initialize failed", MB_OK | MB_ICONERROR);
       ExitProcess(1);
     }
   }
@@ -18,7 +17,7 @@ private:
 };
 
 // Main
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
+int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
   dot_global_initializer di;
   HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
   INITCOMMONCONTROLSEX info = {sizeof(INITCOMMONCONTROLSEX),
