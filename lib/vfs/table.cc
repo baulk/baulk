@@ -18,7 +18,7 @@ bool create_directories(std::wstring_view d, bela::error_code &ec) {
 }
 
 bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec) {
-  if (!create_directories(table.binlocation, ec)) {
+  if (!create_directories(table.appLinks, ec)) {
     return false;
   }
   create_directories(table.temp, ec);
@@ -29,38 +29,38 @@ bool pathFsNewBinLocation(const FsRedirectionTable &table, bela::error_code &ec)
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   etc = bela::StringCat(basePath, L"\\etc");
-  appdata = bela::StringCat(basePath, L"\\appdata");
-  vfs = bela::StringCat(basePath, L"\\vfs");
-  pakcage_root = bela::StringCat(basePath, L"\\packages");
+  appData = bela::StringCat(basePath, L"\\appdata");
+  userVFS = bela::StringCat(basePath, L"\\uservfs");
+  packageRoot = bela::StringCat(basePath, L"\\packages");
   temp = bela::StringCat(basePath, L"\\tmp");
   locks = bela::StringCat(basePath, L"\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");
-  binlocation = bela::StringCat(basePath, L"\\local\\bin");
+  appLinks = bela::StringCat(basePath, L"\\local\\bin");
   return pathFsNewBinLocation(*this, ec);
 }
 
 // Protable (baulk >=4.0)
-bool FsRedirectionTable::InitializeFromPortable(std::wstring_view portableRoot, bela::error_code &ec) {
-  basePath = portableRoot;
+bool FsRedirectionTable::InitializeFromPortable(bela::error_code &ec) {
+  basePath = executableRoot;
   return InitializeFromNewest(ec);
 }
 
 // Legacy Install (baulk <=3.0)
-bool FsRedirectionTable::InitializeFromLegacy(std::wstring_view portableRoot, bela::error_code &ec) {
-  basePath = portableRoot;
+bool FsRedirectionTable::InitializeFromLegacy(bela::error_code &ec) {
+  basePath = executableRoot;
   etc = bela::StringCat(basePath, L"\\bin\\etc");
-  appdata = bela::StringCat(basePath, L"\\bin\\appdata");
-  vfs = bela::StringCat(basePath, L"\\bin\\vfs");
-  pakcage_root = bela::StringCat(basePath, L"\\bin\\pkgs");
+  appData = bela::StringCat(basePath, L"\\bin\\appdata");
+  userVFS = bela::StringCat(basePath, L"\\bin\\vfs");
+  packageRoot = bela::StringCat(basePath, L"\\bin\\pkgs");
   temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp");
   locks = bela::StringCat(basePath, L"\\bin\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");
-  binlocation = bela::StringCat(basePath, L"\\bin\\links");
+  appLinks = bela::StringCat(basePath, L"\\bin\\links");
   return true;
 }
 
 // Windows Store (baulk >=4.0)
-bool FsRedirectionTable::InitializeFromDesktopBridge(bela::error_code &ec) {
+bool FsRedirectionTable::InitializeFromPackaged(bela::error_code &ec) {
   basePath = GetAppBasePath();
   return InitializeFromNewest(ec);
 }

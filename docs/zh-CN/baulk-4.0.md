@@ -36,7 +36,7 @@ baulk
 │   └── curl
 │       └── bin
 │           └── curl.exe
-└── vfs
+└── uservfs
     ├── .cargo
     │   └── bin
     │       └── rustc.exe

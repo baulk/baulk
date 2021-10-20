@@ -7,19 +7,20 @@ namespace baulk::vfs {
 namespace vfs_internal {
 struct FsRedirectionTable {
 public:
-  std::wstring basePath;     // baulk root
-  std::wstring appdata;      // new appdata
-  std::wstring etc;          // baulk etc
-  std::wstring vfs;          // baulk pakcage vfs
-  std::wstring pakcage_root; // baulk package root
-  std::wstring temp;         // baulk temp
-  std::wstring locks;        // baulk locks
-  std::wstring buckets;      // baulk buckets
-  std::wstring binlocation;  // baulk binlocation
+  std::wstring executableRoot; // baulk.exe root
+  std::wstring basePath;       // baulk root
+  std::wstring appData;        // baulk appdata
+  std::wstring etc;            // baulk etc
+  std::wstring userVFS;        // baulk pakcage vfs
+  std::wstring packageRoot;    // baulk package root
+  std::wstring temp;           // baulk temp
+  std::wstring locks;          // baulk locks
+  std::wstring buckets;        // baulk buckets
+  std::wstring appLinks;       // baulk app links location
   // LocalState
-  bool InitializeFromDesktopBridge(bela::error_code &ec);
-  bool InitializeFromPortable(std::wstring_view portableRoot, bela::error_code &ec);
-  bool InitializeFromLegacy(std::wstring_view portableRoot, bela::error_code &ec);
+  bool InitializeFromPackaged(bela::error_code &ec);
+  bool InitializeFromPortable(bela::error_code &ec);
+  bool InitializeFromLegacy(bela::error_code &ec);
   bool InitializeFromSystemAppData(bela::error_code &ec);
   bool InitializeFromLocalAppData(bela::error_code &ec);
 

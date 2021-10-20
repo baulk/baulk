@@ -58,7 +58,7 @@ std::wstring_view GetAppBasePath() {
   return basePath;
 }
 
-std::optional<std::wstring> searchBaulkPortableRoot(bela::error_code &ec) {
+std::optional<std::wstring> searchBaulkExecutableRoot(bela::error_code &ec) {
   // GetModuleFileName returns the absolute path when launched from the application alias
   auto parent = bela::ExecutableFinalPathParent(ec);
   if (!parent) {
@@ -98,18 +98,20 @@ bool PathFs::Initialize(bela::error_code &ec) {
 }
 
 bool PathFs::InitializeInternal(bela::error_code &ec) {
-  if (IsPackaged()) {
-    fsmodel = L"DesktopBridge";
-    return table.InitializeFromDesktopBridge(ec);
-  }
-  auto baulkRoot = searchBaulkPortableRoot(ec);
-  if (!baulkRoot) {
+  auto executableRoot = searchBaulkExecutableRoot(ec);
+  if (!executableRoot) {
     return false;
   }
-  auto envfile = bela::StringCat(*baulkRoot, L"\\baulk.env");
+  table.executableRoot.assign(std::move(*executableRoot));
+  if (IsPackaged()) {
+    fsmodel = L"Packaged";
+    return table.InitializeFromPackaged(ec);
+  }
+
+  auto envfile = bela::StringCat(L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
     fsmodel = L"Legacy";
-    return table.InitializeFromLegacy(*baulkRoot, ec);
+    return table.InitializeFromLegacy(ec);
   }
   if (!InitializeBaulkEnv(envfile, ec)) {
     return false;
@@ -121,9 +123,9 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
     return table.InitializeFromSystemAppData(ec);
   }
   if (bela::EndsWithIgnoreCase(fsmodel, L"Portable")) {
-    return table.InitializeFromPortable(*baulkRoot, ec);
+    return table.InitializeFromPortable(ec);
   }
-  return table.InitializeFromLegacy(*baulkRoot, ec);
+  return table.InitializeFromLegacy(ec);
 }
 
 } // namespace baulk::vfs

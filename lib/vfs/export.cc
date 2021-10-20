@@ -8,26 +8,27 @@ bool InitializePathFs(bela::error_code &ec) {
 }
 
 std::wstring_view PathFsModel() { return PathFs::Instance().Model(); }
-
+// AppExecutableRoot execuatble root
+std::wstring_view AppExecutableRoot() { return PathFs::Instance().Table().executableRoot; }
 // AppBasePath basePath
 std::wstring_view AppBasePath() { return PathFs::Instance().Table().basePath; }
 // AppData
-std::wstring_view AppData() { return PathFs::Instance().Table().appdata; }
+std::wstring_view AppData() { return PathFs::Instance().Table().appData; }
 // AppVFS
 std::wstring_view AppEtc() { return PathFs::Instance().Table().etc; }
 // AppVFS
-std::wstring_view AppVFS() { return PathFs::Instance().Table().vfs; }
+std::wstring_view AppUserVFS() { return PathFs::Instance().Table().userVFS; }
 // AppTemp temp dir
 std::wstring_view AppTemp() { return PathFs::Instance().Table().temp; }
 // AppLocks ...
 std::wstring_view AppLocks() { return PathFs::Instance().Table().locks; }
 // AppBuckets
 std::wstring_view AppBuckets() { return PathFs::Instance().Table().buckets; }
-// AppBinLocation
-std::wstring_view AppBinLocation() { return PathFs::Instance().Table().binlocation; }
+// AppLinks
+std::wstring_view AppLinks() { return PathFs::Instance().Table().appLinks; }
 // AppPackagePath find package full path
 std::wstring AppPackagePath(std::wstring_view packageName) {
-  return bela::StringCat(PathFs::Instance().Table().pakcage_root, L"\\", packageName);
+  return bela::StringCat(PathFs::Instance().Table().packageRoot, L"\\", packageName);
 }
 // AppFsMutexPath pid file path
 std::wstring AppFsMutexPath() { return bela::StringCat(PathFs::Instance().Table().temp, L"\\baulk.pid"); }
