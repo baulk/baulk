@@ -178,7 +178,6 @@ bool EnvDependentChain::FlushEnv() {
     auto newSimulator = searcher.simulator;
     auto baulkpkgroot = bela::StringCat(searcher.baulkbindir, L"\\pkgs\\", e.name);
     newSimulator.SetEnv(L"BAULK_ROOT", searcher.baulkroot);
-    newSimulator.SetEnv(L"BAULK_ETC", searcher.baulketc);
     newSimulator.SetEnv(L"BAULK_VFS", searcher.baulkvfs);
     newSimulator.SetEnv(L"BAULK_PKGROOT", baulkpkgroot);
     newSimulator.SetEnv(L"BAULK_BINDIR", searcher.baulkbindir);

@@ -32,8 +32,8 @@ std::wstring_view AppLocks();
 std::wstring_view AppBuckets();
 // Baulk app link or launcher location
 std::wstring_view AppLinks();
-// AppPackagePath: concat package full path
-std::wstring AppPackagePath(std::wstring_view packageName);
+// AppPackageRoot: concat package full path
+std::wstring AppPackageRoot(std::wstring_view packageName);
 // AppFsMutexPath: return FsMutex file path
 std::wstring AppFsMutexPath();
 std::wstring AppDefaultProfile();

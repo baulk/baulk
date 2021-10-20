@@ -10,9 +10,8 @@
 |---|---|---|---|
 |`BAULK_ROOT`|`baulk::vfs::AppRoot()`|Baulk 包的展开目录|导出|
 |`BAULK_APPDATA`|`baulk::vfs::AppData()`|Baulk 便携配置目录|导出|
-|`BAULK_VFS`|`baulk::vfs::AppVFS()`|该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰，该目录除非是运行强制删除，否则删除包的时候不会删除|导出|
-|`BAULK_PKGROOT`|...|该变量与特定的包相关|导出|
-|`BAULK_BINDIR`|...|||
+|`BAULK_VFS`/`BAULK_USER_VFS`|`baulk::vfs::AppUserVFS()`|虚拟用户目录，该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰，该目录除非是运行强制删除，否则删除包的时候不会删除|导出|
+|`BAULK_PKGROOT`/`BAULK_PACKAGE_ROOT`|...|该变量与特定的包相关|导出|
 
 在使用全新安装的 Baulk 时，将获得如下新的布局：
 
@@ -47,7 +46,9 @@ baulk
 
 该布局不再与 baulk.exe 路径有过于密切的关联，这是因为要支持从安装包安装 Baulk 或者从 Windows Store 安装，注意，旧有的便携式升级会尽可能的保留原有的布局结构。
 
-检测 Baulk 的安装模式需要读取 Baulk 程序根目录下的 `baulk.env` 文件，该文件原始格式为 JSON with comments，`model` 表明 Baulk 目前的运行模式是 System 还是 User 还是 Portable，如果都没有设置则是 `Legacy`，Legacy 模式主要为了兼容 Baulk 3.0 及以前开始使用 Baulk 的用户，避免其需要迁移。
+检测 Baulk 的安装模式会优先判断当前进程是否是打包程序，如果是打包的则按照 Packaged 机制读取，否则需要读取 Baulk 程序根目录下的 `baulk.env` 文件，该文件原始格式为 JSON with comments，`model` 表明 Baulk 目前的运行模式是 System 还是 User 还是 Portable，如果都没有设置则是 `Legacy`，Legacy 模式主要为了兼容 Baulk 3.0 及以前开始使用 Baulk 的用户，避免其需要迁移。
+
+
 
 ## Windows 11 上下文菜单支持
 

@@ -14,9 +14,9 @@ std::wstring_view AppExecutableRoot() { return PathFs::Instance().Table().execut
 std::wstring_view AppBasePath() { return PathFs::Instance().Table().basePath; }
 // AppData
 std::wstring_view AppData() { return PathFs::Instance().Table().appData; }
-// AppVFS
+// AppEtc
 std::wstring_view AppEtc() { return PathFs::Instance().Table().etc; }
-// AppVFS
+// AppUserVFS
 std::wstring_view AppUserVFS() { return PathFs::Instance().Table().userVFS; }
 // AppTemp temp dir
 std::wstring_view AppTemp() { return PathFs::Instance().Table().temp; }
@@ -26,8 +26,8 @@ std::wstring_view AppLocks() { return PathFs::Instance().Table().locks; }
 std::wstring_view AppBuckets() { return PathFs::Instance().Table().buckets; }
 // AppLinks
 std::wstring_view AppLinks() { return PathFs::Instance().Table().appLinks; }
-// AppPackagePath find package full path
-std::wstring AppPackagePath(std::wstring_view packageName) {
+// AppPackageRoot find package full path
+std::wstring AppPackageRoot(std::wstring_view packageName) {
   return bela::StringCat(PathFs::Instance().Table().packageRoot, L"\\", packageName);
 }
 // AppFsMutexPath pid file path

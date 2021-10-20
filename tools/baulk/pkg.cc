@@ -65,10 +65,8 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
   bela::env::Simulator sim;
   sim.InitializeEnv();
   sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
-  sim.SetEnv(L"BAULK_ETC", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\etc"));
   sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
   sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkgname));
-  sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
   for (const auto &p : pkglocal->forceDeletes) {
     auto realdir = sim.PathExpand(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
@@ -99,10 +97,8 @@ int PackageMakeLinks(const baulk::Package &pkg) {
     bela::env::Simulator sim;
     sim.InitializeEnv();
     sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
-    sim.SetEnv(L"BAULK_ETC", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\etc"));
     sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
     sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkg.name));
-    sim.SetEnv(L"BAULK_BINDIR", bela::StringCat(baulk::BaulkRoot(), L"\\bin"));
     for (const auto &p : pkg.venv.mkdirs) {
       auto realdir = sim.PathExpand(p);
       baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
