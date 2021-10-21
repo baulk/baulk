@@ -34,7 +34,7 @@ add_executable(
   vsenv_test
   vsenv.cc)
 
-target_link_libraries(vsenv_test belawin)
+target_link_libraries(vsenv_test baulk.vfs belawin)
 
 add_executable(unzip unzip.cc)
 

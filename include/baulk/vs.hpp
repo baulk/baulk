@@ -1,4 +1,6 @@
 ///
+#ifndef BAULK_VS_HPP
+#define BAULK_VS_HPP
 #include <bela/simulator.hpp>
 #include <bela/path.hpp>
 #include <bela/io.hpp>
@@ -324,3 +326,5 @@ inline bool InitializeVisualStudioEnv(bela::env::Simulator &simulator, const std
   return true;
 }
 } // namespace baulk::env
+
+#endif
