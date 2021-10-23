@@ -111,9 +111,9 @@ Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "A
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Icons]
-Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; AppUserModelID: "{#AppUserId}"
-Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
+Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; AppUserModelID: "{#AppUserId}"
+Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
 
 [Registry]
 ; Aides installing
@@ -150,7 +150,7 @@ begin
         '    {'#10+
         '      "name": "Baulk",'#10+
         '      "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'#10+
-        '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs --clang winsh",'#10+
+        '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs winsh",'#10+
         '      "icon": "'+AppPath+'/share/baulk/baulk.ico",'#10+
         '      "startingDirectory": "%USERPROFILE%",'#10+
         '      "tabTitle": "Windows Terminal \ud83d\udc96 Baulk"'#10+

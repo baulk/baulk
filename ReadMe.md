@@ -279,7 +279,6 @@ Usage: baulk-exec [option] <command> [<args>] ...
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
-  --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --time               Summarize command system resource usage
 
 example:
@@ -318,15 +317,13 @@ Usage: baulkterminal [option] ...
                Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
-  --clang
-               Add Visual Studio's built-in clang to the PATH environment variable
 
 ```
 
 In addition to starting Windows Terminal through baulktermainl, you can also modify the command line of the default terminal of Windows Terminal and use baulk-exec to start the shell, so that the newly created shell has the environment variable context of baulk. For example, change the command line of Powershell Core to: 
 
 ```
-C:\Dev\baulk\bin\baulk-exec.exe --vs --clang pwsh
+C:\Dev\baulk\bin\baulk-exec.exe --vs pwsh
 ```
 
 ## Baulk Dock

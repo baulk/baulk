@@ -12,9 +12,6 @@ target_link_libraries(genlink_test belawin)
 add_executable(parsejson_test parsejson.cc)
 target_link_libraries(parsejson_test belawin)
 
-add_executable(regsdk_test regsdk.cc)
-target_link_libraries(regsdk_test belawin)
-
 add_executable(udir_test udir.cc)
 target_link_libraries(udir_test belawin)
 

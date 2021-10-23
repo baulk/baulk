@@ -1,11 +1,10 @@
 ///
-#include "baulk.hpp"
 #include <baulk/fs.hpp>
 #include <bela/numbers.hpp>
 #include <bela/path.hpp>
 #include <bela/terminal.hpp>
 #include <Msi.h>
-#include <baulkmisc.hpp>
+#include "baulk.hpp"
 
 namespace baulk::msi {
 // https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluiw
@@ -36,12 +35,37 @@ private:
   bool mScriptInProgress{false};
 };
 
+[[maybe_unused]] constexpr uint64_t KB = 1024ULL;
+[[maybe_unused]] constexpr uint64_t MB = KB * 1024;
+[[maybe_unused]] constexpr uint64_t GB = MB * 1024;
+[[maybe_unused]] constexpr uint64_t TB = GB * 1024;
+
+template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
+  if (x >= TB) {
+    _snwprintf_s(buf, N, L"%.2fT", (double)x / TB);
+    return;
+  }
+  if (x >= GB) {
+    _snwprintf_s(buf, N, L"%.2fG", (double)x / GB);
+    return;
+  }
+  if (x >= MB) {
+    _snwprintf_s(buf, N, L"%.2fM", (double)x / MB);
+    return;
+  }
+  if (x > 10 * KB) {
+    _snwprintf_s(buf, N, L"%.2fK", (double)x / KB);
+    return;
+  }
+  _snwprintf_s(buf, N, L"%lldB", x);
+}
+
 void Progressor::Update(int64_t total, int64_t rate) {
   if (!baulk::IsQuietMode && total != 0) {
     wchar_t strrate[32];
     wchar_t strtotal[32];
-    baulk::misc::EncodeRate(strrate, static_cast<uint64_t>(rate));
-    baulk::misc::EncodeRate(strtotal, static_cast<uint64_t>(total));
+    EncodeRate(strrate, static_cast<uint64_t>(rate));
+    EncodeRate(strtotal, static_cast<uint64_t>(total));
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mmsi decompress %s: %s/%s\x1b[0m", name, strrate, strtotal);
   }
 }

@@ -14,7 +14,7 @@ endif()
 
 target_link_libraries(
   baulk-dock
-  baulk.env
+  baulk.vfs
   belashl
   d2d1
   dwrite
