@@ -169,16 +169,15 @@ private:
 
 inline void vs_env_builder::flush() {
   if (!libs.empty()) {
-    simulator->SetEnv(L"LIB", bela::JoinEnv(libs));
+    simulator->SetEnv(L"LIB", bela::JoinEnv(libs), true);
   }
   if (!includes.empty()) {
-    simulator->SetEnv(L"INCLUDE", bela::JoinEnv(includes));
+    simulator->SetEnv(L"INCLUDE", bela::JoinEnv(includes), true);
   }
   if (!libpaths.empty()) {
-    simulator->SetEnv(L"LIBPATH", bela::JoinEnv(libpaths));
+    simulator->SetEnv(L"LIBPATH", bela::JoinEnv(libpaths), true);
   }
   simulator->PathPushFront(std::move(paths));
-  simulator->PathOrganize();
 }
 
 // initialize windows sdk
@@ -292,9 +291,9 @@ inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::
   JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\x86\store\references)");
   auto ifcpath = bela::StringCat(vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
   if (bela::PathExists(ifcpath)) {
-    simulator->SetEnv(L"IFCPATH", ifcpath);
+    simulator->SetEnv(L"IFCPATH", ifcpath, true);
   }
-  simulator->SetEnv(L"VCIDEInstallDir", bela::StringCat(vs.path, LR"(Common7\IDE\VC)"));
+  simulator->SetEnv(L"VCIDEInstallDir", bela::StringCat(vs.path, LR"(Common7\IDE\VC)"), true);
   return true;
 }
 } // namespace env_internal

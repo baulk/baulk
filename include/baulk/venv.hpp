@@ -86,7 +86,7 @@ private:
       sm.SetEnv(key, value);
       return;
     }
-    sm.SetEnv(key, bela::StringCat(value, L";", oldValue));
+    sm.SetEnv(key, bela::StringCat(value, L";", oldValue), true);
   }
 
   bool flushEnv(bela::env::Simulator &sm, bela::error_code &ec) {

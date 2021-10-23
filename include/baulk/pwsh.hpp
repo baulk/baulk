@@ -29,7 +29,7 @@ struct PwshMeta {
   }
 };
 
-std::wstring PwshNewest(const std::vector<PwshMeta> &pwshs) {
+inline std::wstring PwshNewest(const std::vector<PwshMeta> &pwshs) {
   if (pwshs.empty()) {
     return L"";
   }
@@ -42,7 +42,7 @@ std::wstring PwshNewest(const std::vector<PwshMeta> &pwshs) {
   return pwshs[pos].path;
 }
 
-std::wstring PwshPreview(const std::vector<PwshMeta> &pwshs) {
+inline std::wstring PwshPreview(const std::vector<PwshMeta> &pwshs) {
   for (auto &p : pwshs) {
     if (p.preview == prerelease::rc) {
       return p.path;
