@@ -11,7 +11,7 @@ bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   appData = bela::StringCat(basePath, L"\\appdata");
   userVFS = bela::StringCat(basePath, L"\\uservfs");
   packageRoot = bela::StringCat(basePath, L"\\packages");
-  temp = bela::StringCat(basePath, L"\\tmp");
+  temp = bela::StringCat(basePath, L"\\temp");
   locks = bela::StringCat(basePath, L"\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");
   appLinks = bela::StringCat(basePath, L"\\local\\bin");

@@ -2,8 +2,11 @@
 #include "vfsinternal.hpp"
 
 namespace baulk::vfs {
+namespace vfs_internal {
+const FsRedirectionTable &AppPathFsTable() { return baulk::vfs::PathFs::Instance().Table(); }
+} // namespace vfs_internal
 bool InitializePathFs(bela::error_code &ec) {
-  if(!PathFs::Instance().Initialize(ec)){
+  if (!PathFs::Instance().Initialize(ec)) {
     return false;
   }
   return PathFs::Instance().NewFsPaths(ec);

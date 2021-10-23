@@ -35,7 +35,7 @@ Example:
 
 int cmd_upgrade(const argv_t &argv) {
   bela::error_code ec;
-  auto mtx = MakeFsMutex(bela::StringCat(vfs::AppTemp(), L"\\baulk.pid"), ec);
+  auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
     bela::FPrintF(stderr, L"baulk upgrade: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
     return 1;
