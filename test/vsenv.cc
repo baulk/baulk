@@ -15,7 +15,7 @@ int wmain() {
     bela::FPrintF(stderr, L"error %s\n", ec.message);
     return 1;
   }
-  baulk::env::Constructor cs;
+  baulk::env::Constructor cs(true);
   std::vector<std::wstring> envs = {L"rust"};
   if (!cs.InitializeEnvs(envs, sim, ec)) {
     bela::FPrintF(stderr, L"unable initialize venvs: %s\n", ec.message);

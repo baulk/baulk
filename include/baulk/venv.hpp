@@ -1,6 +1,7 @@
 //
 #ifndef BAULK_VENV_HPP
 #define BAULK_VENV_HPP
+#include <bela/terminal.hpp>
 #include <bela/env.hpp>
 #include <bela/simulator.hpp>
 #include "json_utils.hpp"
@@ -37,7 +38,7 @@ inline void ReplaceDependencies(PackageEnv &pkgEnv, const std::vector<std::wstri
 class Constructor {
 public:
   using vector_t = std::vector<std::wstring>;
-  Constructor() = default;
+  Constructor(bool isDebugMode = false) : IsDebugMode{isDebugMode} {}
   Constructor(const Constructor &) = delete;
   Constructor &operator=(const Constructor &) = delete;
   bool InitializeEnvs(const std::vector<std::wstring> &envs, bela::env::Simulator &sm, bela::error_code &ec) {
@@ -140,15 +141,18 @@ private:
     }
     for (const auto e : standardEnvs) {
       if (envExists(e.name)) {
+        DbgPrint(L"venv: %s has been loaded", e.name);
         continue;
       }
       flushOnceEnv(e);
+      DbgPrint(L"venv: %s no dependencies", e.name);
     }
     for (const auto e : requiresEnvs) {
       if (envExists(e.name)) {
+        DbgPrint(L"venv: %s has been loaded", e.name);
         continue;
       }
-      // searcher.DbgPrint(L"venv: %s depend on: %s", e.name, bela::StrJoin(e.dependencies, L", "));
+      DbgPrint(L"venv: %s depend on: %s", e.name, bela::StrJoin(e.dependencies, L", "));
       flushOnceEnv(e);
     }
     sm.PathPushFront(std::move(paths));
@@ -170,6 +174,7 @@ private:
     }
     if (loadPackageLocalEnv(pkgName, pkgEnv, ec)) {
       // TODO
+      DbgPrint(L"venv: %s found local env", pkgName);
     }
     return std::make_optional(std::move(pkgEnv));
   }
@@ -188,6 +193,7 @@ private:
     // local config can replace config
     if (jv.fetch_strings_checked("replace", replaceDependencies)) {
       ReplaceDependencies(pkgEnv, replaceDependencies);
+      DbgPrint(L"venv: %s found replace --> ['%s']", pkgName, bela::StrJoin(replaceDependencies, L"', '"));
     }
     return true;
   }
@@ -232,9 +238,34 @@ private:
     }
     return false;
   }
+  template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    const bela::format_internal::FormatArg arg_array[] = {args...};
+    std::wstring str;
+    str.append(L"\x1b[33m* ");
+    bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
+    if (str.back() == '\n') {
+      str.pop_back();
+    }
+    str.append(L"\x1b[0m\n");
+    return bela::terminal::WriteAuto(stderr, str);
+  }
+  inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
+    if (!IsDebugMode) {
+      return 0;
+    }
+    std::wstring_view msg(fmt);
+    if (!msg.empty() && msg.back() == '\n') {
+      msg.remove_suffix(1);
+    }
+    return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
+  }
   std::vector<PackageEnv> standardEnvs; // no package requires this
   std::list<PackageEnv> requiresEnvs;   // some package requires this
   int depth{0};
+  bool IsDebugMode{false};
 };
 } // namespace baulk::env
 
