@@ -169,11 +169,11 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgMeta, std::wstrin
 #elif defined(_M_ARM64)
   // ARM64 support
   if (jv.fetch_strings_checked("urlarm64", pkg.urls)) {
-    pkg.checksum = jv.fetch("urlarm64.hash");
+    pkg.hashValue = jv.fetch("urlarm64.hash");
   } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.checksum = jv.fetch("url.hash");
+    pkg.hashValue = jv.fetch("url.hash");
   } else if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.checksum = jv.fetch("url64.hash");
+    pkg.hashValue = jv.fetch("url64.hash");
   } else {
     ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to ARM64 platform.");
     return std::nullopt;
@@ -190,7 +190,7 @@ std::optional<baulk::Package> PackageMeta(std::wstring_view pkgMeta, std::wstrin
   }
 #else
   if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.checksum = jv.fetch("url.hash");
+    pkg.hashValue = jv.fetch("url.hash");
   } else {
     ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet ported.");
     return std::nullopt;
