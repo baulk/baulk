@@ -232,19 +232,19 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::
   return std::make_optional(std::move(pkg));
 }
 
-bool PackageUpdatableMeta(const baulk::Package &opkg, baulk::Package &pkg) {
+bool PackageUpdatableMeta(const baulk::Package &pkgLocal, baulk::Package &pkg) {
   // initialize version from installed version
-  bela::version pkgVersion(opkg.version);
-  auto weights = opkg.weights;
+  bela::version pkgVersion(pkgLocal.version);
+  auto weights = pkgLocal.weights;
   bool updated{false};
   auto bucketsDir = baulk::vfs::AppBuckets();
   for (const auto &bk : baulk::LoadedBuckets()) {
-    auto pkgMeta = bela::StringCat(bucketsDir, L"\\", bk.name, L"\\bucket\\", opkg.name, L".json");
+    auto pkgMeta = bela::StringCat(bucketsDir, L"\\", bk.name, L"\\bucket\\", pkgLocal.name, L".json");
     bela::error_code ec;
-    auto pkgN = PackageMeta(pkgMeta, opkg.name, bk.name, ec);
+    auto pkgN = PackageMeta(pkgMeta, pkgLocal.name, bk.name, ec);
     if (!pkgN) {
-      if (ec) {
-        bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgMeta, ec.message);
+      if (ec && ec.code != ENOENT) {
+        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec.message);
       }
       continue;
     }
@@ -273,8 +273,8 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
     auto pkgMeta = bela::StringCat(bucketsDir, L"\\", bk.name, L"\\bucket\\", pkgName, L".json");
     auto pkgN = PackageMeta(pkgMeta, pkgName, bk.name, ec);
     if (!pkgN) {
-      if (ec) {
-        bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgMeta, ec.message);
+      if (ec && ec.code != ENOENT) {
+        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec.message);
       }
       continue;
     }
@@ -298,11 +298,11 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
 
 bool PackageIsUpdatable(std::wstring_view pkgName, baulk::Package &pkg) {
   bela::error_code ec;
-  auto opkg = PackageLocalMeta(pkgName, ec);
-  if (!opkg) {
+  auto localMeta = PackageLocalMeta(pkgName, ec);
+  if (!localMeta) {
     return false;
   }
-  return PackageUpdatableMeta(*opkg, pkg);
+  return PackageUpdatableMeta(*localMeta, pkg);
 }
 
 } // namespace baulk::bucket

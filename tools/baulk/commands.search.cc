@@ -45,7 +45,7 @@ public:
       }
       auto pkg = baulk::bucket::PackageMeta(pkgMetaPath, pkgName, bucket, ec);
       if (!pkg) {
-        bela::FPrintF(stderr, L"Parse %s error: %s\n", pkgMetaPath, ec.message);
+        bela::FPrintF(stderr, L"baulk search: parse package meta error: \x1b[31m%s\x1b[0m\n", ec.message);
         continue;
       }
       auto lopkg = baulk::bucket::PackageLocalMeta(pkgName, ec);
