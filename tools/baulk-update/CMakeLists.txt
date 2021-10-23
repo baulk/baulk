@@ -6,6 +6,7 @@ target_link_libraries(
   baulk-update
   baulk.archive
   baulk.net
+  baulk.vfs
   baulk.misc
   belawin
   belatime

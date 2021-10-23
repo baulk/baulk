@@ -12,7 +12,6 @@
 namespace baulk::update {
 extern bool IsDebugMode;
 extern bool IsForceMode;
-extern std::wstring BaulkRoot;
 template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
