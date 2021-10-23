@@ -64,7 +64,7 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
   profile = profile_;
   auto jv = jo->view();
   localeName = jv.fetch("locale", localeName);
-  auto svs = jv.subviews("buckets");
+  auto svs = jv.subviews("bucket");
   for (auto sv : svs) {
     buckets.emplace_back(sv.fetch("description"), sv.fetch("name"), sv.fetch("url"),
                          sv.fetch_as_integer("weights", 100),

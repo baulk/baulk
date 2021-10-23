@@ -27,6 +27,7 @@ public:
     return false;
   };
   bool SearchMatched(std::wstring_view pkgsUnderBucket, std::wstring_view bucket) {
+    DbgPrint(L"search bucket: %s", pkgsUnderBucket);
     bela::fs::Finder finder;
     bela::error_code ec;
     if (!finder.First(pkgsUnderBucket, L"*.json", ec)) {
@@ -85,7 +86,8 @@ int cmd_search(const argv_t &argv) {
   }
   Searcher searcher(argv);
   auto buckets = vfs::AppBuckets();
-  for (const auto &bk : Buckets()) {
+  DbgPrint(L"buckets: %s", buckets);
+  for (const auto &bk : LoadedBuckets()) {
     auto pkgsUnderBucket = bela::StringCat(buckets, L"\\", bk.name, L"\\bucket");
     searcher.SearchMatched(pkgsUnderBucket, bk.name);
   }
