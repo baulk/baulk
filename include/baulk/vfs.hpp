@@ -17,7 +17,7 @@ bool IsPackaged();
 // - System
 // - Packaged
 // - Legacy
-std::wstring_view PathFsModel();
+std::wstring_view AppMode();
 // Baulk install path: Only used to find the command path of baulk
 // eg:
 //    auto baulkLnkExe=bela::StringCat(AppExecutableRoot(),L"\\bin\\baulk-lnk.exe");

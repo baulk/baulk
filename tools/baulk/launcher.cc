@@ -7,34 +7,25 @@
 #include <bela/io.hpp>
 #include <bela/str_split.hpp>
 #include <bela/datetime.hpp>
-#include <jsonex.hpp>
-#include "launcher.hpp"
 #include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/json_utils.hpp>
+#include "launcher.hpp"
 #include "rcwriter.hpp"
 // template
 #include "launcher.template.ipp"
 
 namespace baulk {
 
-bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela::error_code &ec) {
+bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela::error_code &ec) {
   if (metas.empty()) {
     return true;
   }
-  auto linkmeta = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkLinkMeta);
+  auto linkMeta = bela::StringCat(vfs::AppLocks(), L"\\baulk.linkmeta.json");
   nlohmann::json obj;
-  [&]() {
-    FILE *fd = nullptr;
-    if (auto eo = _wfopen_s(&fd, linkmeta.data(), L"rb"); eo != 0) {
-      return;
-    }
-    auto closer = bela::finally([&] { fclose(fd); });
-    try {
-      obj = nlohmann::json::parse(fd, nullptr, true, true);
-    } catch (const std::exception &e) {
-      DbgPrint(L"Parse link meta json %s", e.what());
-    }
-  }();
-  std::string newjson;
+  if (auto jv = json::parse_file(linkMeta, ec); jv) {
+    obj = std::move(jv->obj);
+  }
   try {
     nlohmann::json newlinks;
     if (auto it = obj.find("links"); it != obj.end()) {
@@ -50,32 +41,23 @@ bool BaulkLinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, 
     }
     obj["links"] = newlinks;
     obj["updated"] = bela::FormatTime<char>(bela::Now());
-    newjson = obj.dump(4);
+    if (!bela::io::WriteTextAtomic(obj.dump(4), linkMeta, ec)) {
+      return false;
+    }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
-  if (newjson.empty()) {
-    return true;
-  }
-  return bela::io::WriteTextAtomic(newjson, linkmeta, ec);
+  return true;
 }
 
-bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
-  auto linkmeta = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkLinkMeta);
-  auto linkbindir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkLinkDir);
+bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
+  auto linkMeta = bela::StringCat(vfs::AppLocks(), L"\\baulk.linkmeta.json");
+  auto links = vfs::AppLinks();
   nlohmann::json obj;
-  [&]() {
-    FILE *fd = nullptr;
-    if (auto eo = _wfopen_s(&fd, linkmeta.data(), L"rb"); eo != 0) {
-      return;
-    }
-    auto closer = bela::finally([&] { fclose(fd); });
-    try {
-      obj = nlohmann::json::parse(fd, nullptr, true, true);
-    } catch (const std::exception &) {
-    }
-  }();
+  if (auto jv = json::parse_file(linkMeta, ec); jv) {
+    obj = std::move(jv->obj);
+  }
   std::string newjson;
   std::error_code e;
   try {
@@ -83,36 +65,35 @@ bool BaulkRemovePkgLinks(std::wstring_view pkg, bela::error_code &ec) {
     if (it == obj.end()) {
       return true;
     }
-    nlohmann::json newlinkobj;
-    auto linksobj = it.value();
-    for (auto oit = linksobj.begin(); oit != linksobj.end(); ++oit) {
-      auto raw = oit.value().get<std::string>();
+    nlohmann::json newlinks;
+    auto links = it.value();
+    for (auto link = links.begin(); link != links.end(); ++link) {
+      auto raw = link.value().get<std::string>();
       auto value = bela::encode_into<char, wchar_t>(raw);
       std::vector<std::wstring_view> mv = bela::StrSplit(value, bela::ByChar('@'), bela::SkipEmpty());
       if (mv.size() < 2) {
         continue;
       }
-      if (mv[0] != pkg) {
-        newlinkobj[oit.key()] = raw;
+      if (mv[0] != pkgName) {
+        newlinks[link.key()] = raw;
         continue;
       }
-      auto file = bela::StringCat(linkbindir, L"\\", bela::encode_into<char, wchar_t>(oit.key()));
+      auto file = bela::StringCat(vfs::AppLinks(), L"\\", bela::encode_into<char, wchar_t>(link.key()));
       if (!std::filesystem::remove(file, e)) {
         auto le = bela::from_std_error_code(e);
         baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, le.message);
       }
     }
     obj["updated"] = bela::FormatTime<char>(bela::Now());
-    obj["links"] = newlinkobj;
-    newjson = obj.dump(4);
+    obj["links"] = newlinks;
+    if (!bela::io::WriteTextAtomic(obj.dump(4), linkMeta, ec)) {
+      return false;
+    }
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
-  if (newjson.empty()) {
-    return true;
-  }
-  return bela::io::WriteTextAtomic(newjson, linkmeta, ec);
+  return true;
 }
 
 // GenerateLinkSource generate link sources
@@ -138,9 +119,9 @@ public:
   Builder(const Builder &) = delete;
   Builder &operator=(const Builder &) = delete;
   ~Builder() {
-    if (!baulktemp.empty() && !baulk::IsTraceMode) {
+    if (!buildTemp.empty() && !baulk::IsTraceMode) {
       std::error_code ec;
-      std::filesystem::remove_all(baulktemp, ec);
+      std::filesystem::remove_all(buildTemp, ec);
     }
   }
   bool Initialize(bela::error_code &ec);
@@ -149,7 +130,7 @@ public:
   const std::vector<LinkMeta> &LinkMetas() const { return linkmetas; }
 
 private:
-  std::wstring baulktemp;
+  std::wstring buildTemp;
   std::vector<LinkMeta> linkmetas;
 };
 
@@ -158,7 +139,7 @@ bool Builder::Initialize(bela::error_code &ec) {
   if (!bktemp) {
     return false;
   }
-  baulktemp.assign(std::move(*bktemp));
+  buildTemp.assign(std::move(*bktemp));
   return true;
 }
 
@@ -186,7 +167,7 @@ inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
 bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view linkdir,
                       const baulk::LinkMeta &lm, bela::error_code &ec) {
   constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain", L"-ENTRY:wWinMain"};
-  constexpr const std::wstring_view subsystemnane[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
+  constexpr const std::wstring_view subsyetmName[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
   auto realexe = bela::RealPathEx(source, ec);
   if (!realexe) {
     return false;
@@ -194,11 +175,11 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
   auto isConsole = bela::pe::IsSubsystemConsole(*realexe);
   DbgPrint(L"executable %s is subsystem console: %v\n", *realexe, isConsole);
   auto name = StripExtension(lm.alias);
-  auto cxxsrcname = bela::StringCat(name, L".cc");
-  auto cxxsrc = bela::StringCat(baulktemp, L"\\", cxxsrcname);
-  auto rcsrcname = bela::StringCat(name, L".rc");
-  auto rcsrc = bela::StringCat(baulktemp, L"\\", rcsrcname);
-  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxsrc, ec)) {
+  auto cxxSourceName = bela::StringCat(name, L".cc");
+  auto cxxSourcePath = bela::StringCat(buildTemp, L"\\", cxxSourceName);
+  auto rcSourceName = bela::StringCat(name, L".rc");
+  auto rcSourcePath = bela::StringCat(buildTemp, L"\\", rcSourceName);
+  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxSourcePath, ec)) {
     return false;
   }
   bool rcwrited = false;
@@ -213,7 +194,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     StringNonEmpty(vi->ProductName, pkg.name);
     StringNonEmpty(vi->OriginalFileName, lm.alias);
     StringNonEmpty(vi->InternalName, lm.alias);
-    rcwrited = w.WriteVersion(*vi, rcsrc, ec);
+    rcwrited = w.WriteVersion(*vi, rcSourcePath, ec);
   } else {
     bela::pe::Version nvi;
     nvi.CompanyName = bela::StringCat(pkg.name, L" contributors");
@@ -224,37 +205,37 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     nvi.OriginalFileName = lm.alias;
     nvi.InternalName = lm.alias;
     baulk::rc::Writer w;
-    rcwrited = w.WriteVersion(nvi, rcsrc, ec);
+    rcwrited = w.WriteVersion(nvi, rcSourcePath, ec);
   }
   if (rcwrited) {
-    if (baulk::BaulkExecutor().Execute(baulktemp, L"rc", L"-nologo", L"-c65001", rcsrcname) != 0) {
+    if (LinkExecutor().Execute(buildTemp, L"rc", L"-nologo", L"-c65001", rcSourceName) != 0) {
       rcwrited = false;
     }
   }
-  DbgPrint(L"compile %s [%s]", cxxsrcname, baulktemp);
-  if (baulk::BaulkExecutor().Execute(baulktemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os", cxxsrcname) != 0) {
-    ec = baulk::BaulkExecutor().LastErrorCode();
+  DbgPrint(L"compile %s [%s]", cxxSourceName, buildTemp);
+  if (LinkExecutor().Execute(buildTemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os", cxxSourceName) != 0) {
+    ec = LinkExecutor().LastErrorCode();
     return false;
   }
   int exitcode = 0;
   DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
   auto index = isConsole ? 0 : 1;
   if (rcwrited) {
-    exitcode = baulk::BaulkExecutor().Execute(baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
-                                              L"-NODEFAULTLIB", subsystemnane[index], entry[index],
-                                              bela::StringCat(name, L".obj"), bela::StringCat(name, L".res"),
-                                              L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
+    exitcode = LinkExecutor().Execute(buildTemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
+                                      subsyetmName[index], entry[index], bela::StringCat(name, L".obj"),
+                                      bela::StringCat(name, L".res"), L"kernel32.lib", L"user32.lib",
+                                      bela::StringCat(L"-OUT:", lm.alias));
   } else {
-    exitcode = baulk::BaulkExecutor().Execute(
-        baulktemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB", subsystemnane[index], entry[index],
-        bela::StringCat(name, L".obj"), L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
+    exitcode = LinkExecutor().Execute(buildTemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
+                                      subsyetmName[index], entry[index], bela::StringCat(name, L".obj"),
+                                      L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", lm.alias));
   }
   if (exitcode != 0) {
-    ec = baulk::BaulkExecutor().LastErrorCode();
+    ec = LinkExecutor().LastErrorCode();
     return false;
   }
   auto target = bela::StringCat(linkdir, L"\\", lm.alias);
-  auto mktarget = bela::StringCat(baulktemp, L"\\", lm.alias);
+  auto mktarget = bela::StringCat(buildTemp, L"\\", lm.alias);
   std::error_code e;
   if (std::filesystem::exists(target, e)) {
     std::filesystem::remove_all(target, e);
@@ -269,9 +250,9 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
 }
 
 bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto pkgroot = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
-  auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
-  if (!baulk::fs::MakeDir(linkdir, ec)) {
+  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto linksDir = vfs::AppLinks();
+  if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
   }
   Builder builder;
@@ -279,13 +260,13 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
     return false;
   }
   for (const auto &lm : pkg.launchers) {
-    auto source = bela::PathCat(pkgroot, L"\\", lm.path);
+    auto source = bela::PathCat(packageRoot, L"\\", lm.path);
     DbgPrint(L"make launcher %s", source);
-    if (!builder.Compile(pkg, source, linkdir, lm, ec)) {
+    if (!builder.Compile(pkg, source, linksDir, lm, ec)) {
       bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec.message);
     }
   }
-  if (!BaulkLinkMetaStore(builder.LinkMetas(), pkg, ec)) {
+  if (!LinkMetaStore(builder.LinkMetas(), pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
@@ -296,37 +277,37 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
 }
 
 bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto baulklnk = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\baulk-lnk.exe");
-  if (!bela::PathExists(baulklnk)) {
+  auto baulkLnk = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin\\baulk-lnk.exe");
+  if (!bela::PathExists(baulkLnk)) {
     ec = bela::make_error_code(bela::ErrGeneral, L"baulk-lnk not exists. cannot create simulated launcher");
     return false;
   }
-  auto pkgroot = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
-  auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
-  if (!baulk::fs::MakeDir(linkdir, ec)) {
+  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto linksDir = vfs::AppLinks();
+  if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.launchers) {
-    auto src = bela::PathCat(pkgroot, L"\\", lm.path);
+    auto src = bela::PathCat(packageRoot, L"\\", lm.path);
     DbgPrint(L"make simulated launcher %s", src);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
     }
-    auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
+    auto lnk = bela::StringCat(linksDir, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         bela::fs::ForceDeleteFile(lnk, ec);
       }
     }
     // use baulk-cli as source
-    if (!baulk::fs::SymLink(baulklnk, lnk, ec)) {
+    if (!baulk::fs::SymLink(linksDir, lnk, ec)) {
       return false;
     }
     linkmetas.emplace_back(lm);
   }
-  if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
+  if (!LinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
@@ -338,20 +319,20 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
 
 // create symlink
 bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto pkgroot = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkPkgsDir, L"\\", pkg.name);
-  auto linkdir = bela::StringCat(baulk::BaulkRoot(), L"\\", BaulkLinkDir);
-  if (!baulk::fs::MakeDir(linkdir, ec)) {
+  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto linksDir = vfs::AppLinks();
+  if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.links) {
-    auto src = bela::PathCat(pkgroot, L"\\", lm.path);
+    auto src = bela::PathCat(packageRoot, L"\\", lm.path);
     DbgPrint(L"make symlink %s", src);
     if (!bela::PathExists(src)) {
       bela::FPrintF(stderr, L"%s not exist\n", src);
       continue;
     }
-    auto lnk = bela::StringCat(linkdir, L"\\", lm.alias);
+    auto lnk = bela::StringCat(packageRoot, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         bela::fs::ForceDeleteFolders(lnk, ec);
@@ -363,7 +344,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
     }
     linkmetas.emplace_back(lm);
   }
-  if (!BaulkLinkMetaStore(linkmetas, pkg, ec)) {
+  if (!LinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
@@ -373,14 +354,14 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
   return true;
 }
 
-bool BaulkMakePkgLinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
+bool MakePackageLinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
   if (!pkg.links.empty() && !MakeSymlinks(pkg, forceoverwrite, ec)) {
     return false;
   }
   if (pkg.launchers.empty()) {
     return true;
   }
-  if (!baulk::BaulkExecutor().Initialized()) {
+  if (!LinkExecutor().Initialized()) {
     return MakeSimulatedLauncher(pkg, forceoverwrite, ec);
   }
   return MakeLaunchers(pkg, forceoverwrite, ec);

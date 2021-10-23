@@ -14,7 +14,7 @@ bool InitializeFastPathFs(bela::error_code &ec) {
   return PathFs::Instance().Initialize(ec);
 }
 
-std::wstring_view PathFsModel() { return PathFs::Instance().Model(); }
+std::wstring_view AppMode() { return PathFs::Instance().Mode(); }
 // AppExecutableRoot execuatble root
 std::wstring_view AppExecutableRoot() { return PathFs::Instance().Table().executableRoot; }
 // AppBasePath basePath

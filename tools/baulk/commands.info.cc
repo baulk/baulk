@@ -1,6 +1,8 @@
 //
 #include <bela/terminal.hpp>
-#include "indicators.hpp"
+#include <baulk/indicators.hpp>
+#include <baulk/fsmutex.hpp>
+#include <baulk/vfs.hpp>
 #include "pkg.hpp"
 #include "commands.hpp"
 #include "baulk.hpp"
@@ -99,9 +101,9 @@ int cmd_info(const argv_t &argv) {
     return 1;
   }
   bela::error_code ec;
-  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
-  if (!locker) {
-    bela::FPrintF(stderr, L"baulk info: \x1b[31m%s\x1b[0m\n", ec.message);
+  auto mtx = MakeFsMutex(bela::StringCat(vfs::AppTemp(), L"\\baulk.pid"), ec);
+  if (!mtx) {
+    bela::FPrintF(stderr, L"baulk info: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
     return 1;
   }
   for (auto pkg : argv) {

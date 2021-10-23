@@ -2,9 +2,9 @@
 #include <bela/path.hpp>
 #include <baulk/fs.hpp>
 #include <tar.hpp>
+#include <baulk/indicators.hpp>
 #include "baulk.hpp"
 #include "decompress.hpp"
-#include "indicators.hpp"
 
 namespace baulk::tar {
 

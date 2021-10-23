@@ -99,19 +99,21 @@ bool PathFs::Initialize(bela::error_code &ec) {
 }
 
 constexpr std::wstring_view envTemplate = LR"({
-    // Don't modified
-    "model": "$0"
+    // Do not modify, baulk relies on this file to select the operating mode  
+    "mode": "$0"
 })";
 
 bool PathFs::NewFsPaths(bela::error_code &ec) {
   std::error_code e;
-  if (!std::filesystem::create_directories(table.basePath, e)) {
-    ec = bela::from_std_error_code(e, L"create_directories: ");
-    return false;
+  if (!bela::PathExists(table.basePath, bela::FileAttribute::Dir)) {
+    if (!std::filesystem::create_directories(table.basePath, e)) {
+      ec = bela::from_std_error_code(e, L"create_directories: ");
+      return false;
+    }
   }
   auto baulkEnv = bela::StringCat(table.basePath, L"\\baulk.env");
   if (!bela::PathFileIsExists(baulkEnv)) {
-    if (bela::io::WriteText(bela::Substitute(envTemplate, fsmodel), baulkEnv, ec)) {
+    if (!bela::io::WriteText(bela::Substitute(envTemplate, mode), baulkEnv, ec)) {
       return false;
     }
   }
@@ -126,25 +128,25 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
   }
   table.executableRoot.assign(std::move(*executableRoot));
   if (IsPackaged()) {
-    fsmodel = L"Packaged";
+    mode = L"Packaged";
     return table.InitializeFromPackaged(ec);
   }
 
   auto envfile = bela::StringCat(L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
-    fsmodel = L"Legacy";
+    mode = L"Legacy";
     return table.InitializeFromLegacy(ec);
   }
   if (!InitializeBaulkEnv(envfile, ec)) {
     return false;
   }
-  if (bela::EqualsIgnoreCase(fsmodel, L"User")) {
+  if (bela::EqualsIgnoreCase(mode, L"User")) {
     return table.InitializeFromLocalAppData(ec);
   }
-  if (bela::EqualsIgnoreCase(fsmodel, L"System")) {
+  if (bela::EqualsIgnoreCase(mode, L"System")) {
     return table.InitializeFromSystemAppData(ec);
   }
-  if (bela::EndsWithIgnoreCase(fsmodel, L"Portable")) {
+  if (bela::EndsWithIgnoreCase(mode, L"Portable")) {
     return table.InitializeFromPortable(ec);
   }
   return table.InitializeFromLegacy(ec);

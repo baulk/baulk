@@ -1,5 +1,7 @@
 //
 #include <bela/terminal.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/fsmutex.hpp>
 #include "pkg.hpp"
 #include "commands.hpp"
 #include "baulk.hpp"
@@ -38,7 +40,7 @@ void PackageInstaller::Update(std::wstring_view name) {
     return;
   }
   bela::FPrintF(stderr, L"\x1b[33mbaulk: '%s' not yet ported, now update buckets and retry it.\x1b[0m\n", name);
-  if (BaulkUpdateBucket(false) != 0) {
+  if (UpdateBucket(false) != 0) {
     return;
   }
   updated = true;
@@ -82,12 +84,12 @@ int cmd_install(const argv_t &argv) {
     return 1;
   }
   bela::error_code ec;
-  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
-  if (!locker) {
-    bela::FPrintF(stderr, L"baulk install: \x1b[31m%s\x1b[0m\n", ec.message);
+  auto mtx = MakeFsMutex(bela::StringCat(vfs::AppTemp(), L"\\baulk.pid"), ec);
+  if (!mtx) {
+    bela::FPrintF(stderr, L"baulk install: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
     return 1;
   }
-  if (!baulk::BaulkInitializeExecutor(ec)) {
+  if (!InitializeExecutor(ec)) {
     baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
   }
   PackageInstaller installer;

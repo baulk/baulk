@@ -4,8 +4,8 @@
 #include <bela/codecvt.hpp>
 #include <bela/path.hpp>
 #include <zip.hpp>
-#include "indicators.hpp"
 #include <baulk/fs.hpp>
+#include <baulk/indicators.hpp>
 #include "baulk.hpp"
 
 namespace baulk::zip {

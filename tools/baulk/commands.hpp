@@ -51,7 +51,7 @@ void usage_bucket();
 void usage_untar();
 void usage_unzip();
 //
-int BaulkUpdateBucket(bool showUpdatable);
+int UpdateBucket(bool showUpdatable);
 } // namespace baulk::commands
 
 #endif

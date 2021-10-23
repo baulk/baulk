@@ -4,7 +4,6 @@ add_executable(
   baulk
   7z.cc
   baulk.cc
-  baulkenv.cc
   bucket.cc
   commands.freeze.cc
   commands.help.cc
@@ -23,14 +22,12 @@ add_executable(
   commands.bucket.cc
   commands.version.cc
   compiler.cc
+  context.cc
   decompress.cc
-  indicators.cc
   launcher.cc
   msi.cc
-  net.cc
   pkg.cc
   tar.cc
-  tcp.cc
   zip.cc
   baulk.rc
   baulk.manifest)
@@ -39,6 +36,8 @@ target_link_libraries(
   baulk
   baulk.archive
   baulk.misc
+  baulk.net
+  baulk.vfs
   belahash
   belawin
   belatime

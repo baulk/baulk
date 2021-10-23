@@ -37,7 +37,7 @@ public:
   bool Initialize(bela::error_code &ec);
   bool NewFsPaths(bela::error_code &ec);
   const auto &Table() { return table; }
-  std::wstring_view Model() const { return fsmodel; }
+  std::wstring_view Mode() const { return mode; }
   std::wstring Join(std::wstring_view child);
 
 private:
@@ -45,7 +45,7 @@ private:
   bool InitializeInternal(bela::error_code &ec);
   bool InitializeBaulkEnv(std::wstring_view envfile, bela::error_code &ec);
   std::once_flag initialized;
-  std::wstring fsmodel;
+  std::wstring mode;
   vfs_internal::FsRedirectionTable table;
 };
 

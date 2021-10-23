@@ -7,6 +7,7 @@
 #include <baulk/fs.hpp>
 #include <baulk/argv.hpp>
 #include <baulk/json_utils.hpp>
+#include <baulk/vfs.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
 
@@ -201,7 +202,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
 }
 
 bool PruneBucket(const baulk::Bucket &bucket) {
-  auto bucketslock = bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
+  auto bucketslock = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
   nlohmann::json newjson = nlohmann::json::array();
   [&]() -> bool {
     FILE *fd = nullptr;
@@ -238,7 +239,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
     bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
     return false;
   }
-  auto bucketDir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
+  auto bucketDir = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
   bela::fs::ForceDeleteFolders(bucketDir, ec);
   return true;
 }

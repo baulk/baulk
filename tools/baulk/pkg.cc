@@ -5,13 +5,15 @@
 #include <bela/simulator.hpp>
 #include <bela/datetime.hpp>
 #include <bela/semver.hpp>
-#include <jsonex.hpp>
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/json_utils.hpp>
+#include <baulk/net.hpp>
+#include <baulk/hash.hpp>
 #include "bucket.hpp"
 #include "launcher.hpp"
 #include "pkg.hpp"
-#include "net.hpp"
-#include <baulk/fs.hpp>
-#include <baulk/hash.hpp>
+
 #include "decompress.hpp"
 
 namespace baulk::package {
@@ -45,7 +47,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
       AddArray(venv, "dependencies", pkg.venv.dependencies); // venv dependencies
       j["venv"] = std::move(venv);
     }
-    auto file = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
+    std::wstring file(vfs::AppLocks());
     if (!baulk::fs::MakeDir(file, ec)) {
       return false;
     }
@@ -57,19 +59,22 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
   return false;
 }
 
-bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
-  auto pkglocal = baulk::bucket::PackageLocalMeta(pkgname, ec);
+bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
+  auto pkglocal = baulk::bucket::PackageLocalMeta(pkgName, ec);
   if (!pkglocal) {
     return false;
   }
   bela::env::Simulator sim;
   sim.InitializeEnv();
-  sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
-  sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
-  sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkgname));
+  auto pkgRoot = baulk::vfs::AppPackageRoot(pkgName);
+  sim.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
+  sim.SetEnv(L"BAULK_VFS", baulk::vfs::AppUserVFS());
+  sim.SetEnv(L"BAULK_USER_VFS", baulk::vfs::AppUserVFS());
+  sim.SetEnv(L"BAULK_PKGROOT", pkgRoot);
+  sim.SetEnv(L"BAULK_PACKAGE_ROOT", pkgRoot);
   for (const auto &p : pkglocal->forceDeletes) {
     auto realdir = sim.PathExpand(p);
-    baulk::DbgPrint(L"force delete: %s@%s", pkgname, realdir);
+    baulk::DbgPrint(L"force delete: %s@%s", pkgName, realdir);
     bela::error_code ec2;
     if (bela::fs::ForceDeleteFolders(realdir, ec2)) {
       bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
@@ -80,7 +85,7 @@ bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec) {
 
 // Package cached
 std::optional<std::wstring> PackageCached(std::wstring_view filename, std::wstring_view hash) {
-  auto pkgfile = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir, L"\\", filename);
+  auto pkgfile = bela::StringCat(vfs::AppTemp(), L"\\", filename);
   if (!bela::PathExists(pkgfile)) {
     return std::nullopt;
   }
@@ -96,9 +101,12 @@ int PackageMakeLinks(const baulk::Package &pkg) {
   if (!pkg.venv.mkdirs.empty()) {
     bela::env::Simulator sim;
     sim.InitializeEnv();
-    sim.SetEnv(L"BAULK_ROOT", baulk::BaulkRoot());
-    sim.SetEnv(L"BAULK_VFS", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\vfs"));
-    sim.SetEnv(L"BAULK_PKGROOT", bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkg\\", pkg.name));
+    auto pkgRoot = baulk::vfs::AppPackageRoot(pkg.name);
+    sim.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
+    sim.SetEnv(L"BAULK_VFS", baulk::vfs::AppUserVFS());
+    sim.SetEnv(L"BAULK_USER_VFS", baulk::vfs::AppUserVFS());
+    sim.SetEnv(L"BAULK_PKGROOT", pkgRoot);
+    sim.SetEnv(L"BAULK_PACKAGE_ROOT", pkgRoot);
     for (const auto &p : pkg.venv.mkdirs) {
       auto realdir = sim.PathExpand(p);
       baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
@@ -109,10 +117,10 @@ int PackageMakeLinks(const baulk::Package &pkg) {
     }
   }
   bela::error_code ec;
-  baulk::BaulkRemovePkgLinks(pkg.name, ec);
+  baulk::RemovePackageLinks(pkg.name, ec);
   // check package is good installed
   // rebuild launcher and links
-  if (!baulk::BaulkMakePkgLinks(pkg, true, ec)) {
+  if (!baulk::MakePackageLinks(pkg, true, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name, ec.message);
     return 1;
   }
@@ -123,7 +131,7 @@ int PackageMakeLinks(const baulk::Package &pkg) {
   return 0;
 }
 
-inline bool BaulkRename(std::wstring_view source, std::wstring_view target, bela::error_code &ec) {
+inline bool RenameForce(std::wstring_view source, std::wstring_view target, bela::error_code &ec) {
   if (bela::PathExists(target)) {
     bela::fs::ForceDeleteFolders(target, ec);
   }
@@ -165,20 +173,20 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     return 1;
   }
   h->regularize(outdir);
-  auto pkgdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\pkgs\\", pkg.name);
+  auto pkgRoot = baulk::vfs::AppPackageRoot(pkg.name);
   std::wstring pkgold;
   std::error_code e;
-  if (bela::PathExists(pkgdir)) {
-    pkgold = bela::StringCat(pkgdir, L".old");
-    if (!BaulkRename(pkgdir, pkgold, ec)) {
-      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgdir, ec.message);
+  if (bela::PathExists(pkgRoot)) {
+    pkgold = bela::StringCat(pkgRoot, L".old");
+    if (!RenameForce(pkgRoot, pkgold, ec)) {
+      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgRoot, ec.message);
       return 1;
     }
   }
-  if (!BaulkRename(outdir, pkgdir, ec)) {
-    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgdir, ec.message);
+  if (!RenameForce(outdir, pkgRoot, ec)) {
+    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgRoot, ec.message);
     if (!pkgold.empty()) {
-      BaulkRename(pkgdir, pkgold, ec);
+      RenameForce(pkgRoot, pkgold, ec);
     }
     return 1;
   }
@@ -192,8 +200,8 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
       rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().wstring());
     }
     if (!bela::EqualsIgnoreCase(fn, rfn)) {
-      auto expnadfile = bela::StringCat(pkgdir, L"/", fn);
-      auto target = bela::StringCat(pkgdir, L"/", rfn);
+      auto expnadfile = bela::StringCat(pkgRoot, L"/", fn);
+      auto target = bela::StringCat(pkgRoot, L"/", rfn);
       if (MoveFileExW(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
         ec = bela::make_system_error_code();
         bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target,
@@ -214,7 +222,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
 
 bool DependenciesExists(const std::vector<std::wstring_view> &dv) {
   for (const auto d : dv) {
-    auto pkglock = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks\\", d, L".json");
+    auto pkglock = bela::StringCat(vfs::AppLocks(), L"\\", d, L".json");
     if (bela::PathFileIsExists(pkglock)) {
       return true;
     }
@@ -240,7 +248,7 @@ int BaulkInstall(const baulk::Package &pkg) {
     if (pkgversion < oldversion || (pkgversion == oldversion && pkg.weights <= pkglocal->weights)) {
       return PackageMakeLinks(pkg);
     }
-    if (baulk::BaulkIsFrozenPkg(pkg.name) && !baulk::IsForceMode) {
+    if (baulk::IsFrozenedPackage(pkg.name) && !baulk::IsForceMode) {
       // Since the metadata has been updated, we cannot rebuild the frozen
       // package launcher
       bela::FPrintF(stderr,
@@ -257,38 +265,38 @@ int BaulkInstall(const baulk::Package &pkg) {
                   L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m\n",
                   pkg.name, pkglocal->version, pkglocal->bucket, pkg.version, pkg.bucket);
   }
-  auto url = baulk::net::BestUrl(pkg.urls);
+  auto url = baulk::net::BestUrl(pkg.urls, LocaleName());
   if (url.empty()) {
     bela::FPrintF(stderr, L"baulk: \x1b[31m%s\x1b[0m no valid url\n", pkg.name);
     return 1;
   }
   baulk::DbgPrint(L"baulk '%s/%s' url: '%s'\n", pkg.name, pkg.version, url);
-  if (!pkg.checksum.empty()) {
-    auto filename = baulk::net::UrlFileName(url);
+  if (!pkg.hashValue.empty()) {
+    auto filename = net::url_path_name(url);
     baulk::DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, filename);
-    if (auto pkgfile = PackageCached(filename, pkg.checksum); pkgfile) {
+    if (auto pkgfile = PackageCached(filename, pkg.hashValue); pkgfile) {
       return PackageExpand(pkg, *pkgfile);
     }
   }
-  auto pkgtmpdir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
-  if (!baulk::fs::MakeDir(pkgtmpdir, ec)) {
-    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", pkgtmpdir, ec.message);
+  auto downloads = vfs::AppTemp();
+  if (!baulk::fs::MakeDir(downloads, ec)) {
+    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", downloads, ec.message);
     return 1;
   }
-  auto pkgfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
+  auto pkgfile = baulk::net::WinGet(url, downloads, pkg.hashValue, true, ec);
   if (!pkgfile) {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     return 1;
   }
-  if (!pkg.checksum.empty() && !baulk::hash::HashEqual(*pkgfile, pkg.checksum, ec)) {
+  if (!pkg.hashValue.empty() && !baulk::hash::HashEqual(*pkgfile, pkg.hashValue, ec)) {
     bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
     // retry download
-    pkgfile = baulk::net::WinGet(url, pkgtmpdir, true, ec);
+    pkgfile = baulk::net::WinGet(url, downloads, pkg.hashValue, true, ec);
     if (!pkgfile) {
       bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
       return 1;
     }
-    if (!baulk::hash::HashEqual(*pkgfile, pkg.checksum, ec)) {
+    if (!baulk::hash::HashEqual(*pkgfile, pkg.hashValue, ec)) {
       bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
       return 1;
     }
@@ -297,11 +305,8 @@ int BaulkInstall(const baulk::Package &pkg) {
     return ret;
   }
   if (!pkg.suggest.empty()) {
-    bela::FPrintF(stderr, L"Suggest installing:");
-    for (auto it : pkg.suggest) {
-      bela::FPrintF(stderr, L"  \x1b[32m%s\x1b[0m", it);
-    }
-    bela::FPrintF(stderr, L"\n");
+    bela::FPrintF(stderr, L"Suggest installing: \x1b[32m%s\x1b[0m\n\n",
+                  bela::StrJoin(pkg.suggest, L"\x1b[0m\n  \x1b[32m"));
   }
   if (!pkg.notes.empty()) {
     bela::FPrintF(stderr, L"Notes: %s\n", pkg.notes);

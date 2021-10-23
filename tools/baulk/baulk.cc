@@ -1,5 +1,6 @@
 #include <bela/path.hpp>
 #include <baulk/argv.hpp>
+#include <baulk/net.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
 
@@ -9,8 +10,7 @@ bool IsForceMode = false;
 bool IsForceDelete = false;
 bool IsQuietMode = false;
 bool IsTraceMode = false;
-bool IsInsecureMode = false;
-wchar_t UserAgent[UerAgentMaximumLength] = L"Wget/7.0 (Baulk)";
+
 int cmd_uninitialized(const baulk::commands::argv_t &argv) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
   return 1;
@@ -71,16 +71,13 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
           IsTraceMode = true;
           break;
         case 'k':
-          IsInsecureMode = true;
+          net::HttpClient::DefaultClient().InsecureMode() = true;
           break;
         case 'A':
-          if (auto len = wcslen(oa); len < 256) {
-            wmemcpy_s(UserAgent, UerAgentMaximumLength, oa, len);
-            UserAgent[len] = 0;
-          }
+          net::HttpClient::DefaultClient().UserAgent() = oa;
           break;
         case 1001:
-          SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
+          net::HttpClient::DefaultClient().ProxyURL() = oa;
           break;
         case 1002:
           IsForceDelete = true;
@@ -92,7 +89,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       },
       ec);
   if (!result) {
-    bela::FPrintF(stderr, L"baulk ParseArgv error: \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk parse argv error: \x1b[31m%s\x1b[0m\n", ec.message);
     return std::nullopt;
   }
   if (IsDebugMode && IsQuietMode) {

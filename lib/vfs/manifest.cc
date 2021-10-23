@@ -11,7 +11,7 @@ bool PathFs::InitializeBaulkEnv(std::wstring_view envfile, bela::error_code &ec)
     return false;
   }
   auto jv = j->view();
-  fsmodel = jv.fetch("model", L"Legacy"sv);
+  mode = jv.fetch("mode", L"Legacy"sv);
   return true;
 }
 } // namespace baulk::vfs

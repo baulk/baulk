@@ -2,6 +2,7 @@
 #ifndef BAULK_JSON_UTILS_HPP
 #define BAULK_JSON_UTILS_HPP
 #include <bela/base.hpp>
+#include <bela/path.hpp>
 #include <json.hpp>
 
 namespace baulk::json {
@@ -40,6 +41,25 @@ public:
       if (it->is_array()) {
         for (const auto &o : it.value()) {
           v.emplace_back(bela::encode_into<char, T>(o.get<std::string_view>()));
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  template <typename T, typename Allocator = std::allocator<T>>
+  requires bela::narrow_character<T>
+  bool fetch_strings_checked(std::string_view name,
+                             std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
+    if (auto it = obj.find(name); it != obj.end()) {
+      if (it->is_string()) {
+        v.emplace_back(it->get<std::string_view>());
+        return true;
+      }
+      if (it->is_array()) {
+        for (const auto &o : it.value()) {
+          v.emplace_back(o.get<std::string_view>());
         }
         return true;
       }

@@ -4,11 +4,13 @@
 #include <bela/io.hpp>
 #include <bela/strip.hpp>
 #include <bela/datetime.hpp>
-#include <filesystem>
-#include <jsonex.hpp>
-#include "net.hpp"
-#include "bucket.hpp"
+#include <baulk/vfs.hpp>
+#include <baulk/fsmutex.hpp>
+#include <baulk/net.hpp>
 #include <baulk/fs.hpp>
+#include <baulk/json_utils.hpp>
+#include "bucket.hpp"
+
 #include "commands.hpp"
 
 namespace baulk::commands {
@@ -19,8 +21,9 @@ struct bucket_metadata {
 
 class BucketUpdater {
 public:
-  using bucket_status_t = bela::flat_hash_map<std::wstring, bucket_metadata, baulk::net::StringCaseInsensitiveHash,
-                                              baulk::net::StringCaseInsensitiveEq>;
+  using bucket_status_t =
+      bela::flat_hash_map<std::wstring, bucket_metadata, net::net_internal::StringCaseInsensitiveHash,
+                          net::net_internal::StringCaseInsensitiveEq>;
   BucketUpdater() = default;
   BucketUpdater(const BucketUpdater &) = delete;
   BucketUpdater &operator=(const BucketUpdater &) = delete;
@@ -30,38 +33,32 @@ public:
 
 private:
   bucket_status_t status;
-  std::wstring bucketslock;
+  std::wstring lockFile;
   bool updated{false};
 };
 
 bool BucketUpdater::Initialize() {
-  bucketslock = bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, bucketslock.data(), L"rb"); en != 0) {
-    if (en == ENOENT) {
-      return true;
-    }
-    auto ec = bela::make_stdc_error_code(en);
-    bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec.message);
-    return false;
+  lockFile = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
+  bela::error_code ec;
+  auto jo = json::parse_file(lockFile, ec);
+  if (!jo) {
+    return ec.code == ENOENT;
   }
-  auto closer = bela::finally([&] { fclose(fd); });
   try {
-    auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    for (const auto &a : j) {
+    for (const auto &a : jo->obj) {
       if (!a.is_object()) {
         continue;
       }
       auto name = a["name"].get<std::string_view>();
       auto latest = a["latest"].get<std::string_view>();
       auto time = a["time"].get<std::string_view>();
-      status.emplace(bela::encode_into<char, wchar_t>(name), bucket_metadata{bela::encode_into<char, wchar_t>(latest), std::string(time)});
+      status.emplace(bela::encode_into<char, wchar_t>(name),
+                     bucket_metadata{bela::encode_into<char, wchar_t>(latest), std::string(time)});
     }
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"unable decode metadata. error: %s\n", e.what());
+    bela::FPrintF(stderr, L"baulk update: decode metadata. error: %s\n", e.what());
     return false;
   }
-
   return true;
 }
 
@@ -80,12 +77,12 @@ bool BucketUpdater::Immobilized() {
     }
     auto meta = j.dump(4);
     bela::error_code ec;
-    if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
-      bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
+    if (!bela::io::WriteTextAtomic(meta, lockFile, ec)) {
+      bela::FPrintF(stderr, L"baulk unable: update %s error: %s\n", lockFile, ec.message);
       return false;
     }
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"unable encode metadata. error: %s\n", e.what());
+    bela::FPrintF(stderr, L"baulk update: unable encode metadata. error: %s\n", e.what());
     return false;
   }
 
@@ -115,40 +112,32 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   return true;
 }
 
-inline std::wstring StringCategory(baulk::Package &pkg) {
-  if (pkg.venv.category.empty()) {
-    return L"";
-  }
-  return bela::StringCat(L" \x1b[36m[", pkg.venv.category, L"]\x1b[0m");
-}
-
 bool PackageScanUpdatable() {
   bela::fs::Finder finder;
   bela::error_code ec;
-  auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
   size_t upgradable = 0;
-  if (finder.First(locksdir, L"*.json", ec)) {
+  if (finder.First(vfs::AppLocks(), L"*.json", ec)) {
     do {
       if (finder.Ignore()) {
         continue;
       }
-      auto pkgname = finder.Name();
-      if (!bela::EndsWithIgnoreCase(pkgname, L".json")) {
+      auto pkgName = finder.Name();
+      if (!bela::EndsWithIgnoreCase(pkgName, L".json")) {
         continue;
       }
-      pkgname.remove_suffix(5);
-      auto opkg = baulk::bucket::PackageLocalMeta(pkgname, ec);
-      if (!opkg) {
+      pkgName.remove_suffix(5);
+      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
+      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
         upgradable++;
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
-                      opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(pkg));
+                      localMeta->name, localMeta->bucket, localMeta->version, pkg.version, pkg.bucket,
+                      IsFrozenedPackage(pkgName) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(pkg));
         continue;
       }
     } while (finder.Next());
@@ -164,12 +153,12 @@ Update bucket metadata.
 )");
 }
 
-int BaulkUpdateBucket(bool showUpdatable) {
+int UpdateBucket(bool showUpdatable) {
   BucketUpdater updater;
   if (!updater.Initialize()) {
     return 1;
   }
-  for (const auto &bucket : baulk::BaulkBuckets()) {
+  for (const auto &bucket : baulk::LoadedBuckets()) {
     updater.Update(bucket);
   }
   if (!updater.Immobilized()) {
@@ -183,11 +172,11 @@ int BaulkUpdateBucket(bool showUpdatable) {
 
 int cmd_update(const argv_t & /*unused argv*/) {
   bela::error_code ec;
-  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
-  if (!locker) {
-    bela::FPrintF(stderr, L"baulk update: \x1b[31m%s\x1b[0m\n", ec.message);
+  auto mtx = MakeFsMutex(bela::StringCat(vfs::AppTemp(), L"\\baulk.pid"), ec);
+  if (!mtx) {
+    bela::FPrintF(stderr, L"baulk update: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
     return 1;
   }
-  return BaulkUpdateBucket(true);
+  return UpdateBucket(true);
 }
 } // namespace baulk::commands

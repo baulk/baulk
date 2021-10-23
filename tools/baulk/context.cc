@@ -35,10 +35,13 @@ public:
   }
   bool Initialize(std::wstring_view profile_, bela::error_code &ec);
   bool InitializeExecutor(bela::error_code &ec);
-  bool IsFrozened(std::wstring_view pkg) const { return std::find(fpkgs.begin(), fpkgs.end(), pkg) != fpkgs.end(); }
+  bool IsFrozenedPackage(std::wstring_view pkgName) const {
+    return std::find(pkgs.begin(), pkgs.end(), pkgName) != pkgs.end();
+  }
   std::wstring_view LocaleName() const { return localeName; }
   std::wstring_view Profile() const { return profile; }
-  const auto &LinkExecutor() const { return executor; }
+  auto &LoadedBuckets() { return buckets; }
+  auto &LinkExecutor() { return executor; }
 
 private:
   bool initializeInternal(const std::wstring &profile_, bela::error_code &ec);
@@ -46,7 +49,7 @@ private:
   std::wstring localeName; // mirrors
   std::wstring profile;
   Buckets buckets;
-  std::vector<std::wstring> fpkgs;
+  std::vector<std::wstring> pkgs;
   compiler::Executor executor;
 };
 
@@ -64,12 +67,13 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
   auto svs = jv.subviews("buckets");
   for (auto sv : svs) {
     buckets.emplace_back(sv.fetch("description"), sv.fetch("name"), sv.fetch("url"),
-                         sv.fetch_as_integer("weights", 100), sv.fetch_as_integer("mode", 0));
+                         sv.fetch_as_integer("weights", 100),
+                         static_cast<BucketObserveMode>(sv.fetch_as_integer("mode", 0)));
     auto bk = buckets.back();
     DbgPrint(L"Add bucket: %s '%s@%s' %s", bk.url, bk.name, bk.description, BucketObserveModeName(bk.mode));
   }
-  if (jv.fetch_strings_checked("freeze", fpkgs) && !fpkgs.empty() && IsDebugMode) {
-    for (const auto &p : fpkgs) {
+  if (jv.fetch_strings_checked("freeze", pkgs) && !pkgs.empty() && IsDebugMode) {
+    for (const auto &p : pkgs) {
       DbgPrint(L"Freeze package %s", p);
     }
   }
@@ -98,6 +102,16 @@ bool InitializeContext(std::wstring_view profile, bela::error_code &ec) {
 bool InitializeExecutor(bela::error_code &ec) { return Context::Instance().InitializeExecutor(ec); }
 std::wstring_view LocaleName() { return Context::Instance().LocaleName(); }
 std::wstring_view Profile() { return Context::Instance().Profile(); }
-const compiler::Executor &LinkExecutor() { return Context::Instance().LinkExecutor(); }
+Buckets &LoadedBuckets() { return Context::Instance().LoadedBuckets(); }
+compiler::Executor &LinkExecutor() { return Context::Instance().LinkExecutor(); }
+bool IsFrozenedPackage(std::wstring_view pkgName) { return Context::Instance().IsFrozenedPackage(pkgName); }
+int BucketWeights(std::wstring_view bucket) {
+  for (const auto &bucket_ : Context::Instance().LoadedBuckets()) {
+    if (bela::EqualsIgnoreCase(bucket_.name, bucket)) {
+      return bucket_.weights;
+    }
+  }
+  return 0;
+}
 
 } // namespace baulk

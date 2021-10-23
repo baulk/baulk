@@ -4,7 +4,6 @@
 #include <baulk/fs.hpp>
 #include "commands.hpp"
 
-
 namespace baulk::commands {
 
 void usage_b3sum() {

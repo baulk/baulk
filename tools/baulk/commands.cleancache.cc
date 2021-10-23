@@ -1,9 +1,9 @@
 // pkgclean command cleanup pkg cache
 #include <bela/terminal.hpp>
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
-#include <baulk/fs.hpp>
-#include "launcher.hpp"
 
 namespace baulk::commands {
 
@@ -43,7 +43,6 @@ Example:
 }
 
 int cmd_cleancache(const argv_t &argv) {
-  auto pkgtemp = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
   bela::error_code ec;
   SYSTEMTIME now;
   GetSystemTime(&now);
@@ -56,7 +55,7 @@ int cmd_cleancache(const argv_t &argv) {
   ULARGE_INTEGER ul;
   ul.LowPart = fnow.dwLowDateTime;
   ul.HighPart = fnow.dwHighDateTime;
-  for (auto &p : std::filesystem::directory_iterator(pkgtemp)) {
+  for (auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
     auto path_ = p.path().wstring();
     if (baulk::IsForceMode || p.is_directory()) {
       bela::fs::ForceDeleteFolders(path_, ec);
