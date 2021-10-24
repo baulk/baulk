@@ -11,9 +11,7 @@ namespace baulk::fs {
 bool IsExecutablePath(std::wstring_view p);
 std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
 
-inline std::wstring FileName(std::wstring_view p) {
-  return std::filesystem::path(p).filename().wstring();
-}
+inline std::wstring FileName(std::wstring_view p) { return std::filesystem::path(p).filename().wstring(); }
 
 inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
@@ -51,8 +49,9 @@ inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink, bela::erro
   return true;
 }
 std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir);
-bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec);
-std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec);
+// MakeFlattened: Flatten directories
+bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec);
+std::optional<std::wstring> NewTempFolder(bela::error_code &ec);
 } // namespace baulk::fs
 
 #endif

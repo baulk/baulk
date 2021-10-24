@@ -132,7 +132,7 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
     return table.InitializeFromPackaged(ec);
   }
 
-  auto envfile = bela::StringCat(L"\\baulk.env");
+  auto envfile = bela::StringCat(table.executableRoot, L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
     mode = L"Legacy";
     return table.InitializeFromLegacy(ec);

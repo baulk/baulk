@@ -268,13 +268,13 @@ bool Regularize(std::wstring_view path) {
     if (!bela::PathExists(sd)) {
       continue;
     }
-    if (baulk::fs::FlatPackageInitialize(sd, path, ec)) {
+    if (baulk::fs::MakeFlattened(sd, path, ec)) {
       bela::error_code ec2;
       bela::fs::ForceDeleteFolders(sd, ec2);
       return !ec;
     }
   }
-  return baulk::fs::FlatPackageInitialize(path, path, ec);
+  return baulk::fs::MakeFlattened(path, path, ec);
 }
 
 } // namespace baulk::msi

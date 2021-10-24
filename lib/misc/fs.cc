@@ -82,7 +82,7 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
   return std::nullopt;
 }
 
-bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec) {
+bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec) {
   auto subfirst = UniqueSubdirectory(dir);
   if (!subfirst) {
     return true;
@@ -107,7 +107,7 @@ bool FlatPackageInitialize(std::wstring_view dir, std::wstring_view dest, bela::
   return true;
 }
 
-std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
+std::optional<std::wstring> NewTempFolder(bela::error_code &ec) {
   std::error_code e;
   auto tmppath = std::filesystem::temp_directory_path(e);
   if (e) {
@@ -118,10 +118,12 @@ std::optional<std::wstring> BaulkMakeTempDir(bela::error_code &ec) {
   if (!tmpdir.empty() && bela::IsPathSeparator(tmpdir.back())) {
     tmpdir.pop_back();
   }
+  static std::atomic_uint32_t instanceId{0};
   auto len = tmpdir.size();
   bela::AlphaNum an(GetCurrentThreadId());
   for (wchar_t X = 'A'; X < 'Z'; X++) {
-    bela::StrAppend(&tmpdir, L"\\BaulkTemp", X, an);
+    bela::StrAppend(&tmpdir, L"\\BaulkTemp-", an, L"-", static_cast<uint32_t>(instanceId));
+    instanceId++;
     if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) && baulk::fs::MakeDir(tmpdir, ec)) {
       return std::make_optional(std::move(tmpdir));
     }

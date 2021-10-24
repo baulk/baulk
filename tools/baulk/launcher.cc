@@ -136,7 +136,7 @@ private:
 };
 
 bool Builder::Initialize(bela::error_code &ec) {
-  auto bktemp = baulk::fs::BaulkMakeTempDir(ec);
+  auto bktemp = baulk::fs::NewTempFolder(ec);
   if (!bktemp) {
     return false;
   }

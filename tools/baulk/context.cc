@@ -1,4 +1,5 @@
 // baulk context
+#include <version.hpp>
 #include <baulk/vfs.hpp>
 #include <baulk/json_utils.hpp>
 #include "baulk.hpp"
@@ -84,9 +85,21 @@ bool Context::Initialize(std::wstring_view profile_, bela::error_code &ec) {
   if (!baulk::vfs::InitializePathFs(ec)) {
     return false;
   }
-  DbgPrint(L"Baulk root '%s'", baulk::vfs::AppBasePath());
+
   localeName = baulk_internal::default_locale_name();
-  baulk::DbgPrint(L"Baulk locale name %s", localeName);
+  if (IsDebugMode) {
+    DbgPrint(L"Baulk %s [%s] time: %s", BAULK_VERSION, vfs::AppMode(), BAULK_BUILD_TIME);
+    DbgPrint(L"Baulk BasePath    '%s'", vfs::AppBasePath());
+    DbgPrint(L"Baulk AppData     '%s'", vfs::AppData());
+    DbgPrint(L"Baulk etc         '%s'", vfs::AppEtc());
+    DbgPrint(L"Baulk AppTemp     '%s'", vfs::AppTemp());
+    DbgPrint(L"Baulk AppPackages '%s'", vfs::AppPackages());
+    DbgPrint(L"Baulk AppLocks    '%s'", vfs::AppLocks());
+    DbgPrint(L"Baulk AppBuckets  '%s'", vfs::AppBuckets());
+    DbgPrint(L"Baulk AppLinks    '%s'", vfs::AppLinks());
+    DbgPrint(L"Baulk Locale Name '%s'", localeName);
+  }
+
   if (profile_.empty()) {
     return initializeInternal(baulk::vfs::AppDefaultProfile(), ec);
   }

@@ -281,7 +281,7 @@ int UpdateBaulk() {
     bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec.message);
     return 1;
   }
-  baulk::fs::FlatPackageInitialize(outdir, outdir, ec);
+  baulk::fs::MakeFlattened(outdir, outdir, ec);
 
   std::filesystem::path opath(outdir);
   auto executableRoot = vfs::AppExecutableRoot();
