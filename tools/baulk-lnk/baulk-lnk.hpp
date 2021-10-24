@@ -81,7 +81,7 @@ inline std::optional<std::wstring> ResolveTarget(bela::error_code &ec) {
                                L"'. target --> [", linkTarget, L"] lnkName:", *lnkFullName);
     return std::nullopt;
   }
-  auto appPackagePath = jv->fetch("app_package_path", bela::StringCat(bela::DirName(lnkDirName), L"\\pkgs"));
+  auto appPackagePath = jv->fetch("app_packages_root", bela::StringCat(bela::DirName(lnkDirName), L"\\pkgs"));
   return std::make_optional<>(bela::StringCat(appPackagePath, L"\\", tv[0], L"\\", tv[1]));
 }
 

@@ -66,12 +66,13 @@ bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
   }
   bela::env::Simulator sim;
   sim.InitializeEnv();
-  auto pkgRoot = baulk::vfs::AppPackageRoot(pkgName);
+  auto pkgFolder = baulk::vfs::AppPackageFolder(pkgName);
+  auto pkgVFS = baulk::vfs::AppPackageVFS(pkgName);
   sim.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
-  sim.SetEnv(L"BAULK_VFS", baulk::vfs::AppUserVFS());
-  sim.SetEnv(L"BAULK_USER_VFS", baulk::vfs::AppUserVFS());
-  sim.SetEnv(L"BAULK_PKGROOT", pkgRoot);
-  sim.SetEnv(L"BAULK_PACKAGE_ROOT", pkgRoot);
+  sim.SetEnv(L"BAULK_VFS", pkgVFS);
+  sim.SetEnv(L"BAULK_PACKAGE_VFS", pkgVFS);
+  sim.SetEnv(L"BAULK_PKGROOT", pkgFolder);
+  sim.SetEnv(L"BAULK_PACKAGE_FOLDER", pkgFolder);
   for (const auto &p : pkglocal->forceDeletes) {
     auto realdir = sim.PathExpand(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgName, realdir);
@@ -101,12 +102,13 @@ int PackageMakeLinks(const baulk::Package &pkg) {
   if (!pkg.venv.mkdirs.empty()) {
     bela::env::Simulator sim;
     sim.InitializeEnv();
-    auto pkgRoot = baulk::vfs::AppPackageRoot(pkg.name);
+    auto pkgFolder = baulk::vfs::AppPackageFolder(pkg.name);
+    auto pkgVFS = baulk::vfs::AppPackageVFS(pkg.name);
     sim.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
-    sim.SetEnv(L"BAULK_VFS", baulk::vfs::AppUserVFS());
-    sim.SetEnv(L"BAULK_USER_VFS", baulk::vfs::AppUserVFS());
-    sim.SetEnv(L"BAULK_PKGROOT", pkgRoot);
-    sim.SetEnv(L"BAULK_PACKAGE_ROOT", pkgRoot);
+    sim.SetEnv(L"BAULK_VFS", pkgVFS);
+    sim.SetEnv(L"BAULK_PACKAGE_VFS", pkgVFS);
+    sim.SetEnv(L"BAULK_PKGROOT", pkgFolder);
+    sim.SetEnv(L"BAULK_PACKAGE_FOLDER", pkgFolder);
     for (const auto &p : pkg.venv.mkdirs) {
       auto realdir = sim.PathExpand(p);
       baulk::DbgPrint(L"mkdir: %s@%s", pkg.name, realdir);
@@ -173,7 +175,7 @@ int PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     return 1;
   }
   h->regularize(outdir);
-  auto pkgRoot = baulk::vfs::AppPackageRoot(pkg.name);
+  auto pkgRoot = baulk::vfs::AppPackageFolder(pkg.name);
   std::wstring pkgold;
   std::error_code e;
   if (bela::PathExists(pkgRoot)) {

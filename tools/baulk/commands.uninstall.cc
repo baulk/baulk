@@ -28,7 +28,7 @@ int uninstall_package(std::wstring_view pkgName) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgName, ec.message);
   }
   bela::fs::ForceDeleteFolders(lockfile, ec);
-  auto packageRoot = vfs::AppPackageRoot(pkgName);
+  auto packageRoot = vfs::AppPackageFolder(pkgName);
   if (!bela::fs::ForceDeleteFolders(packageRoot, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n", pkgName, ec.message);
     return 1;

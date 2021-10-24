@@ -15,6 +15,12 @@ public:
   const auto &Table() { return table; }
   std::wstring_view Mode() const { return mode; }
   std::wstring Join(std::wstring_view child);
+  std::wstring PackageVFS(std::wstring_view pkgName) const {
+    if (mode == LegacyMode) {
+      return table.vfs;
+    }
+    return bela::StringCat(table.vfs, L"\\", pkgName);
+  }
 
 private:
   PathFs() {}

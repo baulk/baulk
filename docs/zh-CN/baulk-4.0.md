@@ -10,13 +10,12 @@
 |---|---|---|---|
 |`BAULK_ROOT`|`baulk::vfs::AppRoot()`|Baulk 包的展开目录|导出|
 |`BAULK_APPDATA`|`baulk::vfs::AppData()`|Baulk 便携配置目录|导出|
-|`BAULK_VFS`/`BAULK_USER_VFS`|`baulk::vfs::AppUserVFS()`|虚拟用户目录，该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰，该目录除非是运行强制删除，否则删除包的时候不会删除|导出|
-|`BAULK_PKGROOT`/`BAULK_PACKAGE_ROOT`|...|该变量与特定的包相关|导出|
+|`BAULK_VFS`/`BAULK_PACKAGE_VFS`|`baulk::vfs::AppPackageVFS(std::wstring_view packageName)`|包的虚拟目录，除了 Legacy 模式（也就是兼容旧模式），其他模式包之间是相互隔离的，该目录通常用于 NodeJS Rust Golang 等支持 venv 特性的包，覆盖默认的环境变量，避免不同的包数据相互干扰，该目录除非是运行强制删除，否则删除包的时候不会删除|导出|
+|`BAULK_PKGROOT`/`BAULK_PACKAGE_FOLDER`|`baulk::vfs::AppPackageFolder(std::wstring_view packageName)`|该变量与特定的包相关|导出|
 
 在使用全新安装的 Baulk 时，将获得如下新的布局：
 
 ```txt
-baulk
 ├── appdata
 │   ├── belautils
 │   │   └── kisasum.pos.json
@@ -35,13 +34,18 @@ baulk
 │   └── curl
 │       └── bin
 │           └── curl.exe
-└── uservfs
-    ├── .cargo
+├── temp
+│   ├── baulk.pid
+│   └── wincurl-win64-7.79.1.2.zip
+└── vfs
+    ├── go
     │   └── bin
-    │       └── rustc.exe
-    └── go
-        └── bin
-            └── gopls.exe
+    │       └── gopls.exe
+    └── rust
+        └── .cargo
+            ├── bin
+            │   └── rustc.exe
+            └── config
 ```
 
 该布局不再与 baulk.exe 路径有过于密切的关联，这是因为要支持从安装包安装 Baulk 或者从 Windows Store 安装，注意，旧有的便携式升级会尽可能的保留原有的布局结构。
@@ -57,7 +61,7 @@ baulk
 
 ## 更好的压缩解压
 
-TODO
+在 Baulk 4.0 中，我们将为 Windows 11 提供一个右键解压 `tar.gz/tar.xz/tar.bz2/tar.zstd` 等格式的打包程序。
 
 ## 有限的 Scoop 包清单支持
 

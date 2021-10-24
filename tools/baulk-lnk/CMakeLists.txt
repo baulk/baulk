@@ -1,9 +1,9 @@
 # baulklnk
-add_executable(baulk-lnk main.cc baulk-lnk.rc baulk-lnk.manifest)
+add_executable(baulk-lnk baulk-lnk.cc baulk-lnk.rc baulk-lnk.manifest)
 
 target_link_libraries(baulk-lnk belawin)
 
-add_executable(baulk-winlnk WIN32 winmain.cc baulk-winlnk.rc baulk-lnk.manifest)
+add_executable(baulk-winlnk WIN32 baulk-winlnk.cc baulk-winlnk.rc baulk-lnk.manifest)
 
 target_link_libraries(baulk-winlnk belawin belashl)
 

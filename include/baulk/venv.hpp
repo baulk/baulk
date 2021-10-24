@@ -114,12 +114,13 @@ private:
     };
     auto flushOnceEnv = [&](const PackageEnv &e) {
       auto newSimulator = cleanedSimulator;
-      auto pkgRoot = baulk::vfs::AppPackageRoot(e.name);
+      auto pkgFolder = baulk::vfs::AppPackageFolder(e.name);
+      auto pkgVFS = baulk::vfs::AppPackageVFS(e.name);
       newSimulator.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
-      newSimulator.SetEnv(L"BAULK_VFS", baulk::vfs::AppUserVFS());
-      newSimulator.SetEnv(L"BAULK_USER_VFS", baulk::vfs::AppUserVFS());
-      newSimulator.SetEnv(L"BAULK_PKGROOT", pkgRoot);
-      newSimulator.SetEnv(L"BAULK_PACKAGE_ROOT", pkgRoot);
+      newSimulator.SetEnv(L"BAULK_VFS", pkgVFS);
+      newSimulator.SetEnv(L"BAULK_PACKAGE_VFS", pkgVFS);
+      newSimulator.SetEnv(L"BAULK_PKGROOT", pkgFolder);
+      newSimulator.SetEnv(L"BAULK_PACKAGE_FOLDER", pkgFolder);
       joinPathExpand(e.paths, paths, newSimulator);
       joinPathExpand(e.includes, includes, newSimulator);
       joinPathExpand(e.libs, libs, newSimulator);

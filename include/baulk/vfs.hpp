@@ -16,8 +16,8 @@ public:
   std::wstring basePath;       // baulk root
   std::wstring appData;        // baulk appdata
   std::wstring etc;            // baulk etc
-  std::wstring userVFS;        // baulk pakcage vfs
-  std::wstring packageRoot;    // baulk package root
+  std::wstring vfs;            // baulk pakcage vfs
+  std::wstring packages;       // baulk package root
   std::wstring temp;           // baulk temp
   std::wstring locks;          // baulk locks
   std::wstring buckets;        // baulk buckets
@@ -61,16 +61,17 @@ std::wstring_view AppExecutableRoot();
 std::wstring_view AppBasePath(); // root
 std::wstring_view AppData();
 std::wstring_view AppEtc();
-// Baulk package vfs root
-std::wstring_view AppUserVFS();
 // Baulk vfs temp dir
 std::wstring_view AppTemp();
+std::wstring_view AppPackages();
 std::wstring_view AppLocks();
 std::wstring_view AppBuckets();
 // Baulk app link or launcher location
 std::wstring_view AppLinks();
-// AppPackageRoot: concat package full path
-std::wstring AppPackageRoot(std::wstring_view packageName);
+// AppPackageFolder: concat package full path
+std::wstring AppPackageFolder(std::wstring_view packageName);
+// AppPackageVFS
+std::wstring AppPackageVFS(std::wstring_view packageName);
 // AppFsMutexPath: return FsMutex file path
 std::wstring AppFsMutexPath();
 std::wstring AppDefaultProfile();

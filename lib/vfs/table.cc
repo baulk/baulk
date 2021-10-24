@@ -9,8 +9,8 @@ namespace baulk::vfs::vfs_internal {
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
   etc = bela::StringCat(basePath, L"\\etc");
   appData = bela::StringCat(basePath, L"\\appdata");
-  userVFS = bela::StringCat(basePath, L"\\uservfs");
-  packageRoot = bela::StringCat(basePath, L"\\packages");
+  vfs = bela::StringCat(basePath, L"\\vfs");
+  packages = bela::StringCat(basePath, L"\\packages");
   temp = bela::StringCat(basePath, L"\\temp");
   locks = bela::StringCat(basePath, L"\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");
@@ -29,8 +29,8 @@ bool FsRedirectionTable::InitializeFromLegacy(bela::error_code &ec) {
   basePath = executableRoot;
   etc = bela::StringCat(basePath, L"\\bin\\etc");
   appData = bela::StringCat(basePath, L"\\bin\\appdata");
-  userVFS = bela::StringCat(basePath, L"\\bin\\vfs");
-  packageRoot = bela::StringCat(basePath, L"\\bin\\pkgs");
+  vfs = bela::StringCat(basePath, L"\\bin\\vfs");
+  packages = bela::StringCat(basePath, L"\\bin\\pkgs");
   temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp");
   locks = bela::StringCat(basePath, L"\\bin\\locks");
   buckets = bela::StringCat(basePath, L"\\buckets");

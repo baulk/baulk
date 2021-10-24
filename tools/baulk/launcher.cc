@@ -41,6 +41,7 @@ bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela:
     }
     obj["links"] = newlinks;
     obj["updated"] = bela::FormatTime<char>(bela::Now());
+    obj["app_packages_root"] = bela::encode_into<wchar_t, char>(vfs::AppPackages());
     if (!bela::io::WriteTextAtomic(obj.dump(4), linkMeta, ec)) {
       return false;
     }
@@ -250,7 +251,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
 }
 
 bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto packageRoot = vfs::AppPackageFolder(pkg.name);
   auto linksDir = vfs::AppLinks();
   if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
@@ -282,7 +283,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
     ec = bela::make_error_code(bela::ErrGeneral, L"baulk-lnk not exists. cannot create simulated launcher");
     return false;
   }
-  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto packageRoot = vfs::AppPackageFolder(pkg.name);
   auto linksDir = vfs::AppLinks();
   if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
@@ -319,7 +320,7 @@ bool MakeSimulatedLauncher(const baulk::Package &pkg, bool forceoverwrite, bela:
 
 // create symlink
 bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto packageRoot = vfs::AppPackageRoot(pkg.name);
+  auto packageRoot = vfs::AppPackageFolder(pkg.name);
   auto linksDir = vfs::AppLinks();
   if (!baulk::fs::MakeDir(linksDir, ec)) {
     return false;
