@@ -42,13 +42,6 @@ struct StringCaseInsensitiveEq {
   bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
 
-inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
-  bela::error_code ec;
-  ec.code = GetLastError();
-  ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
-  return ec;
-}
-
 constexpr int hexval_table[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0~0f
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 10~1f

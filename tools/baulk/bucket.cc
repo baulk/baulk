@@ -104,10 +104,21 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   if (!baulk::fs::MakeDir(temp, ec)) {
     return false;
   }
-  auto saveFile = baulk::net::WinGet(master, temp, L"", true, ec);
+  std::optional<std::wstring> saveFile;
+  bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata\nurl: \x1b[36m%s\x1b[0m\n", bucket.name, master);
+  for (int i = 0; i < 4; i++) {
+    ec.clear();
+    if (i != 0) {
+      bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m", bucket.name, i);
+    }
+    if (saveFile = baulk::net::WinGet(master, temp, L"", true, ec); saveFile) {
+      break;
+    }
+  }
   if (!saveFile) {
     return false;
   }
+
   auto deleter = bela::finally([&] {
     bela::error_code ec_;
     bela::fs::ForceDeleteFile(*saveFile, ec_);

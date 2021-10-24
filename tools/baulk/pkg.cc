@@ -273,8 +273,8 @@ bool PackageInstall(const baulk::Package &pkg) {
     return false;
   }
   DbgPrint(L"baulk '%s/%s' url: '%s'\n", pkg.name, pkg.version, url);
+  auto urlFileName = net::url_path_name(url);
   if (!pkg.hashValue.empty()) {
-    auto urlFileName = net::url_path_name(url);
     DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, urlFileName);
     if (auto pkgFile = PackageCached(urlFileName, pkg.hashValue); pkgFile) {
       return PackageExpand(pkg, *pkgFile);
@@ -282,16 +282,17 @@ bool PackageInstall(const baulk::Package &pkg) {
   }
   auto downloads = vfs::AppTemp();
   if (!baulk::fs::MakeDir(downloads, ec)) {
-    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", downloads, ec.message);
+    bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec.message);
     return false;
   }
+  bela::FPrintF(stderr, L"baulk: download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", urlFileName, url);
   std::optional<std::wstring> pkgFile;
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     if (i != 0) {
-      bela::FPrintF(stderr, L"baulk download '%s' retries: %d", url, i + 1);
+      bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", urlFileName, i);
     }
     if (pkgFile = baulk::net::WinGet(url, downloads, pkg.hashValue, true, ec); !pkgFile) {
-      bela::FPrintF(stderr, L"baulk download %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
+      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", urlFileName, ec.message);
       continue;
     }
     // hash not check

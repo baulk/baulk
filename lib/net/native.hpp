@@ -25,7 +25,18 @@ struct WINHTTP_SECURITY_INFO_X {
 #endif
 
 namespace baulk::net::native {
-using baulk::net::net_internal::make_net_error_code;
+
+inline bela::error_code make_net_error_code(std::wstring_view prefix = L"") {
+  bela::error_code ec;
+  ec.code = GetLastError();
+  if (ec.code >= WINHTTP_ERROR_BASE && ec.code <= WINHTTP_ERROR_LAST) {
+    ec.message = bela::resolve_module_error_message(L"winhttp.dll", ec.code, prefix);
+  } else {
+    ec.message = bela::resolve_system_error_message(ec.code, prefix);
+  }
+  return ec;
+}
+
 struct url {
   std::wstring host;
   std::wstring filename;

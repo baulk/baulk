@@ -67,7 +67,7 @@ void response_trace(minimal_response &resp) {
   }
 }
 
-using baulk::net::net_internal::make_net_error_code;
+using baulk::net::native::make_net_error_code;
 bool HttpClient::IsNoProxy(std::wstring_view host) const {
   for (const auto &u : noProxy) {
     if (bela::EqualsIgnoreCase(u, host)) {
