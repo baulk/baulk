@@ -64,7 +64,7 @@ bool PackageInstaller::Install(std::wstring_view name) {
     bela::FPrintF(stderr, L"baulk: '%s' not support \x1b[31m%s\x1b[0m\n", name, architecture());
     return false;
   }
-  return baulk::package::BaulkInstall(*pkg) == 0;
+  return baulk::package::PackageInstall(*pkg);
 }
 
 void usage_install() {
@@ -90,7 +90,7 @@ int cmd_install(const argv_t &argv) {
     return 1;
   }
   if (!InitializeExecutor(ec)) {
-    baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
+    DbgPrint(L"baulk install: unable initialize compiler executor: %s", ec.message);
   }
   PackageInstaller installer;
   for (auto pkg : argv) {

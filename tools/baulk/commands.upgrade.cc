@@ -41,7 +41,7 @@ int cmd_upgrade(const argv_t &argv) {
     return 1;
   }
   if (!InitializeExecutor(ec)) {
-    baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
+    baulk::DbgPrint(L"baulk upgrade: unable initialize compiler executor: %s", ec.message);
   }
 
   bela::fs::Finder finder;
@@ -61,7 +61,7 @@ int cmd_upgrade(const argv_t &argv) {
       }
       baulk::Package pkg;
       if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
-        baulk::package::BaulkInstall(pkg);
+        baulk::package::PackageInstall(pkg);
         continue;
       }
     } while (finder.Next());
