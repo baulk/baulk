@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include "types.hpp"
+#include "base.hpp"
 
 // The unix compilers use a 32-bit wchar_t
 // The windows compilers, gcc and MSVC, both define a 16 bit wchar_t.
@@ -100,7 +101,7 @@ struct FormatArg {
     floating.d = f;
     floating.width = sizeof(double);
   }
-  
+
   // wchar_t
   // A C-style text string. and wstring_view
   FormatArg(const wchar_t *str) : at(ArgType::STRING) {
@@ -186,6 +187,10 @@ struct FormatArg {
     ustring.data = reinterpret_cast<const char *>(sv.data());
     ustring.len = sv.size();
   }
+  FormatArg(const bela::error_code &ec) : at(ArgType::STRING) {
+    strings.data = ec.message.data();
+    strings.len = ec.message.size();
+  }
 
   // Any pointer value that can be cast to a "void*".
   template <class T> FormatArg(T *p) : ptr((void *)p), at(ArgType::POINTER) {}
@@ -267,24 +272,24 @@ size_t StrAppendFormatInternal(std::wstring *buf, const wchar_t *fmt, const Form
 } // namespace format_internal
 
 size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt);
-template <typename... Args> size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt, const Args &... args) {
+template <typename... Args> size_t StrAppendFormat(std::wstring *buf, const wchar_t *fmt, const Args &...args) {
   const format_internal::FormatArg arg_array[] = {args...};
   return format_internal::StrAppendFormatInternal(buf, fmt, arg_array, sizeof...(args));
 }
 
-template <typename... Args> ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, const Args &... args) {
+template <typename... Args> ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt, const Args &...args) {
   const format_internal::FormatArg arg_array[] = {args...};
   return format_internal::StrFormatInternal(buf, N, fmt, arg_array, sizeof...(args));
 }
 
-template <size_t N, typename... Args> ssize_t StrFormat(wchar_t (&buf)[N], const wchar_t *fmt, const Args &... args) {
+template <size_t N, typename... Args> ssize_t StrFormat(wchar_t (&buf)[N], const wchar_t *fmt, const Args &...args) {
   // Use Arg() object to record type information and then copy arguments to an
   // array to make it easier to iterate over them.
   const format_internal::FormatArg arg_array[] = {args...};
   return format_internal::StrFormatInternal(buf, N, fmt, arg_array, sizeof...(args));
 }
 
-template <typename... Args> std::wstring StrFormat(const wchar_t *fmt, const Args &... args) {
+template <typename... Args> std::wstring StrFormat(const wchar_t *fmt, const Args &...args) {
   const format_internal::FormatArg arg_array[] = {args...};
   return format_internal::StrFormatInternal(fmt, arg_array, sizeof...(args));
 }
