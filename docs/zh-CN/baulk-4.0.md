@@ -50,7 +50,7 @@
 
 该布局不再与 baulk.exe 路径有过于密切的关联，这是因为要支持从安装包安装 Baulk 或者从 Windows Store 安装，注意，旧有的便携式升级会尽可能的保留原有的布局结构。
 
-检测 Baulk 的安装模式会优先判断当前进程是否是打包程序，如果是打包的则按照 Packaged 机制读取，否则需要读取 Baulk 程序根目录下的 `baulk.env` 文件，该文件原始格式为 JSON with comments，`model` 表明 Baulk 目前的运行模式是 System 还是 User 还是 Portable，如果都没有设置则是 `Legacy`，Legacy 模式主要为了兼容 Baulk 3.0 及以前开始使用 Baulk 的用户，避免其需要迁移。
+检测 Baulk 的安装模式会优先判断当前进程是否是打包程序，如果是打包的则按照 Packaged 机制读取，否则需要读取 Baulk 程序根目录下的 `baulk.env` 文件，该文件原始格式为 JSON with comments，`mode` 表明 Baulk 目前的运行模式是 System 还是 User 还是 Portable，如果都没有设置则是 `Legacy`，Legacy 模式主要为了兼容 Baulk 3.0 及以前开始使用 Baulk 的用户，避免其需要迁移。
 
 
 
