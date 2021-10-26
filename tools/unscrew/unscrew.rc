@@ -1,0 +1,40 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "windows.h"
+#include "revision.h"
+#include "resource.h"
+
+ICON_BAULK_APP ICON "unscrew.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+PRODUCTVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "000904b0"
+BEGIN
+VALUE "CompanyName", L"Baulk contributors"
+VALUE "FileDescription", L"unscrew - Baulk modern extraction commands"
+VALUE "FileVersion", BAULK_VERSION
+VALUE "InternalName", L"unscrew.exe"
+VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "OriginalFilename", L"unscrew.exe"
+VALUE "ProductName", L"unscrew - Baulk modern extraction commands"
+VALUE "ProductVersion", BAULK_VERSION
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x9, 1200
+END
+END

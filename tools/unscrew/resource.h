@@ -1,0 +1,8 @@
+///
+#ifndef BAULK_UNSCREW_RESOURCE_H
+#define BAULK_UNSCREW_RESOURCE_H
+
+#define ICON_BAULK_APP 256
+
+
+#endif
