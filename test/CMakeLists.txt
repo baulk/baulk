@@ -65,3 +65,9 @@ target_link_libraries(fsmutex_test belawin)
 
 add_executable(indicators_test indicators_test.cc)
 target_link_libraries(indicators_test baulk.net)
+
+add_executable(pb_test pb1.cc base.manifest)
+target_link_libraries(pb_test belashl)
+
+add_executable(pb2_test pb2.cc base.manifest)
+target_link_libraries(pb2_test belashl)
