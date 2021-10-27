@@ -2,9 +2,8 @@
 #ifndef BAULK_UNSCREW_HPP
 #define BAULK_UNSCREW_HPP
 #include <bela/base.hpp>
-#include <bela/comutils.hpp>
-#include <ShObjIdl.h>
-#include <ShlObj_core.h>
+#include <mutex>
+#include <thread>
 
 namespace baulk::unscrew {
 class ProgressBar {
@@ -12,11 +11,15 @@ public:
   ProgressBar() = default;
   ProgressBar(const ProgressBar &) = delete;
   ProgressBar &operator=(const ProgressBar &) = delete;
-  bool InitializeFile(std::wstring_view path);
+  ~ProgressBar();
+  bool NewProgressBar(std::wstring_view path,bela::error_code &ec);
   bool SetProgress(int64_t completed);
 
 private:
-  bela::comptr<IProgressDialog> b;
+  std::mutex mtx;
+  std::shared_ptr<std::thread> ui;
+  HWND hProgressBar{nullptr};
+  int64_t size{0};
 };
 } // namespace baulk::unscrew
 
