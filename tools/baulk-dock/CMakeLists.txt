@@ -22,7 +22,8 @@ target_link_libraries(
   shcore
   Winmm
   comctl32
-  ole32.lib
-  comsupp.lib)
+  dwmapi
+  ole32
+  comsupp)
 
 install(TARGETS "baulk-dock" DESTINATION bin)

@@ -142,6 +142,7 @@ private:
   std::vector<Label> labels;
   std::wstring baulkroot;
   BaulkDockTable tables;
+  HBRUSH hBrush{nullptr};
 };
 } // namespace baulk::dock
 #endif

@@ -1,7 +1,7 @@
 #
-add_executable(unscrew WIN32 unscrew.cc progressbar.cc unscrew.rc unscrew.manifest)
+add_executable(unscrew WIN32 mica.cc unscrew.rc unscrew.manifest)
 
-target_link_libraries(unscrew belashl belatime Shell32)
+target_link_libraries(unscrew belashl belatime dwmapi comctl32 Shell32)
 
 if(BAULK_ENABLE_LTO)
   set_property(TARGET unscrew PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

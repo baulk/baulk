@@ -20,6 +20,7 @@
 #include <version.hpp>
 #include <bela/match.hpp>
 #include <strsafe.h>
+#include <dwmapi.h>
 #include "app.hpp"
 
 namespace baulk::dock {
@@ -168,6 +169,9 @@ MainWindow::~MainWindow() {
   if (hMonoFont != nullptr) {
     DeleteFont(hMonoFont);
   }
+  if (hBrush != nullptr) {
+    DeleteObject(hBrush);
+  }
 }
 
 LRESULT MainWindow::InitializeWindow() {
@@ -223,7 +227,7 @@ HRESULT MainWindow::CreateDeviceResources() {
     hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &textBrush);
   }
   if (SUCCEEDED(hr)) {
-    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(0xFFC300), &borderBrush);
+    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Navy), &borderBrush);
   }
   if (SUCCEEDED(hr)) {
     LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE64), L"PNG", 64, 64, &bitmap);
@@ -247,10 +251,10 @@ HRESULT MainWindow::OnRender() {
   auto dsz = renderTarget->GetSize();
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-  renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-  renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
+  renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke, 1.0f));
+  // renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
-  renderTarget->DrawLine(D2D1::Point2F(20, 120), D2D1::Point2F(dsz.width - 20, 120), borderBrush, 1.0);
+  renderTarget->DrawLine(D2D1::Point2F(180, 110), D2D1::Point2F(dsz.width - 45, 110), borderBrush, 0.7f);
   if (bitmap != nullptr) {
     auto isz = bitmap->GetSize();
     renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 160, 60 + isz.width, 160 + isz.height), 1.0,
@@ -365,6 +369,7 @@ bool RecreateFont(HFONT &hFont, int dpiY, std::wstring_view name) {
  *  Message Action Function
  */
 LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  hBrush = CreateSolidBrush(RGB(245, 245, 245));
   // Adjust window initialize use real DPI
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
@@ -420,6 +425,8 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
 
   InitializeControl();
+  BOOL darkMode = FALSE;
+  ::DwmSetWindowAttribute(m_hWnd, 20, &darkMode, sizeof(darkMode));
   return S_OK;
 }
 
@@ -479,7 +486,14 @@ LRESULT MainWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
   return hr;
 }
 
-LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) { return S_OK; }
+LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  HDC hdc = (HDC)wParam;
+  SetBkMode(hdc, TRANSPARENT);
+  // SetBkColor(hdc, RGB(255, 255, 255));
+  SetTextColor(hdc, RGB(245, 245, 245));
+  return (LRESULT)((HBRUSH)hBrush);
+  // return ::DefWindowProc(m_hWnd, nMsg, wParam, lParam);
+}
 
 LRESULT MainWindow::OnSysMemuAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
   bela::BelaMessageBox(m_hWnd, L"About Baulk environment dock", BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
