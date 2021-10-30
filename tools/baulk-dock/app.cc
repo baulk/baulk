@@ -24,6 +24,36 @@
 #include "app.hpp"
 
 namespace baulk::dock {
+constexpr auto lightModeColor = RGB(243, 243, 243);
+typedef LONG NTSTATUS, *PNTSTATUS;
+#define STATUS_SUCCESS (0x00000000)
+typedef NTSTATUS(WINAPI *rtl_get_version_t)(PRTL_OSVERSIONINFOW);
+
+bool IsWindowsVersionOrGreater(int major, int minor, int buildNumber) {
+  auto ntdll = ::GetModuleHandleW(L"ntdll.dll");
+  if (ntdll == nullptr) {
+    return false;
+  }
+  auto invoke_ = reinterpret_cast<rtl_get_version_t>(GetProcAddress(ntdll, "RtlGetVersion"));
+  if (invoke_ == nullptr) {
+    return false;
+  }
+  RTL_OSVERSIONINFOW rovi = {0};
+  rovi.dwOSVersionInfoSize = sizeof(rovi);
+  if (invoke_(&rovi) != STATUS_SUCCESS) {
+    return false;
+  }
+  if (auto dwMajorVersion = static_cast<int>(rovi.dwMajorVersion); dwMajorVersion != major) {
+    return dwMajorVersion - major > 0;
+  }
+  if (auto dwMinorVersion = static_cast<int>(rovi.dwMinorVersion); dwMinorVersion != minor) {
+    return rovi.dwMinorVersion - minor > 0;
+  }
+  if (auto dwBuildNumber = static_cast<int>(rovi.dwBuildNumber); dwBuildNumber != buildNumber) {
+    return dwBuildNumber - buildNumber > 0;
+  }
+  return false;
+}
 // style
 constexpr const auto noresizewnd = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_MINIMIZEBOX);
 constexpr const auto wexstyle = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY;
@@ -174,8 +204,34 @@ MainWindow::~MainWindow() {
   }
 }
 
+// InitializeMica: only windows 11 or later support mica material
+bool InitializeMica(HWND hWnd, bool enableMica) {
+  // Mica
+  enum DWMWINDOWATTRIBUTE { DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_CAPTION_COLOR = 35, DWMWA_MICA_EFFECT = 1029 };
+
+  enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
+
+  DWM_BOOL value = DWMWCP_TRUE;
+  auto color = lightModeColor;
+  DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, reinterpret_cast<void *>(&color), sizeof(color));
+  if (!enableMica) {
+    return true;
+  }
+  MARGINS margins = {-1};
+  ::DwmExtendFrameIntoClientArea(hWnd, &margins);
+  // Dark mode
+  DWM_BOOL darkPreference = DWMWCP_FALSE;
+  DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkPreference, sizeof(darkPreference));
+  // Mica
+  DWM_BOOL micaPreference = DWMWCP_TRUE;
+  DwmSetWindowAttribute(hWnd, DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference));
+
+  return true;
+}
+
 LRESULT MainWindow::InitializeWindow() {
-  // change UI style
+  //isMicaEnabled = IsWindowsVersionOrGreater(10, 0, 19041);
+  //  change UI style
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   bela::error_code ec;
   if (!InitializeBase(ec)) {
@@ -186,7 +242,8 @@ LRESULT MainWindow::InitializeWindow() {
     return S_FALSE;
   }
   RECT layout = {100, 100, 800, 320};
-  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, WS_EX_APPWINDOW | WS_EX_WINDOWEDGE);
+  auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
+  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, extend_style);
   return S_OK;
 }
 
@@ -251,7 +308,7 @@ HRESULT MainWindow::OnRender() {
   auto dsz = renderTarget->GetSize();
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-  renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::WhiteSmoke, 1.0f));
+  renderTarget->Clear(D2D1::ColorF(0xF3F3F3, 1.0f));
   // renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
   renderTarget->DrawLine(D2D1::Point2F(180, 110), D2D1::Point2F(dsz.width - 45, 110), borderBrush, 0.7f);
@@ -369,7 +426,8 @@ bool RecreateFont(HFONT &hFont, int dpiY, std::wstring_view name) {
  *  Message Action Function
  */
 LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
-  hBrush = CreateSolidBrush(RGB(245, 245, 245));
+  InitializeMica(m_hWnd, isMicaEnabled);
+  hBrush = CreateSolidBrush(lightModeColor);
   // Adjust window initialize use real DPI
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
@@ -490,7 +548,7 @@ LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
   HDC hdc = (HDC)wParam;
   SetBkMode(hdc, TRANSPARENT);
   // SetBkColor(hdc, RGB(255, 255, 255));
-  SetTextColor(hdc, RGB(245, 245, 245));
+  SetTextColor(hdc, lightModeColor);
   return (LRESULT)((HBRUSH)hBrush);
   // return ::DefWindowProc(m_hWnd, nMsg, wParam, lParam);
 }

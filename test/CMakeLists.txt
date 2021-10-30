@@ -71,3 +71,7 @@ target_link_libraries(pb_test belashl)
 
 add_executable(pb2_test pb2.cc base.manifest)
 target_link_libraries(pb2_test belashl)
+
+
+add_executable(titlebar_test WIN32 titlebar.cc base.manifest)
+target_link_libraries(titlebar_test belashl)

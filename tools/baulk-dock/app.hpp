@@ -143,6 +143,7 @@ private:
   std::wstring baulkroot;
   BaulkDockTable tables;
   HBRUSH hBrush{nullptr};
+  bool isMicaEnabled{false};
 };
 } // namespace baulk::dock
 #endif
