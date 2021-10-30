@@ -207,13 +207,24 @@ MainWindow::~MainWindow() {
 // InitializeMica: only windows 11 or later support mica material
 bool InitializeMica(HWND hWnd, bool enableMica) {
   // Mica
-  enum DWMWINDOWATTRIBUTE { DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_CAPTION_COLOR = 35, DWMWA_MICA_EFFECT = 1029 };
+  enum DWMWINDOWATTRIBUTE {
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
+    DWMWA_BORDER_COLOR = 34,
+    DWMWA_CAPTION_COLOR = 35,
+    DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37,
+    DWMWA_MICA_EFFECT = 1029
+  };
 
   enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
 
   DWM_BOOL value = DWMWCP_TRUE;
   auto color = lightModeColor;
   DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, reinterpret_cast<void *>(&color), sizeof(color));
+  COLORREF borderd = RGB(245, 245, 245);
+  DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, reinterpret_cast<void *>(&borderd), sizeof(borderd));
+  UINT thickness = 2;
+  DwmSetWindowAttribute(hWnd, DWMWA_VISIBLE_FRAME_BORDER_THICKNESS, reinterpret_cast<void *>(&thickness),
+                        sizeof(thickness));
   if (!enableMica) {
     return true;
   }
@@ -230,8 +241,8 @@ bool InitializeMica(HWND hWnd, bool enableMica) {
 }
 
 LRESULT MainWindow::InitializeWindow() {
-  //isMicaEnabled = IsWindowsVersionOrGreater(10, 0, 19041);
-  //  change UI style
+  // isMicaEnabled = IsWindowsVersionOrGreater(10, 0, 19041);
+  //   change UI style
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   bela::error_code ec;
   if (!InitializeBase(ec)) {

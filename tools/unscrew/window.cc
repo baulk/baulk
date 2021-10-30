@@ -91,10 +91,28 @@ MainWindow::~MainWindow() {
 }
 
 // InitializeMica: only windows 11 or later support mica material
+// https://github.com/microsoft/microsoft-ui-xaml/issues/2236
 bool MainWindow::InitializeMica() {
   // Mica
-  enum DWMWINDOWATTRIBUTE { DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_MICA_EFFECT = 1029 };
+  enum DWMWINDOWATTRIBUTE {
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
+    DWMWA_BORDER_COLOR = 34,
+    DWMWA_CAPTION_COLOR = 35,
+    DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37,
+    DWMWA_MICA_EFFECT = 1029
+  };
+
   enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
+
+  DWM_BOOL value = DWMWCP_TRUE;
+  auto color = RGB(243, 243, 243);
+  DwmSetWindowAttribute(m_hWnd, DWMWA_CAPTION_COLOR, reinterpret_cast<void *>(&color), sizeof(color));
+  COLORREF borderd = RGB(245, 245, 245);
+  DwmSetWindowAttribute(m_hWnd, DWMWA_BORDER_COLOR, reinterpret_cast<void *>(&borderd), sizeof(borderd));
+  UINT thickness = 2;
+  DwmSetWindowAttribute(m_hWnd, DWMWA_VISIBLE_FRAME_BORDER_THICKNESS, reinterpret_cast<void *>(&thickness),
+                        sizeof(thickness));
+  // Mica
   MARGINS margins = {-1};
   ::DwmExtendFrameIntoClientArea(m_hWnd, &margins);
   // Dark mode
@@ -103,6 +121,8 @@ bool MainWindow::InitializeMica() {
   // Mica
   DWM_BOOL micaPreference = DWMWCP_TRUE;
   DwmSetWindowAttribute(m_hWnd, DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference));
+  DWM_BOOL hostbackdropbrush = DWMWCP_TRUE;
+  DwmSetWindowAttribute(m_hWnd, DWMWA_USE_HOSTBACKDROPBRUSH, &hostbackdropbrush, sizeof(hostbackdropbrush));
   return true;
 }
 
