@@ -61,8 +61,7 @@ bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent, LPCWS
     break;
   case mbs_t::ABOUT:
     if (hWnd) {
-      auto hIcon = reinterpret_cast<HICON>(SendMessageW(hWnd, WM_GETICON, ICON_BIG, 0));
-      if (hIcon) {
+      if (auto hIcon = reinterpret_cast<HICON>(SendMessageW(hWnd, WM_GETICON, ICON_BIG, 0)); hIcon != nullptr) {
         tc.hMainIcon = hIcon;
         tc.dwFlags |= TDF_USE_HICON_MAIN;
       }

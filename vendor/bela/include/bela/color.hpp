@@ -1,13 +1,40 @@
 // base from https://github.com/microsoft/terminal/blob/master/src/inc/til/color.h
 #ifndef BELA_COLOR_HPP
 #define BELA_COLOR_HPP
-#include <charconv>
-#include "charconv.hpp"
-#include "base.hpp"
-#include "numbers.hpp"
-#include "str_cat_narrow.hpp"
+#include "types.hpp"
+#include <string>
+#include <string_view>
 
 namespace bela {
+namespace color_internal {
+constexpr int hexval_table[] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0~0f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 10~1f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 20~2f
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  -1, -1, -1, -1, -1, -1, // 30~3f
+    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 40~4f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 50~5f
+    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 60~6f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 70~7f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 80~8f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 90~9f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // a0~af
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // b0~bf
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // c0~cf
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // d0~df
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // e0~ef
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  // f0~ff
+};
+constexpr int decode_byte_couple(uint8_t a, uint8_t b) {
+  auto a1 = hexval_table[a];
+  auto b1 = hexval_table[b];
+  if (a1 < 0 || b1 < 0) {
+    return -1;
+  }
+  return ((a1 << 4) | b1);
+}
+
+} // namespace color_internal
 // color is a universal integral 8bpp RGBA (0-255) color type implicitly convertible to/from
 // a number of other color types.
 struct color {
@@ -117,82 +144,64 @@ struct color {
 
   constexpr bool operator!=(const bela::color &other) const { return !(*this == other); }
 
-  std::wstring Encode(const bool omitAlpha = true) const {
-    if (omitAlpha) {
-      return bela::StringCat(L"#", bela::AlphaNum(bela::Hex(r, bela::kZeroPad2)),
-                             bela::AlphaNum(bela::Hex(g, bela::kZeroPad2)),
-                             bela::AlphaNum(bela::Hex(b, bela::kZeroPad2)));
+  template <typename T>
+  requires bela::character<T>
+  constexpr int encode(T *buffer, size_t len, const bool omitAlpha = false) const {
+    constexpr char hex[] = "0123456789ABCDEF";
+    if (len < 7) {
+      return 0;
     }
-    return bela::StringCat(L"#", bela::AlphaNum(bela::Hex(a, bela::kZeroPad2)),
-                           bela::AlphaNum(bela::Hex(r, bela::kZeroPad2)), bela::AlphaNum(bela::Hex(g, bela::kZeroPad2)),
-                           bela::AlphaNum(bela::Hex(b, bela::kZeroPad2)));
+    buffer[0] = '#';
+    buffer[1] = hex[r >> 4];
+    buffer[2] = hex[r & 0xF];
+    buffer[3] = hex[g >> 4];
+    buffer[4] = hex[g & 0xF];
+    buffer[5] = hex[b >> 4];
+    buffer[6] = hex[b & 0xF];
+    if (!omitAlpha || len < 9) {
+      return 7;
+    }
+    buffer[7] = hex[a >> 4];
+    buffer[8] = hex[a & 0xF];
+    return 9;
   }
-  std::string NarrowEncode(const bool omitAlpha = true) const {
-    if (omitAlpha) {
-      return bela::narrow::StringCat("#", bela::narrow::AlphaNum(bela::narrow::Hex(r, bela::narrow::kZeroPad2)),
-                                     bela::narrow::AlphaNum(bela::narrow::Hex(g, bela::narrow::kZeroPad2)),
-                                     bela::narrow::AlphaNum(bela::narrow::Hex(b, bela::narrow::kZeroPad2)));
-    }
-    return bela::narrow::StringCat("#", bela::narrow::AlphaNum(bela::narrow::Hex(a, bela::narrow::kZeroPad2)),
-                                   bela::narrow::AlphaNum(bela::narrow::Hex(r, bela::narrow::kZeroPad2)),
-                                   bela::narrow::AlphaNum(bela::narrow::Hex(g, bela::narrow::kZeroPad2)),
-                                   bela::narrow::AlphaNum(bela::narrow::Hex(b, bela::narrow::kZeroPad2)));
+
+  template <typename T = wchar_t, typename Allocator = std::allocator<T>>
+  requires bela::character<T>
+  [[nodiscard]] std::basic_string<T, std::char_traits<T>, Allocator> encode(const bool omitAplha = false) const {
+    using string_t = std::basic_string<T, std::char_traits<T>, Allocator>;
+    string_t text;
+    text.resize(omitAplha ? 9 : 7);
+    auto n = encode(text.data(), text.size(), omitAplha);
+    text.resize(n);
+    return text;
   }
-  static bool Decode(std::string_view sr, color &c) {
-    if (sr.empty() || sr.front() != '#') {
-      return false;
+  static constexpr bela::color unresolved() { return bela::color(); }
+  // decode color from text eg: #F5F5F5
+  template <typename CharT = char8_t>
+  requires bela::character<CharT>
+  static constexpr bela::color decode(std::basic_string_view<CharT> text, bela::color defaults = unresolved()) {
+    if (text.size() < 7 || text.front() != '#') {
+      return defaults;
     }
-    sr.remove_prefix(1);
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    uint8_t a = 255;
-    if (sr.size() == 8) {
-      auto r0 = std::from_chars(sr.data(), sr.data() + 2, a, 16);
-      if (r0.ec != std::errc{}) {
-        return false;
-      }
-      sr.remove_prefix(2);
+    text.remove_prefix(1);
+    int a = 255;
+    if (text.size() >= 8) {
+      a = color_internal::decode_byte_couple(static_cast<uint8_t>(text[6]), static_cast<uint8_t>(text[7]));
     }
-    if (sr.size() != 6) {
-      return false;
+    auto r = color_internal::decode_byte_couple(static_cast<uint8_t>(text[0]), static_cast<uint8_t>(text[1]));
+    auto g = color_internal::decode_byte_couple(static_cast<uint8_t>(text[2]), static_cast<uint8_t>(text[3]));
+    auto b = color_internal::decode_byte_couple(static_cast<uint8_t>(text[4]), static_cast<uint8_t>(text[5]));
+    if (r == -1 || g == -1 || b == -1 || a == -1) {
+      return defaults;
     }
-    auto r1 = std::from_chars(sr.data(), sr.data() + 2, r, 16);
-    auto r2 = std::from_chars(sr.data() + 2, sr.data() + 4, g, 16);
-    auto r3 = std::from_chars(sr.data() + 4, sr.data() + 6, b, 16);
-    if (r1.ec != std::errc{} || r2.ec != std::errc{} || r3.ec != std::errc{}) {
-      return false;
-    }
-    c = color(r, g, b, a);
-    return true;
+    return bela::color(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b),
+                       static_cast<uint8_t>(a));
   }
-  static bool Decode(std::wstring_view sr, color &c) {
-    if (sr.empty() || sr.front() != L'#') {
-      return false;
-    }
-    sr.remove_prefix(1);
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    uint8_t a = 255;
-    if (sr.size() == 8) {
-      auto r0 = bela::from_chars(sr.data(), sr.data() + 2, a, 16);
-      if (r0.ec != std::errc{}) {
-        return false;
-      }
-      sr.remove_prefix(2);
-    }
-    if (sr.size() != 6) {
-      return false;
-    }
-    auto r1 = bela::from_chars(sr.data(), sr.data() + 2, r, 16);
-    auto r2 = bela::from_chars(sr.data() + 2, sr.data() + 4, g, 16);
-    auto r3 = bela::from_chars(sr.data() + 4, sr.data() + 6, b, 16);
-    if (r1.ec != std::errc{} || r2.ec != std::errc{} || r3.ec != std::errc{}) {
-      return false;
-    }
-    c = color(r, g, b, a);
-    return true;
+  template <typename CharT = char8_t, size_t N>
+  requires bela::character<CharT>
+  [[nodiscard]] static constexpr bela::color decode(CharT (&str)[N], bela::color defaults = unresolved()) {
+    return decode(std::basic_string_view(str, N), defaults);
   }
 };
 
