@@ -196,8 +196,8 @@ inline std::string AsciiStrToLower(std::string_view s) {
   return result;
 }
 
-inline wchar_t ascii_toupper(wchar_t c) { return (c > 0xFF ? c : ascii_internal::kToUpper[c]); }
-inline char ascii_toupper(char c) { return ascii_internal::kToUpper[c]; }
+constexpr wchar_t ascii_toupper(wchar_t c) { return (c > 0xFF ? c : ascii_internal::kToUpper[c]); }
+constexpr char ascii_toupper(char c) { return ascii_internal::kToUpper[c]; }
 
 // Converts the characters in `s` to uppercase, changing the contents of `s`.
 void AsciiStrToUpper(std::wstring *s);
@@ -219,7 +219,7 @@ inline std::string AsciiStrToUpper(std::string_view s) {
 
 // Returns std::wstring_view with whitespace stripped from the beginning of the
 // given wstring_view.
-inline std::wstring_view StripLeadingAsciiWhitespace(std::wstring_view str) {
+constexpr std::wstring_view StripLeadingAsciiWhitespace(std::wstring_view str) {
   for (auto it = str.begin(); it != str.end(); it++) {
     if (!ascii_isspace(*it)) {
       return str.substr(it - str.begin());
@@ -230,7 +230,7 @@ inline std::wstring_view StripLeadingAsciiWhitespace(std::wstring_view str) {
 
 // Returns std::string_view with whitespace stripped from the beginning of the
 // given string_view.
-inline std::string_view StripLeadingAsciiWhitespace(std::string_view str) {
+constexpr std::string_view StripLeadingAsciiWhitespace(std::string_view str) {
   for (auto it = str.begin(); it != str.end(); it++) {
     if (!ascii_isspace(static_cast<char8_t>(*it))) {
       return str.substr(it - str.begin());
@@ -261,7 +261,7 @@ inline void StripLeadingAsciiWhitespace(std::string *str) {
 
 // Returns std::wstring_view with whitespace stripped from the end of the given
 // string_view.
-inline std::wstring_view StripTrailingAsciiWhitespace(std::wstring_view str) {
+constexpr std::wstring_view StripTrailingAsciiWhitespace(std::wstring_view str) {
   for (size_t i = str.size() - 1; i > 0; i--) {
     if (!ascii_isspace(str[i])) {
       return str.substr(0, i + 1);
@@ -272,7 +272,7 @@ inline std::wstring_view StripTrailingAsciiWhitespace(std::wstring_view str) {
 
 // Returns std::string_view with whitespace stripped from the end of the given
 // string_view.
-inline std::string_view StripTrailingAsciiWhitespace(std::string_view str) {
+constexpr std::string_view StripTrailingAsciiWhitespace(std::string_view str) {
   for (size_t i = str.size() - 1; i > 0; i--) {
     if (!ascii_isspace(static_cast<char8_t>(str[i]))) {
       return str.substr(0, i + 1);
@@ -305,13 +305,13 @@ inline void StripTrailingAsciiWhitespace(std::string *str) {
 
 // Returns std::wstring_view with whitespace stripped from both ends of the
 // given wstring_view.
-inline std::wstring_view StripAsciiWhitespace(std::wstring_view str) {
+constexpr std::wstring_view StripAsciiWhitespace(std::wstring_view str) {
   return StripTrailingAsciiWhitespace(StripLeadingAsciiWhitespace(str));
 }
 
 // Returns std::string_view with whitespace stripped from both ends of the
 // given string_view.
-inline std::string_view StripAsciiWhitespace(std::string_view str) {
+constexpr std::string_view StripAsciiWhitespace(std::string_view str) {
   return StripTrailingAsciiWhitespace(StripLeadingAsciiWhitespace(str));
 }
 
