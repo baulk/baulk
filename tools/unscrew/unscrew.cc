@@ -26,7 +26,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
   InitCommonControlsEx(&info);
   baulk::unscrew::MainWindow win;
 
-  if (!win.MakeWindow(L"Extract baulk-win64-4.0.zip")) {
+  if (!win.MakeWindow(hInstance, L"Extract baulk-win64-4.0.zip")) {
     return 0;
   }
 

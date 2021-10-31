@@ -2,26 +2,11 @@
 #ifndef BAULK_UNSCREW_WINDOW_HPP
 #define BAULK_UNSCREW_WINDOW_HPP
 #include <bela/base.hpp>
+#include <baulk/graphics.hpp>
+#include <baulk/win32.hpp>
 #include "resource.h"
 
 namespace baulk::unscrew {
-// https://github.com/oberth/custom-chrome/wiki
-// https://kubyshkin.name/posts/win32-window-custom-title-bar-caption/
-struct CustomTitleBarButtonRects {
-  RECT close;
-  RECT maximize;
-  RECT minimize;
-};
-
-enum CustomTitleBarHoveredButton {
-  CustomTitleBarHoveredButton_None,
-  CustomTitleBarHoveredButton_Minimize,
-  CustomTitleBarHoveredButton_Maximize,
-  CustomTitleBarHoveredButton_Close,
-};
-
-constexpr int ScaleDPI(int value, UINT dpi) { return static_cast<int>(static_cast<float>(value) * dpi / 96); }
-bool IsWindowsVersionOrGreater(int major, int minor, int buildNumber);
 template <class Derived> class BaseWindow {
 public:
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -40,12 +25,11 @@ public:
 
   BaseWindow() = default;
 
-  BOOL MakeWindow(PCWSTR lpWindowName) {
-    isMicaEnabled = IsWindowsVersionOrGreater(10, 0, 19041);
-    hInstance = GetModuleHandleW(nullptr);
+  BOOL MakeWindow(HINSTANCE hInst, PCWSTR lpWindowName) {
+    hInstance = hInst;
     WNDCLASSEXW wc = {
         .cbSize = sizeof(WNDCLASSEXW),
-        .style = CS_HREDRAW | CS_VREDRAW,
+        .style = 0,
         .lpfnWndProc = Derived::WindowProc,
         .cbClsExtra = 0,
         .cbWndExtra = 0,
@@ -61,13 +45,13 @@ public:
     // WS_EX_NOREDIRECTIONBITMAP
     // https://blog.lindexi.com/post/WPF-%E4%BD%BF%E7%94%A8-Composition-API-%E5%81%9A%E9%AB%98%E6%80%A7%E8%83%BD%E6%B8%B2%E6%9F%93.html
     // https://docs.microsoft.com/en-us/archive/msdn-magazine/2014/june/windows-with-c-high-performance-window-layering-using-the-windows-composition-engine
-    auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
     constexpr auto window_style =
         WS_SYSMENU       // Explicitly ask for the titlebar to support snapping via Win + ← / Win + →
         | WS_MINIMIZEBOX // Add minimize button to support minimizing by clicking on the taskbar icon
+        | WS_CAPTION     //
         | WS_VISIBLE;    // Make window visible after it is created (not important)
-    m_hWnd = CreateWindowExW(extend_style, ClassName(), lpWindowName, window_style, CW_USEDEFAULT, CW_USEDEFAULT, 1000,
-                             600, nullptr, nullptr, hInstance, this);
+    m_hWnd = CreateWindowExW(WS_EX_APPWINDOW, ClassName(), lpWindowName, window_style, CW_USEDEFAULT, CW_USEDEFAULT,
+                             1000, 600, nullptr, nullptr, hInstance, this);
 
     return (m_hWnd ? TRUE : FALSE);
   }
@@ -79,7 +63,6 @@ protected:
   virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
   HINSTANCE hInstance{nullptr};
   HWND m_hWnd{nullptr};
-  bool isMicaEnabled{false};
 };
 
 struct Widget {
@@ -109,9 +92,6 @@ struct Widget {
 
 class MainWindow : public BaseWindow<MainWindow> {
 private:
-  LRESULT OnNccalcsize(WPARAM wParam, LPARAM lParam);
-  LRESULT OnNchittest(WPARAM wParam, LPARAM lParam);
-  LRESULT OnNcMouseMove(WPARAM wParam, LPARAM lParam);
   LRESULT OnCreate(WPARAM wParam, LPARAM lParam);
   LRESULT OnPaint(WPARAM wParam, LPARAM lParam);
   bool MakeWidget(Widget &w, LPCWSTR cn, LPCWSTR text, DWORD ds, int x, int y, int cx, int cy, ptrdiff_t id) {
@@ -139,7 +119,6 @@ public:
 
 private:
   bool InitializeMica();
-  CustomTitleBarHoveredButton mouseHovered{CustomTitleBarHoveredButton_None};
   Widget wProgress;
   HFONT hFont{nullptr}; // GDI font
   int dpiX{96};

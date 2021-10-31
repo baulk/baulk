@@ -73,6 +73,13 @@ constexpr auto DarkMode = PersonalizeMode{
     .disable = bela::color(204, 204, 204),
 };
 
+constexpr auto CustomMode = PersonalizeMode{
+    .background = bela::color(204, 204, 204),
+    .text = bela::color(0, 0, 0),
+    .border = bela::color(245, 245, 245),
+    .disable = bela::color(77, 77, 77),
+};
+
 // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
 // SystemUsesLightTheme  DWORD 0 or 1 // Changes the taskbar and system tray color
 // AppsUseLightTheme     DWORD 0 or 1 // Changes app colors

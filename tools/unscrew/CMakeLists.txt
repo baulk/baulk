@@ -1,5 +1,5 @@
 #
-add_executable(unscrew WIN32 unscrew.cc window.cc utils.cc unscrew.rc unscrew.manifest)
+add_executable(unscrew WIN32 unscrew.cc window.cc unscrew.rc unscrew.manifest)
 
 target_link_libraries(unscrew belashl belatime uxtheme dwmapi comctl32 Shell32)
 
