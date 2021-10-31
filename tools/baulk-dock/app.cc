@@ -20,40 +20,11 @@
 #include <version.hpp>
 #include <bela/match.hpp>
 #include <strsafe.h>
-#include <dwmapi.h>
+#include <vsstyle.h>
+#include <baulk/win32.hpp>
 #include "app.hpp"
 
 namespace baulk::dock {
-constexpr auto lightModeColor = RGB(243, 243, 243);
-typedef LONG NTSTATUS, *PNTSTATUS;
-#define STATUS_SUCCESS (0x00000000)
-typedef NTSTATUS(WINAPI *rtl_get_version_t)(PRTL_OSVERSIONINFOW);
-
-bool IsWindowsVersionOrGreater(int major, int minor, int buildNumber) {
-  auto ntdll = ::GetModuleHandleW(L"ntdll.dll");
-  if (ntdll == nullptr) {
-    return false;
-  }
-  auto invoke_ = reinterpret_cast<rtl_get_version_t>(GetProcAddress(ntdll, "RtlGetVersion"));
-  if (invoke_ == nullptr) {
-    return false;
-  }
-  RTL_OSVERSIONINFOW rovi = {0};
-  rovi.dwOSVersionInfoSize = sizeof(rovi);
-  if (invoke_(&rovi) != STATUS_SUCCESS) {
-    return false;
-  }
-  if (auto dwMajorVersion = static_cast<int>(rovi.dwMajorVersion); dwMajorVersion != major) {
-    return dwMajorVersion - major > 0;
-  }
-  if (auto dwMinorVersion = static_cast<int>(rovi.dwMinorVersion); dwMinorVersion != minor) {
-    return rovi.dwMinorVersion - minor > 0;
-  }
-  if (auto dwBuildNumber = static_cast<int>(rovi.dwBuildNumber); dwBuildNumber != buildNumber) {
-    return dwBuildNumber - buildNumber > 0;
-  }
-  return false;
-}
 // style
 constexpr const auto noresizewnd = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_MINIMIZEBOX);
 constexpr const auto wexstyle = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY;
@@ -63,6 +34,10 @@ constexpr const auto cbstyle =
 constexpr const auto chboxstyle =
     BS_PUSHBUTTON | BS_TEXT | BS_DEFPUSHBUTTON | BS_CHECKBOX | BS_AUTOCHECKBOX | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
 constexpr const auto pbstyle = BS_PUSHBUTTON | BS_TEXT | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
+
+inline D2D1::ColorF FromColor(const bela::color c) {
+  return D2D1::ColorF(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f);
+}
 
 // Resources Safe Release
 template <typename I> inline void Free(I **i) {
@@ -204,47 +179,11 @@ MainWindow::~MainWindow() {
   }
 }
 
-// InitializeMica: only windows 11 or later support mica material
-bool InitializeMica(HWND hWnd, bool enableMica) {
-  // Mica
-  enum DWMWINDOWATTRIBUTE {
-    DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
-    DWMWA_BORDER_COLOR = 34,
-    DWMWA_CAPTION_COLOR = 35,
-    DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37,
-    DWMWA_MICA_EFFECT = 1029
-  };
-
-  enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
-
-  DWM_BOOL value = DWMWCP_TRUE;
-  auto color = lightModeColor;
-  DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, reinterpret_cast<void *>(&color), sizeof(color));
-  COLORREF borderd = RGB(245, 245, 245);
-  DwmSetWindowAttribute(hWnd, DWMWA_BORDER_COLOR, reinterpret_cast<void *>(&borderd), sizeof(borderd));
-  UINT thickness = 2;
-  DwmSetWindowAttribute(hWnd, DWMWA_VISIBLE_FRAME_BORDER_THICKNESS, reinterpret_cast<void *>(&thickness),
-                        sizeof(thickness));
-  if (!enableMica) {
-    return true;
-  }
-  MARGINS margins = {-1};
-  ::DwmExtendFrameIntoClientArea(hWnd, &margins);
-  // Dark mode
-  DWM_BOOL darkPreference = DWMWCP_FALSE;
-  DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkPreference, sizeof(darkPreference));
-  // Mica
-  DWM_BOOL micaPreference = DWMWCP_TRUE;
-  DwmSetWindowAttribute(hWnd, DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference));
-
-  return true;
-}
-
 LRESULT MainWindow::InitializeWindow() {
-  // isMicaEnabled = IsWindowsVersionOrGreater(10, 0, 19041);
-  //   change UI style
-  hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   bela::error_code ec;
+  themes.Load(ec);
+  systemVersion = baulk::windows::GetWindowsVersion();
+  hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);
     return S_FALSE;
@@ -252,7 +191,7 @@ LRESULT MainWindow::InitializeWindow() {
   if (CreateDeviceIndependentResources() != S_OK) {
     return S_FALSE;
   }
-  RECT layout = {100, 100, 800, 320};
+  RECT layout = {100, 100, 800, 290};
   auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
   Create(nullptr, layout, L"Baulk environment dock", noresizewnd, extend_style);
   return S_OK;
@@ -292,7 +231,7 @@ HRESULT MainWindow::CreateDeviceResources() {
                                           D2D1::HwndRenderTargetProperties(m_hWnd, size), &renderTarget);
   renderTarget->SetDpi(static_cast<float>(dpiX), static_cast<float>(dpiX));
   if (SUCCEEDED(hr)) {
-    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &textBrush);
+    hr = renderTarget->CreateSolidColorBrush(FromColor(themes.Mode.text), &textBrush);
   }
   if (SUCCEEDED(hr)) {
     hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Navy), &borderBrush);
@@ -319,13 +258,13 @@ HRESULT MainWindow::OnRender() {
   auto dsz = renderTarget->GetSize();
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-  renderTarget->Clear(D2D1::ColorF(0xF3F3F3, 1.0f));
+  renderTarget->Clear(FromColor(themes.Mode.background));
   // renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
   renderTarget->DrawLine(D2D1::Point2F(180, 110), D2D1::Point2F(dsz.width - 45, 110), borderBrush, 0.7f);
   if (bitmap != nullptr) {
     auto isz = bitmap->GetSize();
-    renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 160, 60 + isz.width, 160 + isz.height), 1.0,
+    renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 130, 60 + isz.width, 130 + isz.height), 1.0,
                              D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
   }
   for (const auto &label : labels) {
@@ -437,8 +376,7 @@ bool RecreateFont(HFONT &hFont, int dpiY, std::wstring_view name) {
  *  Message Action Function
  */
 LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
-  InitializeMica(m_hWnd, isMicaEnabled);
-  hBrush = CreateSolidBrush(lightModeColor);
+  hBrush = CreateSolidBrush(themes.Mode.background);
   // Adjust window initialize use real DPI
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
@@ -446,7 +384,7 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   WINDOWPLACEMENT placement;
   placement.length = sizeof(WINDOWPLACEMENT);
   auto w = MulDiv(480, dpiX, 96);
-  auto h = MulDiv(320, dpiX, 96);
+  auto h = MulDiv(290, dpiX, 96);
   if (LoadPlacement(placement)) {
     ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top, w, h,
                    SWP_NOZORDER | SWP_NOACTIVATE);
@@ -473,6 +411,7 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     w.layout.right = X + nWidth;
     w.layout.bottom = Y + nHeight;
     w.mono = monofont;
+    w.text = lpWindowName;
     ::SendMessageW(hw, WM_SETFONT, monofont ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
     return true;
   };
@@ -483,10 +422,9 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
   // button
   MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 180, 130, 240, 27, nullptr, hcleanenv);
-  MakeWindow(WC_BUTTONW, L"Use Built-in Clang (VS)", chboxstyle, 180, 160, 240, 27, nullptr, hclang);
-  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 210, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
+  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 180, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
              hbaulkenv);
-
+  // SetWindowTheme(hcleanenv.hWnd, nullptr, nullptr);
   HMENU hSystemMenu = ::GetSystemMenu(m_hWnd, FALSE);
   InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_BAULK_DOCK_ABOUT, L"About Baulk environment dock\tAlt+F1");
 
@@ -494,8 +432,9 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
 
   InitializeControl();
-  BOOL darkMode = FALSE;
-  ::DwmSetWindowAttribute(m_hWnd, 20, &darkMode, sizeof(darkMode));
+  if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
+    baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
+  }
   return S_OK;
 }
 
@@ -540,7 +479,6 @@ LRESULT MainWindow::OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &
   UpdateWindowPos(hvsarchbox);
   UpdateWindowPos(hvenvbox);
   UpdateWindowPos(hcleanenv);
-  UpdateWindowPos(hclang);
   UpdateWindowPos(hbaulkenv);
   return S_OK;
 }
@@ -557,16 +495,103 @@ LRESULT MainWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
 LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
   HDC hdc = (HDC)wParam;
-  SetBkMode(hdc, TRANSPARENT);
-  // SetBkColor(hdc, RGB(255, 255, 255));
-  SetTextColor(hdc, lightModeColor);
+  SetBkColor(hdc, themes.Mode.background);
+  SetTextColor(hdc, themes.Mode.text);
+  // FIXME: dark mode checkbox color
+  // SetBkMode(hdc, TRANSPARENT);
   return (LRESULT)((HBRUSH)hBrush);
-  // return ::DefWindowProc(m_hWnd, nMsg, wParam, lParam);
 }
 
 LRESULT MainWindow::OnSysMemuAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
   bela::BelaMessageBox(m_hWnd, L"About Baulk environment dock", BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
   return S_OK;
+}
+
+LRESULT MainWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  auto *nmhdr = reinterpret_cast<NMHDR *>(lParam);
+  if (nmhdr == nullptr) {
+    return S_FALSE;
+  }
+  switch (nmhdr->code) {
+  case NM_CUSTOMDRAW: {
+    auto result = OnCustomDraw(reinterpret_cast<NMCUSTOMDRAW *>(lParam));
+    ::SetWindowLongPtr(m_hWnd, DWLP_MSGRESULT, result);
+    return result;
+  }
+  default:
+    break;
+  }
+  bHandle = FALSE;
+  return S_OK;
+}
+
+SIZE GetCheckBoxSize(HWND hWnd, int dpiX) {
+  if (IsAppThemed()) {
+    HTHEME theme{nullptr};
+    HDC hdc{nullptr};
+    auto closer = bela::finally([&] {
+      if (theme != nullptr) {
+        CloseThemeData(theme);
+      }
+      if (hdc != nullptr) {
+        ReleaseDC(nullptr, hdc);
+      }
+    });
+    if (theme = OpenThemeData(hWnd, L"Button"); theme != nullptr) {
+      hdc = GetDC(nullptr);
+      SIZE size{0};
+      if (GetThemePartSize(theme, hdc, BP_CHECKBOX, CBS_UNCHECKEDNORMAL, nullptr, TS_DRAW, &size) == S_OK) {
+        return size;
+      }
+    }
+  }
+  return {MulDiv(13, dpiX, USER_DEFAULT_SCREEN_DPI), MulDiv(13, dpiX, USER_DEFAULT_SCREEN_DPI)};
+}
+
+void MainWindow::DrawButtonText(const NMCUSTOMDRAW *customDraw) {
+  const Widget *w = nullptr;
+  if (customDraw->hdr.hwndFrom == hcleanenv.hWnd) {
+    w = &hcleanenv;
+  }
+  if (w == nullptr) {
+    return;
+  }
+  UINT dpi = GetDpiForWindow(customDraw->hdr.hwndFrom);
+  auto size = GetCheckBoxSize(w->hWnd, dpi);
+  RECT textRect = customDraw->rc;
+  textRect.left += size.cx + MulDiv(6, dpi, USER_DEFAULT_SCREEN_DPI);
+  COLORREF textColor;
+
+  if (::IsWindowEnabled(customDraw->hdr.hwndFrom)) {
+    textColor = themes.Mode.text;
+  } else {
+    textColor = themes.Mode.disable;
+  }
+
+  SetTextColor(customDraw->hdc, textColor);
+  UINT textFormat = ((customDraw->uItemState & CDIS_SHOWKEYBOARDCUES) != 0) ? DT_LEFT : DT_LEFT | DT_HIDEPREFIX;
+  RECT finalTextRect = textRect;
+  DrawText(customDraw->hdc, w->data(), static_cast<int>(w->size()), &finalTextRect, textFormat | DT_CALCRECT);
+  if (windows::rect_height(finalTextRect) < windows::rect_height(textRect)) {
+    textRect.top += (windows::rect_height(textRect) - windows::rect_height(finalTextRect)) / 2;
+  }
+  DrawText(customDraw->hdc, w->data(), static_cast<int>(w->size()), &textRect, textFormat);
+  if ((customDraw->uItemState & CDIS_FOCUS) != 0) {
+    DrawFocusRect(customDraw->hdc, &textRect);
+  }
+}
+
+INT_PTR MainWindow::OnCustomDraw(const NMCUSTOMDRAW *customDraw) {
+  if (customDraw->hdr.hwndFrom != hcleanenv.hWnd) {
+    return CDRF_DODEFAULT;
+  }
+  switch (customDraw->dwDrawStage) {
+  case CDDS_PREPAINT:
+    DrawButtonText(customDraw);
+    return CDRF_SKIPDEFAULT;
+  }
+
+  return CDRF_DODEFAULT;
 }
 
 } // namespace baulk::dock

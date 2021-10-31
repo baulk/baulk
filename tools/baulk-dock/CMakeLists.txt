@@ -22,6 +22,7 @@ target_link_libraries(
   shcore
   Winmm
   comctl32
+  uxtheme
   dwmapi
   ole32
   comsupp)

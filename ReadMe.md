@@ -328,7 +328,13 @@ C:\Dev\baulk\bin\baulk-exec.exe --vs pwsh
 
 ## Baulk Dock
 
+Baulk Dock **Light Mode**:
+
 ![](./docs/images/baulk-dock.png)
+
+Baulk Dock **Dark Mode**:
+
+![](./docs/images/baulk-dock-dark.png)
 
 ## Baulk upgrade
 
