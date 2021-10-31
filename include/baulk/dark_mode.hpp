@@ -1,0 +1,2 @@
+// See: https://github.com/electron/electron/blob/f489e3054a44bf946ad56add94485ff74c845782/shell/browser/win/dark_mode.cc
+// and https://github.com/electron/electron/blob/f489e3054a44bf946ad56add94485ff74c845782/shell/browser/win/dark_mode.h

@@ -132,25 +132,28 @@ inline bool PersonalizeThemes::Load(bela::error_code &ec) {
 }
 
 inline bool PersonalizeWindowUI(HWND hWnd, const PersonalizeThemes &themes) {
-  enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
-  DWM_BOOL darkPreference = themes.AppsUseLightTheme ? DWMWCP_TRUE : DWMWCP_FALSE;
-  DwmSetWindowAttribute(hWnd, dwm::DWMWA_USE_IMMERSIVE_DARK_MODE, &darkPreference, sizeof(darkPreference));
   COLORREF captionColor = themes.Mode.background;
   DwmSetWindowAttribute(hWnd, dwm::DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
   COLORREF titleColor = themes.Mode.text;
   DwmSetWindowAttribute(hWnd, dwm::DWMWA_TEXT_COLOR, &titleColor, sizeof(titleColor));
   COLORREF borderColor = themes.Mode.border;
   DwmSetWindowAttribute(hWnd, dwm::DWMWA_BORDER_COLOR, &borderColor, sizeof(borderColor));
+  enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
+  DWM_BOOL darkPreference = themes.AppsUseLightTheme ? DWMWCP_FALSE : DWMWCP_FALSE;
+  DwmSetWindowAttribute(hWnd, dwm::DWMWA_USE_IMMERSIVE_DARK_MODE, &darkPreference, sizeof(darkPreference));
   return true;
 }
 
 inline bool EnableMicaMaterials(HWND hWnd) {
+  MARGINS margins = {-1};
+  ::DwmExtendFrameIntoClientArea(hWnd, &margins);
   auto micaPreference = dwm::DWMWCP_TRUE;
   if (DwmSetWindowAttribute(hWnd, dwm::DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference)) != S_OK) {
     return false;
   }
-  auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
-  return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle | WS_EX_NOREDIRECTIONBITMAP) != 0;
+  // auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+  // return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle | WS_EX_NOREDIRECTIONBITMAP) != 0;
+  return true;
 }
 
 inline bool DisableMicaMaterials(HWND hWnd) {
@@ -159,8 +162,9 @@ inline bool DisableMicaMaterials(HWND hWnd) {
   if (DwmSetWindowAttribute(hWnd, dwm::DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference)) != S_OK) {
     return false;
   }
-  auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & (~WS_EX_NOREDIRECTIONBITMAP);
-  return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle) != 0;
+  // auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & (~WS_EX_NOREDIRECTIONBITMAP);
+  // return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle) != 0;
+  return true;
 }
 
 inline bool EnableRoundWindow(HWND hWnd) {

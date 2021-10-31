@@ -435,6 +435,9 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
     baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
   }
+  // if (baulk::windows::mica_materials_enabled(systemVersion)) {
+  //   baulk::windows::EnableMicaMaterials(m_hWnd);
+  // }
   return S_OK;
 }
 
