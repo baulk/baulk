@@ -182,7 +182,7 @@ MainWindow::~MainWindow() {
 LRESULT MainWindow::InitializeWindow() {
   bela::error_code ec;
   themes.Load(ec);
-  systemVersion = baulk::windows::GetWindowsVersion();
+  systemVersion = baulk::windows::version();
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);

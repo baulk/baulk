@@ -48,7 +48,7 @@ int wmain(int argc, wchar_t **argv) {
     return 0;
   }
   const auto &legacyTable = baulk::vfs::vfs_internal::AppPathFsTable();
-  baulk::vfs::vfs_internal::FsRedirectionTable newTable(legacyTable.executableRoot);
+  baulk::vfs::vfs_internal::FsRedirectionTable newTable(legacyTable.appLocation);
   if (!newTable.InitializeFromPortable(ec)) {
     bela::FPrintF(stderr, L"baulk-mirage InitializeFromPortable error %s\n", ec.message);
     return 1;

@@ -166,7 +166,7 @@ template <size_t Len = 256> std::wstring GetCwd() {
 }
 
 LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
-  auto baulkexec = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin\\baulk-exec.exe");
+  auto baulkexec = vfs::AppLocationPath(L"baulk-exec.exe");
   auto cwd = GetCwd();
   bela::EscapeArgv ea;
   if (auto wt = FindWindowsTerminal(); wt) {

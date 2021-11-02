@@ -9,19 +9,20 @@ namespace vfs_internal {
 class FsRedirectionTable {
 public:
   FsRedirectionTable() = default;
-  FsRedirectionTable(std::wstring_view exeRoot) : executableRoot(exeRoot) {}
+  FsRedirectionTable(std::wstring_view exeRoot) : appLocation(exeRoot) {}
   FsRedirectionTable(const FsRedirectionTable &) = delete;
   FsRedirectionTable &operator=(const FsRedirectionTable &) = delete;
-  std::wstring executableRoot; // baulk.exe root
-  std::wstring basePath;       // baulk root
-  std::wstring appData;        // baulk appdata
-  std::wstring etc;            // baulk etc
-  std::wstring vfs;            // baulk pakcage vfs
-  std::wstring packages;       // baulk package root
-  std::wstring temp;           // baulk temp
-  std::wstring locks;          // baulk locks
-  std::wstring buckets;        // baulk buckets
-  std::wstring appLinks;       // baulk app links location
+  std::wstring appLocation; // baulk.exe root
+  std::wstring basePath;    // baulk root
+  std::wstring appData;     // baulk appdata
+  std::wstring etc;         // baulk etc
+  std::wstring vfs;         // baulk pakcage vfs
+  std::wstring packages;    // baulk package root
+  std::wstring temp;        // baulk temp
+  std::wstring locks;       // baulk locks
+  std::wstring buckets;     // baulk buckets
+  std::wstring appLinks;    // baulk app links location
+  bool appLocationFlat{false};
   // LocalState
   bool InitializeFromPackaged(bela::error_code &ec);
   bool InitializeFromPortable(bela::error_code &ec);
@@ -55,8 +56,12 @@ constexpr std::wstring_view SystemMode = L"System";
 constexpr std::wstring_view PortableMode = L"Portable";
 // Baulk install path: Only used to find the command path of baulk
 // eg:
-//    auto baulkLnkExe=bela::StringCat(AppExecutableRoot(),L"\\bin\\baulk-lnk.exe");
-std::wstring_view AppExecutableRoot();
+
+std::wstring_view AppLocation();
+// auto baulkLnkExe=AppLocationPath(L"\\baulk-lnk.exe");
+using namespace std::string_view_literals;
+std::wstring AppLocationPath(std::wstring_view name = L""sv);
+//
 // Baulk vfs root directory
 std::wstring_view AppBasePath(); // root
 std::wstring_view AppData();

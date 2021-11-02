@@ -37,7 +37,7 @@ constexpr const std::wstring_view archfilesuffix() {
 
 bool detect_baulk_revision(std::wstring &releasename) {
   bela::process::Process ps;
-  auto baulkexe = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin\\baulk.exe");
+  auto baulkexe = vfs::AppLocationPath(L"baulk-exec.exe");
   if (ps.Capture(baulkexe, L"--version") != 0) {
     if (auto ec = ps.ErrorCode(); ec) {
       bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec.message);
@@ -185,14 +185,13 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
 
 int ExecuteInternal(wchar_t *cmdline) {
   // run a new process and wait
-  auto cwd = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin");
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
   if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE, CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr,
-                     cwd.data(), &si, &pi) != TRUE) {
+                     vfs::AppLocationPath().data(), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"run post script failed %s\n", ec.message);
     return -1;
@@ -224,10 +223,10 @@ inline std::wstring UnarchivePath(std::wstring_view path) {
 
 bool UpdateBaulkExec(std::wstring_view newBaulkExec) {
   bela::error_code ec;
-  auto executableRoot = vfs::AppExecutableRoot();
-  auto baulkExec = bela::StringCat(executableRoot, L"\\bin\\baulk-exec.exe");
-  auto baulkExecDel = bela::StringCat(executableRoot, L"\\bin\\baulk-exec.del");
-  auto baulkExecNew = bela::StringCat(executableRoot, L"\\bin\\baulk-exec.new");
+  auto appLocation = vfs::AppLocation();
+  auto baulkExec = bela::StringCat(appLocation, L"\\bin\\baulk-exec.exe");
+  auto baulkExecDel = bela::StringCat(appLocation, L"\\bin\\baulk-exec.del");
+  auto baulkExecNew = bela::StringCat(appLocation, L"\\bin\\baulk-exec.new");
   if (bela::PathFileIsExists(baulkExec)) {
     if (MoveFileExW(baulkExec.data(), baulkExecDel.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) == TRUE) {
       if (MoveFileExW(newBaulkExec.data(), baulkExec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
@@ -284,7 +283,7 @@ int UpdateBaulk() {
   baulk::fs::MakeFlattened(outdir, outdir, ec);
 
   std::filesystem::path opath(outdir);
-  auto executableRoot = vfs::AppExecutableRoot();
+  auto appLocation = vfs::AppLocation();
   for (const auto &p : std::filesystem::recursive_directory_iterator(outdir)) {
     if (p.is_directory()) {
       continue;
@@ -298,7 +297,7 @@ int UpdateBaulk() {
     // skip all config
 
     DbgPrint(L"found %s", relativepath);
-    auto target = bela::StringCat(executableRoot, L"\\", relativepath);
+    auto target = bela::StringCat(appLocation, L"\\", relativepath);
     if (bela::EqualsIgnoreCase(relativepath, L"config\\baulk.json") && bela::PathExists(target)) {
       continue;
     }
@@ -307,7 +306,7 @@ int UpdateBaulk() {
   if (!IsDebugMode) {
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mbaulk has been upgraded to %s\x1b[0m\n", version);
   }
-  auto olddir = bela::StringCat(executableRoot, L"\\old");
+  auto olddir = bela::StringCat(appLocation, L"\\old");
   baulk::fs::MakeDir(olddir, ec);
 
   auto newBaulkExec = bela::StringCat(outdir, L"\\bin\\baulk-exec.exe");
@@ -316,8 +315,8 @@ int UpdateBaulk() {
   }
   auto newBaulkUpdate = bela::StringCat(outdir, L"\\bin\\baulk-update.exe");
   if (bela::PathExists(newBaulkUpdate)) {
-    auto baulkUpdateNew = bela::StringCat(executableRoot, L"\\bin\\baulk-update.exe");
-    auto baulkUpdateDel = bela::StringCat(executableRoot, L"\\bin\\baulk-update.del");
+    auto baulkUpdateNew = bela::StringCat(appLocation, L"\\bin\\baulk-update.exe");
+    auto baulkUpdateDel = bela::StringCat(appLocation, L"\\bin\\baulk-update.del");
     if (MoveFileExW(baulkUpdateNew.data(), baulkUpdateDel.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) ==
         TRUE) {
     }

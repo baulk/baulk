@@ -20,13 +20,13 @@ bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
 
 // Protable (baulk >=4.0)
 bool FsRedirectionTable::InitializeFromPortable(bela::error_code &ec) {
-  basePath = executableRoot;
+  basePath = appLocation;
   return InitializeFromNewest(ec);
 }
 
 // Legacy Install (baulk <=3.0)
 bool FsRedirectionTable::InitializeFromLegacy(bela::error_code &ec) {
-  basePath = executableRoot;
+  basePath = appLocation;
   etc = bela::StringCat(basePath, L"\\bin\\etc");
   appData = bela::StringCat(basePath, L"\\bin\\appdata");
   vfs = bela::StringCat(basePath, L"\\bin\\vfs");

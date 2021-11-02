@@ -50,9 +50,11 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case 'h':
+          baulk::InitializeContext(profile, ec);
           commands::usage_baulk();
           exit(0);
         case 'v':
+          baulk::InitializeContext(profile, ec);
           commands::Version();
           exit(0);
         case 'P':
@@ -131,7 +133,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
   for (const auto &c : cmdmaps) {
     if (subcmd == c.name) {
       if (c.require_context) {
-        if (bela::error_code ec; !baulk::InitializeContext(profile, ec)) {
+        if (!baulk::InitializeContext(profile, ec)) {
           bela::FPrintF(stderr, L"baulk initialize context error: \x1b[31m%s\x1b[0m\n", ec.message);
           return std::nullopt;
         }

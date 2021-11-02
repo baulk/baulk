@@ -187,8 +187,12 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
     }
   }
 
-  std::vector<std::wstring> paths = {bela::StringCat(baulk::vfs::AppExecutableRoot(), L"\\bin"),
-                                     std::wstring(baulk::vfs::AppLinks())};
+  std::vector<std::wstring> paths = {baulk::vfs::AppLocationPath(), std::wstring(baulk::vfs::AppLinks())};
+  if (IsDebugMode) {
+    for (const auto &p : paths) {
+      DbgPrint(L"Path insert %s", p);
+    }
+  }
   simulator.PathPushFront(std::move(paths));
   baulk::env::Constructor ctor(baulk::exec::IsDebugMode);
   if (!ctor.InitializeEnvs(packageEnvs, simulator, ec)) {

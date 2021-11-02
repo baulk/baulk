@@ -279,15 +279,15 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
 }
 
 std::optional<std::wstring> FindProxyLauncher(bela::error_code &ec) {
+  auto proxyLauncher = vfs::AppLocationPath(L"baulk-lnk.exe");
+  if (!bela::PathExists(proxyLauncher)) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"baulk-lnk.exe not found");
+    return std::nullopt;
+  }
   if (!vfs::IsPackaged()) {
-    auto proxyLauncher = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin\\baulk-lnk.exe");
-    if (!bela::PathExists(proxyLauncher)) {
-      ec = bela::make_error_code(bela::ErrGeneral, L"baulk-lnk.exe not found");
-      return std::nullopt;
-    }
+
     return std::make_optional(std::move(proxyLauncher));
   }
-  auto proxyLauncher = bela::StringCat(vfs::AppExecutableRoot(), L"\\bin\\baulk-lnk.exe");
   auto localLauncher = bela::StringCat(vfs::AppBasePath(), L"\\bin\\baulk-lnk.exe");
   auto h = hash::FileHash(proxyLauncher, hash::hash_t::BLAKE3, ec);
   if (!h) {

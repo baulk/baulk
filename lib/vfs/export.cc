@@ -18,8 +18,23 @@ bool InitializeFastPathFs(bela::error_code &ec) {
 }
 
 std::wstring_view AppMode() { return PathFs::Instance().Mode(); }
-// AppExecutableRoot execuatble root
-std::wstring_view AppExecutableRoot() { return PathFs::Instance().Table().executableRoot; }
+// AppLocation app location
+std::wstring_view AppLocation() { return PathFs::Instance().Table().appLocation; }
+
+std::wstring AppLocationPath(std::wstring_view name) {
+  const auto &table = PathFs::Instance().Table();
+  if (name.empty()) {
+    if (table.appLocationFlat) {
+      return table.appLocation;
+    }
+    return bela::StringCat(table.appLocation, L"\\bin");
+  }
+  if (table.appLocationFlat) {
+    return bela::StringCat(table.appLocation, L"\\", name);
+  }
+  return bela::StringCat(table.appLocation, L"\\bin\\", name);
+}
+
 // AppBasePath basePath
 std::wstring_view AppBasePath() { return PathFs::Instance().Table().basePath; }
 // AppData

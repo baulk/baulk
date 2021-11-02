@@ -1,7 +1,9 @@
 // baulk context
 #include <version.hpp>
+#include <bela/io.hpp>
 #include <baulk/vfs.hpp>
 #include <baulk/json_utils.hpp>
+#include <baulk/fs.hpp>
 #include "baulk.hpp"
 
 namespace baulk {
@@ -54,15 +56,33 @@ private:
   compiler::Executor executor;
 };
 
+constexpr std::wstring_view default_content = LR"({
+    "bucket": [
+        {
+            "description": "Baulk official bucket",
+            "name": "baulk",
+            "url": "https://github.com/baulk/bucket",
+            "weights": 100
+        }
+    ],
+    "freeze": [],
+    "channel": "insider"
+})";
+
 bool Context::initializeInternal(const std::wstring &profile_, bela::error_code &ec) {
-  DbgPrint(L"Baulk use profile '%s'", profile_);
-  auto jo = baulk::json::parse_file(profile_, ec);
+  profile = profile_;
+  DbgPrint(L"Baulk use profile '%s'", profile);
+  auto jo = baulk::json::parse_file(profile, ec);
   if (!jo) {
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", baulk_internal::DefaultBucket);
-    bela::FPrintF(stderr, L"Baulk parse profile %s error: \x1b[31m%s\x1b[0m, ignore profile.\n", profile_, ec.message);
+    bela::FPrintF(stderr, L"baulk: \x1b[31m%s\x1b[0m\nprofile path %s\n", ec.message, profile_);
+    if (ec.code == ERROR_FILE_NOT_FOUND) {
+      baulk::fs::MakeParentDir(profile, ec);
+      bela::io::WriteText(default_content, profile, ec);
+    }
     return true;
   }
-  profile = profile_;
+
   auto jv = jo->view();
   localeName = jv.fetch("locale", localeName);
   auto svs = jv.subviews("bucket");
@@ -88,7 +108,10 @@ bool Context::Initialize(std::wstring_view profile_, bela::error_code &ec) {
 
   localeName = baulk_internal::default_locale_name();
   if (IsDebugMode) {
+
     DbgPrint(L"Baulk %s [%s] time: %s", BAULK_VERSION, vfs::AppMode(), BAULK_BUILD_TIME);
+    DbgPrint(L"Baulk Location    '%s'", vfs::AppLocation());
+    DbgPrint(L"Baulk baulk.exe   '%s'", vfs::AppLocationPath(L"baulk.exe"));
     DbgPrint(L"Baulk BasePath    '%s'", vfs::AppBasePath());
     DbgPrint(L"Baulk AppData     '%s'", vfs::AppData());
     DbgPrint(L"Baulk etc         '%s'", vfs::AppEtc());

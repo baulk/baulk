@@ -59,26 +59,29 @@ std::wstring_view GetAppBasePath() {
   return basePath;
 }
 
-std::optional<std::wstring> searchBaulkExecutableRoot(bela::error_code &ec) {
+std::optional<std::wstring> searchAppLocation(bool &appLocationIsFlat, bela::error_code &ec) {
   // GetModuleFileName returns the absolute path when launched from the application alias
   auto parent = bela::ExecutableFinalPathParent(ec);
   if (!parent) {
     return std::nullopt;
   }
-  auto baulkexe = bela::StringCat(*parent, L"\\baulk.exe");
-  if (bela::PathFileIsExists(baulkexe)) {
+  auto baulExe = bela::StringCat(*parent, L"\\baulk.exe");
+  if (bela::PathFileIsExists(baulExe)) {
+    if (appLocationIsFlat = !bela::EqualsIgnoreCase(bela::BaseName(*parent), L"bin"); appLocationIsFlat) {
+      return std::make_optional<std::wstring>(std::move(*parent));
+    }
     return std::make_optional<std::wstring>(bela::DirName(*parent));
   }
-  std::wstring_view portableRoot(*parent);
+  std::wstring_view appLocation(*parent);
   for (size_t i = 0; i < 5; i++) {
-    if (portableRoot == L".") {
+    if (appLocation == L".") {
       break;
     }
-    auto baulkexe = bela::StringCat(portableRoot, L"\\bin\\baulk.exe");
+    auto baulkexe = bela::StringCat(appLocation, L"\\bin\\baulk.exe");
     if (bela::PathFileIsExists(baulkexe)) {
-      return std::make_optional<std::wstring>(portableRoot);
+      return std::make_optional<std::wstring>(appLocation);
     }
-    portableRoot = bela::DirName(portableRoot);
+    appLocation = bela::DirName(appLocation);
   }
   ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
   return std::nullopt;
@@ -122,17 +125,16 @@ bool PathFs::NewFsPaths(bela::error_code &ec) {
 }
 
 bool PathFs::InitializeInternal(bela::error_code &ec) {
-  auto executableRoot = searchBaulkExecutableRoot(ec);
-  if (!executableRoot) {
+  auto appLocation = searchAppLocation(table.appLocationFlat, ec);
+  if (!appLocation) {
     return false;
   }
-  table.executableRoot.assign(std::move(*executableRoot));
+  table.appLocation.assign(std::move(*appLocation));
   if (IsPackaged()) {
     mode = L"Packaged";
     return table.InitializeFromPackaged(ec);
   }
-
-  auto envfile = bela::StringCat(table.executableRoot, L"\\baulk.env");
+  auto envfile = bela::StringCat(table.appLocation, L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
     mode = L"Legacy";
     return table.InitializeFromLegacy(ec);
@@ -146,6 +148,7 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
   if (bela::EqualsIgnoreCase(mode, L"System")) {
     return table.InitializeFromSystemAppData(ec);
   }
+
   if (bela::EndsWithIgnoreCase(mode, L"Portable")) {
     return table.InitializeFromPortable(ec);
   }
