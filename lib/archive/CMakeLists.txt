@@ -1,6 +1,7 @@
 # archive libs
 
 add_subdirectory(chromium_zlib)
+add_subdirectory(lzmasdk)
 
 # liblzma
 add_library(
@@ -131,7 +132,6 @@ target_compile_definitions(zstd PRIVATE ZSTD_MULTITHREAD)
 target_include_directories(zstd PRIVATE zstd zstd/common zstd/legacy)
 
 add_subdirectory(ced)
-add_subdirectory(ppmd)
 
 # Brotli
 set(BROTLI_SOURCES
@@ -212,8 +212,8 @@ target_link_libraries(
   belawin
   deflate64
   lzma
+  lzmasdk
   zlib
   zstd
-  Ppmd
   ced
   advapi32)

@@ -2,7 +2,7 @@
 #include <bela/types.hpp>
 #include <bela/endian.hpp>
 #include "zipinternal.hpp"
-#include "../ppmd/Ppmd8.h"
+#include "../lzmasdk/C/Ppmd8.h"
 
 namespace baulk::archive::zip {
 using bela::ssize_t;
