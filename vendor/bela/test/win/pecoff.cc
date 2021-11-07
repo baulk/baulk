@@ -2,6 +2,203 @@
 #include <bela/pe.hpp>
 #include <bela/terminal.hpp>
 #include <bela/und.hpp>
+#include <bela/time.hpp>
+#include <bela/datetime.hpp>
+#include <hazel/hazel.hpp>
+
+constexpr size_t amlen = 12;
+class TextWriter {
+public:
+  TextWriter(size_t al) : alen((std::max)(al, amlen)) { space.resize(alen + 2, ' '); }
+  void WriteVariant(std::wstring_view key, const hazel::hazel_value_t &val) {
+    std::wstring_view spaceview{space};
+    bela::FPrintF(stderr, L"%v:%s", key, spaceview.substr(0, spaceview.size() - key.size() - 1));
+    std::visit(hazel::overloaded{
+                   [](auto arg) {}, // ignore
+                   [](const std::wstring &sv) { bela::FPrintF(stdout, L"%s\n", sv); },
+                   [](const std::string &sv) { bela::FPrintF(stdout, L"%s\n", sv); },
+                   [](int16_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](int32_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](int64_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](uint16_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](uint32_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](uint64_t i) { bela::FPrintF(stdout, L"%d\n", i); },
+                   [](bela::Time t) { bela::FPrintF(stdout, L"%s\n", bela::FormatTime(t)); },
+                   [spaceview](const std::vector<std::wstring> &v) {
+                     if (v.empty()) {
+                       bela::FPrintF(stdout, L"\n");
+                       return;
+                     }
+                     bela::FPrintF(stdout, L"%s\n", v[0]);
+                     for (size_t i = 1; i < v.size(); i++) {
+                       bela::FPrintF(stdout, L"%s%s\n", spaceview, v[0]);
+                     }
+                   },
+                   [spaceview](const std::vector<std::string> &v) {
+                     if (v.empty()) {
+                       bela::FPrintF(stdout, L"\n");
+                       return;
+                     }
+                     bela::FPrintF(stdout, L"%s\n", v[0]);
+                     for (size_t i = 1; i < v.size(); i++) {
+                       bela::FPrintF(stdout, L"%s%s\n", spaceview, v[0]);
+                     }
+                   },
+               },
+               val);
+  }
+  void WriteError(const bela::error_code &ec) {
+    std::wstring_view spaceview{space};
+    bela::FPrintF(stdout, L"ErrorCode:%s%d\n", spaceview.substr(0, spaceview.size() - 9 - 1), ec.code);
+    bela::FPrintF(stdout, L"Message:%s%s\n", spaceview.substr(0, spaceview.size() - 7 - 1), ec.message);
+  }
+  void WriteAddress(std::wstring_view k, std::ptrdiff_t val) {
+    std::wstring_view spaceview{space};
+    bela::AlphaNum an(bela::Hex(val, bela::kZeroPad8));
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s0x%s\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), an.Piece());
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s0x%s\n", k, spaceview, an.Piece());
+  }
+  void WriteBool(std::wstring_view k, bool val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%b\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%b\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::int64_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::uint64_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::int32_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::uint32_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::int16_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::uint16_t val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%d\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%d\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, bela::Time val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%s\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1),
+                    bela::FormatTime(val));
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%s\n", k, spaceview, bela::FormatTime(val));
+  }
+  void Write(std::wstring_view k, std::string_view val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%s\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%s\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, std::wstring_view val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s%s\n", k, spaceview.substr(0, spaceview.size() - k.size() - 1), val);
+      return;
+    }
+    bela::FPrintF(stdout, L"%s:\n%s%s\n", k, spaceview, val);
+  }
+  void Write(std::wstring_view k, const std::vector<std::string> &val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s", k, spaceview.substr(0, spaceview.size() - k.size() - 1));
+    } else {
+      bela::FPrintF(stdout, L"%s:\n%s", k, spaceview);
+    }
+    if (val.empty()) {
+      bela::FPrintF(stdout, L"[]\n");
+      return;
+    }
+    bela::FPrintF(stdout, L"%s\n", val[0]);
+    for (size_t i = 1; i < val.size(); i++) {
+      bela::FPrintF(stdout, L"%s%s\n", spaceview, val[i]);
+    }
+  }
+  void Write(std::wstring_view k, const std::vector<std::wstring> &val) {
+    std::wstring_view spaceview{space};
+    if (spaceview.size() >= k.size() + 2) {
+      bela::FPrintF(stdout, L"%s:%s", k, spaceview.substr(0, spaceview.size() - k.size() - 1));
+    } else {
+      bela::FPrintF(stdout, L"%s:\n%s", k, spaceview);
+    }
+    if (val.empty()) {
+      bela::FPrintF(stdout, L"[]\n");
+      return;
+    }
+    bela::FPrintF(stdout, L"%s\n", val[0]);
+    for (size_t i = 1; i < val.size(); i++) {
+      bela::FPrintF(stdout, L"%s%s\n", spaceview, val[i]);
+    }
+  }
+  void Write(std::wstring_view name) { bela::FPrintF(stdout, L"%s:\n", name); }
+  void Write(std::wstring_view k, std::string_view d, const std::vector<bela::pe::Function> &funs,
+             bela::pe::SymbolSearcher &sse) {
+    std::wstring_view spaceview{space};
+    bela::FPrintF(stdout, L"\x1b[34m%s:\x1b[0m\n", d);
+    bela::error_code ec;
+    for (const auto &n : funs) {
+      bela::AlphaNum an(n.Index);
+      auto sv = spaceview.substr(0, 10 - an.Piece().size());
+      if (n.Ordinal == 0) {
+        bela::FPrintF(stdout, L"%s%s %s\n", sv, an.Piece(), bela::demangle(n.Name));
+        continue;
+      }
+      if (auto fn = sse.LookupOrdinalFunctionName(d, n.Ordinal, ec); fn) {
+        bela::FPrintF(stdout, L"%s%s %s (Ordinal %d)\n", sv, an.Piece(), bela::demangle(*fn), n.Ordinal);
+        continue;
+      }
+      bela::FPrintF(stdout, L"%s%s Ordinal%d (Ordinal %d)\n", sv, an.Piece(), n.Ordinal, n.Ordinal);
+    }
+  }
+
+private:
+  std::wstring space;
+  size_t alen{0};
+};
 
 static const constexpr char hex[] = "0123456789abcdef";
 
@@ -202,14 +399,23 @@ int wmain(int argc, wchar_t **argv) {
   if (overlayLen == 0) {
     return 0;
   }
-  uint8_t buffer[2048];
-  auto ret = file.ReadOverlay(buffer, ec);
-  if (ret < 0) {
-    bela::FPrintF(stderr, L"Error: %s\n", ec.message);
+  if (overlayLen < 1024) {
+    uint8_t buffer[1024];
+    auto ret = file.ReadOverlay(buffer, ec);
+    if (ret < 0) {
+      bela::FPrintF(stderr, L"Error: %s\n", ec.message);
+      return 1;
+    }
+    bela::FPrintF(stderr, L"Read %d bytes \n", ret);
+    process_color(stderr, std::string_view{reinterpret_cast<char *>(buffer), static_cast<size_t>(ret)},
+                  file.OverlayOffset());
+    return 0;
+  }
+  hazel::hazel_result result;
+  if (!hazel::LookupFile(file.FD(), result, ec, file.OverlayOffset())) {
+    bela::FPrintF(stderr, L"unable lookup overlay data details: %s\n", ec);
     return 1;
   }
-  bela::FPrintF(stderr, L"Read %d bytes \n", ret);
-  process_color(stderr, std::string_view{reinterpret_cast<char *>(buffer), static_cast<size_t>(ret)},
-                file.OverlayOffset());
+  bela::FPrintF(stderr, L"Overlay description: %s", result.description());
   return 0;
 }

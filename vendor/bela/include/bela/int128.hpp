@@ -958,9 +958,9 @@ inline int128 &int128::operator=(unsigned long long v) { return *this = int128(v
 
 constexpr int128 operator+(int128 lhs, int128 rhs);
 constexpr int128 operator-(int128 lhs, int128 rhs);
-inline int128 operator*(int128 lhs, int128 rhs);
-inline int128 operator/(int128 lhs, int128 rhs);
-inline int128 operator%(int128 lhs, int128 rhs);
+int128 operator*(int128 lhs, int128 rhs); // noinline
+int128 operator/(int128 lhs, int128 rhs); // noinline
+int128 operator%(int128 lhs, int128 rhs); // noinline
 constexpr int128 operator|(int128 lhs, int128 rhs);
 constexpr int128 operator&(int128 lhs, int128 rhs);
 constexpr int128 operator^(int128 lhs, int128 rhs);

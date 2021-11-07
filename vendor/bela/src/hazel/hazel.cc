@@ -32,13 +32,17 @@ bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &) {
   return false;
 }
 
-bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec) {
-  if ((hr.size_ = bela::io::Size(fd.NativeFD(), ec)) == bela::SizeUnInitialized) {
+bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, int64_t offset) {
+  if ((hr.size_ = fd.Size(ec)) == bela::SizeUnInitialized) {
+    return false;
+  }
+  if (offset < 0 || hr.size_ < offset) {
+    ec = bela::make_error_code(ErrGeneral, L"file offset over size");
     return false;
   }
   uint8_t buffer[4096];
-  auto minSize = (std::min)(hr.size_, 4096ll);
-  if (!fd.ReadAt({buffer, static_cast<size_t>(minSize)}, 0, ec)) {
+  auto minSize = (std::min)(hr.size_ - offset, 4096ll);
+  if (!fd.ReadAt({buffer, static_cast<size_t>(minSize)}, offset, ec)) {
     return false;
   }
   bela::bytes_view bv(buffer, static_cast<size_t>(minSize));
