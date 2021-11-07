@@ -363,5 +363,6 @@ Baulk 依赖了许多许可证友好的开源项目，在这里我表示由衷�
 +   [zlib (deflate64) - 解压缩以 `deflate64` 压缩的 ZIP 文件](https://github.com/madler/zlib/tree/master/contrib/infback9)
 +   [liblzma - 解压缩 `tar.xz` 文件和以 `xz` 压缩的 ZIP 文件](https://tukaani.org/xz/)
 +   [zstd - 解压缩 `tar.zst` 文件和以 `zstd` 压缩的 ZIP 文件](https://github.com/facebook/zstd)
++   [mimalloc - 紧凑且性能出色的通用内存分配器](https://github.com/microsoft/mimalloc)
 
 <div>Baulk 图标来源于 <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>

@@ -70,8 +70,9 @@ inline bool AccumulatePwsh(std::wstring_view dir, std::vector<PwshMeta> &pwshs) 
         sv.remove_suffix(previewsv.size());
         preview = prerelease::rc;
       }
-      bela::SimpleAtoi(sv, &version);
-      pwshs.emplace_back(PwshMeta{exe.wstring(), version, preview});
+      if (bela::SimpleAtoi(sv, &version)) {
+        pwshs.emplace_back(PwshMeta{exe.wstring(), version, preview});
+      }
     }
   }
   return !pwshs.empty();

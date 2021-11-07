@@ -357,6 +357,7 @@ Baulk depends many license-friendly open source projects, I would like to expres
 +   [zlib (deflate64) - Extract `ZIP-deflate64`](https://github.com/madler/zlib/tree/master/contrib/infback9)
 +   [liblzma - Extract `tar.xz` and `ZIP-xz`](https://tukaani.org/xz/)
 +   [zstd - Extract `tar.zst` and `ZIP-zstd`](https://github.com/facebook/zstd)
++   [mimalloc - mimalloc is a compact general purpose allocator with excellent performance](https://github.com/microsoft/mimalloc)
 
 <div>Baulk Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 
