@@ -108,7 +108,20 @@ template <class _RawTy>
       _Value >>= 5;
     } while (_Value != 0);
     break;
-
+  case 3:
+    [[fallthrough]];
+  case 5:
+    [[fallthrough]];
+  case 6:
+    [[fallthrough]];
+  case 7:
+    [[fallthrough]];
+  case 9:
+    do {
+      *--_RNext = static_cast<char>('0' + _Value % _Base);
+      _Value = static_cast<_Unsigned>(_Value / _Base);
+    } while (_Value != 0);
+    break;
   default:
     do {
       *--_RNext = _Charconv_digits[_Value % _Base];
@@ -180,6 +193,7 @@ to_chars_result to_chars(wchar_t *_First, wchar_t *_Last, bool _Value, int _Base
 struct from_chars_result {
   const wchar_t *ptr;
   std::errc ec;
+  [[nodiscard]] friend bool operator==(const from_chars_result &, const from_chars_result &) = default;
 };
 
 [[nodiscard]] inline unsigned char _Digit_from_char(const wchar_t _Ch) noexcept {
@@ -462,7 +476,7 @@ struct _Big_integer_flt {
   if (_BitScanReverse64(&_Index, _Value)) {
     return _Index + 1;
   }
-#else // ^^^ 64-bit ^^^ / vvv 32-bit vvv
+#else  // ^^^ 64-bit ^^^ / vvv 32-bit vvv
   uint32_t _Ui32 = static_cast<uint32_t>(_Value >> 32);
 
   if (_BitScanReverse(&_Index, _Ui32)) {

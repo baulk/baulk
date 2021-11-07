@@ -29,6 +29,7 @@ enum class chars_format {
 struct to_chars_result {
   wchar_t *ptr;
   std::errc ec;
+  [[nodiscard]] friend bool operator==(const to_chars_result &, const to_chars_result &) = default;
 };
 template <typename T> T _Min_value(T a, T b) { return a < b ? a : b; }
 template <typename T> T _Max_value(T a, T b) { return a > b ? a : b; }

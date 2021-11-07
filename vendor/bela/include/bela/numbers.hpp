@@ -41,19 +41,24 @@
 #include <string>
 #include <type_traits>
 #include <string_view>
+#include "int128.hpp"
 
 namespace bela {
 namespace numbers_internal {
 // safe_strto?() functions for implementing SimpleAtoi()
 bool safe_strto32_base(std::wstring_view text, int32_t *value, int base);
 bool safe_strto64_base(std::wstring_view text, int64_t *value, int base);
+bool safe_strto128_base(std::wstring_view text, int128 *value, int base);
 bool safe_strtou32_base(std::wstring_view text, uint32_t *value, int base);
 bool safe_strtou64_base(std::wstring_view text, uint64_t *value, int base);
+bool safe_strtou128_base(std::wstring_view text, uint128 *value, int base);
 // narrow
 bool safe_strto32_base(std::string_view text, int32_t *value, int base);
 bool safe_strto64_base(std::string_view text, int64_t *value, int base);
+bool safe_strto128_base(std::string_view text, int128 *value, int base);
 bool safe_strtou32_base(std::string_view text, uint32_t *value, int base);
 bool safe_strtou64_base(std::string_view text, uint64_t *value, int base);
+bool safe_strtou128_base(std::string_view text, uint128 *value, int base);
 
 static const int kFastToBufferSize = 32;
 static const int kSixDigitsToBufferSize = 16;
@@ -190,17 +195,58 @@ template <typename int_type> bool safe_strtoi_base(std::string_view s, int_type 
 
 } // namespace numbers_internal
 
-template <typename I> bool SimpleAtoi(std::wstring_view s, I *out) {
+template <typename I> [[nodiscard]] bool SimpleAtoi(std::wstring_view s, I *out) {
   return numbers_internal::safe_strtoi_base(s, out, 10);
 }
 
-template <typename I> bool SimpleAtoi(std::string_view s, I *out) {
+[[nodiscard]] inline bool SimpleAtoi(std::wstring_view str, bela::int128 *out) {
+  return numbers_internal::safe_strto128_base(str, out, 10);
+}
+
+[[nodiscard]] inline bool SimpleAtoi(std::wstring_view str, bela::uint128 *out) {
+  return numbers_internal::safe_strtou128_base(str, out, 10);
+}
+
+template <typename I> [[nodiscard]] bool SimpleAtoi(std::string_view s, I *out) {
   return numbers_internal::safe_strtoi_base(s, out, 10);
 }
+
+[[nodiscard]] inline bool SimpleAtoi(std::string_view str, bela::int128 *out) {
+  return numbers_internal::safe_strto128_base(str, out, 10);
+}
+
+[[nodiscard]] inline bool SimpleAtoi(std::string_view str, bela::uint128 *out) {
+  return numbers_internal::safe_strtou128_base(str, out, 10);
+}
+
+template <typename int_type> [[nodiscard]] bool SimpleHexAtoi(std::wstring_view str, int_type *out) {
+  return numbers_internal::safe_strtoi_base(str, out, 16);
+}
+
+[[nodiscard]] inline bool SimpleHexAtoi(std::wstring_view str, bela::int128 *out) {
+  return numbers_internal::safe_strto128_base(str, out, 16);
+}
+
+[[nodiscard]] inline bool SimpleHexAtoi(std::wstring_view str, bela::uint128 *out) {
+  return numbers_internal::safe_strtou128_base(str, out, 16);
+}
+
+template <typename int_type> [[nodiscard]] bool SimpleHexAtoi(std::string_view str, int_type *out) {
+  return numbers_internal::safe_strtoi_base(str, out, 16);
+}
+
+[[nodiscard]] inline bool SimpleHexAtoi(std::string_view str, bela::int128 *out) {
+  return numbers_internal::safe_strto128_base(str, out, 16);
+}
+
+[[nodiscard]] inline bool SimpleHexAtoi(std::string_view str, bela::uint128 *out) {
+  return numbers_internal::safe_strtou128_base(str, out, 16);
+}
+
 // bool SimpleAtof(std::wstring_view str, float *out);
 // bool SimpleAtod(std::wstring_view str, double *out);
-bool SimpleAtob(std::wstring_view str, bool *out);
-bool SimpleAtob(std::string_view str, bool *out);
+[[nodiscard]] bool SimpleAtob(std::wstring_view str, bool *out);
+[[nodiscard]] bool SimpleAtob(std::string_view str, bool *out);
 } // namespace bela
 
 #endif

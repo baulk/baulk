@@ -23,7 +23,7 @@ template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 class hazel_result;
-bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec);
+bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, int64_t offset = 0);
 bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec);
 using hazel_value_t = std::variant<std::string, std::wstring, std::vector<std::string>, std::vector<std::wstring>,
                                    int16_t, int32_t, int64_t, uint16_t, uint32_t, uint64_t, bela::Time>;
@@ -106,7 +106,7 @@ public:
 
 private:
   friend bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &ec);
-  friend bool LookupFile(bela::io::FD &fd, hazel_result &hr, bela::error_code &ec);
+  friend bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, int64_t offset);
   std::wstring description_;
   bela::flat_hash_map<std::wstring, hazel_value_t> values_;
   int64_t size_{bela::SizeUnInitialized};

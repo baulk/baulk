@@ -98,6 +98,8 @@ public:
   // NewFile resolve pe file
   bool NewFile(std::wstring_view p, bela::error_code &ec);
   bool NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec);
+  //
+  const auto &FD() const { return fd; }
 
 private:
   bela::io::FD fd;

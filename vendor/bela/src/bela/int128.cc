@@ -135,16 +135,14 @@ uint128 operator/(uint128 lhs, uint128 rhs) {
   DivModImpl(lhs, rhs, &quotient, &remainder);
   return quotient;
 }
-#endif
 
-#if !defined(BELA_HAVE_INTRINSIC_INT128)
 uint128 operator%(uint128 lhs, uint128 rhs) {
   uint128 quotient = 0;
   uint128 remainder = 0;
   DivModImpl(lhs, rhs, &quotient, &remainder);
   return remainder;
 }
-#endif
+#endif // !defined(BELA_HAVE_INTRINSIC_INT128)
 
 namespace {
 
@@ -199,7 +197,7 @@ int128 operator%(int128 lhs, int128 rhs) {
     remainder = -remainder;
   return MakeInt128(int128_internal::BitCastToSigned(Uint128High64(remainder)), Uint128Low64(remainder));
 }
-#endif // ABSL_HAVE_INTRINSIC_INT128
+#endif // BELA_HAVE_INTRINSIC_INT128
 
 } // namespace bela
 

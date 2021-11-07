@@ -1299,6 +1299,163 @@ template <typename IntType> struct LookupTables {
         X / 29, X / 30, X / 31, X / 32, X / 33, X / 34, X / 35, X / 36,                                                \
   }
 
+// This kVmaxOverBase is generated with
+//  for (int base = 2; base < 37; ++base) {
+//    bela::uint128 max = std::numeric_limits<bela::uint128>::max();
+//    auto result = max / base;
+//    std::cout << "    MakeUint128(" << bela::uint128High64(result) << "u, "
+//              << bela::uint128Low64(result) << "u),\n";
+//  }
+// See https://godbolt.org/z/aneYsb
+//
+// uint128& operator/=(uint128) is not constexpr, so hardcode the resulting
+// array to avoid a static initializer.
+template <>
+const uint128 LookupTables<uint128>::kVmaxOverBase[] = {
+    0,
+    0,
+    MakeUint128(9223372036854775807u, 18446744073709551615u),
+    MakeUint128(6148914691236517205u, 6148914691236517205u),
+    MakeUint128(4611686018427387903u, 18446744073709551615u),
+    MakeUint128(3689348814741910323u, 3689348814741910323u),
+    MakeUint128(3074457345618258602u, 12297829382473034410u),
+    MakeUint128(2635249153387078802u, 5270498306774157604u),
+    MakeUint128(2305843009213693951u, 18446744073709551615u),
+    MakeUint128(2049638230412172401u, 14347467612885206812u),
+    MakeUint128(1844674407370955161u, 11068046444225730969u),
+    MakeUint128(1676976733973595601u, 8384883669867978007u),
+    MakeUint128(1537228672809129301u, 6148914691236517205u),
+    MakeUint128(1418980313362273201u, 4256940940086819603u),
+    MakeUint128(1317624576693539401u, 2635249153387078802u),
+    MakeUint128(1229782938247303441u, 1229782938247303441u),
+    MakeUint128(1152921504606846975u, 18446744073709551615u),
+    MakeUint128(1085102592571150095u, 1085102592571150095u),
+    MakeUint128(1024819115206086200u, 16397105843297379214u),
+    MakeUint128(970881267037344821u, 16504981539634861972u),
+    MakeUint128(922337203685477580u, 14757395258967641292u),
+    MakeUint128(878416384462359600u, 14054662151397753612u),
+    MakeUint128(838488366986797800u, 13415813871788764811u),
+    MakeUint128(802032351030850070u, 4812194106185100421u),
+    MakeUint128(768614336404564650u, 12297829382473034410u),
+    MakeUint128(737869762948382064u, 11805916207174113034u),
+    MakeUint128(709490156681136600u, 11351842506898185609u),
+    MakeUint128(683212743470724133u, 17080318586768103348u),
+    MakeUint128(658812288346769700u, 10540996613548315209u),
+    MakeUint128(636094623231363848u, 15266270957552732371u),
+    MakeUint128(614891469123651720u, 9838263505978427528u),
+    MakeUint128(595056260442243600u, 9520900167075897608u),
+    MakeUint128(576460752303423487u, 18446744073709551615u),
+    MakeUint128(558992244657865200u, 8943875914525843207u),
+    MakeUint128(542551296285575047u, 9765923333140350855u),
+    MakeUint128(527049830677415760u, 8432797290838652167u),
+    MakeUint128(512409557603043100u, 8198552921648689607u),
+};
+
+// This kVmaxOverBase generated with
+//   for (int base = 2; base < 37; ++base) {
+//    bela::int128 max = std::numeric_limits<bela::int128>::max();
+//    auto result = max / base;
+//    std::cout << "\tMakeInt128(" << bela::int128High64(result) << ", "
+//              << bela::int128Low64(result) << "u),\n";
+//  }
+// See https://godbolt.org/z/7djYWz
+//
+// int128& operator/=(int128) is not constexpr, so hardcode the resulting array
+// to avoid a static initializer.
+template <>
+const int128 LookupTables<int128>::kVmaxOverBase[] = {
+    0,
+    0,
+    MakeInt128(4611686018427387903, 18446744073709551615u),
+    MakeInt128(3074457345618258602, 12297829382473034410u),
+    MakeInt128(2305843009213693951, 18446744073709551615u),
+    MakeInt128(1844674407370955161, 11068046444225730969u),
+    MakeInt128(1537228672809129301, 6148914691236517205u),
+    MakeInt128(1317624576693539401, 2635249153387078802u),
+    MakeInt128(1152921504606846975, 18446744073709551615u),
+    MakeInt128(1024819115206086200, 16397105843297379214u),
+    MakeInt128(922337203685477580, 14757395258967641292u),
+    MakeInt128(838488366986797800, 13415813871788764811u),
+    MakeInt128(768614336404564650, 12297829382473034410u),
+    MakeInt128(709490156681136600, 11351842506898185609u),
+    MakeInt128(658812288346769700, 10540996613548315209u),
+    MakeInt128(614891469123651720, 9838263505978427528u),
+    MakeInt128(576460752303423487, 18446744073709551615u),
+    MakeInt128(542551296285575047, 9765923333140350855u),
+    MakeInt128(512409557603043100, 8198552921648689607u),
+    MakeInt128(485440633518672410, 17475862806672206794u),
+    MakeInt128(461168601842738790, 7378697629483820646u),
+    MakeInt128(439208192231179800, 7027331075698876806u),
+    MakeInt128(419244183493398900, 6707906935894382405u),
+    MakeInt128(401016175515425035, 2406097053092550210u),
+    MakeInt128(384307168202282325, 6148914691236517205u),
+    MakeInt128(368934881474191032, 5902958103587056517u),
+    MakeInt128(354745078340568300, 5675921253449092804u),
+    MakeInt128(341606371735362066, 17763531330238827482u),
+    MakeInt128(329406144173384850, 5270498306774157604u),
+    MakeInt128(318047311615681924, 7633135478776366185u),
+    MakeInt128(307445734561825860, 4919131752989213764u),
+    MakeInt128(297528130221121800, 4760450083537948804u),
+    MakeInt128(288230376151711743, 18446744073709551615u),
+    MakeInt128(279496122328932600, 4471937957262921603u),
+    MakeInt128(271275648142787523, 14106333703424951235u),
+    MakeInt128(263524915338707880, 4216398645419326083u),
+    MakeInt128(256204778801521550, 4099276460824344803u),
+};
+
+// This kVminOverBase generated with
+//  for (int base = 2; base < 37; ++base) {
+//    bela::int128 min = std::numeric_limits<bela::int128>::min();
+//    auto result = min / base;
+//    std::cout << "\tMakeInt128(" << bela::int128High64(result) << ", "
+//              << bela::int128Low64(result) << "u),\n";
+//  }
+//
+// See https://godbolt.org/z/7djYWz
+//
+// int128& operator/=(int128) is not constexpr, so hardcode the resulting array
+// to avoid a static initializer.
+template <>
+const int128 LookupTables<int128>::kVminOverBase[] = {
+    0,
+    0,
+    MakeInt128(-4611686018427387904, 0u),
+    MakeInt128(-3074457345618258603, 6148914691236517206u),
+    MakeInt128(-2305843009213693952, 0u),
+    MakeInt128(-1844674407370955162, 7378697629483820647u),
+    MakeInt128(-1537228672809129302, 12297829382473034411u),
+    MakeInt128(-1317624576693539402, 15811494920322472814u),
+    MakeInt128(-1152921504606846976, 0u),
+    MakeInt128(-1024819115206086201, 2049638230412172402u),
+    MakeInt128(-922337203685477581, 3689348814741910324u),
+    MakeInt128(-838488366986797801, 5030930201920786805u),
+    MakeInt128(-768614336404564651, 6148914691236517206u),
+    MakeInt128(-709490156681136601, 7094901566811366007u),
+    MakeInt128(-658812288346769701, 7905747460161236407u),
+    MakeInt128(-614891469123651721, 8608480567731124088u),
+    MakeInt128(-576460752303423488, 0u),
+    MakeInt128(-542551296285575048, 8680820740569200761u),
+    MakeInt128(-512409557603043101, 10248191152060862009u),
+    MakeInt128(-485440633518672411, 970881267037344822u),
+    MakeInt128(-461168601842738791, 11068046444225730970u),
+    MakeInt128(-439208192231179801, 11419412998010674810u),
+    MakeInt128(-419244183493398901, 11738837137815169211u),
+    MakeInt128(-401016175515425036, 16040647020617001406u),
+    MakeInt128(-384307168202282326, 12297829382473034411u),
+    MakeInt128(-368934881474191033, 12543785970122495099u),
+    MakeInt128(-354745078340568301, 12770822820260458812u),
+    MakeInt128(-341606371735362067, 683212743470724134u),
+    MakeInt128(-329406144173384851, 13176245766935394012u),
+    MakeInt128(-318047311615681925, 10813608594933185431u),
+    MakeInt128(-307445734561825861, 13527612320720337852u),
+    MakeInt128(-297528130221121801, 13686293990171602812u),
+    MakeInt128(-288230376151711744, 0u),
+    MakeInt128(-279496122328932601, 13974806116446630013u),
+    MakeInt128(-271275648142787524, 4340410370284600381u),
+    MakeInt128(-263524915338707881, 14230345428290225533u),
+    MakeInt128(-256204778801521551, 14347467612885206813u),
+};
+
 template <typename IntType>
 const IntType LookupTables<IntType>::kVmaxOverBase[] = X_OVER_BASE_INITIALIZER(std::numeric_limits<IntType>::max());
 
@@ -1409,12 +1566,20 @@ bool safe_strto64_base(std::wstring_view text, int64_t *value, int base) {
   return safe_int_internal<int64_t>(text, value, base);
 }
 
+bool safe_strto128_base(std::wstring_view text, int128 *value, int base) {
+  return safe_int_internal<bela::int128>(text, value, base);
+}
+
 bool safe_strtou32_base(std::wstring_view text, uint32_t *value, int base) {
   return safe_uint_internal<uint32_t>(text, value, base);
 }
 
 bool safe_strtou64_base(std::wstring_view text, uint64_t *value, int base) {
   return safe_uint_internal<uint64_t>(text, value, base);
+}
+
+bool safe_strtou128_base(std::wstring_view text, uint128 *value, int base) {
+  return safe_uint_internal<bela::uint128>(text, value, base);
 }
 
 template <typename IntType> inline bool safe_parse_positive_int(std::string_view text, int base, IntType *value_p) {
@@ -1519,12 +1684,20 @@ bool safe_strto64_base(std::string_view text, int64_t *value, int base) {
   return safe_int_internal<int64_t>(text, value, base);
 }
 
+bool safe_strto128_base(std::string_view text, int128 *value, int base) {
+  return safe_int_internal<bela::int128>(text, value, base);
+}
+
 bool safe_strtou32_base(std::string_view text, uint32_t *value, int base) {
   return safe_uint_internal<uint32_t>(text, value, base);
 }
 
 bool safe_strtou64_base(std::string_view text, uint64_t *value, int base) {
   return safe_uint_internal<uint64_t>(text, value, base);
+}
+
+bool safe_strtou128_base(std::string_view text, uint128 *value, int base) {
+  return safe_uint_internal<bela::uint128>(text, value, base);
 }
 
 } // namespace numbers_internal
