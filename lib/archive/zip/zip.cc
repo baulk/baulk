@@ -384,8 +384,6 @@ bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
   return Initialize(ec);
 }
 
-bool Reader::OpenReader(HANDLE nfd, int64_t size_, bela::error_code &ec) { return OpenReader(nfd, size_, 0, ec); }
-
 bool Reader::OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec) {
   if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");

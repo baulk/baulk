@@ -2,7 +2,7 @@
 #include "../lzmasdk/C/7z.h"
 #include <baulk/allocate.hpp>
 
-namespace baulk::archive::sevenzip {
+namespace baulk::archive::n7z {
 namespace {
 void *SzAlloc(ISzAllocPtr p, size_t size) {
   (void)p;

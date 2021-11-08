@@ -112,7 +112,6 @@ public:
   }
   ~Reader() = default;
   bool OpenReader(std::wstring_view file, bela::error_code &ec);
-  bool OpenReader(HANDLE nfd, int64_t size_, bela::error_code &ec);
   bool OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec);
   std::string_view Comment() const { return comment; }
   const auto &Files() const { return files; }
@@ -122,12 +121,12 @@ public:
 
 private:
   bela::io::FD fd;
-  std::string comment;
-  std::vector<File> files;
   int64_t size{bela::SizeUnInitialized};
   int64_t baseOffset{0};
   int64_t uncompressedSize{0};
   int64_t compressedSize{0};
+  std::string comment;
+  std::vector<File> files;
   bool Initialize(bela::error_code &ec);
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);
@@ -143,9 +142,9 @@ private:
 };
 
 // NewReader
-inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, bela::error_code &ec) {
+inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, int64_t offset, bela::error_code &ec) {
   Reader r;
-  if (!r.OpenReader(fd, size, ec)) {
+  if (!r.OpenReader(fd, size, offset, ec)) {
     return std::nullopt;
   }
   return std::make_optional(std::move(r));
