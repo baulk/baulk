@@ -4,8 +4,9 @@
 
 namespace hazel::zip {
 bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec) const {
+  auto realPosition = file.position + baseOffset;
   uint8_t buf[fileHeaderLen];
-  if (!fd.ReadAt(buf, file.position, ec)) {
+  if (!fd.ReadAt(buf, realPosition, ec)) {
     return false;
   }
   bela::endian::LittenEndian b(buf);
@@ -16,7 +17,7 @@ bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec)
   b.Discard(22);
   auto filenameLen = static_cast<int>(b.Read<uint16_t>());
   auto extraLen = static_cast<int>(b.Read<uint16_t>());
-  auto position = file.position + fileHeaderLen + filenameLen + extraLen;
+  auto position = realPosition + fileHeaderLen + filenameLen + extraLen;
   if (!fd.Seek(position, ec)) {
     return false;
   }
