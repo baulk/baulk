@@ -4,6 +4,7 @@
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
+#include <bela/pe.hpp>
 
 inline std::string TimeString(time_t t) {
   if (t < 0) {
@@ -19,35 +20,11 @@ inline std::string TimeString(time_t t) {
   return buffer;
 }
 
-int wmain(int argc, wchar_t **argv) {
-  if (argc < 2) {
-    bela::FPrintF(stderr, L"usage: %s zipfile\n", argv[0]);
-    return 1;
-  }
+int listArchive(std::wstring_view path, HANDLE fd, int64_t size, int64_t offset) {
   bela::error_code ec;
-  auto fd = bela::io::NewFile(argv[1], ec);
-  if (!fd) {
-    bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
-    return 1;
-  }
-  std::wstring path;
-  if (auto p = bela::RealPathByHandle(fd->NativeFD(), ec)) {
-    path.assign(std::move(*p));
-  }
-  hazel::hazel_result hr;
-  if (!hazel::LookupFile(*fd, hr, ec)) {
-    bela::FPrintF(stderr, L"unable detect file type: %s %s\n", argv[1], ec.message);
-    return 1;
-  }
-  if (!hr.LooksLikeZIP()) {
-    bela::FPrintF(stderr, L"file: %s not zip file\n", argv[1]);
-    return 1;
-  }
-  bela::FPrintF(stderr, L"sizeof(zip::Reader) = %d %d %d\n", sizeof(hazel::zip::Reader), sizeof(std::string),
-                sizeof(std::vector<hazel::zip::File>));
   hazel::zip::Reader zr;
-  if (!zr.OpenReader(fd->NativeFD(), hr.size(), ec)) {
-    bela::FPrintF(stderr, L"open zip file: %s error %s\n", path, ec.message);
+  if (!zr.OpenReader(fd, size, offset, ec)) {
+    bela::FPrintF(stderr, L"open zip file: %s error %s\n", path, ec);
     return 1;
   }
   if (!zr.Comment().empty()) {
@@ -98,4 +75,44 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stdout, L"Files: %d CompressedSize: %d UncompressedSize: %d\n", zr.Files().size(), zr.CompressedSize(),
                 zr.UncompressedSize());
   return 0;
+}
+
+int wmain(int argc, wchar_t **argv) {
+  if (argc < 2) {
+    bela::FPrintF(stderr, L"usage: %s zipfile\n", argv[0]);
+    return 1;
+  }
+  bela::error_code ec;
+  auto fd = bela::io::NewFile(argv[1], ec);
+  if (!fd) {
+    bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
+    return 1;
+  }
+  std::wstring path;
+  if (auto p = bela::RealPathByHandle(fd->NativeFD(), ec)) {
+    path.assign(std::move(*p));
+  }
+  hazel::hazel_result hr;
+  if (!hazel::LookupFile(*fd, hr, ec)) {
+    bela::FPrintF(stderr, L"unable detect file type: %s %s\n", argv[1], ec);
+    return 1;
+  }
+  if (hr.LooksLikeZIP()) {
+
+    return listArchive(path, fd->NativeFD(), hr.size(), 0);
+  }
+  if (!hr.LooksLikePE()) {
+    bela::FPrintF(stderr, L"file: %s not zip file\n", argv[1]);
+    return 1;
+  }
+  bela::pe::File file;
+  if (!file.NewFile(fd->NativeFD(), hr.size(), ec)) {
+    bela::FPrintF(stderr, L"open pe file: %s error: %s\n", argv[1], ec);
+    return 1;
+  }
+  if (file.OverlayLength() < 4) {
+    bela::FPrintF(stderr, L"file: %s not zip file\n", argv[1]);
+    return 1;
+  }
+  return listArchive(path, fd->NativeFD(), hr.size(), file.OverlayOffset());
 }
