@@ -12,7 +12,7 @@ bool untar(std::wstring_view file) {
     return false;
   }
   bela::FPrintF(stderr, L"File size: %d\n", fr->Size());
-  auto wr = baulk::archive::tar::MakeReader(*fr, ec);
+  auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
     tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
@@ -47,19 +47,19 @@ bool untar(std::wstring_view file) {
       continue;
     }
     fd->SetTime(fh->ModTime, ec);
-    //auto size = fh->Size;
-    //char buffer[4096];
-    //while (size > 0) {
-    //  auto minsize = (std::min)(size, 4096ll);
-    //  auto n = tr->Read(buffer, minsize, ec);
-    //  if (n <= 0) {
-    //    break;
-    //  }
-    //  size -= n;
-    //  if (!fd->Write(buffer, n, ec)) {
-    //    fd->Discard();
-    //  }
-    //}
+    // auto size = fh->Size;
+    // char buffer[4096];
+    // while (size > 0) {
+    //   auto minsize = (std::min)(size, 4096ll);
+    //   auto n = tr->Read(buffer, minsize, ec);
+    //   if (n <= 0) {
+    //     break;
+    //   }
+    //   size -= n;
+    //   if (!fd->Write(buffer, n, ec)) {
+    //     fd->Discard();
+    //   }
+    // }
     if (!tr->WriteTo(
             [&](const void *data, size_t len, bela::error_code &ec) -> bool {
               //

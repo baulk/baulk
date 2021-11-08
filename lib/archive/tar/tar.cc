@@ -21,21 +21,6 @@ ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
   }
   return static_cast<ssize_t>(drSize);
 }
-ssize_t FileReader::ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) {
-  if (!PositionAt(pos, ec)) {
-    return -1;
-  }
-  return Read(buffer, len, ec);
-}
-bool FileReader::PositionAt(int64_t pos, bela::error_code &ec) {
-  auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
-  LARGE_INTEGER oli{0};
-  if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
-    ec = bela::make_system_error_code(L"SetFilePointerEx: ");
-    return false;
-  }
-  return true;
-}
 
 bool FileReader::Discard(int64_t len, bela::error_code &ec) {
   auto li = *reinterpret_cast<LARGE_INTEGER *>(&len);

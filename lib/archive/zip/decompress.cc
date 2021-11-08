@@ -6,7 +6,8 @@ namespace baulk::archive::zip {
 
 bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec) const {
   uint8_t buf[fileHeaderLen];
-  if (!fd.ReadAt({buf, fileHeaderLen}, file.position, ec)) {
+  auto realPosition = file.position + baseOffset;
+  if (!fd.ReadAt({buf, fileHeaderLen}, realPosition, ec)) {
     return false;
   }
   bela::endian::LittenEndian b(buf, sizeof(buf));
@@ -17,7 +18,7 @@ bool Reader::Decompress(const File &file, const Writer &w, bela::error_code &ec)
   b.Discard(22);
   auto filenameLen = static_cast<int>(b.Read<uint16_t>());
   auto extraLen = static_cast<int>(b.Read<uint16_t>());
-  auto position = file.position + fileHeaderLen + filenameLen + extraLen;
+  auto position = realPosition + fileHeaderLen + filenameLen + extraLen;
   if (!fd.Seek(position, ec)) {
     return false;
   }

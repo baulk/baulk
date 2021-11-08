@@ -269,8 +269,6 @@ public:
   FileReader &operator=(const FileReader &) = delete;
   ~FileReader();
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
-  ssize_t ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec);
-  bool PositionAt(int64_t pos, bela::error_code &ec);
   bool Discard(int64_t len, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
   int64_t Size() const { return size; }
@@ -282,7 +280,7 @@ private:
   bool needClosed{false};
 };
 std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
-std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, bela::error_code &ec);
+std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, bela::error_code &ec);
 
 class Reader {
 public:

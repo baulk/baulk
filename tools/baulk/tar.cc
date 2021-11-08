@@ -81,7 +81,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec.message);
     return 1;
   }
-  auto wr = baulk::archive::tar::MakeReader(*fr, ec);
+  auto wr = baulk::archive::tar::MakeReader(*fr,0, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
     tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());

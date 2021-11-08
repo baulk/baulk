@@ -77,7 +77,7 @@ int64_t FGetInteger(wchar_t *&rpch) {
   }
   *rpch = '\0';
   int64_t i = 0;
-  bela::SimpleAtoi(pchPrev, &i);
+  (void)bela::SimpleAtoi(pchPrev, &i);
   return i;
 }
 

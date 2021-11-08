@@ -19,13 +19,16 @@ constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
 constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
 
 // MakeReader make reader
-std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, bela::error_code &ec) {
+std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, bela::error_code &ec) {
   uint8_t magic[512];
-  auto n = fd.ReadAt(magic, sizeof(magic), 0, ec);
+  if (!bela::io::Seek(fd.FD(), offset, ec)) {
+    return nullptr;
+  }
+  auto n = fd.Read(magic, sizeof(magic), ec);
   if (n < 4) {
     return nullptr;
   }
-  if (!fd.PositionAt(0, ec)) {
+  if (!bela::io::Seek(fd.FD(), offset, ec)) {
     return nullptr;
   }
   if (memcmp(xzMagic, magic, sizeof(xzMagic)) == 0) {

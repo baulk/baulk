@@ -353,7 +353,7 @@ bool Reader::Initialize(bela::error_code &ec) {
     return false;
   }
   files.reserve(d.directoryRecords);
-  if (!fd.Seek(d.directoryOffset, ec)) {
+  if (!fd.Seek(d.directoryOffset + baseOffset, ec)) {
     return false;
   }
   // 64K avoid group
@@ -384,13 +384,17 @@ bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
   return Initialize(ec);
 }
 
-bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
+bool Reader::OpenReader(HANDLE nfd, int64_t size_, bela::error_code &ec) { return OpenReader(nfd, size_, 0, ec); }
+
+bool Reader::OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec) {
   if (fd) {
     ec = bela::make_error_code(L"The file has been opened, the function cannot be called repeatedly");
     return false;
   }
   fd.Assgin(nfd, false);
-  size = sz;
+  size = size_;
+  baseOffset = offset_;
   return Initialize(ec);
 }
+
 } // namespace baulk::archive::zip
