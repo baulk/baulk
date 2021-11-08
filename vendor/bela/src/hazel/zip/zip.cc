@@ -338,7 +338,7 @@ bool Reader::Initialize(bela::error_code &ec) {
   }
   comment.assign(std::move(d.comment));
   files.reserve(static_cast<size_t>(d.directoryRecords));
-  if (!fd.Seek(d.directoryOffset, ec)) {
+  if (!fd.Seek(d.directoryOffset + baseOffset, ec)) {
     return false;
   }
   bela::Buffer buffer(16 * 1024);
@@ -364,9 +364,16 @@ bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
   return Initialize(ec);
 }
 
-bool Reader::OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec) {
+bool Reader::OpenReader(HANDLE nfd, int64_t size_, bela::error_code &ec) {
   fd.Assgin(nfd, false);
-  size = sz;
+  size = size_;
+  return Initialize(ec);
+}
+
+bool Reader::OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec) {
+  fd.Assgin(nfd, false);
+  size = size_;
+  baseOffset = offset_;
   return Initialize(ec);
 }
 

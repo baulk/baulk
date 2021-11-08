@@ -135,7 +135,8 @@ public:
   }
   ~Reader() = default;
   bool OpenReader(std::wstring_view file, bela::error_code &ec);
-  bool OpenReader(HANDLE nfd, int64_t sz, bela::error_code &ec);
+  bool OpenReader(HANDLE nfd, int64_t size_, bela::error_code &ec);
+  bool OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec);
   std::string_view Comment() const { return comment; }
   const auto &Files() const { return files; }
   int64_t CompressedSize() const { return compressedSize; }
@@ -155,6 +156,7 @@ public:
 
 private:
   bela::io::FD fd;
+  int64_t baseOffset{0};
   std::string comment;
   std::vector<File> files;
   int64_t size{bela::SizeUnInitialized};
