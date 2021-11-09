@@ -75,3 +75,7 @@ target_link_libraries(pb2_test belashl)
 
 add_executable(titlebar_test WIN32 titlebar.cc base.manifest)
 target_link_libraries(titlebar_test belashl)
+
+
+add_executable(neofetch neofetch.cc base.manifest)
+target_link_libraries(neofetch belawin DXGI)
