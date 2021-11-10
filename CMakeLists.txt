@@ -51,7 +51,7 @@ string(TIMESTAMP BAULK_COPYRIGHT_YEAR "%Y")
 # BAULK_REFNAME maybe defined by ci
 if("${BAULK_REFNAME}" STREQUAL "none")
   if(DEFINED ENV{GITHUB_REF})
-    set(BAULK_REFNAME $ENV{GITHUB_REF})
+    set(BAULK_REFNAME $ENV{GITHUB_REF_NAME})
   endif()
 endif()
 

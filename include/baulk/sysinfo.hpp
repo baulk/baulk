@@ -1,8 +1,33 @@
 #ifndef BAULK_SYSINFO_HPP
 #define BAULK_SYSINFO_HPP
 #include <bela/base.hpp>
+#include <bela/codecvt.hpp>
+
+#if defined(_M_X64) || defined(_M_X86)
+#include <intrin.h>
+#elif defined(_M_ARM64)
+#else
+#endif
 
 namespace baulk::osinfo {
+
+#if defined(_M_X64) || defined(_M_X86)
+#include <intrin.h>
+inline std::wstring resolve_cpu_brand() {
+  int cpubrand[4 * 3];
+  __cpuid(&cpubrand[0], 0x80000002);
+  __cpuid(&cpubrand[4], 0x80000003);
+  __cpuid(&cpubrand[8], 0x80000004);
+  auto cpu_brand = reinterpret_cast<const char *>(cpubrand);
+  return bela::encode_into<char, wchar_t>(
+      {reinterpret_cast<const char *>(cpubrand), strnlen(cpu_brand, sizeof(cpubrand))});
+}
+
+#elif defined(_M_ARM64)
+inline std::wstring resolve_cpu_brand() { return L"ARM64"; }
+#else
+inline std::wstring resolve_cpu_brand() { return L"unknown"; }
+#endif
 
 struct monitor {
   std::wstring device_name;

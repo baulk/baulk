@@ -112,8 +112,8 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   if (!detect_baulk_revision(releasename)) {
     bela::FPrintF(stderr, L"unable detect baulk meta, use baulk-update release name '%s'\n", releasename);
   }
-  constexpr std::wstring_view releaseprefix = L"refs/tags/";
-  if (!bela::StartsWith(releasename, releaseprefix)) {
+  constexpr std::wstring_view releaseprefix = L"refs/heads/";
+  if (bela::StartsWith(releasename, releaseprefix)) {
     DbgPrint(L"baulk refname '%s' not public release", releasename);
     if (!IsForceMode) {
       return false;

@@ -2,6 +2,23 @@
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
 #include <dxgi.h>
+
+#if defined(_M_X64) || defined(_M_X86)
+#include <intrin.h>
+inline std::wstring resolve_cpu_brand() {
+  int cpubrand[4 * 3];
+  __cpuid(&cpubrand[0], 0x80000002);
+  __cpuid(&cpubrand[4], 0x80000003);
+  __cpuid(&cpubrand[8], 0x80000004);
+  auto cpu_brand = reinterpret_cast<const char *>(cpubrand);
+  return bela::encode_into<char, wchar_t>(
+      {reinterpret_cast<const char *>(cpubrand), strnlen(cpu_brand, sizeof(cpubrand))});
+}
+
+#else
+inline std::wstring resolve_cpu_brand() { return L"ARM64"; }
+#endif
+
 /*
 
            .-/+oossssoo+/-.               sk@ostechnix
@@ -120,6 +137,13 @@ void find_graphis_device() {
   }
 }
 
+void find_processor() {
+  bela::FPrintF(stderr, L"CPU: %s\n", resolve_cpu_brand());
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  bela::FPrintF(stderr, L"dwNumberOfProcessors %d\n", si.dwNumberOfProcessors);
+}
+
 // 10,132,217
 // 243,243,243
 int wmain() {
@@ -134,15 +158,16 @@ int wmain() {
   bela::FPrintF(stderr, L"Windows 10\n\x1b[38;5;39m%s\x1b[0m\n", windows10);
   find_monitors();
   find_graphis_device();
-//   DWORD dwSize = 0;
-//   GetLogicalProcessorInformationEx(RelationAll, nullptr, &dwSize);
-//   std::vector<char> data;
-//   data.resize(dwSize);
-//   auto N = dwSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX);
-//   auto p = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(data.data());
-//   GetLogicalProcessorInformationEx(RelationAll, p, &dwSize);
-//   for (int i = 0; i < N; i++) {
-//     bela::FPrintF(stderr, L"Logical core: %d %d\n", i, static_cast<int>(p[i].Size));
-//   }
+  find_processor();
+  //   DWORD dwSize = 0;
+  //   GetLogicalProcessorInformationEx(RelationAll, nullptr, &dwSize);
+  //   std::vector<char> data;
+  //   data.resize(dwSize);
+  //   auto N = dwSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX);
+  //   auto p = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(data.data());
+  //   GetLogicalProcessorInformationEx(RelationAll, p, &dwSize);
+  //   for (int i = 0; i < N; i++) {
+  //     bela::FPrintF(stderr, L"Logical core: %d %d\n", i, static_cast<int>(p[i].Size));
+  //   }
   return 0;
 }

@@ -25,25 +25,14 @@ jobs:
         baulk_target: [baulk-vs2022-win64, baulk-vs2022-win32, baulk-vs2022-arm64]
         include:
           - baulk_target: baulk-vs2022-win64
-            msvc_arch: amd64
+            short_target: win64
           - baulk_target: baulk-vs2022-win32
-            msvc_arch: amd64_x86
+            short_target: win32
           - baulk_target: baulk-vs2022-arm64
-            msvc_arch: amd64_arm64
+            short_target: arm64
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
       - name: compile-baulk
-        shell: cmd
-        env:
-          msvc_arch: ${{ matrix.msvc_arch }}
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsall.bat" %msvc_arch%
-          set BAULK_REFNAME=${{ github.ref }}
-          mkdir build
-          cd build
-          set CC=cl
-          set CXX=cl
-          cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-          ninja all
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/build.ps1" -Target "${{ matrix.short_target }}"
