@@ -1,5 +1,25 @@
 #!/usr/bin/env pwsh
 
+param(
+    [ValidateSet("win64", "win32", "arm64")]
+    [string]$Target = "win64",
+    [string]$RefName = ""
+)
+
+$ArchitecturesAlloweds = @{
+    "win64" = "x64";
+    "win32" = "";
+    "arm64" = "arm64";
+}
+$ArchitecturesInstallIn64BitModes = @{
+    "win64" = "x64";
+    "win32" = "";
+    "arm64" = "arm64";
+}
+
+$ArchitecturesAllowed = $ArchitecturesAlloweds[$Target]
+$ArchitecturesInstallIn64BitMode = $ArchitecturesInstallIn64BitModes[$Target]
+
 $BaulkRoot = Split-Path $PSScriptRoot
 $BaulkIss = Join-Path $PSScriptRoot "baulk.iss"
 Set-Location "$BaulkRoot/build"
@@ -9,33 +29,10 @@ cpack -G ZIP
 $item = Get-Item Baulk*.zip
 $obj = Get-FileHash -Algorithm SHA256 $item.FullName
 $baseName = Split-Path -Leaf $item.FullName
-$env:BAULK_ASSET_NAME = "$baseName"
 $hashtext = $obj.Algorithm + ":" + $obj.Hash.ToLower()
 $hashtext | Out-File -Encoding utf8 -FilePath "$baseName.sum"
-Write-Host "$env:BAULK_ASSET_NAME`n$hashtext"
-# create setup
-$MSVC_ARCH = "$env:MSVC_ARCH"
-switch ($MSVC_ARCH) {
-    "amd64_arm64" {
-        $ArchitecturesAllowed = "arm64"
-        $ArchitecturesInstallIn64BitMode = "arm64"
-        break
-    }
-    "arm64" {
-        $ArchitecturesAllowed = "arm64"
-        $ArchitecturesInstallIn64BitMode = "arm64"
-        break
-    }
-    "amd64" {
-        $ArchitecturesAllowed = "x64"
-        $ArchitecturesInstallIn64BitMode = "x64"
-        break
-    }
-    Default {
-        $ArchitecturesAllowed = ''
-        $ArchitecturesInstallIn64BitMode = ''
-    }
-}
+Write-Host "$baseName`n$hashtext"
+
 Write-Host "build $BaulkSetup.exe arch: $ArchitecturesAllowed install mode: $ArchitecturesInstallIn64BitMode"
 $InnoCli = Get-Command -ErrorAction SilentlyContinue -CommandType Application "iscc.exe"
 if ($null -ne $InnoCli) {
@@ -44,6 +41,7 @@ if ($null -ne $InnoCli) {
 else {
     $InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
 }
+
 $BaseNameSuffix = $ArchitecturesInstallIn64BitMode
 if ($BaseNameSuffix.Length -eq 0) {
     $BaseNameSuffix = "ia32"
