@@ -6,6 +6,10 @@
 #if defined(_M_X64) || defined(_M_X86)
 #include <intrin.h>
 inline std::wstring resolve_cpu_brand() {
+  int cpuinfo[4];
+  __cpuidex(cpuinfo, 0x4, 0);
+  auto ncores = (cpuinfo[0] >> 26) + 1;
+  bela::FPrintF(stderr, L"cores: %d\n", ncores);
   int cpubrand[4 * 3];
   __cpuid(&cpubrand[0], 0x80000002);
   __cpuid(&cpubrand[4], 0x80000003);

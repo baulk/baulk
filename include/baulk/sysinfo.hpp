@@ -11,8 +11,13 @@
 
 namespace baulk::osinfo {
 
+struct cpu_info {
+  std::wstring brand;
+  int cores{0};
+  int threads{0};
+};
+
 #if defined(_M_X64) || defined(_M_X86)
-#include <intrin.h>
 inline std::wstring resolve_cpu_brand() {
   int cpubrand[4 * 3];
   __cpuid(&cpubrand[0], 0x80000002);
