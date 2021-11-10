@@ -7,12 +7,12 @@ param(
 )
 
 $ArchitecturesAlloweds = @{
-    "win64" = "amd64";
+    "win64" = "x64";
     "win32" = "";
     "arm64" = "arm64";
 }
 $ArchitecturesInstallIn64BitModes = @{
-    "win64" = "amd64";
+    "win64" = "x64";
     "win32" = "";
     "arm64" = "arm64";
 }
