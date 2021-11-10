@@ -99,7 +99,7 @@ void find_monitors() {
 }
 
 // https://docs.microsoft.com/zh-cn/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi?redirectedfrom=MSDN#WARP_new_for_Win8
-void find_graphis_device() {
+void find_graphics_device() {
   IDXGIFactory1 *factory{nullptr};
   IDXGIAdapter1 *adapter{nullptr};
   auto closer = bela::finally([&] {
@@ -161,7 +161,7 @@ int wmain() {
   }
   bela::FPrintF(stderr, L"Windows 10\n\x1b[38;5;39m%s\x1b[0m\n", windows10);
   find_monitors();
-  find_graphis_device();
+  find_graphics_device();
   find_processor();
   //   DWORD dwSize = 0;
   //   GetLogicalProcessorInformationEx(RelationAll, nullptr, &dwSize);
