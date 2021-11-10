@@ -6,6 +6,7 @@
 #if defined(_M_X64) || defined(_M_X86)
 #include <intrin.h>
 #elif defined(_M_ARM64)
+#include <arm64_neon.h>
 #else
 #endif
 
@@ -29,6 +30,7 @@ inline std::wstring resolve_cpu_brand() {
 }
 
 #elif defined(_M_ARM64)
+// _ReadStatusReg
 inline std::wstring resolve_cpu_brand() { return L"ARM64"; }
 #else
 inline std::wstring resolve_cpu_brand() { return L"unknown"; }

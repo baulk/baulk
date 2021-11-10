@@ -148,6 +148,22 @@ void find_processor() {
   bela::FPrintF(stderr, L"dwNumberOfProcessors %d\n", si.dwNumberOfProcessors);
 }
 
+void find_processor2() {
+
+  char answer[64] = "Error Reading CPU Name from Registry!", inBuffer[64] = "";
+  const char *csName = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+  HKEY hKey;
+  DWORD gotType, gotSize = BUFSIZ;
+  if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, csName, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+    if (!RegQueryValueExA(hKey, "ProcessorNameString", nullptr, &gotType, (PBYTE)(inBuffer), &gotSize)) {
+      if ((gotType == REG_SZ) && strlen(inBuffer))
+        strcpy(answer, inBuffer);
+    }
+    RegCloseKey(hKey);
+  }
+  bela::FPrintF(stderr, L"CPU: %s\n", answer);
+}
+
 // 10,132,217
 // 243,243,243
 int wmain() {
@@ -163,6 +179,7 @@ int wmain() {
   find_monitors();
   find_graphics_device();
   find_processor();
+  find_processor2();
   //   DWORD dwSize = 0;
   //   GetLogicalProcessorInformationEx(RelationAll, nullptr, &dwSize);
   //   std::vector<char> data;
