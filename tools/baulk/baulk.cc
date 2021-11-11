@@ -128,6 +128,9 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       {L"sha256sum", baulk::commands::cmd_sha256sum, false},  // sha256sum
       {L"untar", baulk::commands::cmd_untar, false},          // untar
       {L"unzip", baulk::commands::cmd_unzip, false},          // unzip
+      {L"extract", baulk::commands::cmd_extract, false},      // extract
+      {L"e", baulk::commands::cmd_extract, false},            // extract command
+      {L"brand", baulk::commands::cmd_brand, false},          // brand
   };
   auto subcmd = pa.Argv().front();
   for (const auto &c : cmdmaps) {

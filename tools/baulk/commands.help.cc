@@ -40,6 +40,8 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
+  extact           Extract files according to the detected archive format
+  brand            Display os device details
 
 Alias:
   h  help
@@ -92,6 +94,9 @@ int cmd_help(const baulk::commands::argv_t &argv) {
       {L"bucket", baulk::commands::usage_bucket},         // bucket command
       {L"untar", baulk::commands::usage_untar},           // untar
       {L"unzip", baulk::commands::usage_unzip},           // unzip
+      {L"extract", baulk::commands::usage_extract},       // extract
+      {L"e", baulk::commands::usage_extract},             // extract
+      {L"brand", baulk::commands::usage_brand},           // brand
   };
   auto subcmd = argv[0];
   for (const auto &u : usages) {

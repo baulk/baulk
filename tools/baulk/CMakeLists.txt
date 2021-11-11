@@ -5,21 +5,23 @@ add_executable(
   7z.cc
   baulk.cc
   bucket.cc
+  commands.b3sum.cc
+  commands.brand.cc
+  commands.bucket.cc
+  commands.cleancache.cc
+  commands.extract.cc
   commands.freeze.cc
   commands.help.cc
   commands.info.cc
   commands.install.cc
   commands.list.cc
   commands.search.cc
+  commands.sha256sum.cc
   commands.uninstall.cc
   commands.untar.cc
   commands.unzip.cc
   commands.update.cc
   commands.upgrade.cc
-  commands.b3sum.cc
-  commands.sha256sum.cc
-  commands.cleancache.cc
-  commands.bucket.cc
   commands.version.cc
   compiler.cc
   context.cc
