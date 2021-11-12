@@ -85,7 +85,7 @@ fnOpenNcThemeData _OpenNcThemeData = nullptr;
 fnShouldSystemUseDarkMode _ShouldSystemUseDarkMode = nullptr;
 fnSetPreferredAppMode _SetPreferredAppMode = nullptr;
 
-bela::semver::version system_version;
+bela::windows_version system_version;
 bool is_mica_materials_enabled{false};
 bool is_title_bar_customization_enabled{false};
 bool dark_mode_supported{false};
