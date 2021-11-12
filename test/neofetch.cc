@@ -49,7 +49,6 @@ llllllllllllll  lllllllllllllllllll
                        ````''*::cll
                                  ``)";
 
-
 // 10,132,217
 // 243,243,243
 int wmain() {
@@ -75,5 +74,9 @@ int wmain() {
   const auto mb = 1024 * 1024ull;
   bela::FPrintF(stderr, L"Memory: %dMiB / %dMiB %d%%\n", detector.MemStatus().avail / mb,
                 detector.MemStatus().total / mb, detector.MemStatus().mem_load);
+  baulk::brand::Render render;
+  detector.Swap(render);
+  auto buffer = render.Draw();
+  bela::FPrintF(stderr, L"%s\n", buffer);
   return 0;
 }
