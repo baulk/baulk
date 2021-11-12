@@ -3,7 +3,6 @@
 #define BAULK_UNSCREW_WINDOW_HPP
 #include <bela/base.hpp>
 #include <baulk/graphics.hpp>
-#include <baulk/win32.hpp>
 #include "resource.h"
 
 namespace baulk::unscrew {

@@ -12,7 +12,6 @@
 #include <vector>
 #include <bela/phmap.hpp>
 #include <bela/base.hpp>
-#include <bela/semver.hpp>
 #include <baulk/graphics.hpp>
 #include "resource.h"
 
@@ -138,7 +137,7 @@ private:
   ID2D1SolidColorBrush *textBrush{nullptr};
   ID2D1SolidColorBrush *borderBrush{nullptr};
   baulk::windows::PersonalizeThemes themes;
-  bela::version systemVersion;
+  bela::windows_version systemVersion;
   HICON hIcon{nullptr};
   /// member
   HINSTANCE hInst{nullptr};

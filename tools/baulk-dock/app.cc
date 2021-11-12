@@ -21,7 +21,6 @@
 #include <bela/match.hpp>
 #include <strsafe.h>
 #include <vsstyle.h>
-#include <baulk/win32.hpp>
 #include "app.hpp"
 
 namespace baulk::dock {
@@ -182,7 +181,7 @@ MainWindow::~MainWindow() {
 LRESULT MainWindow::InitializeWindow() {
   bela::error_code ec;
   themes.Load(ec);
-  systemVersion = baulk::windows::version();
+  systemVersion = bela::windows::version();
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);

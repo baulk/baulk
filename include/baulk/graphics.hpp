@@ -2,9 +2,15 @@
 #define BAULK_GRAPHICS_HPP
 #include <bela/base.hpp>
 #include <bela/color.hpp>
+#include <bela/win32.hpp>
 #include <dwmapi.h>
 
 namespace baulk::windows {
+constexpr bool mica_materials_enabled(const bela::windows_version &ver) { return ver >= bela::windows::win11_21h2; }
+constexpr bool title_bar_customization_enabled(const bela::windows_version &ver) {
+  return ver >= bela::windows::win10_21h1;
+}
+
 namespace dwm {
 // Window attributes
 enum window11_attributes {

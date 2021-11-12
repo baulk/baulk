@@ -2,8 +2,9 @@
 #define BAULK_BRAND_HPP
 #include <bela/base.hpp>
 #include <bela/codecvt.hpp>
+#include <bela/str_join.hpp>
 #include <bela/terminal.hpp>
-#include "win32.hpp"
+#include <bela/win32.hpp>
 
 namespace baulk::brand {
 namespace brand_internal {
@@ -114,13 +115,13 @@ public:
 private:
   friend class Detector;
   meta_lines lines;
-  bela::version version;
+  bela::windows_version version;
   size_t index{0};
   void append_meta_line(std::wstring_view tab, std::wstring &&content) {
     lines.emplace_back(std::pair<std::wstring, std::wstring>(std::wstring(tab), std::move(content)));
   }
   void end_meta_line(std::wstring &text) {
-    text.append(L"  ");
+    text.append(L"    ");
     if (index < lines.size()) {
       const auto &ml = lines[index];
       if (!ml.first.empty()) {
@@ -156,11 +157,21 @@ private:
 };
 
 void Detector::Swap(Render &render) const {
-  render.version = baulk::windows::version();
+  auto version = bela::windows::version();
+  render.version = version;
   auto edition = brand_internal::registry_string(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)",
                                                  L"EditionID");
-  render.append_meta_line(L"OS", bela::StringCat(L"Windows 11 ", edition, L" Build: ", render.version.patch));
+  render.append_meta_line(L"OS", bela::StringCat(L"Windows 11 ", edition));
+  render.append_meta_line(L"Kernel", bela::StringCat(version.major, L".", version.minor, L".", version.build));
   render.append_meta_line(L"CPU", processor());
+
+  // Resolution
+  std::vector<std::wstring> resolution;
+  for (const auto &m : monitors) {
+    resolution.emplace_back(m());
+  }
+  render.append_meta_line(L"Resolution", bela::StrJoin(resolution, L", "));
+
   std::wstring color_line1;
   std::wstring color_line2;
   for (int i = 0; i < 8; i++) {
