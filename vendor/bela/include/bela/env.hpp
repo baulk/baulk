@@ -19,6 +19,7 @@ template <DWORD Len = 256> bool LookupEnv(std::wstring_view key, std::wstring &v
   val.resize(Len);
   auto len = GetEnvironmentVariableW(key.data(), val.data(), Len);
   if (len == 0) {
+    val.clear();
     return !(GetLastError() == ERROR_ENVVAR_NOT_FOUND);
   }
   if (len < Len) {
