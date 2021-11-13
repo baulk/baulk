@@ -1,7 +1,6 @@
 //
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
-#include <dxgi.h>
 #include <baulk/brand.hpp>
 
 /*

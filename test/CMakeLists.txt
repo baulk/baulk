@@ -78,4 +78,4 @@ target_link_libraries(titlebar_test belashl)
 
 
 add_executable(neofetch neofetch.cc base.manifest)
-target_link_libraries(neofetch belawin DXGI)
+target_link_libraries(neofetch belatime belawin DXGI)

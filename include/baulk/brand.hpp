@@ -4,8 +4,10 @@
 #include <bela/codecvt.hpp>
 #include <bela/str_join.hpp>
 #include <bela/terminal.hpp>
+#include <bela/time.hpp>
 #include <bela/win32.hpp>
 #include <bela/env.hpp>
+#include <dxgi.h>
 
 namespace baulk::brand {
 namespace brand_internal {
@@ -128,9 +130,19 @@ struct monitor {
   }
 };
 
+struct storage {
+  std::wstring diskDevice;
+  uint64_t total{0};
+  uint64_t avail{0};
+  uint8_t latter{0};
+  std::wstring operator()() const {
+    return bela::StringCat(diskDevice, L" ", (total - avail) / brand_internal::GiB, L"GB / ",
+                           total / brand_internal::GiB, L"GB (", (total - avail) * 100 / total, L"%)");
+  }
+};
+
 struct memory_status {
   uint64_t total{0};
-  uint64_t used{0};
   uint64_t avail{0};
   uint32_t load{0};
 };
@@ -143,7 +155,7 @@ class Render {
 public:
   Render() = default;
   std::wstring Draw() {
-    if (version > bela::windows::win11_21h2) {
+    if (version >= bela::windows::win11_21h2) {
       return DrawWindows11();
     }
     return DrawWindows10();
@@ -178,8 +190,16 @@ inline std::wstring Render::DrawWindows10() {
   std::wstring text;
   text.resize(4096);
   auto maxlines = (std::max)(std::size(brand_internal::windows10_art_lines), lines.size());
+  text.append(L" ")
+      .append(brand_internal::pop_art_line(std::size(brand_internal::windows10_art_lines)))
+      .append(brand_internal::border)
+      .append(L"\x1b[38;2;255;215;0m")
+      .append(bela::GetEnv(L"USERNAME"))
+      .append(L"\x1b[0m@\x1b[38;2;0;191;255m")
+      .append(bela::GetEnv(L"COMPUTERNAME"))
+      .append(L"\x1b[0m\n");
   for (size_t i = 0; i < maxlines; i++) {
-    text.append(L" \x1b[38;2;109;195;255m")
+    text.append(L" \x1b[38;2;0;191;255m")
         .append(brand_internal::pop_art_line(i))
         .append(L"\x1b[0m")
         .append(brand_internal::border);
@@ -192,6 +212,16 @@ inline std::wstring Render::DrawWindows11() {
   index = 0;
   std::wstring text;
   text.resize(4096);
+  text.append(L" ")
+      .append(brand_internal::padding)
+      .append(L"  ")
+      .append(brand_internal::padding)
+      .append(brand_internal::border)
+      .append(L"\x1b[38;2;255;215;0m")
+      .append(bela::GetEnv(L"USERNAME"))
+      .append(L"\x1b[0m@\x1b[38;2;0;191;255m")
+      .append(bela::GetEnv(L"COMPUTERNAME"))
+      .append(L"\x1b[0m\n");
   for (size_t i = 0; i < 6; i++) {
     text.append(L" ")
         .append(brand_internal::windows_colors[0])
@@ -247,9 +277,11 @@ private:
   bool detect_processor(bela::error_code &ec);
   bool detect_monitors(bela::error_code &ec);
   bool detect_graphics(bela::error_code &ec);
+  bool detect_storages(bela::error_code &ec);
   baulk::brand::processor processor;
   std::vector<monitor> monitors;
   std::vector<std::wstring> graphics;
+  std::vector<storage> storages;
   memory_status mem_status;
 };
 
@@ -275,9 +307,9 @@ void Detector::Swap(Render &render) const {
       !featurePack.empty()) {
     render.append_meta_line(L"FeatureExperiencePack", std::move(featurePack));
   }
-  render.append_meta_line(L"CPU", processor());
-  render.append_meta_line(L"GPU", bela::StrJoin(graphics, L", "));
+  render.append_meta_line(L"Uptime", bela::FormatDuration(bela::Milliseconds(GetTickCount64())));
   render.append_meta_line(L"Terminal", brand_internal::TerminalName());
+
   // Resolution
   std::vector<std::wstring> resolution;
   for (const auto &m : monitors) {
@@ -285,8 +317,15 @@ void Detector::Swap(Render &render) const {
   }
   render.append_meta_line(L"Resolution", bela::StrJoin(resolution, L", "));
   render.append_meta_line(L"WM", L"Desktop Window Manager");
-  render.append_meta_line(L"RAM", bela::StringCat(mem_status.used / MiB, L" MB / ", mem_status.total / MiB,
-                                                  L" MB (Used ", mem_status.load, L"%)"));
+  render.append_meta_line(L"CPU", processor());
+  render.append_meta_line(L"GPU", bela::StrJoin(graphics, L", "));
+  render.append_meta_line(L"RAM", bela::StringCat((mem_status.total - mem_status.avail) / MiB, L"MB / ",
+                                                  mem_status.total / MiB, L"MB (", mem_status.load, L"%)"));
+  std::vector<std::wstring> ss;
+  for (const auto &so : storages) {
+    ss.emplace_back(so());
+  }
+  render.append_meta_line(L"Disk", bela::StrJoin(ss, L", "));
   // COLOR
   std::wstring color_line1;
   std::wstring color_line2;
@@ -311,13 +350,13 @@ inline bool Detector::Execute(bela::error_code &ec) {
   if (!detect_graphics(ec)) {
     return false;
   }
+  detect_storages(ec);
   MEMORYSTATUSEX ms{0};
   ms.dwLength = sizeof(MEMORYSTATUSEX);
   GlobalMemoryStatusEx(&ms);
   mem_status.load = ms.dwMemoryLoad;
   mem_status.avail = ms.ullAvailPhys;
   mem_status.total = ms.ullTotalPhys;
-  mem_status.used = ms.ullTotalPhys - ms.ullAvailPhys;
   return true;
 }
 
@@ -414,16 +453,46 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
       continue;
     }
     graphics.emplace_back(desc1.Description);
-    UINT displayNum = 0;
-    IDXGIOutput *out = nullptr;
-    while (adapter->EnumOutputs(displayNum, &out) != DXGI_ERROR_NOT_FOUND) {
-      displayNum++;
-      DXGI_OUTPUT_DESC desc;
-      if (out->GetDesc(&desc) != S_OK) {
-        continue;
-      }
-      // graphics.emplace_back(desc.DeviceName);
+  }
+  return true;
+}
+
+inline bool Detector::detect_storages(bela::error_code &ec) {
+  auto detect_drive = [&](uint8_t latter) {
+    auto diskPath = bela::StringCat(static_cast<wchar_t>(latter), L":\\");
+    switch (GetDriveType(diskPath.data())) {
+    case DRIVE_REMOVABLE:
+      break;
+    case DRIVE_FIXED:
+      break;
+    case DRIVE_RAMDISK:
+      break;
+    default:
+      return;
     }
+    ULARGE_INTEGER freeBytesForCaller{.QuadPart = 0};
+    ULARGE_INTEGER total{.QuadPart = 0};
+    ULARGE_INTEGER avail{.QuadPart = 0};
+    if (GetDiskFreeSpaceExW(diskPath.data(), &freeBytesForCaller, &total, &avail) != TRUE) {
+      return;
+    }
+    storages.emplace_back(storage{
+        .diskDevice = diskPath.substr(0, 2),
+        .total = total.QuadPart,
+        .avail = avail.QuadPart,
+    });
+  };
+
+  auto N = GetLogicalDrives();
+  for (size_t i = 0; i < sizeof(N) * 8; i++) {
+    if (N == 0) {
+      break;
+    }
+    if ((N & 1) != 0) {
+      auto latter = 'A' + i;
+      detect_drive(static_cast<uint8_t>(latter));
+    }
+    N >>= 1;
   }
   return true;
 }

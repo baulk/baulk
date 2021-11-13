@@ -45,6 +45,7 @@ target_link_libraries(
   belatime
   winhttp
   ws2_32
+  DXGI
   Msi)
 
 if(BAULK_ENABLE_LTO)
