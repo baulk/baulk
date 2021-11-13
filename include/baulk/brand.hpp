@@ -5,6 +5,7 @@
 #include <bela/str_join.hpp>
 #include <bela/terminal.hpp>
 #include <bela/win32.hpp>
+#include <bela/env.hpp>
 
 namespace baulk::brand {
 namespace brand_internal {
@@ -12,13 +13,79 @@ namespace brand_internal {
 // L"\x1b[48;5;33m", // 7
 // L"\x1b[48;5;33m", // 7
 // L"\x1b[48;5;32m", // 8
-constexpr const std::wstring_view colorTable[] = {
+//
+// L"\x1b[48;2;109;195;255m", // 5
+// L"\x1b[48;2;85;185;255m",  // 6
+// L"\x1b[48;2;61;175;255m",  // 7
+// L"\x1b[48;2;36;165;255m",  // 8
+
+#if defined(_M_X64)
+constexpr std::wstring_view update_stack_subkey =
+    L"SOFTWARE\\Microsoft\\Windows "
+    L"NT\\CurrentVersion\\Update\\TargetingInfo\\Installed\\Windows.UpdateStackPackage.amd64";
+#elif defined(_M_ARM64)
+constexpr std::wstring_view update_stack_subkey =
+    L"SOFTWARE\\Microsoft\\Windows "
+    L"NT\\CurrentVersion\\Update\\TargetingInfo\\Installed\\Windows.UpdateStackPackage.arm64";
+#else
+constexpr std::wstring_view update_stack_subkey =
+    L"SOFTWARE\\Microsoft\\Windows "
+    L"NT\\CurrentVersion\\Update\\TargetingInfo\\Installed\\Windows.UpdateStackPackage.x86";
+#endif
+
+constexpr const std::wstring_view windows_colors[] = {
     L"\x1b[48;2;109;195;255m", // 5
-    L"\x1b[48;2;85;185;255m",  // 6
+    L"\x1b[48;2;61;175;255m",  // 7
     L"\x1b[48;2;61;175;255m",  // 7
     L"\x1b[48;2;36;165;255m",  // 8
 };
-constexpr std::wstring_view space = L"                ";
+
+constexpr const std::wstring_view border = L"      ";
+constexpr const std::wstring_view padding = L"                ";
+constexpr const std::wstring_view windows10_art_lines[] = {
+    //
+    L"                         ....::::", // 0
+    L"                 ....::::::::::::", // 1
+    L"        ....:::: ::::::::::::::::", // 2
+    L"....:::::::::::: ::::::::::::::::", // 3
+    L":::::::::::::::: ::::::::::::::::", // 4
+    L":::::::::::::::: ::::::::::::::::", // 5
+    L":::::::::::::::: ::::::::::::::::", // 6
+    L":::::::::::::::: ::::::::::::::::", // 7
+    L"................ ................", // 8
+    L":::::::::::::::: ::::::::::::::::", // 9
+    L":::::::::::::::: ::::::::::::::::", // 10
+    L":::::::::::::::: ::::::::::::::::", // 11
+    L"'''':::::::::::: ::::::::::::::::", // 12
+    L"        '''':::: ::::::::::::::::", // 13
+    L"                 ''''::::::::::::", // 14
+    L"                         ''''::::", // 15
+    L"                                 ", // 16
+    L"                                 ", // 17
+    L"                                 ", // 18
+};
+
+inline std::wstring_view pop_art_line(size_t i) {
+  constexpr auto L = std::size(windows10_art_lines);
+  if (i < L) {
+    return windows10_art_lines[i];
+  }
+  return windows10_art_lines[L - 1];
+}
+
+constexpr auto TiB = 1024 * 1024 * 1024 * 1024ull;
+constexpr auto GiB = 1024 * 1024 * 1024ull;
+constexpr auto MiB = 1024 * 1024ull;
+
+inline std::wstring TerminalName() {
+  if (auto ws = bela::GetEnv(L"WT_SESSION"); !ws.empty()) {
+    return L"Windows Terminal";
+  }
+  if (auto tm = bela::GetEnv(L"TERM_PROGRAM"); !tm.empty()) {
+    return tm;
+  }
+  return L"conhost";
+}
 
 inline std::wstring registry_string(HKEY hKey, std::wstring_view subKey, std::wstring_view valName) {
   HKEY hCurrent = nullptr;
@@ -36,14 +103,13 @@ inline std::wstring registry_string(HKEY hKey, std::wstring_view subKey, std::ws
   }
   return L"";
 }
-
 } // namespace brand_internal
 
 struct processor {
   std::wstring brand;
   int cores{0};
   int logical_cores{0};
-  std::wstring operator()() const { return bela::StringCat(brand, L" ", cores, L"/", logical_cores, L" processor"); }
+  std::wstring operator()() const { return bela::StringCat(brand, L" ", cores, L"C", logical_cores, L"T"); }
 };
 
 struct monitor {
@@ -55,17 +121,18 @@ struct monitor {
   // Resolution:
   std::wstring operator()() const {
     if (orientation != 0) {
-      return bela::StringCat(width, L"x", height, L" ", frequency, L"Hz <LogPixels:", pixels, L" Orientation: ",
+      return bela::StringCat(width, L"x", height, L" ", frequency, L"Hz <LogPixels: ", pixels, L" Orientation: ",
                              orientation, L"°>");
     }
-    return bela::StringCat(width, L"x", height, L" ", frequency, L"Hz <LogPixels:", pixels, L">");
+    return bela::StringCat(width, L"x", height, L" ", frequency, L"Hz <LogPixels: ", pixels, L">");
   }
 };
 
 struct memory_status {
   uint64_t total{0};
+  uint64_t used{0};
   uint64_t avail{0};
-  uint32_t mem_load{0};
+  uint32_t load{0};
 };
 
 using meta_line = std::pair<std::wstring, std::wstring>;
@@ -76,52 +143,23 @@ class Render {
 public:
   Render() = default;
   std::wstring Draw() {
-    std::wstring text;
-    text.resize(4096);
-    for (size_t i = 0; i < 8; i++) {
-      text.append(L" ")
-          .append(brand_internal::colorTable[0])
-          .append(brand_internal::space)
-          .append(L"\x1b[48;5;15m  ")
-          .append(brand_internal::colorTable[2])
-          .append(brand_internal::space)
-          .append(L"\x1b[0m");
-      end_meta_line(text);
+    if (version > bela::windows::win11_21h2) {
+      return DrawWindows11();
     }
-    text.append(L" ")
-        .append(L"\x1b[48;5;15m")
-        .append(brand_internal::space)
-        .append(L"  ")
-        .append(brand_internal::space)
-        .append(L"\x1b[0m");
-    end_meta_line(text);
-    for (size_t i = 0; i < 8; i++) {
-      text.append(L" ")
-          .append(brand_internal::colorTable[1])
-          .append(brand_internal::space)
-          .append(L"\x1b[48;5;15m  ")
-          .append(brand_internal::colorTable[3])
-          .append(brand_internal::space)
-          .append(L"\x1b[0m");
-      end_meta_line(text);
-    }
-    for (size_t i = 17; i < lines.size(); i++) {
-      text.append(L" ").append(brand_internal::space).append(L"  ").append(brand_internal::space);
-      end_meta_line(text);
-    }
-    return text;
+    return DrawWindows10();
   }
+  std::wstring DrawWindows11();
+  std::wstring DrawWindows10();
 
 private:
   friend class Detector;
   meta_lines lines;
   bela::windows_version version;
   size_t index{0};
-  void append_meta_line(std::wstring_view tab, std::wstring &&content) {
+  void append_meta_line(const std::wstring_view tab, std::wstring &&content) {
     lines.emplace_back(std::pair<std::wstring, std::wstring>(std::wstring(tab), std::move(content)));
   }
   void end_meta_line(std::wstring &text) {
-    text.append(L"    ");
     if (index < lines.size()) {
       const auto &ml = lines[index];
       if (!ml.first.empty()) {
@@ -135,6 +173,65 @@ private:
     index++;
   }
 };
+
+inline std::wstring Render::DrawWindows10() {
+  std::wstring text;
+  text.resize(4096);
+  auto maxlines = (std::max)(std::size(brand_internal::windows10_art_lines), lines.size());
+  for (size_t i = 0; i < maxlines; i++) {
+    text.append(L" \x1b[38;2;109;195;255m")
+        .append(brand_internal::pop_art_line(i))
+        .append(L"\x1b[0m")
+        .append(brand_internal::border);
+    end_meta_line(text);
+  }
+  return text;
+}
+
+inline std::wstring Render::DrawWindows11() {
+  index = 0;
+  std::wstring text;
+  text.resize(4096);
+  for (size_t i = 0; i < 6; i++) {
+    text.append(L" ")
+        .append(brand_internal::windows_colors[0])
+        .append(brand_internal::padding)
+        .append(L"\x1b[48;5;15m  ")
+        .append(brand_internal::windows_colors[2])
+        .append(brand_internal::padding)
+        .append(L"\x1b[0m")
+        .append(brand_internal::border);
+    end_meta_line(text);
+  }
+  text.append(L" ")
+      .append(L"\x1b[48;5;15m")
+      .append(brand_internal::padding)
+      .append(L"  ")
+      .append(brand_internal::padding)
+      .append(L"\x1b[0m")
+      .append(brand_internal::border);
+  end_meta_line(text);
+  for (size_t i = 0; i < 6; i++) {
+    text.append(L" ")
+        .append(brand_internal::windows_colors[1])
+        .append(brand_internal::padding)
+        .append(L"\x1b[48;5;15m  ")
+        .append(brand_internal::windows_colors[3])
+        .append(brand_internal::padding)
+        .append(L"\x1b[0m")
+        .append(brand_internal::border);
+    end_meta_line(text);
+  }
+  for (size_t i = 13; i < lines.size(); i++) {
+    text.append(L" ")
+        .append(brand_internal::padding)
+        .append(L"  ")
+        .append(brand_internal::padding)
+        .append(brand_internal::border);
+    end_meta_line(text);
+  }
+  return text;
+}
 
 class Detector {
 public:
@@ -157,21 +254,40 @@ private:
 };
 
 void Detector::Swap(Render &render) const {
+  using brand_internal::GiB;
+  using brand_internal::MiB;
   auto version = bela::windows::version();
   render.version = version;
+  auto is_windows_11 = version >= bela::windows::win11_21h2;
   auto edition = brand_internal::registry_string(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)",
                                                  L"EditionID");
-  render.append_meta_line(L"OS", bela::StringCat(L"Windows 11 ", edition));
-  render.append_meta_line(L"Kernel", bela::StringCat(version.major, L".", version.minor, L".", version.build));
-  render.append_meta_line(L"CPU", processor());
 
+  // DisplayVersion
+  // SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Client.OS.rs2.amd64 version
+  // SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Windows.OOBE.amd64 version
+  auto displayVersion = brand_internal::registry_string(
+      HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)", L"DisplayVersion");
+  render.append_meta_line(
+      L"OS", bela::StringCat(L"Windows ", is_windows_11 ? L"11" : L"10", L" ", edition, L" ", displayVersion));
+  render.append_meta_line(L"Kernel", bela::StringCat(version.major, L".", version.minor, L".", version.build));
+  if (auto featurePack =
+          brand_internal::registry_string(HKEY_LOCAL_MACHINE, brand_internal::update_stack_subkey, L"Version");
+      !featurePack.empty()) {
+    render.append_meta_line(L"FeatureExperiencePack", std::move(featurePack));
+  }
+  render.append_meta_line(L"CPU", processor());
+  render.append_meta_line(L"GPU", bela::StrJoin(graphics, L", "));
+  render.append_meta_line(L"Terminal", brand_internal::TerminalName());
   // Resolution
   std::vector<std::wstring> resolution;
   for (const auto &m : monitors) {
     resolution.emplace_back(m());
   }
   render.append_meta_line(L"Resolution", bela::StrJoin(resolution, L", "));
-
+  render.append_meta_line(L"WM", L"Desktop Window Manager");
+  render.append_meta_line(L"RAM", bela::StringCat(mem_status.used / MiB, L" MB / ", mem_status.total / MiB,
+                                                  L" MB (Used ", mem_status.load, L"%)"));
+  // COLOR
   std::wstring color_line1;
   std::wstring color_line2;
   for (int i = 0; i < 8; i++) {
@@ -198,9 +314,10 @@ inline bool Detector::Execute(bela::error_code &ec) {
   MEMORYSTATUSEX ms{0};
   ms.dwLength = sizeof(MEMORYSTATUSEX);
   GlobalMemoryStatusEx(&ms);
-  mem_status.mem_load = ms.dwMemoryLoad;
+  mem_status.load = ms.dwMemoryLoad;
   mem_status.avail = ms.ullAvailPhys;
   mem_status.total = ms.ullTotalPhys;
+  mem_status.used = ms.ullTotalPhys - ms.ullAvailPhys;
   return true;
 }
 
@@ -296,6 +413,7 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
       // Microsoft Basic Render Driver
       continue;
     }
+    graphics.emplace_back(desc1.Description);
     UINT displayNum = 0;
     IDXGIOutput *out = nullptr;
     while (adapter->EnumOutputs(displayNum, &out) != DXGI_ERROR_NOT_FOUND) {
@@ -304,7 +422,7 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
       if (out->GetDesc(&desc) != S_OK) {
         continue;
       }
-      graphics.emplace_back(desc.DeviceName);
+      // graphics.emplace_back(desc.DeviceName);
     }
   }
   return true;

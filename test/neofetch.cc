@@ -67,16 +67,11 @@ int wmain() {
     bela::FPrintF(stderr, L"detect: %s\n", ec);
     return 1;
   }
-  bela::FPrintF(stderr, L"CPU: %s\n", detector.Processor()());
-  for (const auto &m : detector.Monitors()) {
-    bela::FPrintF(stderr, L"Monitor: %s\n", m());
-  }
-  const auto mb = 1024 * 1024ull;
-  bela::FPrintF(stderr, L"Memory: %dMiB / %dMiB %d%%\n", detector.MemStatus().avail / mb,
-                detector.MemStatus().total / mb, detector.MemStatus().mem_load);
   baulk::brand::Render render;
   detector.Swap(render);
-  auto buffer = render.Draw();
+  auto buffer = render.DrawWindows10();
   bela::FPrintF(stderr, L"%s\n", buffer);
+  auto buffer2 = render.DrawWindows11();
+  bela::FPrintF(stderr, L"\n%s\n", buffer2);
   return 0;
 }

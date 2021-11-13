@@ -26,7 +26,7 @@
 //     "\x1b[48;2;0;150;255m",   // 20
 // };
 
-constexpr const std::string_view colorTable[] = {
+constexpr const std::string_view windows_colors[] = {
     "\x1b[48;2;109;195;255m", // 5
     "\x1b[48;2;85;185;255m",  // 6
     "\x1b[48;2;61;175;255m",  // 7
@@ -40,10 +40,10 @@ struct Render {
   std::string text;
   void draw_line(bool half) {
     text.append(prefix)
-        .append(colorTable[half ? 0 : 1])
+        .append(windows_colors[half ? 0 : 1])
         .append(space)
         .append("\x1b[48;5;15m  ")
-        .append(colorTable[half ? 2 : 3])
+        .append(windows_colors[half ? 2 : 3])
         .append(space)
         .append("\x1b[0m\n");
   }
