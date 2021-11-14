@@ -50,7 +50,7 @@ public:
   void WriteError(const bela::error_code &ec) {
     std::wstring_view spaceview{space};
     bela::FPrintF(stdout, L"ErrorCode:%s%d\n", spaceview.substr(0, spaceview.size() - 9 - 1), ec.code);
-    bela::FPrintF(stdout, L"Message:%s%s\n", spaceview.substr(0, spaceview.size() - 7 - 1), ec.message);
+    bela::FPrintF(stdout, L"Message:%s%s\n", spaceview.substr(0, spaceview.size() - 7 - 1), ec);
   }
   void WriteAddress(std::wstring_view k, std::ptrdiff_t val) {
     std::wstring_view spaceview{space};
@@ -323,7 +323,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   bela::pe::File file;
   if (!file.NewFile(argv[1], ec)) {
-    bela::FPrintF(stderr, L"unable parse pecoff: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable parse pecoff: %s\n", ec);
     return 1;
   }
   bela::FPrintF(stdout,
@@ -403,7 +403,7 @@ int wmain(int argc, wchar_t **argv) {
     uint8_t buffer[1024];
     auto ret = file.ReadOverlay(buffer, ec);
     if (ret < 0) {
-      bela::FPrintF(stderr, L"Error: %s\n", ec.message);
+      bela::FPrintF(stderr, L"Error: %s\n", ec);
       return 1;
     }
     bela::FPrintF(stderr, L"Read %d bytes \n", ret);
