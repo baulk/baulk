@@ -112,10 +112,9 @@ std::optional<std::wstring> dotnet_framwork_folder() {
 #endif
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     if (p.is_directory()) {
-      auto dotnet = p.path().wstring();
-      auto ngen = bela::StringCat(dotnet, L"\\ngen.exe");
+      auto ngen = bela::StringCat(p.path().native(), L"\\ngen.exe");
       if (bela::PathExists(ngen)) {
-        return std::make_optional(std::move(dotnet));
+        return std::make_optional(p.path().wstring());
       }
     }
   }

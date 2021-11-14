@@ -252,7 +252,7 @@ inline void DecompressClear(std::wstring_view dir) {
   for (auto &p : std::filesystem::directory_iterator(dir)) {
     auto extension = p.path().extension().wstring();
     if (bela::EqualsIgnoreCase(extension, msiext)) {
-      baulk::DbgPrint(L"remove msi %s\n", p.path().c_str());
+      baulk::DbgPrint(L"remove msi %s\n", p.path().native());
       std::filesystem::remove_all(p.path(), ec);
     }
   }

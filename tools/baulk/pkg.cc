@@ -199,7 +199,7 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     if (!pkg.rename.empty()) {
       rfn = pkg.rename;
     } else {
-      rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().wstring());
+      rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().native());
     }
     if (!bela::EqualsIgnoreCase(fn, rfn)) {
       auto expnadfile = bela::StringCat(pkgRoot, L"/", fn);

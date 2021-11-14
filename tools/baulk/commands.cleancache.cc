@@ -56,14 +56,14 @@ int cmd_cleancache(const argv_t &argv) {
   ul.LowPart = fnow.dwLowDateTime;
   ul.HighPart = fnow.dwHighDateTime;
   for (auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
-    auto path_ = p.path().wstring();
+    auto path_ = p.path();
     if (baulk::IsForceMode || p.is_directory()) {
-      bela::fs::ForceDeleteFolders(path_, ec);
+      bela::fs::ForceDeleteFolders(path_.native(), ec);
       continue;
     }
-    if (FileIsExpired(path_, ul.QuadPart)) {
-      DbgPrint(L"%s expired", path_);
-      bela::fs::ForceDeleteFolders(path_, ec);
+    if (FileIsExpired(path_.native(), ul.QuadPart)) {
+      DbgPrint(L"%s expired", path_.native());
+      bela::fs::ForceDeleteFolders(path_.native(), ec);
       continue;
     }
   }

@@ -293,15 +293,12 @@ int UpdateBaulk() {
     if (e) {
       continue;
     }
-    auto relativepath = relative.wstring();
-    // skip all config
-
-    DbgPrint(L"found %s", relativepath);
-    auto target = bela::StringCat(appLocation, L"\\", relativepath);
-    if (bela::EqualsIgnoreCase(relativepath, L"config\\baulk.json") && bela::PathExists(target)) {
+    DbgPrint(L"found %s", relative.native());
+    auto target = bela::StringCat(appLocation, L"\\", relative.native());
+    if (bela::EqualsIgnoreCase(relative.native(), L"config\\baulk.json") && bela::PathExists(target)) {
       continue;
     }
-    UpdateFile(p.path().wstring(), target);
+    UpdateFile(p.path().native(), target);
   }
   if (!IsDebugMode) {
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[32mbaulk has been upgraded to %s\x1b[0m\n", version);
