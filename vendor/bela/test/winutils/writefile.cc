@@ -8,22 +8,22 @@ int wmain(int argc, wchar_t **argv) {
   }
   bela::error_code ec;
   if (!bela::io::WriteText(argv[1], L"u8.txt", ec)) {
-    bela::FPrintF(stderr, L"write u8: %s\n", ec.message);
+    bela::FPrintF(stderr, L"write u8: %s\n", ec);
   }
   if (!bela::io::WriteTextU16LE(argv[1], L"u16.txt", ec)) {
-    bela::FPrintF(stderr, L"write u16: %s\n", ec.message);
+    bela::FPrintF(stderr, L"write u16: %s\n", ec);
   }
   auto u8 = bela::io::ReadLine(L"u8.txt", ec);
   if (u8) {
     bela::FPrintF(stderr, L"read u8 success: %s\n", *u8);
   } else {
-    bela::FPrintF(stderr, L"read u8: %s\n", ec.message);
+    bela::FPrintF(stderr, L"read u8: %s\n", ec);
   }
   auto u16 = bela::io::ReadLine(L"u16.txt", ec);
   if (u16) {
     bela::FPrintF(stderr, L"read u16 success: %s\n", *u16);
   } else {
-    bela::FPrintF(stderr, L"read u16: %s\n", ec.message);
+    bela::FPrintF(stderr, L"read u16: %s\n", ec);
   }
   return true;
 }

@@ -159,7 +159,7 @@ constexpr Language languages[] = {
   bela::StrAppend(&s, L"};");
   bela::error_code ec;
   if (!bela::io::WriteText(s, L"./shabang.gen.inc", ec)) {
-    bela::FPrintF(stderr, L"unable gen shabang.gen.inc: %s", ec.message);
+    bela::FPrintF(stderr, L"unable gen shabang.gen.inc: %s", ec);
     return;
   }
   bela::FPrintF(stderr, L"gen ./shabang.gen.inc success\n");

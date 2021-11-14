@@ -19,7 +19,7 @@ int wmain() {
   auto f = bela::FolderPicker(nullptr, nullptr);
   if (!f) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"Picker Folder error: %s\n", ec.message);
+    bela::FPrintF(stderr, L"Picker Folder error: %s\n", ec);
     return 1;
   }
   bela::FPrintF(stderr, L"Folder is: %s\n", *f);

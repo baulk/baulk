@@ -11,7 +11,7 @@ int wmain(int argc, wchar_t **argv) {
   hazel::macho::File file;
   bela::error_code ec;
   if (!file.NewFile(argv[1], ec)) {
-    bela::FPrintF(stderr, L"parse macho file %s error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"parse macho file %s error: %s\n", argv[1], ec);
     return 1;
   }
   std::vector<std::string> libs;
@@ -21,7 +21,7 @@ int wmain(int argc, wchar_t **argv) {
   }
   std::vector<std::string> symbols;
   if (!file.ImportedSymbols(symbols, ec)) {
-    bela::FPrintF(stderr, L"parse macho file %s error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"parse macho file %s error: %s\n", argv[1], ec);
     return 1;
   }
   for (const auto &s : symbols) {

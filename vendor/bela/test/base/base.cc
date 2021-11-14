@@ -8,7 +8,7 @@ int wmain(int argc, wchar_t **argv) {
     FILE *fd = nullptr;
     if (auto e = _wfopen_s(&fd, argv[1], L"rb"); e != 0) {
       auto ec = bela::make_stdc_error_code(e);
-      bela::FPrintF(stderr, L"unable open: %s\n", ec.message);
+      bela::FPrintF(stderr, L"unable open: %s\n", ec);
       return 1;
     }
     fclose(fd);

@@ -12,12 +12,12 @@ int wmain(int argc, wchar_t **argv) {
   bela::fs::Finder finder;
   if ((GetFileAttributesW(dir.data()) & FILE_ATTRIBUTE_DIRECTORY) == 0) {
     if (!finder.First(dir, ec)) {
-      bela::FPrintF(stderr, L"List error %v\n", ec.message);
+      bela::FPrintF(stderr, L"List error %v\n", ec);
       return 1;
     }
   } else {
     if (!finder.First(dir, L"*", ec)) {
-      bela::FPrintF(stderr, L"List error %v\n", ec.message);
+      bela::FPrintF(stderr, L"List error %v\n", ec);
       return 1;
     }
   }

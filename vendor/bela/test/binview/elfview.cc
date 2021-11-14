@@ -11,7 +11,7 @@ int wmain(int argc, wchar_t **argv) {
   hazel::elf::File file;
   bela::error_code ec;
   if (!file.NewFile(argv[1], ec)) {
-    bela::FPrintF(stderr, L"parse elf file %s error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"parse elf file %s error: %s\n", argv[1], ec);
     return 1;
   }
   for (const auto &s : file.Sections()) {
@@ -28,7 +28,7 @@ int wmain(int argc, wchar_t **argv) {
   }
   std::vector<std::string> libs;
   if (!file.Depends(libs, ec)) {
-    bela::FPrintF(stderr, L"parse elf file depends %s error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"parse elf file depends %s error: %s\n", argv[1], ec);
     return 1;
   }
   for (const auto &d : libs) {
