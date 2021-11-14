@@ -85,7 +85,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto fd = bela::io::NewFile(argv[1], ec);
   if (!fd) {
-    bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable open file %s\n", ec);
     return 1;
   }
   std::wstring path;

@@ -24,7 +24,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto fd = bela::io::NewFile(argv[1], ec);
   if (!fd) {
-    bela::FPrintF(stderr, L"unable open file %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable open file %s\n", ec);
     return 1;
   }
   FILE_STANDARD_INFO di;
@@ -32,12 +32,12 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"File size: %d %b\n", di.EndOfFile.QuadPart, di.Directory);
   } else {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"GetFileInformationByHandleEx %s\n", ec.message);
+    bela::FPrintF(stderr, L"GetFileInformationByHandleEx %s\n", ec);
   }
 
   hazel::hazel_result hr;
   if (!hazel::LookupFile(*fd, hr, ec)) {
-    bela::FPrintF(stderr, L"unable detect file type %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable detect file type %s\n", ec);
     return 1;
   }
   std::wstring space;

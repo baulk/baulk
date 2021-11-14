@@ -11,7 +11,7 @@ int wmain(int argc, wchar_t **argv) {
   hazel::fs::FileReparsePoint frp;
   bela::error_code ec;
   if (!hazel::fs::LookupReparsePoint(argv[1], frp, ec)) {
-    bela::FPrintF(stderr, L"unable lookup reparse point %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable lookup reparse point %s\n", ec);
     return 1;
   }
   for (auto &kv : frp.attributes) {

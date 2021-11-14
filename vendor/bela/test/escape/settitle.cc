@@ -14,7 +14,7 @@ int wmain(int argc, wchar_t **argv) {
   }
   if (SetConsoleTitleW(title.data()) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"SetConsoleTitleW [%s] %s\n", title, ec.message);
+    bela::FPrintF(stderr, L"SetConsoleTitleW [%s] %s\n", title, ec);
     return 1;
   }
   bela::FPrintF(stderr, L"New console title is [%s]\n", title);

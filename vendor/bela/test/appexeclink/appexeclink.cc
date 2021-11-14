@@ -13,13 +13,13 @@ int wmain(int argc, wchar_t **argv) {
   if (p) {
     bela::FPrintF(stdout, L"%s RealPath [%s]\n", argv[1], *p);
   } else {
-    bela::FPrintF(stderr, L"%s RealPath error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"%s RealPath error: %s\n", argv[1], ec);
   }
   auto p2 = bela::RealPathEx(argv[1], ec);
   if (p2) {
     bela::FPrintF(stdout, L"%s RealPathEx [%s]\n", argv[1], *p2);
   } else {
-    bela::FPrintF(stderr, L"%s RealPathEx error: %s\n", argv[1], ec.message);
+    bela::FPrintF(stderr, L"%s RealPathEx error: %s\n", argv[1], ec);
   }
   bela::AppExecTarget ae;
   if (!bela::LookupAppExecLinkTarget(argv[1], ae)) {
