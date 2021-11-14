@@ -11,4 +11,5 @@ int cmd_extract(const argv_t &argv) {
   //
   return 0;
 }
+
 } // namespace baulk::commands

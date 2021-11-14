@@ -12,11 +12,35 @@
 #include <bela/time.hpp>
 #include <bela/bytes_view.hpp>
 
-namespace baulk::mem {
-void *allocate(size_t bytes) noexcept;
-template <typename T> T *Allocate(size_t n = 1) noexcept { return reinterpret_cast<T *>(allocate(sizeof(T) * n)); }
-void deallocate(void *p) noexcept;
+extern "C" {
+[[nodiscard]] void *mi_malloc(size_t size) noexcept;
+void mi_free(void *p) noexcept;
+}
 
+namespace baulk::mem {
+template <typename T> T *allocate(size_t n = 1) noexcept { return reinterpret_cast<T *>(mi_malloc(sizeof(T) * n)); }
+inline void deallocate(void *p) noexcept { mi_free(p); }
+inline void *allocate_simple(void *opaque, size_t size) noexcept {
+  (void)opaque;
+  return mi_malloc(size);
+}
+inline void deallocate_simple(void *opaque, void *address) noexcept {
+  (void)opaque;
+  mi_free(address);
+}
+inline void *allocate_bz(void *opaque, int items, int size) noexcept {
+  (void)opaque;
+  return mi_malloc(static_cast<size_t>(items) * size);
+}
+inline void *allocate_zlib(void *opaque, uint32_t items, uint32_t size) noexcept {
+  (void)opaque;
+  return mi_malloc(static_cast<size_t>(items) * size);
+}
+
+inline void *allocate_xz(void *opaque, size_t nmemb, size_t size) noexcept {
+  (void)opaque;
+  return mi_malloc(static_cast<size_t>(nmemb) * size);
+}
 // Buffer use mimalloc
 class Buffer {
 private:

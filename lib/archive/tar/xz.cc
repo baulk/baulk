@@ -4,14 +4,21 @@
 namespace baulk::archive::tar::xz {
 constexpr size_t xzoutsize = 256 * 1024;
 constexpr size_t xzinsize = 256 * 1024;
+
+// LZMA allocator
+static lzma_allocator allocator{                                  // allocater
+                                .alloc = baulk::mem::allocate_xz, //
+                                .free = baulk::mem::deallocate_simple,
+                                .opaque = nullptr};
 Reader::~Reader() {
   if (xzs != nullptr) {
     baulk::mem::deallocate(xzs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  xzs = baulk::mem::Allocate<lzma_stream>();
+  xzs = baulk::mem::allocate<lzma_stream>();
   memset(xzs, 0, sizeof(lzma_stream));
+  xzs->allocator = &allocator;
   auto ret = lzma_stream_decoder(xzs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
     ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);

@@ -3,10 +3,11 @@
 #include <bzlib.h>
 
 namespace baulk::archive::zip {
-
 // bzip2
 bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &ec) const {
-  bz_stream bzs{};
+  bz_stream bzs{0};
+  bzs.bzalloc = baulk::mem::allocate_bz;
+  bzs.bzfree = baulk::mem::deallocate_simple;
   if (auto ret = BZ2_bzDecompressInit(&bzs, 0, 0); ret != BZ_OK) {
     ec = bela::make_error_code(ret, L"BZ2_bzDecompressInit error");
     return false;

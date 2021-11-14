@@ -7,6 +7,8 @@ namespace baulk::archive::zip {
 // https://github.com/madler/zlib/blob/master/examples/zpipe.c#L92
 bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_code &ec) const {
   z_stream zs;
+  zs.zalloc = baulk::mem::allocate_zlib;
+  zs.zfree = baulk::mem::deallocate_simple;
   memset(&zs, 0, sizeof(zs));
   if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
     ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));

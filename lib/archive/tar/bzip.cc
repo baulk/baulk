@@ -9,8 +9,10 @@ Reader::~Reader() {
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  bzs = baulk::mem::Allocate<bz_stream>();
+  bzs = baulk::mem::allocate<bz_stream>();
   memset(bzs, 0, sizeof(bz_stream));
+  bzs->bzalloc = baulk::mem::allocate_bz;
+  bzs->bzfree = baulk::mem::deallocate_simple;
   if (auto bzerr = BZ2_bzDecompressInit(bzs, 0, 0); bzerr != BZ_OK) {
     ec = bela::make_error_code(bzerr, L"BZ2_bzDecompressInit error");
     return false;

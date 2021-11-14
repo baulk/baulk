@@ -5,9 +5,15 @@
 namespace baulk::archive::zip {
 constexpr size_t xzoutsize = 256 * 1024;
 constexpr size_t xzinsize = 128 * 1024;
+// LZMA allocator
+static lzma_allocator allocator{                                  // allocater
+                                .alloc = baulk::mem::allocate_xz, //
+                                .free = baulk::mem::deallocate_simple,
+                                .opaque = nullptr};
 // XZ
 bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &ec) const {
   lzma_stream zs = LZMA_STREAM_INIT;
+  zs.allocator = &allocator;
   auto ret = lzma_stream_decoder(&zs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
     ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);

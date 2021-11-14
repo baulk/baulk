@@ -1,5 +1,6 @@
 ///
 #include "zipinternal.hpp"
+#define ZSTD_STATIC_LINKING_ONLY 1
 #include <zstd.h>
 
 namespace baulk::archive::zip {
@@ -10,7 +11,8 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
   const auto binsize = ZSTD_DStreamInSize();
   Buffer outbuf(boutsize);
   Buffer inbuf(binsize);
-  auto zds = ZSTD_createDCtx();
+  auto zds = ZSTD_createDCtx_advanced(ZSTD_customMem{
+      .customAlloc = baulk::mem::allocate_simple, .customFree = baulk::mem::deallocate_simple, .opaque = nullptr});
   if (zds == nullptr) {
     ec = bela::make_error_code(L"ZSTD_createDStream() out of memory");
     return false;

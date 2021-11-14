@@ -65,6 +65,8 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
   Buffer chunk(CHUNK);
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
+  zs.zalloc = baulk::mem::allocate_zlib;
+  zs.zfree = baulk::mem::deallocate_simple;
   auto ret = inflateBack9Init(&zs, window.data());
   if (ret != Z_OK) {
     ec = bela::make_error_code(ret == Z_MEM_ERROR ? L"not enough memory (!)" : L"internal error");

@@ -3,9 +3,6 @@
 #include "mimalloc/include/mimalloc.h"
 
 namespace baulk::mem {
-void *allocate(size_t bytes) noexcept { return mi_malloc(bytes); }
-void deallocate(void *p) noexcept { mi_free(p); }
-
 void Buffer::MoveFrom(Buffer &&other) {
   Free(); // Free self
   data_ = other.data_;
