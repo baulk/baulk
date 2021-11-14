@@ -43,7 +43,6 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
 bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
   auto wn = bela::encode_into<char, wchar_t>(linkname);
   if (!baulk::archive::NewSymlink(filename, wn, ec, true)) {
-    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
     return false;
   }
   return true;
@@ -79,7 +78,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
   DbgPrint(L"destination %s", dest);
   auto fr = baulk::archive::tar::OpenFile(src, ec);
   if (fr == nullptr) {
-    bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec.message);
+    bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec);
     return 1;
   }
   auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
@@ -89,7 +88,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
   } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
     tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
   } else {
-    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec.message);
+    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec);
     return 1;
   }
   for (;;) {
@@ -98,7 +97,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
       if (ec.code == bela::ErrEnded) {
         break;
       }
-      bela::FPrintF(stderr, L"\nuntar error %s\n", ec.message);
+      bela::FPrintF(stderr, L"\nuntar error %s\n", ec);
       break;
     }
     showProgress(termsz, fh->Name);
@@ -109,14 +108,14 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     if (fh->IsDir()) {
       bela::error_code le;
       if (!extractDir(*out, fh->ModTime, le)) {
-        bela::FPrintF(stderr, L"\nuntar mkdir %s\n", ec.message);
+        bela::FPrintF(stderr, L"\nuntar mkdir %s\n", ec);
       }
       continue;
     }
     if (fh->IsSymlink()) {
       bela::error_code le;
       if (!extractSymlink(*out, fh->LinkName, ec)) {
-        bela::FPrintF(stderr, L"\nuntar mklink %s\n", ec.message);
+        bela::FPrintF(stderr, L"\nuntar mklink %s\n", ec);
       }
       continue;
     }
@@ -126,7 +125,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     }
     auto fd = baulk::archive::File::NewFile(*out, true, ec);
     if (!fd) {
-      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
+      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec);
       continue;
     }
     fd->Chtimes(fh->ModTime, ec);

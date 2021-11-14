@@ -37,6 +37,6 @@ int wmain() {
     bela::FPrintF(stderr, L"TODO: %s\n", *pkgName);
     return 0;
   }
-  bela::FPrintF(stderr, L"error: %s\n", ec.message);
+  bela::FPrintF(stderr, L"error: %s\n", ec);
   return 1;
 }

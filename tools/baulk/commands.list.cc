@@ -65,7 +65,7 @@ int cmd_list(const argv_t &argv) {
   for (const auto a : argv) {
     auto localMeta = baulk::bucket::PackageLocalMeta(a, ec);
     if (!localMeta) {
-      baulk::DbgPrint(L"list package '%s' error: %s", a, ec.message);
+      baulk::DbgPrint(L"list package '%s' error: %s", a, ec);
       continue;
     }
     baulk::Package pkg;

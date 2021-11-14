@@ -38,7 +38,7 @@ int wmain() {
     std::string_view k;
     std::string_view v;
     if (!parsePAXRecord(&pax, &k, &v, ec)) {
-      bela::FPrintF(stderr, L"Error %s\n", ec.message);
+      bela::FPrintF(stderr, L"Error %s\n", ec);
       return 1;
     }
     bela::FPrintF(stderr, L"K %s = V %s\n", k, v);

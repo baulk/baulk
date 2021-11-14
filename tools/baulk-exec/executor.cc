@@ -21,7 +21,7 @@ void Summarizer::SummarizeTime(HANDLE hProcess) {
   FILETIME user_time{0};
   if (GetProcessTimes(hProcess, &creation_time, &exit_time, &kernel_time, &user_time) != TRUE) {
     auto ec = bela::make_system_error_code(L"GetProcessTimes() ");
-    bela::FPrintF(stderr, L"summarize time: %s\n", ec.message);
+    bela::FPrintF(stderr, L"summarize time: %s\n", ec);
     return;
   }
   bela::Time zeroTime;
@@ -46,7 +46,7 @@ bool Executor::LookPath(std::wstring_view cmd, std::wstring &file) {
   bela::error_code ec;
   auto realexe = bela::RealPathEx(file, ec);
   if (!realexe) {
-    DbgPrint(L"resolve realpath %s %s\n", file, ec.message);
+    DbgPrint(L"resolve realpath %s %s\n", file, ec);
     return true;
   }
   DbgPrint(L"resolve realpath %s\n", *realexe);
@@ -120,7 +120,7 @@ int Executor::Exec() {
   if (CreateProcessW(string_nullable(target), ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT,
                      string_nullable(env), string_nullable(cwd), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"baulk-exec: unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec.message);
+    bela::FPrintF(stderr, L"baulk-exec: unable run '%s' error: \x1b[31m%s\x1b[0m\n", arg0, ec);
     return -1;
   }
   CloseHandle(pi.hThread);

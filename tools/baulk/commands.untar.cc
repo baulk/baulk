@@ -35,7 +35,7 @@ int cmd_untar(const argv_t &argv) {
   auto root = resolveTarDestination(argv, tarfile);
   bela::error_code ec;
   if (!baulk::tar::Decompress(tarfile, root, ec)) {
-    bela::FPrintF(stderr, L"decompress %s error: %s\n", tarfile, ec.message);
+    bela::FPrintF(stderr, L"decompress %s error: %s\n", tarfile, ec);
     return 1;
   }
   return 0;

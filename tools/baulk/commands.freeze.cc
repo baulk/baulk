@@ -39,12 +39,12 @@ int cmd_freeze(const argv_t &argv) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   auto jo = json::parse_file(Profile(), ec);
   if (!jo) {
-    bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec);
     return 1;
   }
   auto jv = jo->view();
@@ -66,7 +66,7 @@ int cmd_freeze(const argv_t &argv) {
   jo->obj["updated"] = bela::FormatTime<char>(bela::Now());
   auto text = jo->obj.dump(4);
   if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
-    bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
     return false;
   }
   bela::FPrintF(stderr, L"baulk freeze package success, freezed: %d\n", pkgs.size());
@@ -81,12 +81,12 @@ int cmd_unfreeze(const argv_t &argv) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   auto jo = json::parse_file(Profile(), ec);
   if (!jo) {
-    bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec);
     return 1;
   }
   auto jv = jo->view();
@@ -112,7 +112,7 @@ int cmd_unfreeze(const argv_t &argv) {
   jo->obj["updated"] = bela::FormatTime<char>(bela::Now());
   auto text = jo->obj.dump(4);
   if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
-    bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
     return false;
   }
   bela::FPrintF(stderr, L"baulk unfreeze package success, freezed: %d\n", pkgs.size());

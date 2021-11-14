@@ -133,7 +133,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"baulk-exec: parse argv \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-exec: parse argv \x1b[31m%s\x1b[0m\n", ec);
     return false;
   }
   const auto &Argv = pa.UnresolvedArgs();
@@ -150,7 +150,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
   }
 
   if (!baulk::vfs::InitializeFastPathFs(ec)) {
-    bela::FPrintF(stderr, L"baulk-exec InitializeFastPathFs error %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-exec InitializeFastPathFs error %s\n", ec);
     return false;
   }
 
@@ -169,19 +169,19 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
     simulator.SetEnv(arg.substr(0, pos), arg.substr(pos + 1));
   }
   if (!InitializeGitEnv(cleanup, simulator, ec)) {
-    bela::FPrintF(stderr, L"initialize git env failed: %s\n", ec.message);
+    bela::FPrintF(stderr, L"initialize git env failed: %s\n", ec);
   }
 
   if (initializeVSEnv) {
     if (!baulk::env::InitializeVisualStudioEnv(simulator, arch, false, ec)) {
-      bela::FPrintF(stderr, L"Initialize visual studio env failed %s\n", ec.message);
+      bela::FPrintF(stderr, L"Initialize visual studio env failed %s\n", ec);
     } else {
       DbgPrint(L"Initialize visual studio env done");
     }
   }
   if (initializeVSPreviewEnv) {
     if (!baulk::env::InitializeVisualStudioEnv(simulator, arch, true, ec)) {
-      bela::FPrintF(stderr, L"Initialize visual studio (Preview) env failed %s\n", ec.message);
+      bela::FPrintF(stderr, L"Initialize visual studio (Preview) env failed %s\n", ec);
     } else {
       DbgPrint(L"Initialize visual studio (Preview) env done");
     }
@@ -196,7 +196,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
   simulator.PathPushFront(std::move(paths));
   baulk::env::Constructor ctor(baulk::exec::IsDebugMode);
   if (!ctor.InitializeEnvs(packageEnvs, simulator, ec)) {
-    bela::FPrintF(stderr, L"baulk-exec constructor venvs error %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-exec constructor venvs error %s\n", ec);
     return false;
   }
   return true;

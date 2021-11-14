@@ -191,7 +191,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     buckets.emplace_back(std::move(jbk));
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec.message);
+      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec);
       return 1;
     }
   } catch (const std::exception &e) {
@@ -211,7 +211,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
         return true;
       }
       auto ec = bela::make_stdc_error_code(en);
-      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec.message);
+      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec);
       return false;
     }
     auto closer = bela::finally([&] { fclose(fd); });
@@ -236,7 +236,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
   auto meta = newjson.dump(4);
   bela::error_code ec;
   if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
-    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
+    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec);
     return false;
   }
   auto bucketDir = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
@@ -264,7 +264,7 @@ int BucketModifier::Del(const baulk::Bucket &bucket, bool forcemode) {
     }
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket delete: apply delete '%s' error %s\n", bucket.name, ec.message);
+      bela::FPrintF(stderr, L"baulk bucket delete: apply delete '%s' error %s\n", bucket.name, ec);
       return 1;
     }
   } catch (const std::exception &e) {
@@ -384,7 +384,7 @@ int cmd_bucket(const argv_t &argv) {
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"baulk bucket: parse argv error \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk bucket: parse argv error \x1b[31m%s\x1b[0m\n", ec);
     return 1;
   }
   const auto ua = pa.Argv();

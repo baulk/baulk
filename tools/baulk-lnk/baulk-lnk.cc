@@ -5,7 +5,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto target = ResolveTarget(ec);
   if (!target) {
-    bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec);
     return 1;
   }
   DbgPrint(L"resolve target: %s\n", *target);
@@ -19,7 +19,7 @@ int wmain(int argc, wchar_t **argv) {
   if (CreateProcessW(target->data(), newcmd.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr,
                      nullptr, &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"baulk-lnk, unable create lnk process: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-lnk, unable create lnk process: %s\n", ec);
     return -1;
   }
   CloseHandle(pi.hThread);

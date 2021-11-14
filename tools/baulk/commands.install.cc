@@ -51,12 +51,12 @@ bool PackageInstaller::Install(std::wstring_view name) {
   auto pkg = baulk::bucket::PackageMetaEx(name, ec);
   if (!pkg) {
     if (ec.code != baulk::bucket::ErrPackageNotYetPorted) {
-      bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec.message);
+      bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
       return false;
     }
     Update(name);
     if (pkg = baulk::bucket::PackageMetaEx(name, ec); !pkg) {
-      bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec.message);
+      bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
       return 1;
     }
   }
@@ -86,11 +86,11 @@ int cmd_install(const argv_t &argv) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk install: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk install: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   if (!InitializeExecutor(ec)) {
-    DbgPrint(L"baulk install: unable initialize compiler executor: %s", ec.message);
+    DbgPrint(L"baulk install: unable initialize compiler executor: %s", ec);
   }
   PackageInstaller installer;
   for (auto pkg : argv) {

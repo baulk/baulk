@@ -78,7 +78,7 @@ bool BucketUpdater::Immobilized() {
     auto meta = j.dump(4);
     bela::error_code ec;
     if (!bela::io::WriteTextAtomic(meta, lockFile, ec)) {
-      bela::FPrintF(stderr, L"baulk unable: update %s error: %s\n", lockFile, ec.message);
+      bela::FPrintF(stderr, L"baulk unable: update %s error: %s\n", lockFile, ec);
       return false;
     }
   } catch (const std::exception &e) {
@@ -93,7 +93,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   bela::error_code ec;
   auto latest = baulk::bucket::BucketNewest(bucket, ec);
   if (!latest) {
-    bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
+    bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec);
     return false;
   }
   auto it = status.find(bucket.name);
@@ -103,7 +103,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
   if (!baulk::bucket::BucketUpdate(bucket, *latest, ec)) {
-    bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec.message);
+    bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec);
     return false;
   }
   bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name, *latest);
@@ -174,7 +174,7 @@ int cmd_update(const argv_t & /*unused argv*/) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk update: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk update: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   return UpdateBucket(true);

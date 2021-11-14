@@ -265,14 +265,11 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
     auto source = bela::PathCat(packageRoot, L"\\", lm.path);
     DbgPrint(L"make launcher %s", source);
     if (!builder.Compile(pkg, source, appLinks, lm, ec)) {
-      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec.message);
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec);
     }
   }
   if (!LinkMetaStore(builder.LinkMetas(), pkg, ec)) {
-    bela::FPrintF(stderr,
-                  L"%s create links error: %s\nYour can run 'baulk uninstall' "
-                  L"and retry\n",
-                  pkg.name, ec.message);
+    bela::FPrintF(stderr, L"%s create links error: %s\nYour can run 'baulk uninstall' and retry\n", pkg.name, ec);
     return false;
   }
   return true;
@@ -340,7 +337,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
-                  pkg.name, ec.message);
+                  pkg.name, ec);
     return false;
   }
   return true;
@@ -368,7 +365,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
       }
     }
     if (!baulk::fs::SymLink(src, lnk, ec)) {
-      DbgPrint(L"make %s -> %s: %s\n", src, lnk, ec.message);
+      DbgPrint(L"make %s -> %s: %s\n", src, lnk, ec);
       return false;
     }
     linkmetas.emplace_back(lm);
@@ -377,7 +374,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
     bela::FPrintF(stderr,
                   L"%s create links error: %s\nYour can run 'baulk uninstall' "
                   L"and retry\n",
-                  pkg.name, ec.message);
+                  pkg.name, ec);
     return false;
   }
   return true;

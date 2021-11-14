@@ -91,7 +91,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       },
       ec);
   if (!result) {
-    bela::FPrintF(stderr, L"baulk parse argv error: \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk parse argv error: \x1b[31m%s\x1b[0m\n", ec);
     return std::nullopt;
   }
   if (IsDebugMode && IsQuietMode) {
@@ -137,7 +137,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
     if (subcmd == c.name) {
       if (c.require_context) {
         if (!baulk::InitializeContext(profile, ec)) {
-          bela::FPrintF(stderr, L"baulk initialize context error: \x1b[31m%s\x1b[0m\n", ec.message);
+          bela::FPrintF(stderr, L"baulk initialize context error: \x1b[31m%s\x1b[0m\n", ec);
           return std::nullopt;
         }
       }

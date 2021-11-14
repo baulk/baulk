@@ -109,7 +109,7 @@ inline bool disposition_file_handle(HANDLE fh) {
   case ERROR_ACCESS_DENIED: // This might be due to the read-only bit, try to clear it and try again
     [[fallthrough]];
   default:
-    bela::FPrintF(stderr, L"Disposition: %s\n", ec.message);
+    bela::FPrintF(stderr, L"Disposition: %s\n", ec);
     return false;
   }
 

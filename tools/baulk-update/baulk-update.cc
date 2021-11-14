@@ -40,7 +40,7 @@ bool detect_baulk_revision(std::wstring &releasename) {
   auto baulkexe = vfs::AppLocationPath(L"baulk-exec.exe");
   if (ps.Capture(baulkexe, L"--version") != 0) {
     if (auto ec = ps.ErrorCode(); ec) {
-      bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec.message);
+      bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec);
     }
     releasename.assign(BAULK_REFNAME);
     return false;
@@ -67,7 +67,7 @@ bool ReleaseIsUpgradableFallback(std::wstring &url, std::wstring &version, std::
   bela::error_code ec;
   auto resp = baulk::net::RestGet(latest, ec);
   if (!resp) {
-    bela::FPrintF(stderr, L"baulk upgrade get latest: \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk upgrade get latest: \x1b[31m%s\x1b[0m\n", ec);
     return false;
   }
   size_t index = 0;
@@ -124,7 +124,7 @@ bool ReleaseIsUpgradable(std::wstring &url, std::wstring &version) {
   bela::error_code ec;
   auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
   if (!resp) {
-    bela::FPrintF(stderr, L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk upgrade self get metadata: \x1b[31m%s\x1b[0m\n", ec);
     return false;
   }
   try {
@@ -168,7 +168,7 @@ bool UpdateFile(std::wstring_view src, std::wstring_view target) {
   }
   bela::error_code ec;
   if (!baulk::fs::MakeParentDir(target, ec)) {
-    DbgPrint(L"failed MakeParentDir %s", ec.message);
+    DbgPrint(L"failed MakeParentDir %s", ec);
     return false;
   }
   if (!move_file(src, target)) {
@@ -193,7 +193,7 @@ int ExecuteInternal(wchar_t *cmdline) {
   if (CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE, CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr,
                      vfs::AppLocationPath().data(), &si, &pi) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"run post script failed %s\n", ec.message);
+    bela::FPrintF(stderr, L"run post script failed %s\n", ec);
     return -1;
   }
   CloseHandle(pi.hThread);
@@ -232,7 +232,7 @@ bool UpdateBaulkExec(std::wstring_view newBaulkExec) {
       if (MoveFileExW(newBaulkExec.data(), baulkExec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
           TRUE) {
         ec = bela::make_system_error_code();
-        bela::FPrintF(stderr, L"baulk-update: update apply new baulk-exec: %s\n", ec.message);
+        bela::FPrintF(stderr, L"baulk-update: update apply new baulk-exec: %s\n", ec);
         return false;
       }
       bela::fs::ForceDeleteFolders(baulkExecNew, ec);
@@ -245,7 +245,7 @@ bool UpdateBaulkExec(std::wstring_view newBaulkExec) {
   if (MoveFileExW(newBaulkExec.data(), baulkExecNew.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) !=
       TRUE) {
     ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"baulk-update: update apply baulk-exec.new: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-update: update apply baulk-exec.new: %s\n", ec);
     return true;
   }
   return true;
@@ -263,12 +263,12 @@ int UpdateBaulk() {
   auto appTempDir = vfs::AppTemp();
   bela::error_code ec;
   if (!baulk::fs::MakeDir(appTempDir, ec)) {
-    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", appTempDir, ec.message);
+    bela::FPrintF(stderr, L"baulk unable make %s error: %s\n", appTempDir, ec);
     return 1;
   }
   auto baulkfile = baulk::net::WinGet(url, appTempDir, L"", true, ec);
   if (!baulkfile) {
-    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec.message);
+    bela::FPrintF(stderr, L"baulk get %s: \x1b[31m%s\x1b[0m\n", url, ec);
     return 1;
   }
   auto outdir = UnarchivePath(*baulkfile);
@@ -277,7 +277,7 @@ int UpdateBaulk() {
   }
   DbgPrint(L"Decompress %s to %s\n", filename, outdir);
   if (!zip::Decompress(*baulkfile, outdir, ec)) {
-    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec.message);
+    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec);
     return 1;
   }
   baulk::fs::MakeFlattened(outdir, outdir, ec);
@@ -400,7 +400,7 @@ bool ParseArgv(int argc, wchar_t **argv) {
       },
       ec);
   if (!result) {
-    bela::FPrintF(stderr, L"baulk-update ParseArgv error: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-update ParseArgv error: %s\n", ec);
     return false;
   }
   return true;
@@ -409,7 +409,7 @@ bool ParseArgv(int argc, wchar_t **argv) {
 int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   if (baulk::vfs::InitializeFastPathFs(ec)) {
-    bela::FPrintF(stderr, L"baulk-exec InitializeFastPathFs error %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk-exec InitializeFastPathFs error %s\n", ec);
     return 1;
   }
   if (!ParseArgv(argc, argv)) {

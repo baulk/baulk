@@ -26,7 +26,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto now = bela::Now();
   if (!SetFolderTime(argv[1], now, ec)) {
-    bela::FPrintF(stderr, L"change dir time: %s\n", ec.message);
+    bela::FPrintF(stderr, L"change dir time: %s\n", ec);
     return 1;
   }
   bela::FPrintF(stderr, L"change dir time success\n");

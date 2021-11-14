@@ -13,14 +13,14 @@ bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
                                 OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"CreateFileW() %s: %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"CreateFileW() %s: %s\n", file, ec);
     return false;
   }
   auto closer = bela::finally([&] { CloseHandle(FileHandle); });
   // Retrieve the file times for the file.
   if (GetFileTime(FileHandle, &ftCreate, &ftAccess, &ftWrite) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec);
     return false;
   }
   constexpr auto expires = 30 * 24 * 3600 * 1000LL; // ms
@@ -49,7 +49,7 @@ int cmd_cleancache(const argv_t &argv) {
   FILETIME fnow;
   if (SystemTimeToFileTime(&now, &fnow) != TRUE) {
     ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec.message);
+    bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec);
     return 1;
   }
   ULARGE_INTEGER ul;

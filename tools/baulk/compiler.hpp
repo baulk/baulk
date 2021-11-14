@@ -14,8 +14,7 @@ public:
   Executor &operator=(const Executor &) = delete;
   bool Initialize(bela::error_code &ec);
   template <typename... Args> int Execute(std::wstring_view cwd, std::wstring_view cmd, const Args &...args) {
-    ec.message.clear();
-    ec.code = 0;
+    ec.clear();
     bela::process::Process process(&simulator);
     process.Chdir(cwd); // change cwd
     if (auto exitcode = process.Execute(cmd, std::forward<const Args &>(args)...); exitcode != 0) {

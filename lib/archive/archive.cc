@@ -120,7 +120,8 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
   }
   DWORD flags = linkname.ends_with('/') ? SYMBOLIC_LINK_DIR : SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
   if (CreateSymbolicLinkW(path.data(), linkname.data(), flags) != TRUE) {
-    ec = bela::make_system_error_code();
+    auto prefix = bela::StringCat(L"create symlink '", path, L"' to linkname '", linkname, L"' error ");
+    ec = bela::make_system_error_code(prefix);
     return false;
   }
   return true;

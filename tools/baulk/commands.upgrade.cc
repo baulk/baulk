@@ -37,11 +37,11 @@ int cmd_upgrade(const argv_t &argv) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk upgrade: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk upgrade: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   if (!InitializeExecutor(ec)) {
-    baulk::DbgPrint(L"baulk upgrade: unable initialize compiler executor: %s", ec.message);
+    baulk::DbgPrint(L"baulk upgrade: unable initialize compiler executor: %s", ec);
   }
 
   bela::fs::Finder finder;

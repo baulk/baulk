@@ -255,7 +255,7 @@ bool PackageUpdatableMeta(const baulk::Package &pkgLocal, baulk::Package &pkg) {
     auto pkgN = PackageMeta(pkgMeta, pkgLocal.name, bk.name, ec);
     if (!pkgN) {
       if (ec && ec.code != ENOENT) {
-        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec.message);
+        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec);
       }
       continue;
     }
@@ -285,7 +285,7 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
     auto pkgN = PackageMeta(pkgMeta, pkgName, bk.name, ec);
     if (!pkgN) {
       if (ec && ec.code != ENOENT) {
-        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec.message);
+        bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec);
       }
       continue;
     }

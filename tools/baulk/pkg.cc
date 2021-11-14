@@ -78,7 +78,7 @@ bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
     baulk::DbgPrint(L"force delete: %s@%s", pkgName, realdir);
     bela::error_code ec2;
     if (bela::fs::ForceDeleteFolders(realdir, ec2)) {
-      bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec.message);
+      bela::FPrintF(stderr, L"force delete %s \x1b[31m%s\x1b[0m\n", realdir, ec);
     }
   }
   return true;
@@ -92,7 +92,7 @@ std::optional<std::wstring> PackageCached(std::wstring_view filename, std::wstri
   }
   bela::error_code ec;
   if (!baulk::hash::HashEqual(pkgfile, hash, ec)) {
-    bela::FPrintF(stderr, L"package file %s error: %s\n", filename, ec.message);
+    bela::FPrintF(stderr, L"package file %s error: %s\n", filename, ec);
     return std::nullopt;
   }
   return std::make_optional(std::move(pkgfile));
@@ -123,7 +123,7 @@ bool PackageMakeLinks(const baulk::Package &pkg) {
   // check package is good installed
   // rebuild launcher and links
   if (!baulk::MakePackageLinks(pkg, true, ec)) {
-    bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name, ec.message);
+    bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name, ec);
     return false;
   }
   bela::FPrintF(stderr,
@@ -171,7 +171,7 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
     bela::fs::ForceDeleteFolders(outdir, ec);
   }
   if (!h->decompress(pkgfile, outdir, ec)) {
-    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec.message);
+    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec);
     return false;
   }
   h->regularize(outdir);
@@ -181,12 +181,12 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   if (bela::PathExists(pkgRoot)) {
     pkgold = bela::StringCat(pkgRoot, L".old");
     if (!RenameForce(pkgRoot, pkgold, ec)) {
-      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgRoot, ec.message);
+      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgRoot, ec);
       return false;
     }
   }
   if (!RenameForce(outdir, pkgRoot, ec)) {
-    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgRoot, ec.message);
+    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgRoot, ec);
     if (!pkgold.empty()) {
       RenameForce(pkgRoot, pkgold, ec);
     }
@@ -206,8 +206,7 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
       auto target = bela::StringCat(pkgRoot, L"/", rfn);
       if (MoveFileExW(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
         ec = bela::make_system_error_code();
-        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target,
-                      ec.message);
+        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target, ec);
       }
     }
   }
@@ -216,7 +215,7 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   }
   // create a links
   if (!PackageLocalMetaWrite(pkg, ec)) {
-    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec.message);
+    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec);
     return false;
   }
   return PackageMakeLinks(pkg);
@@ -282,7 +281,7 @@ bool PackageInstall(const baulk::Package &pkg) {
   }
   auto downloads = vfs::AppTemp();
   if (!baulk::fs::MakeDir(downloads, ec)) {
-    bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec.message);
+    bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec);
     return false;
   }
   bela::FPrintF(stderr, L"baulk: download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", urlFileName, url);
@@ -292,7 +291,7 @@ bool PackageInstall(const baulk::Package &pkg) {
       bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", urlFileName, i);
     }
     if (pkgFile = baulk::net::WinGet(url, downloads, pkg.hashValue, true, ec); !pkgFile) {
-      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", urlFileName, ec.message);
+      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", urlFileName, ec);
       continue;
     }
     // hash not check
@@ -302,7 +301,7 @@ bool PackageInstall(const baulk::Package &pkg) {
     if (hash::HashEqual(*pkgFile, pkg.hashValue, ec)) {
       break;
     }
-    bela::FPrintF(stderr, L"baulk download '%s' error: \x1b[31m%s\x1b[0m\n", bela::BaseName(*pkgFile), ec.message);
+    bela::FPrintF(stderr, L"baulk download '%s' error: \x1b[31m%s\x1b[0m\n", bela::BaseName(*pkgFile), ec);
   }
   if (!pkgFile) {
     return false;

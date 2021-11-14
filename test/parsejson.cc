@@ -99,7 +99,7 @@ int wmain(int argc, wchar_t **argv) {
   internal::VisualStudioInstance vci;
   bela::error_code ec;
   if (!vci.Encode(internal::vsj, ec)) {
-    bela::FPrintF(stderr, L"unable parse json: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable parse json: %s\n", ec);
     return 1;
   }
   bela::FPrintF(stderr,

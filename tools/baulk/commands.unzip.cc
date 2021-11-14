@@ -36,7 +36,7 @@ int cmd_unzip(const argv_t &argv) {
   auto dest = resolveZipDestination(argv, zipfile);
   bela::error_code ec;
   if (!baulk::zip::Decompress(zipfile, dest, ec)) {
-    bela::FPrintF(stderr, L"decompress %s error: %s\n", zipfile, ec.message);
+    bela::FPrintF(stderr, L"decompress %s error: %s\n", zipfile, ec);
     return 1;
   }
   return 0;

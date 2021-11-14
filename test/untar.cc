@@ -9,7 +9,7 @@ bool untar(std::wstring_view file) {
   bela::error_code ec;
   auto fr = baulk::archive::tar::OpenFile(file, ec);
   if (fr == nullptr) {
-    bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec);
     return false;
   }
   bela::FPrintF(stderr, L"File size: %d\n", fr->Size());
@@ -20,7 +20,7 @@ bool untar(std::wstring_view file) {
   } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
     tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
   } else {
-    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", file, ec);
     return false;
   }
   for (;;) {
@@ -30,7 +30,7 @@ bool untar(std::wstring_view file) {
         bela::FPrintF(stderr, L"\nsuccess\n");
         break;
       }
-      bela::FPrintF(stderr, L"\nuntar error %s\n", ec.message);
+      bela::FPrintF(stderr, L"\nuntar error %s\n", ec);
       break;
     }
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", fh->Name);
@@ -44,7 +44,7 @@ bool untar(std::wstring_view file) {
     }
     auto fd = baulk::archive::File::NewFile(*out, true, ec);
     if (!fd) {
-      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
+      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec);
       continue;
     }
     fd->Chtimes(fh->ModTime, ec);

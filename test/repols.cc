@@ -33,7 +33,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto commit = BucketRepoNewest(argv[1], ec);
   if (!commit) {
-    bela::FPrintF(stderr, L"repo head not found: %s\n", ec.message);
+    bela::FPrintF(stderr, L"repo head not found: %s\n", ec);
     return 1;
   }
   bela::FPrintF(stderr, L"From %s\n", argv[1]);

@@ -80,7 +80,6 @@ bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bel
   }
   auto wn = bela::encode_into<char, wchar_t>(linkname);
   if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
-    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
     return false;
   }
   return true;
@@ -148,11 +147,11 @@ int unzip(std::wstring_view path) {
   extractor.OverwriteFile(true);
   bela::error_code ec;
   if (!extractor.OpenReader(path, ec)) {
-    bela::FPrintF(stderr, L"unable open zip file %s error: %s\n", path, ec.message);
+    bela::FPrintF(stderr, L"unable open zip file %s error: %s\n", path, ec);
     return 1;
   }
   if (!extractor.Extract(ec)) {
-    bela::FPrintF(stderr, L"unable extract file: %s error: %s\n", path, ec.message);
+    bela::FPrintF(stderr, L"unable extract file: %s error: %s\n", path, ec);
     return 1;
   }
   return 0;

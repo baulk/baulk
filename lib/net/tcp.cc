@@ -19,7 +19,7 @@ public:
     WSADATA wsaData;
     if (auto err = WSAStartup(wVersionRequested, &wsaData); err != 0) {
       auto ec = bela::make_system_error_code();
-      bela::FPrintF(stderr, L"BUGS WSAStartup %s\n", ec.message);
+      bela::FPrintF(stderr, L"BUGS WSAStartup %s\n", ec);
       return;
     }
     initialized = true;
@@ -188,7 +188,7 @@ std::optional<Conn> DialTimeout(std::wstring_view address, int port, int timeout
   static winsock_initializer initializer_;
   PADDRINFOEX4 rhints = nullptr;
   if (!ResolveName(address, port, &rhints, ec)) {
-    bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec.message);
+    bela::FPrintF(stderr, L"GetAddrInfoExW %s\n", ec);
     return std::nullopt;
   }
   auto hi = rhints;

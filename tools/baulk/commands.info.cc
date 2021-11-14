@@ -63,7 +63,7 @@ int PackageDisplayInfo(std::wstring_view name) {
   bela::error_code ec, oec;
   auto pkg = baulk::bucket::PackageMetaEx(name, ec);
   if (!pkg) {
-    bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
     return 1;
   }
 
@@ -103,7 +103,7 @@ int cmd_info(const argv_t &argv) {
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk info: \x1b[31mbaulk %s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk info: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   for (auto pkg : argv) {

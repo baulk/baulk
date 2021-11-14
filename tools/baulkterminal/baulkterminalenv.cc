@@ -119,7 +119,7 @@ void ApplyBaulkNewExec(std::wstring_view baulkexec) {
     DbgPrint(L"Found baulk-exec.new: %s trace apply it", baulkexecnew);
     if (MoveFileExW(baulkexecnew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
       auto ec = bela::make_system_error_code();
-      DbgPrint(L"Apply new baulk-exec error: %s", ec.message);
+      DbgPrint(L"Apply new baulk-exec error: %s", ec);
     }
   }
   auto baulkexecdel = bela::StringCat(dir, L"\\baulk-exec.del");

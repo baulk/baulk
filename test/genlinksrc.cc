@@ -170,13 +170,13 @@ int wmain(int argc, wchar_t **argv) {
   auto s3 = baulk::GenerateBatLinkSource(argv[1], bela::pe::Subsystem::GUI);
   bela::error_code ec;
   if (!bela::io::WriteText(s1, L"genfile_console.cc", ec)) {
-    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
   if (!bela::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
-    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
   if (!bela::io::WriteText(s3, L"genfile.bat", ec)) {
-    bela::FPrintF(stderr, L"unable writetext: %s\n", ec.message);
+    bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
   return 0;
 }
