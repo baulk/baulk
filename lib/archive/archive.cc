@@ -1,4 +1,5 @@
 #include <bela/match.hpp>
+#include <bela/path.hpp>
 #include <baulk/archive.hpp>
 #include <filesystem>
 
@@ -139,14 +140,28 @@ bool Chtimes(std::wstring_view file, bela::Time t, bela::error_code &ec) {
   return chtimes(fd, t, ec);
 }
 
+constexpr bool is_dot_or_separator(wchar_t ch) { return bela::IsPathSeparator(ch) || ch == L'.'; }
+
 std::wstring_view PathRemoveExtension(std::wstring_view p) {
-  constexpr std::wstring_view extensions[] = {
-      L".tgz", L".tar.gz", L".tbz2",    L".tar.bz2", L".tar.xz", L".txz", L".tar.zst", L".tar.zstd", L".tar.br",
-      L".tbr", L".tlz4",   L".tar.lz4", L".tar",     L".zip",    L".rar", L".7z",      L".cab",      L".msi"};
+  if (p.empty()) {
+    return L".";
+  }
+  auto i = p.size() - 1;
+  for (; i != 0 && is_dot_or_separator(p[i]); i--) {
+    p.remove_suffix(1);
+  }
+  constexpr std::wstring_view extensions[] = {L".tar.gz",   L".tar.bz2", L".tar.xz", L".tar.zst",
+                                              L".tar.zstd", L".tar.br",  L".tar.lz4"};
   for (const auto e : extensions) {
     if (bela::EndsWithIgnoreCase(p, e)) {
       return p.substr(0, p.size() - e.size());
     }
+  }
+  if (auto pos = p.find_last_of(L"\\/."); pos != std::wstring_view::npos && p[pos] == L'.') {
+    // if (pos >= 1 && bela::IsPathSeparator(p[pos - 1])) {
+    //   return p;
+    // }
+    return p.substr(0, pos);
   }
   return p;
 }
