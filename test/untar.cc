@@ -1,5 +1,6 @@
 ///
-#include <tar.hpp>
+#include <baulk/archive.hpp>
+#include <baulk/archive/tar.hpp>
 #include <bela/terminal.hpp>
 #include <bela/datetime.hpp>
 
@@ -33,7 +34,7 @@ bool untar(std::wstring_view file) {
       break;
     }
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", fh->Name);
-    auto dest = baulk::archive::tar::PathRemoveExtension(file);
+    auto dest = baulk::archive::PathRemoveExtension(file);
     auto out = baulk::archive::JoinSanitizePath(dest, fh->Name);
     if (!out) {
       continue;
@@ -41,12 +42,12 @@ bool untar(std::wstring_view file) {
     if (fh->Size == 0) {
       continue;
     }
-    auto fd = baulk::archive::NewFD(*out, ec, true);
+    auto fd = baulk::archive::File::NewFile(*out, true, ec);
     if (!fd) {
       bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
       continue;
     }
-    fd->SetTime(fh->ModTime, ec);
+    fd->Chtimes(fh->ModTime, ec);
     // auto size = fh->Size;
     // char buffer[4096];
     // while (size > 0) {
@@ -63,7 +64,7 @@ bool untar(std::wstring_view file) {
     if (!tr->WriteTo(
             [&](const void *data, size_t len, bela::error_code &ec) -> bool {
               //
-              return fd->Write(data, len, ec);
+              return fd->WriteFull(data, len, ec);
             },
             fh->Size, ec)) {
       fd->Discard();

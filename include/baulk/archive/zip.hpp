@@ -1,15 +1,13 @@
-//
-#ifndef BAULK_ZIP_HPP
-#define BAULK_ZIP_HPP
-#include <span>
+// baulk zip headers
+#ifndef BAULK_ARCHIVE_ZIP_HPP
+#define BAULK_ARCHIVE_ZIP_HPP
 #include <bela/base.hpp>
 #include <bela/io.hpp>
-#include <bela/str_cat_narrow.hpp>
 #include <bela/time.hpp>
-#include <bela/phmap.hpp>
-#include "archive.hpp"
+#include <functional>
 
 namespace baulk::archive::zip {
+using bela::os::FileMode;
 // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 // https://www.hanshq.net/zip.html
 // https://www.hanshq.net/zip2.html
@@ -57,7 +55,6 @@ struct directoryEnd {
   uint64_t directoryOffset{0}; // relative to file
 };
 
-using bela::os::FileMode;
 // FileMode to string
 std::string String(FileMode m);
 
@@ -150,10 +147,6 @@ inline std::optional<Reader> NewReader(HANDLE fd, int64_t size, int64_t offset, 
   return std::make_optional(std::move(r));
 }
 
-// root must be the cleaned path
-std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, const File &file, bool autocvt = true);
-
-//
 } // namespace baulk::archive::zip
 
 #endif

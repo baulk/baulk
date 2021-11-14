@@ -6,11 +6,11 @@ constexpr size_t xzoutsize = 256 * 1024;
 constexpr size_t xzinsize = 256 * 1024;
 Reader::~Reader() {
   if (xzs != nullptr) {
-    baulk::archive::archive_internal::Deallocate(xzs, 1);
+    baulk::mem::deallocate(xzs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  xzs = baulk::archive::archive_internal::Allocate<lzma_stream>(1);
+  xzs = baulk::mem::Allocate<lzma_stream>();
   memset(xzs, 0, sizeof(lzma_stream));
   auto ret = lzma_stream_decoder(xzs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {

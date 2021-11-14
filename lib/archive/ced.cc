@@ -1,9 +1,9 @@
-///
-#include "zipinternal.hpp"
+#include <bela/codecvt.hpp>
 #include <bela/path.hpp>
+#include <baulk/archive.hpp>
 #include <compact_enc_det/compact_enc_det.h>
 
-namespace baulk::archive::zip {
+namespace baulk::archive {
 // https://codereview.chromium.org/2081653007/
 // https://docs.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 uint32_t codePageSearch(Encoding e) {
@@ -55,7 +55,7 @@ uint32_t codePageSearch(Encoding e) {
   return CP_ACP;
 }
 
-inline std::wstring fromcodePage(std::string_view name, int codePage = CP_ACP) {
+inline std::wstring encode_from_codepage(std::string_view name, int codePage = CP_ACP) {
   auto sz = MultiByteToWideChar(codePage, 0, name.data(), (int)name.size(), nullptr, 0);
   std::wstring output;
   output.resize(sz);
@@ -63,19 +63,16 @@ inline std::wstring fromcodePage(std::string_view name, int codePage = CP_ACP) {
   return output;
 }
 
-inline std::wstring PathConvert(const File &file, bool autocvt) {
-  if (file.IsFileNameUTF8()) {
-    return bela::encode_into<char, wchar_t>(file.name);
-  }
-  if (!autocvt) {
-    return fromcodePage(file.name);
+inline std::wstring encode_into_native(std::string_view filename, bool always_utf8) {
+  if (always_utf8) {
+    return bela::encode_into<char, wchar_t>(filename);
   }
   bool is_reliable = false;
   int bytes_consumed = 0;
-  auto e = CompactEncDet::DetectEncoding(file.name.data(), static_cast<int>(file.name.size()), nullptr, nullptr,
-                                         nullptr, UNKNOWN_ENCODING, UNKNOWN_LANGUAGE, CompactEncDet::WEB_CORPUS, false,
+  auto e = CompactEncDet::DetectEncoding(filename.data(), static_cast<int>(filename.size()), nullptr, nullptr, nullptr,
+                                         UNKNOWN_ENCODING, UNKNOWN_LANGUAGE, CompactEncDet::WEB_CORPUS, false,
                                          &bytes_consumed, &is_reliable);
-  return fromcodePage(file.name, codePageSearch(e));
+  return encode_from_codepage(filename, codePageSearch(e));
 }
 
 constexpr bool IsDangerousPath(std::wstring_view p) {
@@ -88,12 +85,11 @@ constexpr bool IsDangerousPath(std::wstring_view p) {
   return false;
 }
 
-std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, const File &file, bool autocvt) {
-  auto filename = PathConvert(file, autocvt);
-  auto path = bela::PathCat(root, filename);
-  // not allowed path
+std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename, bool always_utf8) {
+  auto fileName = encode_into_native(filename, always_utf8);
+  auto path = bela::PathCat(root, fileName);
   if (IsDangerousPath(path)) {
-    return std::nullopt;
+    return std::nullopt; // Windows BUG
   }
   if (path.size() <= root.size()) {
     return std::nullopt;
@@ -106,4 +102,5 @@ std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, const File 
   }
   return std::make_optional(std::move(path));
 }
-} // namespace baulk::archive::zip
+
+} // namespace baulk::archive

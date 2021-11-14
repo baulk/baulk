@@ -122,6 +122,7 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   }
   return true;
 }
+
 using bufioReader = bela::bufio::Reader<4096>;
 
 constexpr uint32_t SizeMin = 0xFFFFFFFFu;

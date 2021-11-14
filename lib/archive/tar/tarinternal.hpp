@@ -1,10 +1,13 @@
 //
 #ifndef BAULK_ARCHIVE_TAR_INTERNAL_HPP
 #define BAULK_ARCHIVE_TAR_INTERNAL_HPP
-#include <tar.hpp>
+#include <baulk/archive/tar.hpp>
+#include <baulk/allocate.hpp>
+#include <baulk/archive.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
+using baulk::mem::Buffer;
 // https://www.gnu.org/software/tar/manual/html_node/Formats.html
 constexpr char magicGNU[] = {'u', 's', 't', 'a', 'r', ' '};
 constexpr char versionGNU[] = {' ', 0x00};

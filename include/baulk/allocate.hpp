@@ -14,6 +14,7 @@
 
 namespace baulk::mem {
 void *allocate(size_t bytes) noexcept;
+template <typename T> T *Allocate(size_t n = 1) noexcept { return reinterpret_cast<T *>(allocate(sizeof(T) * n)); }
 void deallocate(void *p) noexcept;
 
 // Buffer use mimalloc
@@ -24,7 +25,7 @@ private:
 
 public:
   Buffer() = default;
-  Buffer(size_t maxsize) { grow(maxsize); }
+  Buffer(size_t new_capacity) { grow(new_capacity); }
   Buffer(Buffer &&other) noexcept { MoveFrom(std::move(other)); }
   Buffer &operator=(Buffer &&other) noexcept {
     MoveFrom(std::move(other));
@@ -33,7 +34,7 @@ public:
   Buffer(const Buffer &) = delete;
   Buffer &operator=(const Buffer &) = delete;
   ~Buffer() { Free(); }
-  void grow(size_t n);
+  void grow(size_t new_capacity);
   [[nodiscard]] size_t &size() { return size_; }
   [[nodiscard]] size_t &pos() { return pos_; }
   [[nodiscard]] uint8_t *data() { return data_; }

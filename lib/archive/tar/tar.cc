@@ -3,6 +3,7 @@
 #include <bela/str_cat_narrow.hpp>
 #include <bela/str_join_narrow.hpp>
 #include <bela/str_split_narrow.hpp>
+#include <baulk/allocate.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
@@ -465,18 +466,6 @@ bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
     remainingSize -= extracted;
   }
   return ret;
-}
-
-std::wstring_view PathRemoveExtension(std::wstring_view p) {
-  constexpr std::wstring_view extensions[] = {
-      L".tgz", L".tar.gz", L".tbz2",    L".tar.bz2", L".tar.xz", L".txz", L".tar.zst", L".tar.zstd", L".tar.br",
-      L".tbr", L".tlz4",   L".tar.lz4", L".tar",     L".zip",    L".rar", L".7z",      L".cab",      L".msi"};
-  for (const auto e : extensions) {
-    if (bela::EndsWithIgnoreCase(p, e)) {
-      return p.substr(0, p.size() - e.size());
-    }
-  }
-  return p;
 }
 
 } // namespace baulk::archive::tar

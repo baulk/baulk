@@ -1,47 +1,16 @@
-///
-#include <memory_resource>
+#include <bela/match.hpp>
+#include <baulk/archive.hpp>
 #include <filesystem>
-#include <archive.hpp>
-#include <bela/datetime.hpp>
-#include <bela/path.hpp>
 
 namespace baulk::archive {
-// https://en.cppreference.com/w/cpp/memory/unsynchronized_pool_resource
-// https://quuxplusone.github.io/blog/2018/06/05/libcpp-memory-resource/
-// https://www.bfilipek.com/2020/06/pmr-hacking.html
-namespace archive_internal {
-#ifdef PARALLEL_UNZIP
-std::pmr::synchronized_pool_resource pool;
-#else
-std::pmr::unsynchronized_pool_resource pool;
-#endif
-} // namespace archive_internal
-
-void Buffer::Free() {
-  if (data_ != nullptr) {
-    archive_internal::pool.deallocate(data_, capacity_);
-    data_ = nullptr;
-    capacity_ = 0;
+inline void close_file(HANDLE &hFile) {
+  if (hFile != INVALID_HANDLE_VALUE) {
+    CloseHandle(hFile);
+    hFile = INVALID_HANDLE_VALUE;
   }
 }
-
-void Buffer::grow(size_t n) {
-  if (n <= capacity_) {
-    return;
-  }
-  auto b = reinterpret_cast<uint8_t *>(archive_internal::pool.allocate(n));
-  if (size_ != 0) {
-    memcpy(b, data_, n);
-  }
-  if (data_ != nullptr) {
-    archive_internal::pool.deallocate(data_, capacity_);
-  }
-  data_ = b;
-  capacity_ = n;
-}
-
 // https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime
-bool FD::SetTime(bela::Time t, bela::error_code &ec) {
+inline bool chtimes(HANDLE fd, bela::Time t, bela::error_code &ec) {
   auto ft = bela::ToFileTime(t);
   if (::SetFileTime(fd, &ft, &ft, &ft) != TRUE) {
     ec = bela::make_system_error_code(L"SetFileTime ");
@@ -49,7 +18,22 @@ bool FD::SetTime(bela::Time t, bela::error_code &ec) {
   }
   return true;
 }
-bool FD::Discard() {
+
+File::~File() { close_file(fd); }
+File::File(File &&o) noexcept {
+  close_file(fd);
+  fd = o.fd;
+  o.fd = INVALID_HANDLE_VALUE;
+}
+File &File::operator=(File &&o) noexcept {
+  close_file(fd);
+  fd = o.fd;
+  o.fd = INVALID_HANDLE_VALUE;
+  return *this;
+}
+bool File::Chtimes(bela::Time t, bela::error_code &ec) { return chtimes(fd, t, ec); }
+
+bool File::Discard() {
   if (fd == INVALID_HANDLE_VALUE) {
     return false;
   }
@@ -69,44 +53,32 @@ bool FD::Discard() {
   // FileDispositionInfoEx isn't documented in MSDN at the time of this writing, but is present
   // in minwinbase.h as of at least 10.0.16299.0
   constexpr auto _FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
-  if (SetFileInformationByHandle(fd, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex))) {
-    Free();
+  if (SetFileInformationByHandle(fd, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex)) == TRUE) {
+    close_file(fd);
     return true;
   }
   FILE_DISPOSITION_INFO _Info{/* .Delete= */ TRUE};
-  if (SetFileInformationByHandle(fd, FileDispositionInfo, &_Info, sizeof(_Info))) {
-    Free();
+  if (SetFileInformationByHandle(fd, FileDispositionInfo, &_Info, sizeof(_Info)) == TRUE) {
+    close_file(fd);
     return true;
   }
   return false;
 }
-
-bool FD::Write(const void *data, size_t bytes, bela::error_code &ec) {
-  auto p = reinterpret_cast<const char *>(data);
-  while (bytes != 0) {
+bool File::WriteFull(const void *data, size_t bytes, bela::error_code &ec) {
+  auto len = static_cast<DWORD>(bytes);
+  auto u8d = reinterpret_cast<const uint8_t *>(data);
+  DWORD writtenBytes = 0;
+  do {
     DWORD dwSize = 0;
-    if (WriteFile(fd, p, static_cast<DWORD>(bytes), &dwSize, nullptr) != TRUE) {
-      ec = bela::make_system_error_code(L"WriteFull ");
+    if (WriteFile(fd, u8d + writtenBytes, len - writtenBytes, &dwSize, nullptr) != TRUE) {
+      ec = bela::make_system_error_code(L"WriteFile() ");
       return false;
     }
-    bytes -= dwSize;
-    p += dwSize;
-  }
+    writtenBytes += dwSize;
+  } while (writtenBytes < len);
   return true;
 }
-
-std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child) {
-  auto path = bela::PathCat(root, bela::encode_into<char, wchar_t>(child));
-  if (path == L"." || !path.starts_with(root) || root.size() == path.size()) {
-    return std::nullopt;
-  }
-  if (!root.ends_with('/') && !bela::IsPathSeparator(path[root.size()])) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(path));
-}
-
-std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overwrite) {
+std::optional<File> File::NewFile(std::wstring_view path, bool overwrite, bela::error_code &ec) {
   std::filesystem::path p(path);
   std::error_code sec;
   if (std::filesystem::exists(p, sec)) {
@@ -117,13 +89,15 @@ std::optional<FD> NewFD(std::wstring_view path, bela::error_code &ec, bool overw
   } else {
     std::filesystem::create_directories(p.parent_path(), sec);
   }
-  auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL, nullptr);
+  auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
+                        FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (fd == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code(L"CreateFileW ");
     return std::nullopt;
   }
-  return std::make_optional<FD>(fd);
+  File file;
+  file.fd = fd;
+  return std::make_optional<File>(std::move(file));
 }
 
 #ifndef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
@@ -152,21 +126,28 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
   return true;
 }
 
-bool SetFileTimeEx(std::wstring_view file, bela::Time t, bela::error_code &ec) {
-  auto FileHandle =
+bool Chtimes(std::wstring_view file, bela::Time t, bela::error_code &ec) {
+  auto fd =
       CreateFileW(file.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                   nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-  if (FileHandle == INVALID_HANDLE_VALUE) {
+  if (fd == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code(L"CreateFileW() ");
     return false;
   }
-  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
-  auto ft = bela::ToFileTime(t);
-  if (::SetFileTime(FileHandle, &ft, &ft, &ft) != TRUE) {
-    ec = bela::make_system_error_code(L"SetFileTime ");
-    return false;
+  auto closer = bela::finally([&] { CloseHandle(fd); });
+  return chtimes(fd, t, ec);
+}
+
+std::wstring_view PathRemoveExtension(std::wstring_view p) {
+  constexpr std::wstring_view extensions[] = {
+      L".tgz", L".tar.gz", L".tbz2",    L".tar.bz2", L".tar.xz", L".txz", L".tar.zst", L".tar.zstd", L".tar.br",
+      L".tbr", L".tlz4",   L".tar.lz4", L".tar",     L".zip",    L".rar", L".7z",      L".cab",      L".msi"};
+  for (const auto e : extensions) {
+    if (bela::EndsWithIgnoreCase(p, e)) {
+      return p.substr(0, p.size() - e.size());
+    }
   }
-  return true;
+  return p;
 }
 
 } // namespace baulk::archive

@@ -5,11 +5,11 @@ namespace baulk::archive::tar::bzip {
 Reader::~Reader() {
   if (bzs != nullptr) {
     BZ2_bzDecompressEnd(bzs);
-    baulk::archive::archive_internal::Deallocate(bzs, 1);
+    baulk::mem::deallocate(bzs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  bzs = baulk::archive::archive_internal::Allocate<bz_stream>(1);
+  bzs = baulk::mem::Allocate<bz_stream>();
   memset(bzs, 0, sizeof(bz_stream));
   if (auto bzerr = BZ2_bzDecompressInit(bzs, 0, 0); bzerr != BZ_OK) {
     ec = bela::make_error_code(bzerr, L"BZ2_bzDecompressInit error");

@@ -110,7 +110,7 @@ Byte ppmd_read(const IByteIn *pp) {
 }
 static void *SzBigAlloc(ISzAllocPtr p, size_t size) {
   auto N = size + sizeof(size);
-  auto address = baulk::archive::archive_internal::Allocate<uint8_t>(N);
+  auto address = baulk::mem::Allocate<uint8_t>(N);
   memcpy(address, &N, sizeof(size_t));
   return address + sizeof(size_t);
 }
@@ -121,7 +121,7 @@ static void SzBigFree(ISzAllocPtr p, void *address) {
   auto raddr = reinterpret_cast<uint8_t *>(address) - sizeof(size_t);
   size_t N = 0;
   memcpy(&N, raddr, sizeof(size_t));
-  return baulk::archive::archive_internal::Deallocate(raddr, N);
+  baulk::mem::deallocate(raddr);
 }
 
 const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};

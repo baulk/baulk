@@ -1,6 +1,6 @@
 //
-#include <zip.hpp>
-#include <archive.hpp>
+#include <baulk/archive.hpp>
+#include <baulk/archive/zip.hpp>
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
@@ -99,7 +99,7 @@ bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_
 }
 
 bool Extractor::extractFile(const File &file, bela::error_code &ec) {
-  auto dest = baulk::archive::zip::JoinSanitizePath(destination, file);
+  auto dest = baulk::archive::JoinSanitizePath(destination, file.name, file.IsFileNameUTF8());
   if (!dest) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
@@ -113,25 +113,25 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
   if (file.IsDir()) {
     return extractDir(file, *dest, ec);
   }
-  auto fd = baulk::archive::NewFD(*dest, ec, owfile);
+  auto fd = baulk::archive::File::NewFile(*dest, owfile, ec);
   if (!fd) {
-    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec.message);
+    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec);
     return false;
   }
-  if (!fd->SetTime(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec.message);
+  if (!fd->Chtimes(file.time, ec)) {
+    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec);
     return false;
   }
-  bela::error_code ec2;
+  bela::error_code writeEc;
   auto ret = reader.Decompress(
       file,
       [&](const void *data, size_t len) {
         //
-        return fd->Write(data, len, ec2);
+        return fd->WriteFull(data, len, writeEc);
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
+    bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec, writeEc);
     return false;
   }
   return true;

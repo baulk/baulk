@@ -4,6 +4,7 @@
 #include <bela/time.hpp>
 #include <bela/ascii.hpp>
 #include <bela/io.hpp>
+#include <baulk/net/types.hpp>
 
 namespace baulk::net::net_internal {
 enum class hash_t : uint16_t {

@@ -25,18 +25,18 @@ void Buffer::Free() {
   capacity_ = 0;
 }
 
-void Buffer::grow(size_t n) {
-  if (n <= capacity_) {
+void Buffer::grow(size_t new_capacity) {
+  if (new_capacity <= capacity_) {
     return;
   }
-  auto b = reinterpret_cast<uint8_t *>(mi_malloc(capacity_));
+  auto b = reinterpret_cast<uint8_t *>(mi_malloc(new_capacity));
   if (size_ != 0) {
-    memcpy(b, data_, n);
+    memcpy(b, data_, size_);
   }
   if (data_ != nullptr) {
     mi_free(data_);
   }
   data_ = b;
-  capacity_ = n;
+  capacity_ = new_capacity;
 }
 } // namespace baulk::mem

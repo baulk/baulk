@@ -168,6 +168,7 @@ set(BROTLI_SOURCES
 add_library(
   baulk.archive STATIC
   archive.cc
+  ced.cc
   tar/brotli.cc
   tar/bzip.cc
   tar/decompressor.cc
@@ -183,7 +184,6 @@ add_library(
   zip/deflate.cc
   zip/deflate64.cc
   zip/filemode.cc
-  zip/path.cc
   zip/ppmd.cc
   zip/xz.cc
   zip/zip.cc
@@ -209,6 +209,7 @@ target_include_directories(baulk.archive PRIVATE ${BAULK_ZIP_INC})
 target_compile_options(baulk.archive PRIVATE ${LZMA_DEF})
 target_link_libraries(
   baulk.archive
+  baulk.mem
   belawin
   deflate64
   lzma

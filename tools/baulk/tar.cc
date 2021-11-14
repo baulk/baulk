@@ -1,7 +1,8 @@
 /// ----- support tar.*
 #include <bela/path.hpp>
 #include <baulk/fs.hpp>
-#include <tar.hpp>
+#include <baulk/archive.hpp>
+#include <baulk/archive/tar.hpp>
 #include <baulk/indicators.hpp>
 #include "baulk.hpp"
 #include "decompress.hpp"
@@ -57,7 +58,7 @@ bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
     ec = bela::from_std_error_code(e, L"mkdir ");
     return false;
   }
-  baulk::archive::SetFileTimeEx(dir, t, ec);
+  baulk::archive::Chtimes(dir, t, ec);
   return true;
 }
 
@@ -81,7 +82,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec.message);
     return 1;
   }
-  auto wr = baulk::archive::tar::MakeReader(*fr,0, ec);
+  auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
     tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
@@ -123,16 +124,16 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     if (!fh->IsRegular()) {
       continue;
     }
-    auto fd = baulk::archive::NewFD(*out, ec, true);
+    auto fd = baulk::archive::File::NewFile(*out, true, ec);
     if (!fd) {
       bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec.message);
       continue;
     }
-    fd->SetTime(fh->ModTime, ec);
+    fd->Chtimes(fh->ModTime, ec);
     if (!tr->WriteTo(
             [&](const void *data, size_t len, bela::error_code &ec) -> bool {
               //
-              return fd->Write(data, len, ec);
+              return fd->WriteFull(data, len, ec);
             },
             fh->Size, ec)) {
       fd->Discard();

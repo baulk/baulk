@@ -1,8 +1,8 @@
 /// Tar
-#ifndef BAULK_TAR_HPP
-#define BAULK_TAR_HPP
-#include "archive.hpp"
+#ifndef BAULK_ARCHIVE_TAR_HPP
+#define BAULK_ARCHIVE_TAR_HPP
 #include <bela/io.hpp>
+#include <bela/time.hpp>
 #include <bela/phmap.hpp>
 #include <memory>
 
@@ -305,7 +305,6 @@ private:
   int64_t remainingSize{0};
   int64_t paddingSize{0};
 };
-std::wstring_view PathRemoveExtension(std::wstring_view p);
 } // namespace baulk::archive::tar
 
 #endif

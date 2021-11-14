@@ -5,11 +5,11 @@ namespace baulk::archive::tar::gzip {
 Reader::~Reader() {
   if (zs != nullptr) {
     inflateEnd(zs);
-    baulk::archive::archive_internal::Deallocate(zs, 1);
+    baulk::mem::deallocate(zs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  zs = baulk::archive::archive_internal::Allocate<z_stream>(1);
+  zs = baulk::mem::Allocate<z_stream>();
   memset(zs, 0, sizeof(z_stream));
   if (auto zerr = inflateInit2(zs, MAX_WBITS + 16); zerr != Z_OK) {
     ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));

@@ -2,10 +2,13 @@
 #ifndef BAULK_ZIP_INTERNAL_HPP
 #define BAULK_ZIP_INTERNAL_HPP
 #include <bela/path.hpp>
-#include <zip.hpp>
+#include <baulk/archive/zip.hpp>
+#include <baulk/allocate.hpp>
+#include <baulk/archive.hpp>
 #include "Crc32.h"
 
 namespace baulk::archive::zip {
+using baulk::mem::Buffer;
 // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 // https://en.wikipedia.org/wiki/ZIP_(file_format)
 // https://en.wikipedia.org/wiki/Comparison_of_file_archivers

@@ -61,8 +61,8 @@ unsigned get(void *in_desc, unsigned char **buf) {
 
 // DEFLATE64
 bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_code &ec) const {
-  baulk::archive::Buffer window(65536);
-  baulk::archive::Buffer chunk(CHUNK);
+  Buffer window(65536);
+  Buffer chunk(CHUNK);
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
   auto ret = inflateBack9Init(&zs, window.data());

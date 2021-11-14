@@ -28,7 +28,8 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
       ZSTD_outBuffer out{outbuf.data(), boutsize, 0};
       auto result = ZSTD_decompressStream(zds, &out, &in);
       if (ZSTD_isError(result) != 0) {
-        ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ", bela::encode_into<char, wchar_t>(ZSTD_getErrorName(result)));
+        ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ",
+                                   bela::encode_into<char, wchar_t>(ZSTD_getErrorName(result)));
         return false;
       }
       crc32val = crc32_fast(out.dst, out.pos, crc32val);
