@@ -7,6 +7,8 @@
 #include <bela/time.hpp>
 #include <bela/win32.hpp>
 #include <bela/env.hpp>
+#include <bela/comutils.hpp>
+#include <bela/str_replace.hpp>
 #include <dxgi.h>
 
 namespace baulk::brand {
@@ -107,11 +109,19 @@ inline std::wstring registry_string(HKEY hKey, std::wstring_view subKey, std::ws
 }
 } // namespace brand_internal
 
+// inline std::wstring symbols_replace(std::wstring_view s) {
+//   // https://symbolsdb.com/
+//   return bela::StrReplaceAll(s, {{L"(R)", L"®"}, {L"(C)", L"©"}, {L"(TM)", L"™"}});
+// }
+
 struct processor {
   std::wstring brand;
   int cores{0};
   int logical_cores{0};
-  std::wstring operator()() const { return bela::StringCat(brand, L" ", cores, L"C", logical_cores, L"T"); }
+  std::wstring operator()() const {
+    return bela::StringCat(bela::StrReplaceAll(brand, {{L"Intel(R) Core(TM)", L"Intel"}}), L" ", cores, L"C",
+                           logical_cores, L"T");
+  }
 };
 
 struct monitor {
@@ -285,7 +295,25 @@ private:
   memory_status mem_status;
 };
 
-void Detector::Swap(Render &render) const {
+inline std::wstring_view os_arch() {
+  SYSTEM_INFO si{0};
+  GetNativeSystemInfo(&si);
+  switch (si.wProcessorArchitecture) {
+  case PROCESSOR_ARCHITECTURE_AMD64:
+    return L"x64";
+  case PROCESSOR_ARCHITECTURE_ARM64:
+    return L"arm64";
+  case PROCESSOR_ARCHITECTURE_ARM:
+    return L"arm";
+  case PROCESSOR_ARCHITECTURE_INTEL:
+    return L"x86";
+  default:
+    break;
+  }
+  return L"unknown";
+}
+
+inline void Detector::Swap(Render &render) const {
   using brand_internal::GiB;
   using brand_internal::MiB;
   auto version = bela::windows::version();
@@ -293,14 +321,13 @@ void Detector::Swap(Render &render) const {
   auto is_windows_11 = version >= bela::windows::win11_21h2;
   auto edition = brand_internal::registry_string(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)",
                                                  L"EditionID");
-
   // DisplayVersion
   // SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Client.OS.rs2.amd64 version
   // SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed\Windows.OOBE.amd64 version
   auto displayVersion = brand_internal::registry_string(
       HKEY_LOCAL_MACHINE, LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)", L"DisplayVersion");
-  render.append_meta_line(
-      L"OS", bela::StringCat(L"Windows ", is_windows_11 ? L"11" : L"10", L" ", edition, L" ", displayVersion));
+  render.append_meta_line(L"OS", bela::StringCat(L"Windows ", is_windows_11 ? L"11" : L"10", L" ", edition, L" ",
+                                                 displayVersion, L" [", os_arch(), L"]"));
   render.append_meta_line(L"Kernel", bela::StringCat(version.major, L".", version.minor, L".", version.build));
   if (auto featurePack =
           brand_internal::registry_string(HKEY_LOCAL_MACHINE, brand_internal::update_stack_subkey, L"Version");
@@ -326,12 +353,16 @@ void Detector::Swap(Render &render) const {
     ss.emplace_back(so());
   }
   render.append_meta_line(L"Disk", bela::StrJoin(ss, L", "));
+  render.append_meta_line(L"Emoji",L"😊 👍 💖 💘 🗂️ 🥝 🧱");
+  render.append_meta_line(L"", L"");
   // COLOR
+  // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
+  // http://jafrog.com/2013/11/23/colors-in-terminal.html
   std::wstring color_line1;
   std::wstring color_line2;
   for (int i = 0; i < 8; i++) {
-    bela::StrAppend(&color_line1, L"\x1b[3", i, L"m\x1b[4", i, L"m    ");
-    bela::StrAppend(&color_line2, L"\x1b[38;5;", i, L"m\x1b[48;5;", i, L"m    ");
+    bela::StrAppend(&color_line1, L"\x1b[0;4", i, L"m    ");
+    bela::StrAppend(&color_line2, L"\x1b[0;10", i, L"m    ");
   }
   color_line1.append(L"\x1b[0m");
   color_line2.append(L"\x1b[0m");
@@ -433,17 +464,16 @@ inline bool Detector::detect_monitors(bela::error_code &ec) {
 }
 
 inline bool Detector::detect_graphics(bela::error_code &ec) {
-  IDXGIFactory1 *factory{nullptr};
-  IDXGIAdapter1 *adapter{nullptr};
+  bela::comptr<IDXGIFactory1> factory;
   if (auto hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void **>(&factory)); FAILED(hr)) {
     ec = bela::make_system_error_code(L"CreateDXGIFactory1");
     return false;
   }
-  auto closer = bela::finally([&] { factory->Release(); });
-  UINT Adapter = 0;
-  while (factory->EnumAdapters1(Adapter, &adapter) != DXGI_ERROR_NOT_FOUND) {
-    auto close_adapter = bela::finally([&] { adapter->Release(); });
-    Adapter++;
+  for (UINT AdapterNum = 0;; AdapterNum++) {
+    bela::comptr<IDXGIAdapter1> adapter;
+    if (factory->EnumAdapters1(AdapterNum, &adapter) == DXGI_ERROR_NOT_FOUND) {
+      break;
+    }
     DXGI_ADAPTER_DESC1 desc1;
     if (adapter->GetDesc1(&desc1) != S_OK) {
       ec = bela::make_system_error_code(L"GetDesc1");
@@ -453,7 +483,7 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
       // Microsoft Basic Render Driver
       continue;
     }
-    graphics.emplace_back(desc1.Description);
+    graphics.emplace_back(bela::StrReplaceAll(desc1.Description, {{L"(R)", L""}}));
   }
   return true;
 }
