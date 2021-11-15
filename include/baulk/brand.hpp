@@ -442,6 +442,7 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
   auto closer = bela::finally([&] { factory->Release(); });
   UINT Adapter = 0;
   while (factory->EnumAdapters1(Adapter, &adapter) != DXGI_ERROR_NOT_FOUND) {
+    auto close_adapter = bela::finally([&] { adapter->Release(); });
     Adapter++;
     DXGI_ADAPTER_DESC1 desc1;
     if (adapter->GetDesc1(&desc1) != S_OK) {
