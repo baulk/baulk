@@ -195,9 +195,13 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
   for (auto si : sdkincludes) {
     JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, si);
   }
+  // NetFx SDK
+  JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\NETFXSDK\\4.8\\Include\\um");
   for (auto sl : sdklibs) {
     JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, sl, arch);
   }
+  // NetFx SDK
+  JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\NETFXSDK\\4.8\\Lib\\um\\", arch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", HostArch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", HostArch);
 #ifdef _M_X64
