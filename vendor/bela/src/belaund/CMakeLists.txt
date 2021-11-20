@@ -3,6 +3,7 @@
 add_library(
   belaund STATIC
   llvm/Demangle.cpp
+  llvm/DLangDemangle.cpp
   llvm/ItaniumDemangle.cpp
   llvm/MicrosoftDemangle.cpp
   llvm/MicrosoftDemangleNodes.cpp

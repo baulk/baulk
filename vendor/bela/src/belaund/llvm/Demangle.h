@@ -60,6 +60,9 @@ char *microsoftDemangle(const std::string_view mangled_name, size_t *n_read,
 // Demangles a Rust v0 mangled symbol. The API follows that of __cxa_demangle.
 char *rustDemangle(const std::string_view MangledName, char *Buf, size_t *N, int *Status);
 
+// Demangles a D mangled symbol.
+char *dlangDemangle(const std::string_view MangledName);
+
 /// Attempt to demangle a string using different demangling schemes.
 /// The function uses heuristics to determine which demangling scheme to use.
 /// \param MangledName - reference to string to demangle.
