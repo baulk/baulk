@@ -32,7 +32,7 @@ Function Invoke-BatchFile {
     Remove-Item $tempFile
 }
 
-Function Exec {
+Function Execute {
     param(
         [string]$FilePath,
         [string]$Arguments,
@@ -97,11 +97,11 @@ catch {
 }
 $env:CC = "cl"
 $env:CXX = "cl"
-$ExitCode = Exec -FilePath "cmake" -WD $WD -Arguments "-GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TEST=ON .."
+$ExitCode = Execute -FilePath "cmake" -WD $WD -Arguments "-GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TEST=ON .."
 if ($ExitCode -ne 0) {
     exit $ExitCode
 }
-$ExitCode = Exec -FilePath "ninja" -WD $WD -Arguments "all"
+$ExitCode = Execute -FilePath "ninja" -WD $WD -Arguments "all"
 if ($ExitCode -ne 0) {
     exit $ExitCode
 }
