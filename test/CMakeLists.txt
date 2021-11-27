@@ -82,3 +82,6 @@ target_link_libraries(neofetch belatime belawin DXGI)
 
 add_executable(pathext_test pathextension.cc base.manifest)
 target_link_libraries(pathext_test belatime belawin)
+
+add_executable(extract_test extract.cc base.manifest)
+target_link_libraries(extract_test baulk.archive)

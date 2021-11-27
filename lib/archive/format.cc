@@ -1,9 +1,48 @@
 ///
 #include <bela/io.hpp>
+#include <bela/pe.hpp>
 #include <baulk/archive.hpp>
 #include "tar/tarinternal.hpp"
 
 namespace baulk::archive {
+
+const wchar_t *ArchiveFormatName(file_format_t t) {
+  struct name_table {
+    file_format_t t;
+    const wchar_t *name;
+  };
+  constexpr name_table tables[] = {
+      /// archive
+      {file_format_t::epub, L"application/epub"}, //
+      {file_format_t::zip, L"application/zip"},
+      {file_format_t::tar, L"application/x-tar"},
+      {file_format_t::rar, L"application/vnd.rar"},
+      {file_format_t::gz, L"application/gzip"},
+      {file_format_t::bz2, L"application/x-bzip2"},
+      {file_format_t::zstd, L"application/x-zstd"},
+      {file_format_t::_7z, L"application/x-7z-compressed"},
+      {file_format_t::xz, L"application/x-xz"},
+      {file_format_t::eot, L"application/octet-stream"},
+      {file_format_t::crx, L"application/x-google-chrome-extension"},
+      {file_format_t::deb, L"application/vnd.debian.binary-package"},
+      {file_format_t::lz, L"application/x-lzip"},
+      {file_format_t::rpm, L"application/x-rpm"},
+      {file_format_t::cab, L"application/vnd.ms-cab-compressed"},
+      {file_format_t::msi, L"application/x-msi"},
+      {file_format_t::dmg, L"application/x-apple-diskimage"},
+      {file_format_t::xar, L"application/x-xar"},
+      {file_format_t::wim, L"application/x-ms-wim"},
+      {file_format_t::z, L"application/x-compress"}, //
+  };
+
+  for (const auto &m : tables) {
+    if (m.t == t) {
+      return m.name;
+    }
+  }
+  return L"application/octet-stream";
+}
+
 constexpr const unsigned k7zSignatureSize = 6;
 constexpr const uint8_t k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
 constexpr const uint8_t PEMagic[] = {'P', 'E', '\0', '\0'};
@@ -84,20 +123,41 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
 }
 
 constexpr size_t magic_size = 512;
-file_format_t AnalyzeFormat(HANDLE fd, int64_t offset, bela::error_code &ec) {
-  uint8_t buffer[magic_size];
-  if (!bela::io::Seek(fd, offset, ec)) {
-    return file_format_t::none;
+
+std::optional<bela::io::FD> NewArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+                                           bela::error_code &ec) {
+  auto fd = bela::io::NewFile(file, ec);
+  if (!fd) {
+    return std::nullopt;
   }
+  offset = 0;
   DWORD drSize = {0};
-  if (::ReadFile(fd, buffer, static_cast<DWORD>(magic_size), &drSize, nullptr) != TRUE) {
+  uint8_t buffer[magic_size] = {0};
+  if (::ReadFile(fd->NativeFD(), buffer, static_cast<DWORD>(magic_size), &drSize, nullptr) != TRUE) {
     ec = bela::make_system_error_code(L"ReadFile: ");
-    return file_format_t::none;
+    return std::nullopt;
   }
-  // seek to offset
-  if (!bela::io::Seek(fd, offset, ec)) {
-    return file_format_t::none;
+  if (afmt = analyze_format_internal(bela::bytes_view(buffer, static_cast<size_t>(drSize)));
+      afmt != file_format_t::exe) {
+    return std::move(fd);
   }
-  return analyze_format_internal(bela::bytes_view(buffer, static_cast<size_t>(drSize)));
+  bela::pe::File pefile;
+  if (!pefile.NewFile(fd->NativeFD(), bela::SizeUnInitialized, ec)) {
+    return std::nullopt;
+  }
+  if (pefile.OverlayLength() < magic_size) {
+    return std::nullopt;
+  }
+  offset = pefile.OverlayOffset();
+  if (!fd->Seek(offset, ec)) {
+    return std::nullopt;
+  }
+  if (::ReadFile(fd->NativeFD(), buffer, static_cast<DWORD>(magic_size), &drSize, nullptr) != TRUE) {
+    ec = bela::make_system_error_code(L"ReadFile: ");
+    return std::nullopt;
+  }
+  afmt = analyze_format_internal(bela::bytes_view(buffer, static_cast<size_t>(drSize)));
+  return std::move(fd);
 }
+
 } // namespace baulk::archive

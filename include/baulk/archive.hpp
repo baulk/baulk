@@ -3,6 +3,7 @@
 #include <bela/os.hpp>
 #include <bela/base.hpp>
 #include <bela/time.hpp>
+#include <bela/io.hpp>
 
 namespace baulk::archive {
 enum class file_format_t : uint32_t {
@@ -17,13 +18,7 @@ enum class file_format_t : uint32_t {
   zstd,
   _7z,
   xz,
-  pdf,
-  swf,
-  rtf,
   eot,
-  ps,
-  sqlite,
-  nes,
   crx,
   deb,
   lz,
@@ -36,7 +31,7 @@ enum class file_format_t : uint32_t {
   z,
   exe, // Currently only supports PE self-extracting files (ELF/Mach-O) not currently supported
 };
-
+const wchar_t *ArchiveFormatName(file_format_t t);
 using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
@@ -64,7 +59,18 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
 std::wstring_view PathRemoveExtension(std::wstring_view p);
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename,
                                              bool always_utf8 = true);
-file_format_t AnalyzeFormat(HANDLE fd, int64_t offset, bela::error_code &ec);
+
+std::optional<bela::io::FD> NewArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+                                           bela::error_code &ec);
+
+// class Extractor {
+// public:
+//   virtual bool Extract(bela::error_code &ec) = 0;
+//   virtual bool List(bela::error_code &ec) = 0;
+// };
+
+// std::shared_ptr<Extractor> MakeExtractor(std::wstring_view filename, std::wstring_view chroot, bela::error_code &ec);
+
 } // namespace baulk::archive
 
 #endif
