@@ -15,7 +15,12 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"file %s not archive file: %s\n", argv[1], ec);
     return 1;
   }
+
   auto name = baulk::archive::ArchiveFormatName(afmt);
-  bela::FPrintF(stderr, L"file archive format: %s%s\n", name, offset == 0 ? L"" : L" (PE Self Extract)");
+  if (offset != 0) {
+    bela::FPrintF(stderr, L"file archive format: %s  (PE Self Extract offset: %d)\n", name, offset);
+    return 0;
+  }
+  bela::FPrintF(stderr, L"file archive format: %s\n", name);
   return 0;
 }

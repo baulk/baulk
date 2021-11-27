@@ -169,6 +169,7 @@ add_library(
   baulk.archive STATIC
   archive.cc
   ced.cc
+  extractor.cc
   format.cc
   tar/brotli.cc
   tar/bzip.cc

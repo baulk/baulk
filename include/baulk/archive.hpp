@@ -4,6 +4,7 @@
 #include <bela/base.hpp>
 #include <bela/time.hpp>
 #include <bela/io.hpp>
+#include <functional>
 
 namespace baulk::archive {
 enum class file_format_t : uint32_t {
@@ -63,13 +64,18 @@ std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string
 std::optional<bela::io::FD> NewArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
                                            bela::error_code &ec);
 
-// class Extractor {
-// public:
-//   virtual bool Extract(bela::error_code &ec) = 0;
-//   virtual bool List(bela::error_code &ec) = 0;
-// };
+class Extractor {
+public:
+  virtual bool Extract(bela::error_code &ec) = 0;
+};
 
-// std::shared_ptr<Extractor> MakeExtractor(std::wstring_view filename, std::wstring_view chroot, bela::error_code &ec);
+struct ExtractorOptions {
+  std::function<bool(const std::wstring_view filename)> new_file;
+  std::function<bool(int64_t total, int64_t decompressed)> show_progress;
+};
+
+std::shared_ptr<Extractor> NewExtractor(std::wstring_view filename, std::wstring_view chroot,
+                                        const ExtractorOptions &opts, bela::error_code &ec);
 
 } // namespace baulk::archive
 
