@@ -38,6 +38,7 @@ using bela::ErrEnded;
 using bela::ErrGeneral;
 using bela::ErrUnimplemented;
 
+
 class File {
 public:
   File(File &&o) noexcept;
@@ -70,8 +71,10 @@ public:
 };
 
 struct ExtractorOptions {
+  // extract new file
   std::function<bool(const std::wstring_view filename)> new_file;
-  std::function<bool(int64_t total, int64_t decompressed)> show_progress;
+  // show_progress
+  std::function<bool(int64_t total, int64_t bytes)> show_progress;
 };
 
 std::shared_ptr<Extractor> NewExtractor(std::wstring_view filename, std::wstring_view chroot,
