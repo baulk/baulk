@@ -38,14 +38,14 @@ int wmain(int argc, wchar_t **argv) {
   if (std::vector<hazel::elf::Symbol> symbols; file.Symbols(symbols, ec)) {
     bela::FPrintF(stdout, L"\x1b[34mSymbols:\x1b[0m\n");
     for (const auto &s : symbols) {
-      bela::FPrintF(stdout, L"%s %s %s\n", llvm::demangle(s.Name), s.Library, s.Version);
+      bela::FPrintF(stdout, L"%s %s %s\n", bela::demangle(s.Name), s.Library, s.Version);
     }
   }
 
   if (std::vector<hazel::elf::Symbol> symbols; file.DynamicSymbols(symbols, ec)) {
     bela::FPrintF(stderr, L"\x1b[34mDynamic Symbols:\x1b[0m\n");
     for (const auto &s : symbols) {
-      bela::FPrintF(stdout, L"%s (%s@%s)\n", llvm::demangle(s.Name), s.Library, s.Version);
+      bela::FPrintF(stdout, L"%s (%s@%s)\n", bela::demangle(s.Name), s.Library, s.Version);
     }
   }
 

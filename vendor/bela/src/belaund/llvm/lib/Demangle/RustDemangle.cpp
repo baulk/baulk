@@ -11,9 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "Demangle.h"
-#include "StringView.h"
-#include "Utility.h"
+#include "llvm/Demangle/Demangle.h"
+#include "llvm/Demangle/StringView.h"
+#include "llvm/Demangle/Utility.h"
 
 #include <algorithm>
 #include <cassert>
@@ -147,7 +147,7 @@ private:
 
 } // namespace
 
-char *llvm::rustDemangle(const std::string_view MangledName, char *Buf, size_t *N,
+char *llvm::rustDemangle(const char *MangledName, char *Buf, size_t *N,
                          int *Status) {
   if (MangledName == nullptr || (Buf != nullptr && N == nullptr)) {
     if (Status != nullptr)
@@ -156,7 +156,7 @@ char *llvm::rustDemangle(const std::string_view MangledName, char *Buf, size_t *
   }
 
   // Return early if mangled name doesn't look like a Rust symbol.
-  StringView Mangled(MangledName.data(),MangledName.size());
+  StringView Mangled(MangledName);
   if (!Mangled.startsWith("_R")) {
     if (Status != nullptr)
       *Status = demangle_invalid_mangled_name;

@@ -10,36 +10,43 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "Demangle.h"
-#include <string_view>
+#include "llvm/Demangle/Demangle.h"
 #include <cstdlib>
 #include <cstring>
 
-static bool isItaniumEncoding(std::string_view MangledName) {
-  return MangledName.starts_with("_Z") || MangledName.starts_with("___Z");
+static bool isItaniumEncoding(const char *S) {
+  // Itanium encoding requires 1 or 3 leading underscores, followed by 'Z'.
+  return std::strncmp(S, "_Z", 2) == 0 || std::strncmp(S, "___Z", 4) == 0;
 }
 
-static bool isRustEncoding(std::string_view MangledName) { return MangledName.starts_with("_R"); }
+static bool isRustEncoding(const char *S) { return S[0] == '_' && S[1] == 'R'; }
 
-static bool isDLangEncoding(std::string_view MangledName) {
-  return MangledName.starts_with("_D");;
+static bool isDLangEncoding(const std::string &MangledName) {
+  return MangledName.size() >= 2 && MangledName[0] == '_' &&
+         MangledName[1] == 'D';
 }
 
-std::string llvm::demangle(std::string_view MangledName) {
+std::string llvm::demangle(const std::string &MangledName) {
   std::string Result;
-  if (nonMicrosoftDemangle(MangledName, Result))
+  const char *S = MangledName.c_str();
+
+  if (nonMicrosoftDemangle(S, Result))
     return Result;
-  if (MangledName[0] == '_' && nonMicrosoftDemangle(MangledName.substr(1), Result))
+
+  if (S[0] == '_' && nonMicrosoftDemangle(S + 1, Result))
     return Result;
-  if (char *Demangled = microsoftDemangle(MangledName, nullptr, nullptr, nullptr, nullptr)) {
+
+  if (char *Demangled =
+          microsoftDemangle(S, nullptr, nullptr, nullptr, nullptr)) {
     Result = Demangled;
     std::free(Demangled);
     return Result;
   }
-  return std::string(MangledName);
+
+  return MangledName;
 }
 
-bool llvm::nonMicrosoftDemangle(const std::string_view MangledName, std::string &Result) {
+bool llvm::nonMicrosoftDemangle(const char *MangledName, std::string &Result) {
   char *Demangled = nullptr;
   if (isItaniumEncoding(MangledName))
     Demangled = itaniumDemangle(MangledName, nullptr, nullptr, nullptr);

@@ -10,8 +10,8 @@
 // file does not yet support:
 //   - C++ modules TS
 
-#include "Demangle.h"
-#include "ItaniumDemangle.h"
+#include "llvm/Demangle/Demangle.h"
+#include "llvm/Demangle/ItaniumDemangle.h"
 
 #include <cassert>
 #include <cctype>
@@ -323,7 +323,7 @@ public:
 
 using Demangler = itanium_demangle::ManglingParser<DefaultAllocator>;
 
-char *llvm::itaniumDemangle(const std::string_view MangledName, char *Buf,
+char *llvm::itaniumDemangle(const char *MangledName, char *Buf,
                             size_t *N, int *Status) {
   if (MangledName == nullptr || (Buf != nullptr && N == nullptr)) {
     if (Status)
@@ -332,7 +332,7 @@ char *llvm::itaniumDemangle(const std::string_view MangledName, char *Buf,
   }
 
   int InternalStatus = demangle_success;
-  Demangler Parser(MangledName.data(), MangledName.data() + MangledName.size());
+  Demangler Parser(MangledName, MangledName + std::strlen(MangledName));
   OutputBuffer OB;
 
   Node *AST = Parser.parse();

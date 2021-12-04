@@ -308,11 +308,11 @@ static void process_color(FILE *out, std::string_view sv, int64_t offset) {
   } while (n == 16 && maxlen > 0);
 }
 
-std::string demangle(const std::string_view MangledName) {
+std::string demangle(const std::string &MangledName) {
   if (MangledName.empty()) {
     return "(unnamed)";
   }
-  return llvm::demangle(MangledName);
+  return bela::demangle(MangledName);
 }
 
 int wmain(int argc, wchar_t **argv) {
@@ -348,11 +348,11 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stdout, L"\x1b[33mDllName: %s\x1b[0m\n", d.first);
     for (const auto &n : d.second) {
       if (n.Ordinal == 0) {
-        bela::FPrintF(stdout, L" %7d %s\n", n.Index, llvm::demangle(n.Name));
+        bela::FPrintF(stdout, L" %7d %s\n", n.Index, bela::demangle(n.Name));
         continue;
       }
       if (auto fn = sse.LookupOrdinalFunctionName(d.first, n.Ordinal, ec); fn) {
-        bela::FPrintF(stdout, L"         %s (Ordinal %d)\n", llvm::demangle(*fn), n.Ordinal);
+        bela::FPrintF(stdout, L"         %s (Ordinal %d)\n", bela::demangle(*fn), n.Ordinal);
         continue;
       }
       bela::FPrintF(stdout, L"         Ordinal%d (Ordinal %d)\n", n.Ordinal, n.Ordinal);

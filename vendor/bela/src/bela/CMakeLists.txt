@@ -8,6 +8,7 @@ add_library(
   codecvt.cc
   escaping.cc
   fmt.cc
+  fnmatch_narrow.c
   fnmatch.cc
   int128.cc
   match.cc

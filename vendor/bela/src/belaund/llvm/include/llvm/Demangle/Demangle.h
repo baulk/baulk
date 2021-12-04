@@ -28,7 +28,7 @@ enum : int {
   demangle_success = 0,
 };
 
-char *itaniumDemangle(const std::string_view mangled_name, char *buf, size_t *n,
+char *itaniumDemangle(const char *mangled_name, char *buf, size_t *n,
                       int *status);
 
 enum MSDemangleFlags {
@@ -53,24 +53,24 @@ enum MSDemangleFlags {
 /// receives the size of the demangled string on output if n_buf is not nullptr.
 /// status receives one of the demangle_ enum entries above if it's not nullptr.
 /// Flags controls various details of the demangled representation.
-char *microsoftDemangle(const std::string_view mangled_name, size_t *n_read,
-                        char *buf, size_t *n_buf,
-                        int *status, MSDemangleFlags Flags = MSDF_None);
+char *microsoftDemangle(const char *mangled_name, size_t *n_read, char *buf,
+                        size_t *n_buf, int *status,
+                        MSDemangleFlags Flags = MSDF_None);
 
 // Demangles a Rust v0 mangled symbol. The API follows that of __cxa_demangle.
-char *rustDemangle(const std::string_view MangledName, char *Buf, size_t *N, int *Status);
+char *rustDemangle(const char *MangledName, char *Buf, size_t *N, int *Status);
 
 // Demangles a D mangled symbol.
-char *dlangDemangle(const std::string_view MangledName);
+char *dlangDemangle(const char *MangledName);
 
 /// Attempt to demangle a string using different demangling schemes.
 /// The function uses heuristics to determine which demangling scheme to use.
 /// \param MangledName - reference to string to demangle.
 /// \returns - the demangled string, or a copy of the input string if no
 /// demangling occurred.
-std::string demangle(const std::string_view MangledName);
+std::string demangle(const std::string &MangledName);
 
-bool nonMicrosoftDemangle(const std::string_view MangledName,std::string &Result);
+bool nonMicrosoftDemangle(const char *MangledName, std::string &Result);
 
 /// "Partial" demangler. This supports demangling a string into an AST
 /// (typically an intermediate stage in itaniumDemangle) and querying certain
