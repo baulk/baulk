@@ -13,13 +13,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "MicrosoftDemangle.h"
-#include "Demangle.h"
-#include "MicrosoftDemangleNodes.h"
+#include "llvm/Demangle/MicrosoftDemangle.h"
+#include "llvm/Demangle/Demangle.h"
+#include "llvm/Demangle/MicrosoftDemangleNodes.h"
 
-#include "DemangleConfig.h"
-#include "StringView.h"
-#include "Utility.h"
+#include "llvm/Demangle/DemangleConfig.h"
+#include "llvm/Demangle/StringView.h"
+#include "llvm/Demangle/Utility.h"
 
 #include <array>
 #include <cctype>
@@ -2338,16 +2338,16 @@ void Demangler::dumpBackReferences() {
     std::printf("\n");
 }
 
-char *llvm::microsoftDemangle(const std::string_view MangledName, size_t *NMangled,
+char *llvm::microsoftDemangle(const char *MangledName, size_t *NMangled,
                               char *Buf, size_t *N,
                               int *Status, MSDemangleFlags Flags) {
   Demangler D;
   OutputBuffer OB;
 
-  StringView Name{MangledName.data(), MangledName.size()};
+  StringView Name{MangledName};
   SymbolNode *AST = D.parse(Name);
   if (!D.Error && NMangled)
-    *NMangled = Name.begin() - MangledName.data();
+    *NMangled = Name.begin() - MangledName;
 
   if (Flags & MSDF_DumpBackrefs)
     D.dumpBackReferences();
