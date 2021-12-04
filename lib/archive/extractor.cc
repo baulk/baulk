@@ -6,7 +6,7 @@ std::shared_ptr<Extractor> NewExtractor(std::wstring_view filename, std::wstring
                                         const ExtractorOptions &opts, bela::error_code &ec) {
   file_format_t afmt{file_format_t::none};
   int64_t offset{0};
-  auto fd = baulk::archive::NewArchiveFile(filename, afmt, offset, ec);
+  auto fd = baulk::archive::NewDecompressFile(filename, afmt, offset, ec);
   if (!fd) {
     return nullptr;
   }

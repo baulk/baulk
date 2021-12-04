@@ -38,7 +38,6 @@ using bela::ErrEnded;
 using bela::ErrGeneral;
 using bela::ErrUnimplemented;
 
-
 class File {
 public:
   File(File &&o) noexcept;
@@ -62,8 +61,9 @@ std::wstring_view PathRemoveExtension(std::wstring_view p);
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename,
                                              bool always_utf8 = true);
 
-std::optional<bela::io::FD> NewArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
-                                           bela::error_code &ec);
+// NewDecompressFile open file and detect archive file format and offset
+std::optional<bela::io::FD> NewDecompressFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+                                              bela::error_code &ec);
 
 class Extractor {
 public:

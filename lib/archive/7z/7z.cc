@@ -6,12 +6,12 @@ namespace baulk::archive::n7z {
 namespace {
 void *SzAlloc(ISzAllocPtr p, size_t size) {
   (void)p;
-  return mem::allocate(size);
+  return mi_malloc(size);
 }
 void SzFree(ISzAllocPtr p, void *address) {
   (void)p;
-  mem::deallocate(address);
+  mi_free(address);
 }
 } // namespace
 
-} // namespace baulk::archive::sevenzip
+} // namespace baulk::archive::n7z

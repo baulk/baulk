@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t **argv) {
   file_format_t afmt{file_format_t::none};
   int64_t offset{0};
   bela::error_code ec;
-  auto fd = baulk::archive::NewArchiveFile(argv[1], afmt, offset, ec);
+  auto fd = baulk::archive::NewDecompressFile(argv[1], afmt, offset, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"file %s not archive file: %s\n", argv[1], ec);
     return 1;
