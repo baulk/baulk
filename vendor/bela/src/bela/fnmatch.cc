@@ -23,77 +23,22 @@ constexpr int BRACKET = -3;
 constexpr int QUESTION = -4;
 constexpr int STAR = -5;
 
-int CharCompare(const char16_t *l, const char16_t *r) {
-  for (; *l == *r && *l; l++, r++)
-    ;
-  return *l - *r;
-}
-
-#define FN_WCTYPE_ALNUM 1
-#define FN_WCTYPE_ALPHA 2
-#define FN_WCTYPE_BLANK 3
-#define FN_WCTYPE_CNTRL 4
-#define FN_WCTYPE_DIGIT 5
-#define FN_WCTYPE_GRAPH 6
-#define FN_WCTYPE_LOWER 7
-#define FN_WCTYPE_PRINT 8
-#define FN_WCTYPE_PUNCT 9
-#define FN_WCTYPE_SPACE 10
-#define FN_WCTYPE_UPPER 11
-#define FN_WCTYPE_XDIGIT 12
-
-int Fniswctype(wint_t wc, int type) {
-  switch (type) {
-  case FN_WCTYPE_ALNUM:
-    return iswalnum(wc);
-  case FN_WCTYPE_ALPHA:
-    return iswalpha(wc);
-  case FN_WCTYPE_BLANK:
-    return iswblank(wc);
-  case FN_WCTYPE_CNTRL:
-    return iswcntrl(wc);
-  case FN_WCTYPE_DIGIT:
-    return iswdigit(wc);
-  case FN_WCTYPE_GRAPH:
-    return iswgraph(wc);
-  case FN_WCTYPE_LOWER:
-    return iswlower(wc);
-  case FN_WCTYPE_PRINT:
-    return iswprint(wc);
-  case FN_WCTYPE_PUNCT:
-    return iswpunct(wc);
-  case FN_WCTYPE_SPACE:
-    return iswspace(wc);
-  case FN_WCTYPE_UPPER:
-    return iswupper(wc);
-  case FN_WCTYPE_XDIGIT:
-    return iswxdigit(wc);
-  }
-  return 0;
-}
-
-int Fnwctype(const char16_t *s) {
-  int i;
-  const char16_t *p;
-  /* order must match! */
-  static constexpr const char16_t names[] = u"alnum\0"
-                                            u"alpha\0"
-                                            u"blank\0"
-                                            u"cntrl\0"
-                                            u"digit\0"
-                                            u"graph\0"
-                                            u"lower\0"
-                                            u"print\0"
-                                            u"punct\0"
-                                            u"space\0"
-                                            u"upper\0"
-                                            u"xdigit";
-  for (i = 1, p = names; *p; i++, p += 6)
-    if (*s == *p && CharCompare(s, p) == 0) {
-      return i;
+constexpr bool same_character_matched(wint_t wc, std::u16string_view sv) {
+  constexpr struct {
+    std::u16string_view sv;
+    decltype(iswalnum) *fn;
+  } matchers[] = {
+      {u"alnum", iswalnum}, {u"alpha", iswalpha}, {u"blank", iswblank}, {u"cntrl", iswcntrl},
+      {u"digit", iswdigit}, {u"graph", iswgraph}, {u"lower", iswlower}, {u"print", iswprint},
+      {u"punct", iswpunct}, {u"space", iswspace}, {u"upper", iswupper}, {u"xdigit", iswxdigit},
+  };
+  for (const auto &m : matchers) {
+    if (m.sv == sv) {
+      return m.fn(wc) != 0;
     }
-  return 0;
-}
+  }
+  return false;
+} // namespace bela
 
 // convert UTF-16 text to UTF-32
 int CharNext(const char16_t *str, size_t n, size_t *step) {
@@ -252,14 +197,14 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
       const char16_t *p0 = p + 2;
       int z = p[1];
       p += 3;
-      while (p[-1] != z || p[0] != ']')
+      while (p[-1] != z || p[0] != ']') {
         p++;
-      if (z == ':' && p - 1 - p0 < 16) {
-        char16_t buf[16];
-        memcpy(buf, p0, (p - 1 - p0) * sizeof(char16_t));
-        buf[p - 1 - p0] = 0;
-        if (Fniswctype(static_cast<wint_t>(k), Fnwctype(buf)) ||
-            Fniswctype(static_cast<wint_t>(kfold), Fnwctype(buf))) {
+      }
+      auto svlen = p - 1 - p0;
+      if (z == ':' && svlen < 16) {
+        std::u16string_view sv{p0, static_cast<size_t>(svlen)};
+        if (same_character_matched(static_cast<wint_t>(k), sv) ||
+            same_character_matched(static_cast<wint_t>(kfold), sv)) {
           return !inv;
         }
       }
@@ -460,15 +405,11 @@ bool FnMatch(std::u16string_view pattern, std::u16string_view text, int flags) {
     // if (FnMatchInternal(pattern_, text_, flags) == 0) {
     //   return true;
     // }
-    //return false;
+    // return false;
   }
   if ((flags & fnmatch::LeadingDir) != 0) {
-    auto pos = text.find_first_of(u"\\/");
-    if (pos != std::wstring_view::npos) {
+    if (auto pos = text.find_first_of(u"\\/"); pos != std::u16string_view::npos) {
       text.remove_suffix(text.size() - pos);
-    }
-    if (FnMatchInternal(pattern, text, flags) == 0) {
-      return true;
     }
   }
   return FnMatchInternal(pattern, text, flags) == 0;
