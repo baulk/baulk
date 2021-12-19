@@ -160,7 +160,7 @@ inline std::wstring_view StripExtension(std::wstring_view filename) {
   return filename.substr(0, pos);
 }
 
-inline void StringNonEmpty(std::wstring &s, std::wstring_view d) {
+inline void StringFilling(std::wstring &s, std::wstring_view d) {
   if (s.empty()) {
     s = d;
   }
@@ -190,12 +190,12 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     if (vi->CompanyName.empty()) {
       vi->CompanyName = bela::StringCat(pkg.name, L" contributors");
     }
-    StringNonEmpty(vi->FileDescription, pkg.description);
-    StringNonEmpty(vi->FileVersion, pkg.version);
-    StringNonEmpty(vi->ProductVersion, pkg.version);
-    StringNonEmpty(vi->ProductName, pkg.name);
-    StringNonEmpty(vi->OriginalFileName, linkMeta.alias);
-    StringNonEmpty(vi->InternalName, linkMeta.alias);
+    StringFilling(vi->FileDescription, pkg.description);
+    StringFilling(vi->FileVersion, pkg.version);
+    StringFilling(vi->ProductVersion, pkg.version);
+    StringFilling(vi->ProductName, pkg.name);
+    StringFilling(vi->OriginalFileName, linkMeta.alias);
+    StringFilling(vi->InternalName, linkMeta.alias);
     rcwrited = w.WriteVersion(*vi, rcSourcePath, ec);
   } else {
     bela::pe::Version nvi;

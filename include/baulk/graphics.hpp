@@ -7,25 +7,28 @@
 
 namespace baulk::windows {
 constexpr bool mica_materials_enabled(const bela::windows_version &ver) { return ver >= bela::windows::win11_21h2; }
+constexpr bool mica_system_backdrop_enabled(const bela::windows_version &ver) {
+  constexpr bela::windows_version win11_22523(10, 0, 22523);
+  return ver >= win11_22523;
+}
 constexpr bool title_bar_customization_enabled(const bela::windows_version &ver) {
   return ver >= bela::windows::win10_21h1;
 }
 
 namespace dwm {
+// clang-format off
 // Window attributes
 enum window11_attributes {
-  DWMWA_USE_HOSTBACKDROPBRUSH = 17, // [set] BOOL, Allows the use of host backdrop brushes for the window.
-  // [set] BOOL, Allows a window to either use the accent color, or dark, according to the user Color Mode preferences.
-  DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
-  // [set] WINDOW_CORNER_PREFERENCE, Controls the policy that rounds top-level window corners
-  DWMWA_WINDOW_CORNER_PREFERENCE = 33,
-  DWMWA_BORDER_COLOR = 34,                   // [set] COLORREF, The color of the thin border around a top-level window
-  DWMWA_CAPTION_COLOR = 35,                  // [set] COLORREF, The color of the caption
-  DWMWA_TEXT_COLOR = 36,                     // [set] COLORREF, The color of the caption text
-  DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37, // [get] UINT, width of the visible border around a thick frame window
-  DWMWA_MICA_EFFECT = 1029,                  // [set] BOOL
+  DWMWA_USE_HOSTBACKDROPBRUSH = 17,           // [set] BOOL, Allows the use of host backdrop brushes for the window.
+  DWMWA_USE_IMMERSIVE_DARK_MODE = 20,         // [set] BOOL, Allows a window to either use the accent color, or dark, according to the user Color Mode preferences.
+  DWMWA_WINDOW_CORNER_PREFERENCE = 33,        // [set] WINDOW_CORNER_PREFERENCE, Controls the policy that rounds top-level window corners
+  DWMWA_BORDER_COLOR = 34,                    // [set] COLORREF, The color of the thin border around a top-level window
+  DWMWA_CAPTION_COLOR = 35,                   // [set] COLORREF, The color of the caption
+  DWMWA_TEXT_COLOR = 36,                      // [set] COLORREF, The color of the caption text
+  DWMWA_VISIBLE_FRAME_BORDER_THICKNESS = 37,  // [get] UINT, width of the visible border around a thick frame window
+  DWMWA_SYSTEMBACKDROP_TYPE = 38,             // [get, set] SYSTEMBACKDROP_TYPE, Controls the system-drawn backdrop material of a window, including behind the non-client area.
+  DWMWA_MICA_EFFECT = 1029,                   // [set] BOOL
 };
-
 enum window_corner_preference {
   /*
    * Let the system decide whether or not to round window corners
@@ -45,9 +48,26 @@ enum window_corner_preference {
   /*
    * Round the corners if appropriate, with a small radius
    */
-  DWMWCP_ROUNDSMALL = 3
+  DWMWCP_ROUNDSMALL = 3,
+
+  /*
+   * Round the corners of the window in the same style as system popup menus
+   */
+  DWMWCP_MENU = 4
 
 };
+
+// Types used with DWMWA_SYSTEMBACKDROP_TYPE
+enum DWM_SYSTEMBACKDROP_TYPE
+{
+    DWMSBT_AUTO,             // [Default] Let DWM automatically decide the system-drawn backdrop for this window.
+    DWMSBT_NONE,             // Do not draw any system backdrop.
+    DWMSBT_MAINWINDOW,       // Draw the backdrop material effect corresponding to a long-lived window.
+    DWMSBT_TRANSIENTWINDOW,  // Draw the backdrop material effect corresponding to a transient window.
+    DWMSBT_TABBEDWINDOW,     // Draw the backdrop material effect corresponding to a window with a tabbed title bar.
+};
+
+// clang-format on
 
 // Use this constant to reset any window part colors to the system default behavior
 constexpr auto dwmwa_color_default = 0xFFFFFFFFu;

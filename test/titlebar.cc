@@ -178,18 +178,6 @@ static LRESULT win32_custom_title_bar_example_window_callback(HWND handle, UINT 
     return 0;
   }
   case WM_CREATE: {
-    // enum DWMWINDOWATTRIBUTE { DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_MICA_EFFECT = 1029 };
-    // enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
-    // MARGINS margins = {-1};
-    // ::DwmExtendFrameIntoClientArea(handle, &margins);
-    // // Dark mode
-    // DWM_BOOL darkPreference = DWMWCP_FALSE;
-    // DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkPreference, sizeof(darkPreference));
-    // // Mica
-    // DWM_BOOL micaPreference = DWMWCP_TRUE;
-    // DwmSetWindowAttribute(handle, DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference));
-    // DWM_BOOL value=TRUE;
-    // DwmSetWindowAttribute(handle, DWMWA_USE_HOSTBACKDROPBRUSH, reinterpret_cast<void*>(&value), sizeof(value));
     RECT size_rect;
     GetWindowRect(handle, &size_rect);
 
