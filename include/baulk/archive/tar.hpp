@@ -5,6 +5,7 @@
 #include <bela/time.hpp>
 #include <bela/phmap.hpp>
 #include <memory>
+#include "format.hpp"
 
 namespace baulk::archive::tar {
 constexpr long ErrNotTarFile = 754320;
@@ -263,24 +264,21 @@ struct ExtractReader {
 
 class FileReader : public ExtractReader {
 public:
-  FileReader(HANDLE fd_, int64_t size_ = bela::SizeUnInitialized, bool nc = false)
-      : fd(fd_), size(size_), needClosed(nc) {}
+  FileReader(bela::io::FD &&fd_) : fd(std::move(fd_)) {}
   FileReader(const FileReader &) = delete;
   FileReader &operator=(const FileReader &) = delete;
-  ~FileReader();
+  ~FileReader() = default;
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   bool Discard(int64_t len, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
-  int64_t Size() const { return size; }
-  HANDLE FD() const { return fd; }
+  auto FD() const { return fd.NativeFD(); }
 
 private:
-  HANDLE fd{INVALID_HANDLE_VALUE};
-  int64_t size{bela::SizeUnInitialized};
-  bool needClosed{false};
+  bela::io::FD fd;
 };
 std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
 std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, bela::error_code &ec);
+std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_format_t afmt, bela::error_code &ec);
 
 class Reader {
 public:

@@ -6,7 +6,7 @@
 
 namespace baulk::archive {
 
-const wchar_t *ArchiveFormatName(file_format_t t) {
+const wchar_t *FormatToMIME(file_format_t t) {
   struct name_table {
     file_format_t t;
     const wchar_t *name;
@@ -124,8 +124,8 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
 
 constexpr size_t magic_size = 512;
 
-std::optional<bela::io::FD> NewDecompressFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
-                                              bela::error_code &ec) {
+std::optional<bela::io::FD> OpenCompressedFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+                                               bela::error_code &ec) {
   auto fd = bela::io::NewFile(file, ec);
   if (!fd) {
     return std::nullopt;

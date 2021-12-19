@@ -5,34 +5,9 @@
 #include <bela/time.hpp>
 #include <bela/io.hpp>
 #include <functional>
+#include "archive/format.hpp"
 
 namespace baulk::archive {
-enum class file_format_t : uint32_t {
-  none,
-  /// archive
-  epub,
-  zip,
-  tar,
-  rar,
-  gz,
-  bz2,
-  zstd,
-  _7z,
-  xz,
-  eot,
-  crx,
-  deb,
-  lz,
-  rpm,
-  cab,
-  msi,
-  dmg,
-  xar,
-  wim,
-  z,
-  exe, // Currently only supports PE self-extracting files (ELF/Mach-O) not currently supported
-};
-const wchar_t *ArchiveFormatName(file_format_t t);
 using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
@@ -61,9 +36,9 @@ std::wstring_view PathRemoveExtension(std::wstring_view p);
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename,
                                              bool always_utf8 = true);
 
-// NewDecompressFile open file and detect archive file format and offset
-std::optional<bela::io::FD> NewDecompressFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
-                                              bela::error_code &ec);
+// OpenCompressedFile open file and detect archive file format and offset
+std::optional<bela::io::FD> OpenCompressedFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+                                               bela::error_code &ec);
 
 } // namespace baulk::archive
 

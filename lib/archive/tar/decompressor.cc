@@ -78,4 +78,36 @@ std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, bela::
   ec = bela::make_error_code(ErrNotTarFile, L"not a tar file");
   return nullptr;
 }
+
+std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_format_t afmt, bela::error_code &ec) {
+  if (!bela::io::Seek(fd.FD(), offset, ec)) {
+    return nullptr;
+  }
+  switch (afmt) {
+  case file_format_t::gz:
+    if (auto r = std::make_shared<gzip::Reader>(&fd); r->Initialize(ec)) {
+      return r;
+    }
+    break;
+  case file_format_t::bz2:
+    if (auto r = std::make_shared<bzip::Reader>(&fd); r->Initialize(ec)) {
+      return r;
+    }
+    break;
+  case file_format_t::zstd:
+    if (auto r = std::make_shared<zstd::Reader>(&fd); r->Initialize(ec)) {
+      return r;
+    }
+    break;
+  case file_format_t::xz:
+    if (auto r = std::make_shared<xz::Reader>(&fd); r->Initialize(ec)) {
+      return r;
+    }
+    break;
+  default:
+    break;
+  }
+  return nullptr;
+}
+
 } // namespace baulk::archive::tar

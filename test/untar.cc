@@ -12,7 +12,6 @@ bool untar(std::wstring_view file) {
     bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec);
     return false;
   }
-  bela::FPrintF(stderr, L"File size: %d\n", fr->Size());
   auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {

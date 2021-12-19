@@ -10,13 +10,13 @@ int wmain(int argc, wchar_t **argv) {
   file_format_t afmt{file_format_t::none};
   int64_t offset{0};
   bela::error_code ec;
-  auto fd = baulk::archive::NewDecompressFile(argv[1], afmt, offset, ec);
+  auto fd = baulk::archive::OpenCompressedFile(argv[1], afmt, offset, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"file %s not archive file: %s\n", argv[1], ec);
     return 1;
   }
 
-  auto name = baulk::archive::ArchiveFormatName(afmt);
+  auto name = baulk::archive::FormatToMIME(afmt);
   if (offset != 0) {
     bela::FPrintF(stderr, L"file archive format: %s  (PE Self Extract offset: %d)\n", name, offset);
     return 0;

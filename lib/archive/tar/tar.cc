@@ -7,16 +7,10 @@
 #include <charconv>
 
 namespace baulk::archive::tar {
-// tar code
-FileReader::~FileReader() {
-  if (fd != INVALID_HANDLE_VALUE && needClosed) {
-    CloseHandle(fd);
-  }
-}
 
 ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
   DWORD drSize = {0};
-  if (::ReadFile(fd, buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
+  if (::ReadFile(fd.NativeFD(), buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
     ec = bela::make_system_error_code(L"ReadFile: ");
     return -1;
   }
@@ -26,7 +20,7 @@ ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
 bool FileReader::Discard(int64_t len, bela::error_code &ec) {
   auto li = *reinterpret_cast<LARGE_INTEGER *>(&len);
   LARGE_INTEGER oli{0};
-  if (SetFilePointerEx(fd, li, &oli, SEEK_CUR) != TRUE) {
+  if (SetFilePointerEx(fd.NativeFD(), li, &oli, SEEK_CUR) != TRUE) {
     ec = bela::make_system_error_code(L"SetFilePointerEx: ");
     return false;
   }
@@ -39,7 +33,7 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
   while (filesize > 0) {
     auto minsize = (std::min)(bufferSize, filesize);
     DWORD drSize = {0};
-    if (::ReadFile(fd, buffer, static_cast<DWORD>(minsize), &drSize, nullptr) != TRUE) {
+    if (::ReadFile(fd.NativeFD(), buffer, static_cast<DWORD>(minsize), &drSize, nullptr) != TRUE) {
       ec = bela::make_system_error_code(L"ReadFile: ");
       return false;
     }
@@ -53,18 +47,11 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
 }
 
 std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec) {
-  auto fd = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
+  auto fd = bela::io::NewFile(file, ec);
+  if (!fd) {
     return nullptr;
   }
-  LARGE_INTEGER li;
-  if (GetFileSizeEx(fd, &li) != TRUE) {
-    ec = bela::make_system_error_code(L"GetFileSizeEx: ");
-    return nullptr;
-  }
-  return std::make_shared<FileReader>(fd, li.QuadPart, true);
+  return std::make_shared<FileReader>(std::move(*fd));
 }
 
 inline bool isZeroBlock(const ustar_header &th) {
