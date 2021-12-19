@@ -65,21 +65,6 @@ std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string
 std::optional<bela::io::FD> NewDecompressFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
                                               bela::error_code &ec);
 
-class Extractor {
-public:
-  virtual bool Extract(bela::error_code &ec) = 0;
-};
-
-struct ExtractorOptions {
-  // extract new file
-  std::function<bool(const std::wstring_view filename)> new_file;
-  // show_progress
-  std::function<bool(int64_t total, int64_t bytes)> show_progress;
-};
-
-std::shared_ptr<Extractor> NewExtractor(std::wstring_view filename, std::wstring_view chroot,
-                                        const ExtractorOptions &opts, bela::error_code &ec);
-
 } // namespace baulk::archive
 
 #endif

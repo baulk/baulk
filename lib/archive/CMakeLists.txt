@@ -1,7 +1,7 @@
 # archive libs
 
 add_subdirectory(chromium_zlib)
-add_subdirectory(lzmasdk)
+add_subdirectory(ppmd)
 
 # liblzma
 add_library(
@@ -169,7 +169,6 @@ add_library(
   baulk.archive STATIC
   archive.cc
   ced.cc
-  extractor.cc
   format.cc
   tar/brotli.cc
   tar/bzip.cc
@@ -215,7 +214,7 @@ target_link_libraries(
   belawin
   deflate64
   lzma
-  lzmasdk
+  ppmd
   zlib
   zstd
   ced
