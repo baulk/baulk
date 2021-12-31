@@ -1,4 +1,4 @@
-# Copyright (C) 2021. Baulk contributors. All Rights Reserved.
+# Copyright (C) 2022. Baulk contributors. All Rights Reserved.
 cmake_minimum_required(VERSION 3.18)
 project(Baulk)
 
