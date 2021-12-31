@@ -63,8 +63,15 @@ status_t LookupImages(bela::bytes_view bv, hazel_result &hr) {
   constexpr const uint8_t gifMagic[] = {0x47, 0x49, 0x46};
   constexpr const uint8_t webpMagic[] = {0x57, 0x45, 0x42, 0x50};
   constexpr const uint8_t psdMagic[] = {0x38, 0x42, 0x50, 0x53};
+  constexpr const uint8_t qoiMagic[] = {'q', 'o', 'i', 'f'};
   constexpr const size_t psdhlen = 4 + 2 + 6 + 2 + 4 + 4 + 2 + 2;
   switch (bv[0]) {
+  case 'q':
+    if (bv.starts_bytes_with(qoiMagic) && hr.ZeroExists()) {
+      hr.assign(types::qoi, L"Quite OK Image Format");
+      return Found;
+    }
+    break;
   case 0x0:
     if (bv.starts_bytes_with(icoMagic)) {
       hr.assign(types::ico, L"ICO file format (.ico)");
