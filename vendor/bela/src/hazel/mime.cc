@@ -84,6 +84,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::jxr, L"image/vnd.ms-photo"},
       {types::psd, L"image/vnd.adobe.photoshop"},
       {types::ico, L"image/vnd.microsoft.icon"}, // image/x-icon
+      {types::qoi, L"image/qoi"},
       // docs
       {types::doc, L"application/msword"},
       {types::docx, L"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},

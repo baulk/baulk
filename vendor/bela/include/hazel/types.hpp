@@ -102,6 +102,8 @@ typedef enum hazel_types_e : uint32_t {
   avcs,
   avif,
   avis,
+  //
+  qoi,
   // docs
   doc,
   docx,
