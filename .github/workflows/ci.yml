@@ -18,16 +18,14 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
-        target: [baulk-win64, baulk-win32, baulk-arm64]
+        target: [baulk-win64,baulk-arm64]
         include:
           - target: baulk-win64
             short_target: win64
-          - target: baulk-win32
-            short_target: win32
           - target: baulk-arm64
             short_target: arm64
     steps:
