@@ -7,7 +7,6 @@ param(
 
 # C:\Program Files\Microsoft Visual Studio\2022
 $VS2022Root = "$env:ProgramFiles\Microsoft Visual Studio\2022"
-$VS2019Root = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019"
 
 $clangtidy = $null
 $clangtidyLocal = $(
@@ -16,13 +15,8 @@ $clangtidyLocal = $(
     "$VS2022Root\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
     "$VS2022Root\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
     "$VS2022Root\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    # x64
-    "$VS2019Root\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
-    "$VS2019Root\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    "$VS2019Root\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
     
-    "$env:ProgramFiles\llvm\bin\clang-tidy.exe", 
-    "${env:ProgramFiles(x86)}\llvm\bin\clang-tidy.exe"
+    "$env:ProgramFiles\llvm\bin\clang-tidy.exe"
 )
 foreach ($c in $clangtidyLocal) {
     if (Test-Path $c) {
