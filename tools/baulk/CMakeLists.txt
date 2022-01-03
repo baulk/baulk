@@ -30,7 +30,6 @@ add_executable(
   msi.cc
   pkg.cc
   tar.cc
-  zip.cc
   baulk.rc
   baulk.manifest)
 
