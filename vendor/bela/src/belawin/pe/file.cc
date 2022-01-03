@@ -207,7 +207,7 @@ bool File::NewFile(std::wstring_view p, bela::error_code &ec) {
 }
 
 bool File::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
-  fd.Assgin(fd_, true);
+  fd.Assgin(fd_, false);
   size = sz;
   return parseFile(ec);
 }
