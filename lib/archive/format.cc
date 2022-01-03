@@ -124,40 +124,29 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
 
 constexpr size_t magic_size = 512;
 
-std::optional<bela::io::FD> OpenCompressedFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
-                                               bela::error_code &ec) {
-  auto fd = bela::io::NewFile(file, ec);
-  if (!fd) {
-    return std::nullopt;
+bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec) {
+  uint8_t magicBytes[magic_size] = {0};
+  int64_t outlen = 0;
+  if (!fd.ReadAt(magicBytes, 0, outlen, ec)) {
+    return false;
   }
-  offset = 0;
-  DWORD drSize = {0};
-  uint8_t buffer[magic_size] = {0};
-  if (::ReadFile(fd->NativeFD(), buffer, static_cast<DWORD>(magic_size), &drSize, nullptr) != TRUE) {
-    ec = bela::make_system_error_code(L"ReadFile: ");
-    return std::nullopt;
-  }
-  if (afmt = analyze_format_internal(bela::bytes_view(buffer, static_cast<size_t>(drSize)));
+  if (afmt = analyze_format_internal(bela::bytes_view(magicBytes, static_cast<size_t>(outlen)));
       afmt != file_format_t::exe) {
-    return std::move(fd);
+    return true;
   }
   bela::pe::File pefile;
-  if (!pefile.NewFile(fd->NativeFD(), bela::SizeUnInitialized, ec)) {
-    return std::nullopt;
+  if (!pefile.NewFile(fd.NativeFD(), bela::SizeUnInitialized, ec)) {
+    return false;
   }
   if (pefile.OverlayLength() < magic_size) {
-    return std::nullopt;
+    return false;
   }
   offset = pefile.OverlayOffset();
-  if (!fd->Seek(offset, ec)) {
-    return std::nullopt;
+  if (!fd.ReadAt(magicBytes, offset, outlen, ec)) {
+    return false;
   }
-  if (::ReadFile(fd->NativeFD(), buffer, static_cast<DWORD>(magic_size), &drSize, nullptr) != TRUE) {
-    ec = bela::make_system_error_code(L"ReadFile: ");
-    return std::nullopt;
-  }
-  afmt = analyze_format_internal(bela::bytes_view(buffer, static_cast<size_t>(drSize)));
-  return std::move(fd);
+  afmt = analyze_format_internal(bela::bytes_view(magicBytes, static_cast<size_t>(outlen)));
+  return true;
 }
 
 } // namespace baulk::archive

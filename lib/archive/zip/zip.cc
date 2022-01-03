@@ -382,6 +382,10 @@ bool Reader::OpenReader(std::wstring_view file, bela::error_code &ec) {
     return false;
   }
   fd = std::move(*fd_);
+  file_format_t afmt{file_format_t::none};
+  if (!CheckArchiveFormat(fd, afmt, baseOffset, ec)) {
+    return false;
+  }
   return Initialize(ec);
 }
 

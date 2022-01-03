@@ -8,7 +8,11 @@ void usage_extract() {
 }
 
 int cmd_extract(const argv_t &argv) {
-  //
+  if (argv.empty()) {
+    usage_extract();
+    return 1;
+  }
+  auto arfile = argv[0];
   return 0;
 }
 
