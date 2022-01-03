@@ -19,6 +19,19 @@ void FD::MoveFrom(FD &&o) {
   o.needClosed = false;
 }
 
+bool FD::ReadAt(std::span<uint8_t> buffer, int64_t pos, int64_t &outlen, bela::error_code &ec) const {
+  if (!bela::io::Seek(fd, pos, ec)) {
+    return false;
+  }
+  DWORD dwSize = 0;
+  if (::ReadFile(fd, buffer.data(), static_cast<DWORD>(buffer.size()), &dwSize, nullptr) != TRUE) {
+    ec = bela::make_system_error_code(L"ReadFile: ");
+    return false;
+  }
+  outlen = static_cast<int64_t>(dwSize);
+  return true;
+}
+
 bool FD::ReadFull(std::span<uint8_t> buffer, bela::error_code &ec) const {
   if (buffer.size() == 0) {
     return true;

@@ -88,6 +88,11 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"unable open file %s\n", ec);
     return 1;
   }
+  char magic[10] = {0};
+  int64_t outlen = 0;
+  if (fd->ReadAt(magic, 0, outlen, ec)) {
+    bela::FPrintF(stderr, L"magic: '%s' outlen: %d\n", std::string_view{magic, 4}, outlen);
+  }
   std::wstring path;
   if (auto p = bela::RealPathByHandle(fd->NativeFD(), ec)) {
     path.assign(std::move(*p));

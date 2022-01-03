@@ -81,6 +81,27 @@ public:
   bool Seek(int64_t pos, bela::error_code &ec, Whence whence = SeekStart) const {
     return bela::io::Seek(fd, pos, ec, whence);
   }
+  // ReadAt reads buffer.size() bytes into p starting at offset off in the underlying input source. 0 <= outlen <=
+  // buffer.size()
+  // Try to read bytes into the buffer 
+  bool ReadAt(std::span<uint8_t> buffer, int64_t pos, int64_t &outlen, bela::error_code &ec) const;
+  // ReadAt reads buffer.size() bytes into p starting at offset off in the underlying input source. 0 <= outlen <=
+  // buffer.size()
+  // Try to read bytes into the buffer 
+  template <typename T>
+  requires exclude_buffer_derived<T>
+  bool ReadAt(T &t, int64_t pos, int64_t &outlen, bela::error_code &ec) const {
+    return ReadAt({reinterpret_cast<uint8_t *>(&t), sizeof(T)}, pos, outlen, ec);
+  }
+  // ReadAt reads buffer.size() bytes into p starting at offset off in the underlying input source. 0 <= outlen <=
+  // buffer.size()
+  // Try to read bytes into the buffer 
+  template <typename T>
+  requires vectorizable_derived<T>
+  bool ReadAt(std::vector<T> &tv, int64_t pos, int64_t &outlen, bela::error_code &ec) const {
+    return ReadAt({reinterpret_cast<uint8_t *>(tv.data()), sizeof(T) * tv.size()}, pos, outlen, ec);
+  }
+
   // ReadAt reads buffer.size() bytes from the File starting at byte offset pos.
   bool ReadFull(std::span<uint8_t> buffer, bela::error_code &ec) const;
   bool ReadFull(bela::Buffer &buffer, size_t nbytes, bela::error_code &ec) const {
@@ -90,8 +111,11 @@ public:
     }
     return false;
   }
-  // ReadFull reads exactly buffer.size() bytes from FD into buffer.
+  // ReadAt reads buffer.size() bytes into p starting at offset off in the underlying input source
+  // Force a full buffer
   bool ReadAt(std::span<uint8_t> buffer, int64_t pos, bela::error_code &ec) const;
+  // ReadAt reads nbytes bytes into p starting at offset off in the underlying input source
+  // Force a full buffer
   bool ReadAt(bela::Buffer &buffer, size_t nbytes, int64_t pos, bela::error_code &ec) const {
     if (auto p = buffer.make_span(nbytes); ReadAt(p, pos, ec)) {
       buffer.size() = p.size();
@@ -107,13 +131,15 @@ public:
   bool ReadFull(std::vector<T> &tv, bela::error_code &ec) const {
     return ReadFull({reinterpret_cast<uint8_t *>(tv.data()), sizeof(T) * tv.size()}, ec);
   }
-
+  // ReadAt reads sizeof T bytes into p starting at offset off in the underlying input source
+  // Force a full buffer
   template <typename T>
   requires exclude_buffer_derived<T>
   bool ReadAt(T &t, int64_t pos, bela::error_code &ec) const {
     return ReadAt({reinterpret_cast<uint8_t *>(&t), sizeof(T)}, pos, ec);
   }
-
+  // ReadAt reads vector bytes into p starting at offset off in the underlying input source
+  // Force a full buffer
   template <typename T>
   requires vectorizable_derived<T>
   bool ReadAt(std::vector<T> &tv, int64_t pos, bela::error_code &ec) const {
