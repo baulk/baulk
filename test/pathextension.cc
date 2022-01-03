@@ -38,7 +38,8 @@ int wmain() {
                                          L"/home/path/some.tgz.tar.gz",
                                          L"C:/jackson.zip",
                                          L"/home/path/some.tgz....",
-                                         L"/home/path/.zip"};
+                                         L"/home/path/.zip",
+                                         L"/home/path/abc.exe"};
   for (const auto sv : paths) {
     bela::FPrintF(stderr, L"[%s]--> %s\n", sv, PathRemoveExtension(sv));
   }

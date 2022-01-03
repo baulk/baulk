@@ -33,13 +33,21 @@ private:
 bool Chtimes(std::wstring_view file, bela::Time t, bela::error_code &ec);
 bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite = false);
 std::wstring_view PathRemoveExtension(std::wstring_view p);
+
+inline std::wstring FileDestination(std::wstring_view arfile) {
+  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size()) {
+    return std::wstring(d);
+  }
+  return bela::StringCat(arfile, L".out");
+}
+
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename,
                                              bool always_utf8 = true);
 
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
 // OpenArchiveFile open file and detect archive file format and offset
 inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
-                                                      bela::error_code &ec) {
+                                                   bela::error_code &ec) {
   if (auto fd = bela::io::NewFile(file, ec); fd) {
     if (CheckArchiveFormat(*fd, afmt, offset, ec)) {
       return std::move(fd);
