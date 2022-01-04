@@ -12,6 +12,7 @@
 #include <baulk/json_utils.hpp>
 #include <baulk/fs.hpp>
 #include <baulk/vfs.hpp>
+#include <baulk/archive/extract.hpp>
 #include "baulk-update.hpp"
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables
@@ -275,9 +276,13 @@ int UpdateBaulk() {
   if (bela::PathExists(outdir)) {
     bela::fs::ForceDeleteFolders(outdir, ec);
   }
-  DbgPrint(L"Decompress %s to %s\n", filename, outdir);
-  if (!zip::Decompress(*baulkfile, outdir, ec)) {
-    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", *baulkfile, ec);
+  baulk::archive::ZipExtractor zr;
+  if (!zr.OpenReader(*baulkfile, outdir, ec)) {
+    bela::FPrintF(stderr, L"baulk extract %s error: %s\n", *baulkfile, ec);
+    return 1;
+  }
+  if (!zr.Extract(ec)) {
+    bela::FPrintF(stderr, L"baulk extract %s error: %s\n", *baulkfile, ec);
     return 1;
   }
   baulk::fs::MakeFlattened(outdir, outdir, ec);
@@ -405,7 +410,7 @@ bool ParseArgv(int argc, wchar_t **argv) {
 
 int wmain(int argc, wchar_t **argv) {
   bela::error_code ec;
-  if (baulk::vfs::InitializeFastPathFs(ec)) {
+  if (!baulk::vfs::InitializeFastPathFs(ec)) {
     bela::FPrintF(stderr, L"baulk-exec InitializeFastPathFs error %s\n", ec);
     return 1;
   }

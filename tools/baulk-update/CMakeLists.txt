@@ -1,6 +1,6 @@
 #
 
-add_executable(baulk-update baulk-update.cc zip.cc baulk-update.rc baulk-update.manifest)
+add_executable(baulk-update baulk-update.cc baulk-update.rc baulk-update.manifest)
 
 target_link_libraries(
   baulk-update

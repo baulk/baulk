@@ -37,10 +37,6 @@ inline bela::ssize_t DbgPrint(const wchar_t *fmt) {
   return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
 }
 
-namespace zip {
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec);
-}
-
 } // namespace baulk::update
 
 #endif
