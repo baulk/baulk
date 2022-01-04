@@ -61,11 +61,9 @@ bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
   return true;
 }
 
+constexpr auto ErrParseCompressedFile = baulk::archive::tar::ErrNoFilter + 10000;
+
 bool tar_extract(baulk::archive::tar::ExtractReader *reader, std::wstring_view dest, bela::error_code &ec) {
-  DbgPrint(L"destination %s", dest);
-  if (!baulk::fs::MakeDir(dest, ec)) {
-    return false;
-  }
   bela::terminal::terminal_size termsz{0};
   if (!baulk::IsQuietMode) {
     if (bela::terminal::IsSameTerminal(stderr)) {
@@ -83,7 +81,6 @@ bool tar_extract(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
       if (ec.code == bela::ErrEnded) {
         break;
       }
-      bela::FPrintF(stderr, L"\nuntar error %s\n", ec);
       break;
     }
     showProgress(termsz, fh->Name);
@@ -111,7 +108,7 @@ bool tar_extract(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
     }
     auto fd = baulk::archive::File::NewFile(*out, true, ec);
     if (!fd) {
-      bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec);
+      bela::FPrintF(stderr, L"NewFD %s error: %s\n", *out, ec);
       continue;
     }
     fd->Chtimes(fh->ModTime, ec);
@@ -124,30 +121,64 @@ bool tar_extract(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
       fd->Discard();
     }
   }
+  if (tr->Index() == 0) {
+    ec = bela::make_error_code(ErrParseCompressedFile, L"single decompress file");
+    return false;
+  }
+  if (!ec) {
+    bela::FPrintF(stderr, L"\nuntar error %s\n", ec);
+    return false;
+  }
   if (!baulk::IsQuietMode) {
     bela::FPrintF(stderr, L"\n");
   }
   return true;
 }
 
-bool single_decompress(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt,
-                       std::wstring_view dest, bela::error_code &ec) {
-  ///
-
-  return false;
+bool single_decompress(baulk::archive::tar::FileReader &fr, int64_t offset, baulk::archive::file_format_t afmt,
+                       std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+  auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec);
+  if (!wr) {
+    bela::FPrintF(stderr, L"unable decompress file: %s no filter\n", src);
+    return false;
+  }
+  auto baseName = baulk::archive::PathRemoveExtension(bela::BaseName(src));
+  DbgPrint(L"File %s not tar file", bela::BaseName(src));
+  bela::FPrintF(stderr, L"\x1b[33mx %s\x1b[0m\n", baseName);
+  auto out = bela::StringCat(dest, L"\\", baseName);
+  auto fd = baulk::archive::File::NewFile(out, true, ec);
+  if (!fd) {
+    bela::FPrintF(stderr, L"NewFD %s error: %s\n", out, ec);
+    return false;
+  }
+  uint8_t buffer[8192];
+  for (;;) {
+    auto nBytes = wr->Read(buffer, sizeof(buffer), ec);
+    if (nBytes <= 0) {
+      break;
+    }
+    if (!fd->WriteFull(buffer, static_cast<size_t>(nBytes), ec)) {
+      return false;
+    }
+  }
+  return true;
 }
 
-bool TarExtract(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view dest,
-                bela::error_code &ec) {
+bool TarExtract(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view src,
+                std::wstring_view dest, bela::error_code &ec) {
+  DbgPrint(L"destination %s", dest);
+  if (!baulk::fs::MakeDir(dest, ec)) {
+    return false;
+  }
   baulk::archive::tar::FileReader fr(fd.NativeFD());
   if (auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec); wr) {
     if (tar_extract(wr.get(), dest, ec)) {
       return true;
     }
-    if (ec.code != baulk::archive::tar::ErrNotTarFile) {
+    if (ec.code != ErrParseCompressedFile) {
       return false;
     }
-    return single_decompress(fd, offset, afmt, dest, ec);
+    return single_decompress(fr, offset, afmt, src, dest, ec);
   }
   if (ec.code == baulk::archive::tar::ErrNoFilter) {
     return tar_extract(&fr, dest, ec);
@@ -165,7 +196,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
         afmt = baulk::archive::file_format_t::brotli;
       }
     }
-    return TarExtract(*fd, offset, afmt, dest, ec);
+    return TarExtract(*fd, offset, afmt, src, dest, ec);
   }
   bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec);
   return false;

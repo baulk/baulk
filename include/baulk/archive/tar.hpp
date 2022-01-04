@@ -288,6 +288,7 @@ public:
   bela::ssize_t Read(void *buffer, size_t size, bela::error_code &ec);
   bool ReadFull(void *buffer, size_t size, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec);
+  int Index() const { return index; }
 
 private:
   bela::ssize_t readInternal(void *buffer, size_t size, bela::error_code &ec);
@@ -301,6 +302,7 @@ private:
   ExtractReader *r{nullptr};
   int64_t remainingSize{0};
   int64_t paddingSize{0};
+  int index{0};
 };
 } // namespace baulk::archive::tar
 

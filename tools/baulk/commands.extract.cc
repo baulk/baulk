@@ -63,7 +63,7 @@ int cmd_extract(const argv_t &argv) {
   case file_format_t::bz2:
     [[fallthrough]];
   case file_format_t::tar:
-    if (!tar::TarExtract(*fd, baseOffest, afmt, dest, ec)) {
+    if (!tar::TarExtract(*fd, baseOffest, afmt, arfile, dest, ec)) {
       bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
       return 1;
     }

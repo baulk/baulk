@@ -432,6 +432,7 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
       h.Format = FormatUSTAR;
     }
     remainingSize = h.Size;
+    index++;
     return std::make_optional(std::move(h));
   }
   return std::nullopt;

@@ -45,5 +45,4 @@ std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_f
   ec.code = ErrNoFilter;
   return nullptr;
 }
-
 } // namespace baulk::archive::tar
