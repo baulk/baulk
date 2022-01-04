@@ -61,7 +61,8 @@ bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
   return true;
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+bool tar_extract(baulk::archive::tar::ExtractReader *reader, std::wstring_view dest, bela::error_code &ec) {
+  DbgPrint(L"destination %s", dest);
   if (!baulk::fs::MakeDir(dest, ec)) {
     return false;
   }
@@ -75,22 +76,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
       }
     }
   }
-  DbgPrint(L"destination %s", dest);
-  auto fr = baulk::archive::tar::OpenFile(src, ec);
-  if (fr == nullptr) {
-    bela::FPrintF(stderr, L"unable open file %s error %s\n", src, ec);
-    return 1;
-  }
-  auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
-  std::shared_ptr<baulk::archive::tar::Reader> tr;
-  if (wr != nullptr) {
-    tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
-  } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
-    tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
-  } else {
-    bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec);
-    return 1;
-  }
+  auto tr = std::make_shared<baulk::archive::tar::Reader>(reader);
   for (;;) {
     auto fh = tr->Next(ec);
     if (!fh) {
@@ -142,5 +128,46 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
     bela::FPrintF(stderr, L"\n");
   }
   return true;
+}
+
+bool single_decompress(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt,
+                       std::wstring_view dest, bela::error_code &ec) {
+  ///
+
+  return false;
+}
+
+bool TarExtract(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view dest,
+                bela::error_code &ec) {
+  baulk::archive::tar::FileReader fr(fd.NativeFD());
+  if (auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec); wr) {
+    if (tar_extract(wr.get(), dest, ec)) {
+      return true;
+    }
+    if (ec.code != baulk::archive::tar::ErrNotTarFile) {
+      return false;
+    }
+    return single_decompress(fd, offset, afmt, dest, ec);
+  }
+  if (ec.code == baulk::archive::tar::ErrNoFilter) {
+    return tar_extract(&fr, dest, ec);
+  }
+  bela::FPrintF(stderr, L"untar error %s\n", ec);
+  return false;
+}
+
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+  int64_t offset = 0;
+  baulk::archive::file_format_t afmt{baulk::archive::file_format_t::none};
+  if (auto fd = baulk::archive::OpenArchiveFile(src, offset, afmt, ec); fd) {
+    if (afmt == baulk::archive::file_format_t::none) {
+      if (bela::EndsWithIgnoreCase(src, L".tar.br") || bela::EndsWithIgnoreCase(src, L".tbr")) {
+        afmt = baulk::archive::file_format_t::brotli;
+      }
+    }
+    return TarExtract(*fd, offset, afmt, dest, ec);
+  }
+  bela::FPrintF(stderr, L"unable open tar file %s error %s\n", src, ec);
+  return false;
 }
 } // namespace baulk::tar

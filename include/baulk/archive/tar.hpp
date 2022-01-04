@@ -264,6 +264,7 @@ struct ExtractReader {
 
 class FileReader : public ExtractReader {
 public:
+  FileReader(HANDLE fd_, bool needClosed = false) { fd.Assgin(fd_, needClosed); }
   FileReader(bela::io::FD &&fd_) : fd(std::move(fd_)) {}
   FileReader(const FileReader &) = delete;
   FileReader &operator=(const FileReader &) = delete;
@@ -276,8 +277,6 @@ public:
 private:
   bela::io::FD fd;
 };
-std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec);
-std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, bela::error_code &ec);
 std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_format_t afmt, bela::error_code &ec);
 
 class Reader {

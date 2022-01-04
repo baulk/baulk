@@ -46,14 +46,6 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
   return true;
 }
 
-std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec) {
-  auto fd = bela::io::NewFile(file, ec);
-  if (!fd) {
-    return nullptr;
-  }
-  return std::make_shared<FileReader>(std::move(*fd));
-}
-
 inline bool isZeroBlock(const ustar_header &th) {
   static ustar_header zeroth = {0};
   return memcmp(&th, &zeroth, sizeof(ustar_header)) == 0;
@@ -170,7 +162,7 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
     return false;
   }
   if (h.Format = getFormat(hdr); h.Format == FormatUnknown) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
     return false;
   }
   h.Typeflag = hdr.typeflag;

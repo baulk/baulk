@@ -27,6 +27,7 @@ enum class file_format_t : uint32_t {
   xar,
   wim,
   z,
+  brotli,
   exe, // Currently only supports PE self-extracting files (ELF/Mach-O) not currently supported
 };
 const wchar_t *FormatToMIME(file_format_t t);

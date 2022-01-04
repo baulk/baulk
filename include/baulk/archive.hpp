@@ -46,7 +46,7 @@ std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string
 
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
 // OpenArchiveFile open file and detect archive file format and offset
-inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, file_format_t &afmt, int64_t &offset,
+inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,
                                                    bela::error_code &ec) {
   if (auto fd = bela::io::NewFile(file, ec); fd) {
     if (CheckArchiveFormat(*fd, afmt, offset, ec)) {

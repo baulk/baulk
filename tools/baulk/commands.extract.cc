@@ -45,7 +45,7 @@ int cmd_extract(const argv_t &argv) {
   file_format_t afmt{file_format_t::none};
   int64_t baseOffest = 0;
   bela::error_code ec;
-  auto fd = archive::OpenArchiveFile(arfile, afmt, baseOffest, ec);
+  auto fd = archive::OpenArchiveFile(arfile, baseOffest, afmt, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
     return 1;
@@ -54,8 +54,20 @@ int cmd_extract(const argv_t &argv) {
   switch (afmt) {
   case file_format_t::zip:
     return zip_extract(*fd, dest, baseOffest);
+  case file_format_t::xz:
+    [[fallthrough]];
+  case file_format_t::zstd:
+    [[fallthrough]];
+  case file_format_t::gz:
+    [[fallthrough]];
+  case file_format_t::bz2:
+    [[fallthrough]];
   case file_format_t::tar:
-    break;
+    if (!tar::TarExtract(*fd, baseOffest, afmt, dest, ec)) {
+      bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
+      return 1;
+    }
+    return 0;
   default:
     fd->Assgin(INVALID_HANDLE_VALUE, false);
     if (!sevenzip::Decompress(arfile, dest, ec)) {

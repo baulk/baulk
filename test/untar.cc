@@ -7,17 +7,25 @@
 bool untar(std::wstring_view file) {
   bela::FPrintF(stderr, L"untar %s\n", file);
   bela::error_code ec;
-  auto fr = baulk::archive::tar::OpenFile(file, ec);
-  if (fr == nullptr) {
+  int64_t offset = 0;
+  baulk::archive::file_format_t afmt{baulk::archive::file_format_t::none};
+  auto fd = baulk::archive::OpenArchiveFile(file, offset, afmt, ec);
+  if (!fd) {
     bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec);
     return false;
   }
-  auto wr = baulk::archive::tar::MakeReader(*fr, 0, ec);
+  if (afmt == baulk::archive::file_format_t::none) {
+    if (bela::EndsWithIgnoreCase(file, L".tar.br") || bela::EndsWithIgnoreCase(file, L".tbr")) {
+      afmt = baulk::archive::file_format_t::brotli;
+    }
+  }
+  baulk::archive::tar::FileReader fr(fd->NativeFD());
+  auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec);
   std::shared_ptr<baulk::archive::tar::Reader> tr;
   if (wr != nullptr) {
     tr = std::make_shared<baulk::archive::tar::Reader>(wr.get());
   } else if (ec.code == baulk::archive::tar::ErrNoFilter) {
-    tr = std::make_shared<baulk::archive::tar::Reader>(fr.get());
+    tr = std::make_shared<baulk::archive::tar::Reader>(&fr);
   } else {
     bela::FPrintF(stderr, L"unable open tar file %s error %s\n", file, ec);
     return false;
