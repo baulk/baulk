@@ -1,7 +1,6 @@
 #include "baulk.hpp"
 #include <bela/terminal.hpp>
 #include <baulk/archive.hpp>
-#include <baulk/archive/extract.hpp>
 #include "decompress.hpp"
 #include "commands.hpp"
 
@@ -19,21 +18,6 @@ Example:
 
 )");
 }
-using archive::file_format_t;
-
-int zip_extract(bela::io::FD &fd, std::wstring_view dest, int64_t offset) {
-  baulk::archive::ZipExtractor extractor(baulk::IsQuietMode);
-  bela::error_code ec;
-  if (!extractor.OpenReader(fd, dest, bela::SizeUnInitialized, offset, ec)) {
-    bela::FPrintF(stderr, L"baulk extract zip error: %s\n", ec);
-    return 1;
-  }
-  if (!extractor.Extract(ec)) {
-    bela::FPrintF(stderr, L"baulk extract zip error: %s\n", ec);
-    return 1;
-  }
-  return 0;
-}
 
 int cmd_extract(const argv_t &argv) {
   if (argv.empty()) {
@@ -42,57 +26,8 @@ int cmd_extract(const argv_t &argv) {
   }
   auto arfile = argv[0];
   auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(arfile);
-  file_format_t afmt{file_format_t::none};
-  int64_t baseOffest = 0;
   bela::error_code ec;
-  auto fd = archive::OpenArchiveFile(arfile, baseOffest, afmt, ec);
-  if (!fd) {
-    bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
-    return 1;
-  }
-  DbgPrint(L"detect file format: %s", archive::FormatToMIME(afmt));
-  switch (afmt) {
-  case file_format_t::zip:
-    return zip_extract(*fd, dest, baseOffest);
-  case file_format_t::xz:
-    [[fallthrough]];
-  case file_format_t::zstd:
-    [[fallthrough]];
-  case file_format_t::gz:
-    [[fallthrough]];
-  case file_format_t::bz2:
-    [[fallthrough]];
-  case file_format_t::tar:
-    if (!tar::TarExtract(*fd, baseOffest, afmt, arfile, dest, ec)) {
-      bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
-      return 1;
-    }
-    if (!standard::Regularize(dest)) {
-      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
-    }
-    return 0;
-  case file_format_t::msi:
-    fd->Assgin(INVALID_HANDLE_VALUE, false);
-    if (!msi::Decompress(arfile, dest, ec)) {
-      bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
-      return 1;
-    }
-    if (!msi::Regularize(dest)) {
-      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
-    }
-    break;
-  default:
-    fd->Assgin(INVALID_HANDLE_VALUE, false);
-    if (!sevenzip::Decompress(arfile, dest, ec)) {
-      bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
-      return 1;
-    }
-    if (!standard::Regularize(dest)) {
-      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
-    }
-    break;
-  }
-  return 0;
+  return smart::Decompress(arfile, dest, ec) ? 0 : 1;
 }
 
 } // namespace baulk::commands

@@ -28,8 +28,12 @@ namespace tar {
 bool TarExtract(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view src,
                 std::wstring_view dest, bela::error_code &ec);
 bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
-
 } // namespace tar
+
+namespace smart {
+bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
+inline bool Regularize(std::wstring_view path) { return true; }
+} // namespace smart
 
 struct decompress_handler_t {
   std::wstring_view extension;
@@ -39,12 +43,12 @@ struct decompress_handler_t {
 
 inline std::optional<decompress_handler_t> LookupHandler(std::wstring_view ext) {
   static constexpr decompress_handler_t hs[] = {
-      {L"exe", exe::Decompress, exe::Regularize},
-      {L"msi", msi::Decompress, msi::Regularize},
-      {L"zip", zip::Decompress, standard::Regularize},
-      {L"7z", sevenzip::Decompress, standard::Regularize},
-      {L"tar", tar::Decompress, standard::Regularize}
-      //
+      {L"exe", exe::Decompress, exe::Regularize},          // exe
+      {L"msi", msi::Decompress, msi::Regularize},          // msi
+      {L"zip", zip::Decompress, standard::Regularize},     // zip
+      {L"7z", sevenzip::Decompress, standard::Regularize}, // 7z
+      {L"tar", tar::Decompress, standard::Regularize},     // tar
+      {L"auto", smart::Decompress, smart::Regularize},     // auto detect
   };
   for (const auto &h : hs) {
     if (h.extension == ext) {
