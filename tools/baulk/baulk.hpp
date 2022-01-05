@@ -50,28 +50,47 @@ inline const std::wstring_view BucketObserveModeName(BucketObserveMode m) {
   case BucketObserveMode::Github:
     break;
   case BucketObserveMode::Git:
-    return L"Git";
+    return L"git";
   default:
     break;
   }
-  return L"Github";
+  return L"github-zip";
+}
+
+enum BucketVariant {
+  Native = 0, //
+  Scoop = 1,
+};
+
+inline const std::wstring_view BucketVariantName(BucketVariant v) {
+  switch (v) {
+  case BucketVariant::Native:
+    break;
+  case BucketVariant::Scoop:
+    return L"scoop";
+  default:
+    break;
+  }
+  return L"native";
 }
 
 struct Bucket {
   Bucket() = default;
   Bucket(std::wstring_view desc, std::wstring_view n, std::wstring_view u, int weights_ = 99,
-         BucketObserveMode mode_ = BucketObserveMode::Github) {
+         BucketObserveMode mode_ = BucketObserveMode::Github, BucketVariant variant_ = BucketVariant::Native) {
     description = desc;
     name = n;
     url = u;
     weights = weights_;
     mode = mode_;
+    variant = variant_;
   }
   std::wstring description;
   std::wstring name;
   std::wstring url;
   int weights{99};
   BucketObserveMode mode{BucketObserveMode::Github};
+  BucketVariant variant{BucketVariant::Native};
 };
 using Buckets = std::vector<Bucket>;
 

@@ -87,11 +87,13 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
   localeName = jv.fetch("locale", localeName);
   auto svs = jv.subviews("bucket");
   for (auto sv : svs) {
-    buckets.emplace_back(sv.fetch("description"), sv.fetch("name"), sv.fetch("url"),
-                         sv.fetch_as_integer("weights", 100),
-                         static_cast<BucketObserveMode>(sv.fetch_as_integer("mode", 0)));
+    buckets.emplace_back(
+        sv.fetch("description"), sv.fetch("name"), sv.fetch("url"), sv.fetch_as_integer("weights", 100),
+        static_cast<BucketObserveMode>(sv.fetch_as_integer("mode", static_cast<int>(BucketObserveMode::Github))),
+        static_cast<BucketVariant>(sv.fetch_as_integer("variant", static_cast<int>(BucketVariant::Native))));
     auto bk = buckets.back();
-    DbgPrint(L"Add bucket: %s '%s@%s' %s", bk.url, bk.name, bk.description, BucketObserveModeName(bk.mode));
+    DbgPrint(L"Add bucket: %s '%s@%s' mode: %s variant: %s", bk.url, bk.name, bk.description,
+             BucketObserveModeName(bk.mode), BucketVariantName(bk.variant));
   }
   if (jv.fetch_strings_checked("freeze", pkgs) && !pkgs.empty() && IsDebugMode) {
     for (const auto &p : pkgs) {
