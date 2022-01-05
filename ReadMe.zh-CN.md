@@ -228,6 +228,7 @@ baulk 根据清单中设置的 URL 下载压缩包，如果本地存在同名的
 |`msi`|内置，基于 MSI API|-|
 |`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|7z 支持的格式|
 |`tar`|内置|支持 gzip/xz/zstd/bzip/brotli|
+|`auto`|-|自动检测文件格式，主要为了兼容 scoop|
 
 在清单文件中，还可能存在 `links/launchers`，baulk 将根据 `links` 的设置创建特定文件的符号链接，在安装了 Visual Studio 的情况下，baulk 将根据 `launchers` 设置创建启动器，如果 Visual Studio 没有安装则会使用 `baulk-lnk` 创建模拟启动器。如果在 baulk 运行在 Windows x64 或者 ARM64 架构时，会有一些细小的差别，即优先使用平台相关的 URL/Launchers/Links，细节如下：
 
@@ -355,7 +356,7 @@ Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希
 Baulk 依赖了许多许可证友好的开源项目，在这里我表示由衷的感谢。
 
 +   [Bela - 提供了现代的 C++ 开发体验](https://github.com/fcharlie/bela.git)
-+   [LZMA SDK - 解压缩 `7z` 文件和以 `Ppmd` 压缩的 ZIP 文件](https://www.7-zip.org/sdk.html)
++   [Ppmd - 解压缩以 `Ppmd` 压缩的 ZIP 文件](https://www.7-zip.org/sdk.html)
 +   [Brotli - 解压缩 `tar.br` 文件和以 `brotli` 压缩的 ZIP 文件](https://github.com/google/brotli)
 +   [bzip2 - 解压缩 `tar.bz` 文件和以 `bzip2` 压缩的 ZIP 文件](https://sourceware.org/bzip2/)
 +   [Compact Encoding Detection - zip 非 UTF-8 文件名编码检测](https://github.com/google/compact_enc_det)

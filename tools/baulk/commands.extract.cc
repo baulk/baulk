@@ -67,12 +67,28 @@ int cmd_extract(const argv_t &argv) {
       bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
       return 1;
     }
+    if (!standard::Regularize(dest)) {
+      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
+    }
     return 0;
+  case file_format_t::msi:
+    fd->Assgin(INVALID_HANDLE_VALUE, false);
+    if (!msi::Decompress(arfile, dest, ec)) {
+      bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
+      return 1;
+    }
+    if (!msi::Regularize(dest)) {
+      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
+    }
+    break;
   default:
     fd->Assgin(INVALID_HANDLE_VALUE, false);
     if (!sevenzip::Decompress(arfile, dest, ec)) {
       bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
       return 1;
+    }
+    if (!standard::Regularize(dest)) {
+      bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
     }
     break;
   }

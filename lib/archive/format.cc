@@ -6,6 +6,33 @@
 
 namespace baulk::archive {
 
+struct oleheader_t {
+  uint32_t id[2]; // D0CF11E0 A1B11AE1
+  uint32_t clid[4];
+  uint16_t verminor; // 0x3e
+  uint16_t verdll;   // 0x03
+  uint16_t byteorder;
+  uint16_t lsectorB;
+  uint16_t lssectorB;
+
+  uint16_t reserved1;
+  uint32_t reserved2;
+  uint32_t reserved3;
+
+  uint32_t cfat; // count full sectors
+  uint32_t dirstart;
+
+  uint32_t reserved4;
+
+  uint32_t sectorcutoff; // min size of a standard stream ; if less than this
+                         // then it uses short-streams
+  uint32_t sfatstart;    // first short-sector or EOC
+  uint32_t csfat;        // count short sectors
+  uint32_t difstart;     // first sector master sector table or EOC
+  uint32_t cdif;         // total count
+  uint32_t MSAT[109];    // First 109 MSAT
+};
+
 const wchar_t *FormatToMIME(file_format_t t) {
   struct name_table {
     file_format_t t;
@@ -71,6 +98,27 @@ constexpr bool is_zip_magic(const uint8_t *buf, size_t size) {
           (buf[3] == 0x4 || buf[3] == 0x6 || buf[3] == 0x8));
 }
 
+bool is_msi_archive(bela::bytes_view bv) {
+  constexpr const uint8_t msoleMagic[] = {0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1};
+  constexpr const auto olesize = sizeof(oleheader_t);
+  if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 513) {
+    return false;
+  }
+  if (bv[512] == 0xEC && bv[513] == 0xA5) {
+    // L"Microsoft Word 97-2003"
+    return false;
+  }
+  if (bv[512] == 0x09 && bv[513] == 0x08) {
+    // L"Microsoft Excel 97-2003"
+    return false;
+  }
+  if (bv[512] == 0xA0 && bv[513] == 0x46) {
+    // L"Microsoft PowerPoint 97-2003"
+    return false;
+  }
+  return true;
+}
+
 file_format_t analyze_format_internal(bela::bytes_view bv) {
   if (is_zip_magic(bv.data(), bv.size())) {
     return file_format_t::zip;
@@ -119,10 +167,13 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
       return file_format_t::tar;
     }
   }
+  if (is_msi_archive(bv)) {
+    return file_format_t::msi;
+  }
   return file_format_t::none;
 }
 
-constexpr size_t magic_size = 512;
+constexpr size_t magic_size = 1024;
 
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec) {
   uint8_t magicBytes[magic_size] = {0};

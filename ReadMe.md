@@ -228,6 +228,7 @@ In baulk, `extension` supports `zip`, `msi`, `7z`, `exe`, `tar`, and baulk execu
 |`msi`|Built-in, based on MSI API|-|
 |`7z`|Priority:</br>baulk7z - Baulk distribution</br>7z - installed by baulk</br>7z - find in `PATH`|decompress format support by 7-zip|
 |`tar`|Built-in|Support gzip/xz/zstd/bzip/brotli|
+|`auto`|-|Automatically detect file format, support scoop package|
 
 In the manifest file, there may also be `links/launchers`, and baulk will create symbolic links for specific files according to the settings of `links`. With Visual Studio installed, baulk will create a launcher based on the `launchers` setting, if If Visual Studio is not installed, it will use `baulk-lnk` to create an analog launcher. If baulk runs on Windows x64 or ARM64 architecture, there will be some small differences, that is, the platform-related URL/Launchers/Links is preferred, as follows:
 
@@ -349,7 +350,7 @@ At present, we use the Github Release Latest mechanism to upgrade Baulk itself. 
 Baulk depends many license-friendly open source projects, I would like to express my sincere gratitude. 
 
 +   [Bela - Modern C++ development experience](https://github.com/fcharlie/bela.git)
-+   [LZMA SDK - Extract `7z` archive and `ZIP-Ppmd`](https://www.7-zip.org/sdk.html)
++   [Ppmd - Extract `ZIP-Ppmd`](https://www.7-zip.org/sdk.html)
 +   [Brotli - Extract `tar.br` and `ZIP-Brotli`](https://github.com/google/brotli)
 +   [bzip2 - Extract `tar.bz` and `ZIP-bzip2`](https://sourceware.org/bzip2/)
 +   [Compact Encoding Detection - zip non-UTF-8 file name encoding detection](https://github.com/google/compact_enc_det)
