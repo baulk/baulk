@@ -2,6 +2,8 @@
 #ifndef BAULK_DECOMPRESS_HPP
 #define BAULK_DECOMPRESS_HPP
 #include <bela/base.hpp>
+#include <bela/io.hpp>
+#include <baulk/archive/format.hpp>
 
 namespace baulk {
 namespace standard {
@@ -23,8 +25,11 @@ namespace sevenzip {
 bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
 } // namespace sevenzip
 namespace tar {
+bool TarExtract(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view src,
+                std::wstring_view dest, bela::error_code &ec);
 bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
-}
+
+} // namespace tar
 
 struct decompress_handler_t {
   std::wstring_view extension;

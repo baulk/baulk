@@ -9,8 +9,8 @@
 #include <bela/env.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/io.hpp>
-#include <jsonex.hpp>
-#include <baulkenv.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/json_utils.hpp>
 #include <filesystem>
 
 namespace baulk::dock {
@@ -23,29 +23,6 @@ std::optional<std::wstring> FindWindowsTerminal() {
     return std::nullopt;
   }
   return std::make_optional(std::move(wt));
-}
-
-bool SearchBaulk(std::wstring &baulkroot, bela::error_code &ec) {
-  auto exepath = bela::ExecutableFinalPathParent(ec);
-  if (!exepath) {
-    return false;
-  }
-  auto baulkexe = bela::StringCat(*exepath, L"\\baulk.exe");
-  if (bela::PathExists(baulkexe)) {
-    baulkroot = bela::DirName(*exepath);
-    return true;
-  }
-  std::wstring bkroot(*exepath);
-  for (size_t i = 0; i < 5; i++) {
-    auto baulkexe = bela::StringCat(bkroot, L"\\bin\\baulk.exe");
-    if (bela::PathExists(baulkexe)) {
-      baulkroot = bkroot;
-      return true;
-    }
-    bela::PathStripName(bkroot);
-  }
-  ec = bela::make_error_code(bela::ErrGeneral, L"unable found baulk.exe");
-  return false;
 }
 
 inline constexpr bool DirSkipFaster(const wchar_t *dir) {
@@ -82,41 +59,31 @@ private:
   WIN32_FIND_DATAW wfd;
 };
 
-bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgname, EnvNode &node) {
+bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgName, EnvNode &node) {
   bela::error_code ec;
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {
-    ec = bela::make_stdc_error_code(en, bela::StringCat(L"open '", lockfile, L"'"));
+  auto jo = json::parse_file(lockfile, ec);
+  if (!jo) {
     return false;
   }
-  auto closer = bela::finally([&] { fclose(fd); });
-  constexpr std::wstring_view space = L"                ";
-  try {
-    auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    auto version = bela::ToWide(j["version"].get<std::string_view>());
-    if (auto it = j.find("venv"); it != j.end() && it.value().is_object()) {
-      node.Value = pkgname;
-      node.Desc = pkgname;
-      baulk::json::JsonAssignor jea(it.value());
-      if (auto category = jea.get("category"); !category.empty()) {
-        bela::StrAppend(&node.Desc, L"(", category, L")    ", version, L"");
-      }
-      return true;
+  auto jv = jo->view();
+  auto version = jv.fetch("version");
+  if (auto sv = jv.subview("venv"); sv) {
+    node.Value = pkgName;
+    node.Desc = pkgName;
+    if (auto category = sv->fetch("category"); !category.empty()) {
+      bela::StrAppend(&node.Desc, L"(", category, L")    ", version, L"");
     }
-  } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"parse package '", lockfile, L"' json: ", bela::ToWide(e.what()));
-    return false;
+    return true;
   }
   return false;
 }
 
 bool MainWindow::InitializeBase(bela::error_code &ec) {
-  if (!SearchBaulk(baulkroot, ec)) {
+  if (!vfs::InitializeFastPathFs(ec)) {
     return false;
   }
-  auto locksdir = bela::StringCat(baulkroot, L"\\bin\\locks");
   Finder finder;
-  if (finder.First(locksdir, L"*.json", ec)) {
+  if (finder.First(vfs::AppLocks(), L"*.json", ec)) {
     do {
       if (finder.Ignore()) {
         continue;
@@ -125,7 +92,7 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
       if (!bela::EndsWithIgnoreCase(pkgname, L".json")) {
         continue;
       }
-      auto lockfile = bela::StringCat(locksdir, L"\\", pkgname);
+      auto lockfile = bela::StringCat(vfs::AppLocks(), L"\\", pkgname);
       pkgname.remove_suffix(5);
       baulk::dock::EnvNode node;
       if (SearchVirtualEnv(lockfile, pkgname, node)) {
@@ -137,36 +104,32 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
 }
 
 bool MainWindow::LoadPlacement(WINDOWPLACEMENT &placement) {
-  auto posfile = bela::StringCat(baulkroot, L"\\bin\\etc\\baulk-dock.pos.json");
-  FILE *fd = nullptr;
-  if (auto en = _wfopen_s(&fd, posfile.data(), L"rb"); en != 0) {
+  auto posFilePath = bela::StringCat(vfs::AppData(), L"\\baulk\\baulk-dock.pos.json");
+  bela::error_code ec;
+  auto jo = json::parse_file(posFilePath, ec);
+  if (!jo) {
     return false;
   }
-  auto closer = bela::finally([&] { fclose(fd); });
-  try {
-    auto j = nlohmann::json::parse(fd, nullptr, true, true);
-    placement.flags = j["flags"];
-    placement.ptMaxPosition.x = j["ptMaxPosition.X"];
-    placement.ptMaxPosition.y = j["ptMaxPosition.Y"];
-    placement.ptMinPosition.x = j["ptMinPosition.X"];
-    placement.ptMinPosition.y = j["ptMinPosition.Y"];
-    placement.showCmd = j["showCmd"];
-    placement.rcNormalPosition.bottom = j["rcNormalPosition.bottom"];
-    placement.rcNormalPosition.left = j["rcNormalPosition.left"];
-    placement.rcNormalPosition.right = j["rcNormalPosition.right"];
-    placement.rcNormalPosition.top = j["rcNormalPosition.top"];
-  } catch (const std::exception &) {
-    return false;
-  }
+  auto jv = jo->view();
+  placement.flags = jv.fetch_as_integer("flags", 0u);
+  placement.ptMaxPosition.x = jv.fetch_as_integer("ptMaxPosition.X", 0l);
+  placement.ptMaxPosition.y = jv.fetch_as_integer("ptMaxPosition.Y", 0l);
+  placement.ptMinPosition.x = jv.fetch_as_integer("ptMinPosition.X", 0l);
+  placement.ptMinPosition.y = jv.fetch_as_integer("ptMinPosition.Y", 0l);
+  placement.showCmd = jv.fetch_as_integer("showCmd", 0u);
+  placement.rcNormalPosition.bottom = jv.fetch_as_integer("rcNormalPosition.bottom", 0l);
+  placement.rcNormalPosition.left = jv.fetch_as_integer("rcNormalPosition.left", 0l);
+  placement.rcNormalPosition.right = jv.fetch_as_integer("rcNormalPosition.right", 0l);
+  placement.rcNormalPosition.top = jv.fetch_as_integer("rcNormalPosition.top", 0l);
   return true;
 }
 void MainWindow::SavePlacement(const WINDOWPLACEMENT &placement) {
-  auto etcdir = bela::StringCat(baulkroot, L"\\bin\\etc");
+  auto saveDir = bela::StringCat(vfs::AppData(), L"\\baulk");
   std::error_code e;
-  if (std::filesystem::create_directories(etcdir, e); e) {
+  if (std::filesystem::create_directories(saveDir, e); e) {
     return;
   }
-  auto posfile = bela::StringCat(etcdir, L"\\baulk-dock.pos.json");
+  auto posfile = bela::StringCat(saveDir, L"\\baulk-dock.pos.json");
   nlohmann::json j;
   j["flags"] = placement.flags;
   j["ptMaxPosition.X"] = placement.ptMaxPosition.x;
@@ -178,9 +141,8 @@ void MainWindow::SavePlacement(const WINDOWPLACEMENT &placement) {
   j["rcNormalPosition.left"] = placement.rcNormalPosition.left;
   j["rcNormalPosition.right"] = placement.rcNormalPosition.right;
   j["rcNormalPosition.top"] = placement.rcNormalPosition.top;
-  auto s = j.dump(4);
   bela::error_code ec;
-  bela::io::WriteTextAtomic(s, posfile, ec);
+  bela::io::WriteTextAtomic(j.dump(4), posfile, ec);
 }
 
 template <size_t Len = 256> std::wstring GetCwd() {
@@ -204,16 +166,13 @@ template <size_t Len = 256> std::wstring GetCwd() {
 }
 
 LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
-  auto baulkexec = bela::StringCat(baulkroot, L"\\bin\\baulk-exec.exe");
+  auto baulkexec = vfs::AppLocationPath(L"baulk-exec.exe");
   auto cwd = GetCwd();
   bela::EscapeArgv ea;
   if (auto wt = FindWindowsTerminal(); wt) {
     ea.Assign(*wt).Append(L"--title").Append(L"Windows Terminal \U0001F496 Baulk").Append(L"--");
   }
   ea.Append(baulkexec).Append(L"-W").Append(GetCwd());
-  if (Button_GetCheck(hclang.hWnd) == BST_CHECKED) {
-    ea.Append(L"--clang");
-  }
   if (Button_GetCheck(hcleanenv.hWnd) == BST_CHECKED) {
     ea.Append(L"--cleanup");
   }

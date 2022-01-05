@@ -1,7 +1,7 @@
 //Microsoft Visual C++ generated resource script.
 //
 #include "windows.h"
-#include "baulkversion.h"
+#include "revision.h"
 
 500 ICON "baulk-exec.ico"
 

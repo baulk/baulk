@@ -3,12 +3,13 @@
 #include <bela/base.hpp>
 #include <bela/io.hpp>
 #include <bela/strip.hpp>
-#include <json.hpp>
+#include <baulk/hash.hpp>
+#include <baulk/fs.hpp>
+#include <baulk/argv.hpp>
+#include <baulk/json_utils.hpp>
+#include <baulk/vfs.hpp>
 #include "baulk.hpp"
-#include "baulkargv.hpp"
 #include "commands.hpp"
-#include "hash.hpp"
-#include "fs.hpp"
 
 namespace baulk::commands {
 // Bucket Modifier
@@ -32,7 +33,7 @@ private:
 
 bool BucketModifier::Initialize() {
   FILE *fd = nullptr;
-  if (auto eo = _wfopen_s(&fd, baulk::BaulkProfile().data(), L"rb"); eo != 0) {
+  if (auto eo = _wfopen_s(&fd, baulk::Profile().data(), L"rb"); eo != 0) {
     ec = bela::make_stdc_error_code(eo);
     return false;
   }
@@ -40,7 +41,7 @@ bool BucketModifier::Initialize() {
   try {
     meta = nlohmann::json::parse(fd, nullptr, true, true);
   } catch (const std::exception &e) {
-    ec = bela::make_error_code(bela::ErrGeneral, bela::ToWide(e.what()));
+    ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
     return false;
   }
   return true;
@@ -48,20 +49,20 @@ bool BucketModifier::Initialize() {
 
 bool BucketModifier::Apply() {
   auto jsontext = meta.dump(4);
-  return bela::io::WriteTextAtomic(jsontext, baulk::BaulkProfile(), ec);
+  return bela::io::WriteTextAtomic(jsontext, baulk::Profile(), ec);
 }
 
 bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket) {
   try {
     const auto &bks = meta["bucket"];
     for (auto &b : bks) {
-      auto name = bela::ToWide(b["name"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       if (!bela::EqualsIgnoreCase(bucketName, name)) {
         continue;
       }
       bucket.name = name;
-      bucket.description = bela::ToWide(b["description"].get<std::string_view>());
-      bucket.url = bela::ToWide(b["url"].get<std::string_view>());
+      bucket.description = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
+      bucket.url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
       int weights = 100;
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
@@ -97,9 +98,9 @@ int BucketModifier::List(std::wstring_view bucketName) {
   try {
     const auto &bks = meta["bucket"];
     for (auto &b : bks) {
-      auto desc = bela::ToWide(b["description"].get<std::string_view>());
-      auto name = bela::ToWide(b["name"].get<std::string_view>());
-      auto url = bela::ToWide(b["url"].get<std::string_view>());
+      auto desc = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
+      auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
+      auto url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
       int weights = 100;
       if (auto it = b.find("weights"); it != b.end()) {
         weights = it.value().get<int>();
@@ -175,22 +176,22 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
       for (const auto &bk : it.value()) {
-        auto name = bela::ToWide(bk["name"].get<std::string_view>());
+        auto name = bela::encode_into<char, wchar_t>(bk["name"].get<std::string_view>());
         if (!bela::EqualsIgnoreCase(name, nbk.name)) {
           buckets.push_back(bk);
         }
       }
     }
     nlohmann::json jbk;
-    jbk["description"] = bela::ToNarrow(nbk.description);
-    jbk["name"] = bela::ToNarrow(nbk.name);
-    jbk["url"] = bela::ToNarrow(nbk.url);
+    jbk["description"] = bela::encode_into<wchar_t, char>(nbk.description);
+    jbk["name"] = bela::encode_into<wchar_t, char>(nbk.name);
+    jbk["url"] = bela::encode_into<wchar_t, char>(nbk.url);
     jbk["mode"] = static_cast<int>(nbk.mode);
     jbk["weights"] = nbk.weights;
     buckets.emplace_back(std::move(jbk));
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec.message);
+      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec);
       return 1;
     }
   } catch (const std::exception &e) {
@@ -201,7 +202,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
 }
 
 bool PruneBucket(const baulk::Bucket &bucket) {
-  auto bucketslock = bela::StringCat(baulk::BaulkRoot(), L"\\buckets\\buckets.lock.json");
+  auto bucketslock = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
   nlohmann::json newjson = nlohmann::json::array();
   [&]() -> bool {
     FILE *fd = nullptr;
@@ -210,7 +211,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
         return true;
       }
       auto ec = bela::make_stdc_error_code(en);
-      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec.message);
+      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec);
       return false;
     }
     auto closer = bela::finally([&] { fclose(fd); });
@@ -222,7 +223,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
           continue;
         }
         auto name = a["name"].get<std::string_view>();
-        if (!bela::EqualsIgnoreCase(bucket.name, bela::ToWide(name))) {
+        if (!bela::EqualsIgnoreCase(bucket.name, bela::encode_into<char, wchar_t>(name))) {
           newjson.push_back(a);
         }
       }
@@ -235,10 +236,10 @@ bool PruneBucket(const baulk::Bucket &bucket) {
   auto meta = newjson.dump(4);
   bela::error_code ec;
   if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
-    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec.message);
+    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec);
     return false;
   }
-  auto bucketDir = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BucketsDirName, L"\\", bucket.name);
+  auto bucketDir = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
   bela::fs::ForceDeleteFolders(bucketDir, ec);
   return true;
 }
@@ -253,7 +254,7 @@ int BucketModifier::Del(const baulk::Bucket &bucket, bool forcemode) {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
       for (const auto &bk : it.value()) {
-        auto name = bela::ToWide(bk["name"].get<std::string_view>());
+        auto name = bela::encode_into<char, wchar_t>(bk["name"].get<std::string_view>());
         if (bela::EqualsIgnoreCase(name, bucket.name)) {
           deleted = true;
           continue;
@@ -263,7 +264,7 @@ int BucketModifier::Del(const baulk::Bucket &bucket, bool forcemode) {
     }
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket delete: apply delete '%s' error %s\n", bucket.name, ec.message);
+      bela::FPrintF(stderr, L"baulk bucket delete: apply delete '%s' error %s\n", bucket.name, ec);
       return 1;
     }
   } catch (const std::exception &e) {
@@ -314,15 +315,15 @@ Example:
 int cmd_bucket(const argv_t &argv) {
   BucketModifier bm;
   if (!bm.Initialize()) {
-    bela::FPrintF(stderr, L"baulk bucket: load %s error: \x1b[31m%s\x1b[0m\n", baulk::BaulkProfile(),
+    bela::FPrintF(stderr, L"baulk bucket: load %s error: \x1b[31m%s\x1b[0m\n", baulk::Profile(),
                   bm.ErrorCode().message);
     return 1;
   }
   if (argv.empty()) {
     return bm.List();
   }
-  baulk::cli::BaulkArgv ba(argv);
-  ba.Add(L"verbose", baulk::cli::no_argument, L'V')
+  baulk::cli::ParseArgv pa(argv);
+  pa.Add(L"verbose", baulk::cli::no_argument, L'V')
       .Add(L"name", baulk::cli::required_argument, L'N')
       .Add(L"url", baulk::cli::required_argument, L'U')
       .Add(L"weights", baulk::cli::required_argument, L'W')
@@ -334,7 +335,7 @@ int cmd_bucket(const argv_t &argv) {
   bela::error_code ec;
   bool replace{false};
   bool forcemode{false};
-  auto ret = ba.Execute(
+  auto ret = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {
         case L'V':
@@ -383,10 +384,10 @@ int cmd_bucket(const argv_t &argv) {
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"baulk bucket: parse argv error \x1b[31m%s\x1b[0m\n", ec.message);
+    bela::FPrintF(stderr, L"baulk bucket: parse argv error \x1b[31m%s\x1b[0m\n", ec);
     return 1;
   }
-  const auto ua = ba.Argv();
+  const auto ua = pa.Argv();
   if (ua.empty()) {
     return bm.List(bucket.name);
   }

@@ -279,7 +279,6 @@ Usage: baulk-exec [option] <command> [<args>] ...
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
-  --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --time               Summarize command system resource usage
 
 example:
@@ -318,20 +317,24 @@ Usage: baulkterminal [option] ...
                Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
-  --clang
-               Add Visual Studio's built-in clang to the PATH environment variable
 
 ```
 
 In addition to starting Windows Terminal through baulktermainl, you can also modify the command line of the default terminal of Windows Terminal and use baulk-exec to start the shell, so that the newly created shell has the environment variable context of baulk. For example, change the command line of Powershell Core to: 
 
 ```
-C:\Dev\baulk\bin\baulk-exec.exe --vs --clang pwsh
+C:\Dev\baulk\bin\baulk-exec.exe --vs pwsh
 ```
 
 ## Baulk Dock
 
+Baulk Dock **Light Mode**:
+
 ![](./docs/images/baulk-dock.png)
+
+Baulk Dock **Dark Mode**:
+
+![](./docs/images/baulk-dock-dark.png)
 
 ## Baulk upgrade
 
@@ -341,6 +344,21 @@ At present, we use the Github Release Latest mechanism to upgrade Baulk itself. 
 
 [《Baulk - 开发一个简单的包管理工具历程》](https://forcemz.net/toolset/2020/07/18/Baulk/)
 
-## Other
+## Thanks
+
+Baulk depends many license-friendly open source projects, I would like to express my sincere gratitude. 
+
++   [Bela - Modern C++ development experience](https://github.com/fcharlie/bela.git)
++   [LZMA SDK - Extract `7z` archive and `ZIP-Ppmd`](https://www.7-zip.org/sdk.html)
++   [Brotli - Extract `tar.br` and `ZIP-Brotli`](https://github.com/google/brotli)
++   [bzip2 - Extract `tar.bz` and `ZIP-bzip2`](https://sourceware.org/bzip2/)
++   [Compact Encoding Detection - zip non-UTF-8 file name encoding detection](https://github.com/google/compact_enc_det)
++   [zlib (Chromium variants)  - Extract `tar.gz` and `ZIP-deflate`](https://github.com/chromium/chromium/tree/master/third_party/zlib)
++   [zlib (deflate64) - Extract `ZIP-deflate64`](https://github.com/madler/zlib/tree/master/contrib/infback9)
++   [liblzma - Extract `tar.xz` and `ZIP-xz`](https://tukaani.org/xz/)
++   [zstd - Extract `tar.zst` and `ZIP-zstd`](https://github.com/facebook/zstd)
++   [mimalloc - mimalloc is a compact general purpose allocator with excellent performance](https://github.com/microsoft/mimalloc)
 
 <div>Baulk Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+
+

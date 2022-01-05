@@ -21,16 +21,16 @@ inline VersionPart MakeVersionPart(std::wstring_view vs) {
   VersionPart vp;
   std::vector<std::wstring_view> vsv = bela::StrSplit(vs, bela::ByChar('.'), bela::SkipEmpty());
   if (!vsv.empty()) {
-    bela::SimpleAtoi(vsv[0], &vp.MajorPart);
+    (void)bela::SimpleAtoi(vsv[0], &vp.MajorPart);
   }
   if (vsv.size() > 1) {
-    bela::SimpleAtoi(vsv[1], &vp.MinorPart);
+    (void)bela::SimpleAtoi(vsv[1], &vp.MinorPart);
   }
   if (vsv.size() > 2) {
-    bela::SimpleAtoi(vsv[2], &vp.BuildPart);
+    (void)bela::SimpleAtoi(vsv[2], &vp.BuildPart);
   }
   if (vsv.size() > 3) {
-    bela::SimpleAtoi(vsv[3], &vp.PrivatePart);
+    (void)bela::SimpleAtoi(vsv[3], &vp.PrivatePart);
   }
   return vp;
 }

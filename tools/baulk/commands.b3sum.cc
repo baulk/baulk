@@ -1,8 +1,8 @@
 //
 #include <bela/terminal.hpp>
+#include <baulk/hash.hpp>
+#include <baulk/fs.hpp>
 #include "commands.hpp"
-#include "hash.hpp"
-#include "fs.hpp"
 
 namespace baulk::commands {
 
@@ -25,7 +25,7 @@ int cmd_b3sum(const argv_t &argv) {
   for (const auto a : argv) {
     auto hv = baulk::hash::FileHash(a, baulk::hash::hash_t::BLAKE3, ec);
     if (!hv) {
-      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 checksum: \x1b[31m%s\x1b[0m\n", a, ec.message);
+      bela::FPrintF(stderr, L"File: %s cannot calculate blake3 checksum: \x1b[31m%s\x1b[0m\n", a, ec);
       continue;
     }
     bela::FPrintF(stdout, L"%s %s\n", *hv, baulk::fs::FileName(a));

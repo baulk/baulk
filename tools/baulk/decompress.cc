@@ -1,7 +1,8 @@
 #include <bela/path.hpp>
 #include "baulk.hpp"
 #include "decompress.hpp"
-#include "fs.hpp"
+#include <baulk/fs.hpp>
+#include <baulk/archive/extract.hpp>
 
 namespace baulk {
 
@@ -9,7 +10,7 @@ namespace standard {
 bool Regularize(std::wstring_view path) {
   bela::error_code ec;
   // TODO some zip code
-  return baulk::fs::FlatPackageInitialize(path, path, ec);
+  return baulk::fs::MakeFlattened(path, path, ec);
 }
 } // namespace standard
 
@@ -44,5 +45,17 @@ bool Regularize(std::wstring_view path) {
   return true;
 }
 } // namespace exe
+
+namespace zip {
+
+bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
+  baulk::archive::ZipExtractor extractor(baulk::IsQuietMode);
+  if (!extractor.OpenReader(src, outdir, ec)) {
+    return false;
+  }
+  return extractor.Extract(ec);
+}
+
+} // namespace zip
 
 } // namespace baulk

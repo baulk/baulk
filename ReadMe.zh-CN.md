@@ -278,7 +278,6 @@ Usage: baulk-exec [option] <command> [<args>] ...
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
-  --clang              Add Visual Studio's built-in clang to the PATH environment variable
   --time               Summarize command system resource usage
 
 example:
@@ -317,20 +316,24 @@ Usage: baulkterminal [option] ...
                Load Visual Studio (Preview) related environment variables
   --conhost
                Use conhost not Windows terminal
-  --clang
-               Add Visual Studio's built-in clang to the PATH environment variable
 
 ```
 
 除了通过 baulktermainl 启动 Windows Terminal，你还可以修改 Windows Terminal 默认终端的命令行，使用 baulk-exec 启动 shell，从而是新建的 shell 具备有 baulk 的环境变量上下文，比如将 Powershell Core 的命令行改为：
 
 ```
-C:\Dev\baulk\bin\baulk-exec.exe --vs --clang pwsh
+C:\Dev\baulk\bin\baulk-exec.exe --vs pwsh
 ```
 
 ## Baulk Dock
 
+Baulk Dock **Light Mode**:
+
 ![](./docs/images/baulk-dock.png)
+
+Baulk Dock **Dark Mode**:
+
+![](./docs/images/baulk-dock-dark.png)
 
 ## Baulk 的升级
 
@@ -346,4 +349,20 @@ Baulk 设计理念来自于 [clangbuilder](https://github.com/fstudio/clangbuild
 
 Windows 在不断的改进，我也曾给 Windows Terminal 提交了 PR，我希望 Baulk 专注于在新的 Windows 上运行，因此在实现 Baulk 的时候，错误信息都使用了 ANSI 转义（Bela 实际上在旧的控制台支持 ANSI 转义转 Console API），Baulk 中也添加了 `baulkterminal` 命令与 Windows Terminal 高度集成。此外还添加了脚本支持用户修改右键菜单，在资源管理器目录下按特定的启动路径打开初始化 Baulk 环境了的 Windows Terminal。
 
-<div>Baulk Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+
+## 致谢
+
+Baulk 依赖了许多许可证友好的开源项目，在这里我表示由衷的感谢。
+
++   [Bela - 提供了现代的 C++ 开发体验](https://github.com/fcharlie/bela.git)
++   [LZMA SDK - 解压缩 `7z` 文件和以 `Ppmd` 压缩的 ZIP 文件](https://www.7-zip.org/sdk.html)
++   [Brotli - 解压缩 `tar.br` 文件和以 `brotli` 压缩的 ZIP 文件](https://github.com/google/brotli)
++   [bzip2 - 解压缩 `tar.bz` 文件和以 `bzip2` 压缩的 ZIP 文件](https://sourceware.org/bzip2/)
++   [Compact Encoding Detection - zip 非 UTF-8 文件名编码检测](https://github.com/google/compact_enc_det)
++   [zlib (Chromium 变体)  - 解压缩 `tar.xz` 文件和以 `defalte` 压缩的 ZIP 文件](https://github.com/chromium/chromium/tree/master/third_party/zlib)
++   [zlib (deflate64) - 解压缩以 `deflate64` 压缩的 ZIP 文件](https://github.com/madler/zlib/tree/master/contrib/infback9)
++   [liblzma - 解压缩 `tar.xz` 文件和以 `xz` 压缩的 ZIP 文件](https://tukaani.org/xz/)
++   [zstd - 解压缩 `tar.zst` 文件和以 `zstd` 压缩的 ZIP 文件](https://github.com/facebook/zstd)
++   [mimalloc - 紧凑且性能出色的通用内存分配器](https://github.com/microsoft/mimalloc)
+
+<div>Baulk 图标来源于 <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>

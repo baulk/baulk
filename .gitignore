@@ -2,7 +2,7 @@
 .vs/
 /build/
 /build.arm64/
-/include/baulkversion.h
+/include/revision.h
 /out/
 *.pdb
 *.exe

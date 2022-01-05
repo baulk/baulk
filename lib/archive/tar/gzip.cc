@@ -2,17 +2,20 @@
 #include "gzip.hpp"
 
 namespace baulk::archive::tar::gzip {
+
 Reader::~Reader() {
   if (zs != nullptr) {
     inflateEnd(zs);
-    baulk::archive::archive_internal::Deallocate(zs, 1);
+    baulk::mem::deallocate(zs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  zs = baulk::archive::archive_internal::Allocate<z_stream>(1);
+  zs = baulk::mem::allocate<z_stream>();
   memset(zs, 0, sizeof(z_stream));
+  zs->zalloc = baulk::mem::allocate_zlib;
+  zs->zfree = baulk::mem::deallocate_simple;
   if (auto zerr = inflateInit2(zs, MAX_WBITS + 16); zerr != Z_OK) {
-    ec = bela::make_error_code(ErrGeneral, bela::ToWide(zError(zerr)));
+    ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
     return false;
   }
   out.grow(outsize);
@@ -41,7 +44,7 @@ bool Reader::decompress(bela::error_code &ec) {
     case Z_DATA_ERROR:
       [[fallthrough]];
     case Z_MEM_ERROR:
-      ec = bela::make_error_code(ret, bela::ToWide(zError(ret)));
+      ec = bela::make_error_code(ret, bela::encode_into<char, wchar_t>(zError(ret)));
       return false;
     default:
       break;

@@ -39,7 +39,8 @@ function(
         COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref --symbolic-full-name @{upstream}
         WORKING_DIRECTORY ${path}
         RESULT_VARIABLE git_result
-        OUTPUT_VARIABLE git_output ERROR_QUIET)
+        OUTPUT_VARIABLE git_output
+        ERROR_QUIET)
       if(git_result EQUAL 0)
         string(REPLACE "/" ";" branch ${git_output})
         list(GET branch 0 remote)
@@ -50,7 +51,8 @@ function(
         COMMAND ${GIT_EXECUTABLE} remote get-url ${remote}
         WORKING_DIRECTORY ${path}
         RESULT_VARIABLE git_result
-        OUTPUT_VARIABLE git_output ERROR_QUIET)
+        OUTPUT_VARIABLE git_output
+        ERROR_QUIET)
       if(git_result EQUAL 0)
         string(STRIP "${git_output}" git_output)
         set(${repository}
@@ -66,7 +68,8 @@ function(
       COMMAND ${GIT_EXECUTABLE} symbolic-ref HEAD
       WORKING_DIRECTORY ${path}
       RESULT_VARIABLE git_result
-      OUTPUT_VARIABLE git_output ERROR_QUIET)
+      OUTPUT_VARIABLE git_output
+      ERROR_QUIET)
     if(git_result EQUAL 0)
       string(STRIP "${git_output}" git_output)
       set(${refname}

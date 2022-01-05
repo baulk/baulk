@@ -5,10 +5,8 @@
 #include <bela/match.hpp>
 #include <bela/strip.hpp>
 #include <filesystem>
-#include <regutils.hpp>
-#include <jsonex.hpp>
-#include <baulkenv.hpp>
-#include <pwsh.hpp>
+#include <baulk/registry.hpp>
+#include <baulk/pwsh.hpp>
 #include "baulkterminal.hpp"
 
 namespace baulkterminal {
@@ -42,7 +40,7 @@ bool UseShell(std::wstring_view shell, bela::EscapeArgv &ea) {
   if (NameEquals(shell, L"bash")) {
     // git for windows
     bela::error_code ec;
-    if (auto gw = baulk::regutils::GitForWindowsInstallPath(ec); gw) {
+    if (auto gw = baulk::registry::GitForWindowsInstallPath(ec); gw) {
       if (auto bash = bela::StringCat(*gw, L"\\bin\\bash.exe"); bela::PathExists(bash)) {
         ea.Append(bash).Append(L"-i").Append(L"-l");
         DbgPrint(L"Use bash: %s", bash);
@@ -121,7 +119,7 @@ void ApplyBaulkNewExec(std::wstring_view baulkexec) {
     DbgPrint(L"Found baulk-exec.new: %s trace apply it", baulkexecnew);
     if (MoveFileExW(baulkexecnew.data(), baulkexec.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
       auto ec = bela::make_system_error_code();
-      DbgPrint(L"Apply new baulk-exec error: %s", ec.message);
+      DbgPrint(L"Apply new baulk-exec error: %s", ec);
     }
   }
   auto baulkexecdel = bela::StringCat(dir, L"\\baulk-exec.del");
@@ -157,20 +155,12 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
       ea.Append(L"-A").Append(arch);
       DbgPrint(L"Select arch: %s", arch);
     }
-    if (clang) {
-      ea.Append(L"--clang");
-      DbgPrint(L"Turn on clang env");
-    }
   } else if (usevs) {
     ea.Append(L"--vs");
     DbgPrint(L"Turn on vs env");
     if (!arch.empty()) {
       ea.Append(L"-A").Append(arch);
       DbgPrint(L"Select arch: %s", arch);
-    }
-    if (clang) {
-      ea.Append(L"--clang");
-      DbgPrint(L"Turn on clang env");
     }
   }
   if (!cwd.empty()) {

@@ -1,4 +1,10 @@
 ///
+#ifndef UNICODE
+#define UNICODE 1
+#endif
+#ifndef _UNICODE
+#define _UNICODE 1
+#endif
 #include <bela/base.hpp>
 #include <Windowsx.h>
 #include <cassert>
@@ -11,9 +17,10 @@
 #include <ShellScalingAPI.h>
 #include <array>
 #include <bela/picker.hpp>
-#include <baulkrev.hpp>
+#include <version.hpp>
 #include <bela/match.hpp>
 #include <strsafe.h>
+#include <vsstyle.h>
 #include "app.hpp"
 
 namespace baulk::dock {
@@ -26,6 +33,10 @@ constexpr const auto cbstyle =
 constexpr const auto chboxstyle =
     BS_PUSHBUTTON | BS_TEXT | BS_DEFPUSHBUTTON | BS_CHECKBOX | BS_AUTOCHECKBOX | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
 constexpr const auto pbstyle = BS_PUSHBUTTON | BS_TEXT | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE;
+
+inline D2D1::ColorF FromColor(const bela::color c) {
+  return D2D1::ColorF(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f);
+}
 
 // Resources Safe Release
 template <typename I> inline void Free(I **i) {
@@ -162,12 +173,16 @@ MainWindow::~MainWindow() {
   if (hMonoFont != nullptr) {
     DeleteFont(hMonoFont);
   }
+  if (hBrush != nullptr) {
+    DeleteObject(hBrush);
+  }
 }
 
 LRESULT MainWindow::InitializeWindow() {
-  // change UI style
-  hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   bela::error_code ec;
+  themes.Load(ec);
+  systemVersion = bela::windows::version();
+  hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);
     return S_FALSE;
@@ -175,8 +190,9 @@ LRESULT MainWindow::InitializeWindow() {
   if (CreateDeviceIndependentResources() != S_OK) {
     return S_FALSE;
   }
-  RECT layout = {100, 100, 800, 320};
-  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, WS_EX_APPWINDOW | WS_EX_WINDOWEDGE);
+  RECT layout = {100, 100, 800, 290};
+  auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
+  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, extend_style);
   return S_OK;
 }
 
@@ -214,10 +230,10 @@ HRESULT MainWindow::CreateDeviceResources() {
                                           D2D1::HwndRenderTargetProperties(m_hWnd, size), &renderTarget);
   renderTarget->SetDpi(static_cast<float>(dpiX), static_cast<float>(dpiX));
   if (SUCCEEDED(hr)) {
-    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &textBrush);
+    hr = renderTarget->CreateSolidColorBrush(FromColor(themes.Mode.text), &textBrush);
   }
   if (SUCCEEDED(hr)) {
-    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(0xFFC300), &borderBrush);
+    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Navy), &borderBrush);
   }
   if (SUCCEEDED(hr)) {
     LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE64), L"PNG", 64, 64, &bitmap);
@@ -241,13 +257,13 @@ HRESULT MainWindow::OnRender() {
   auto dsz = renderTarget->GetSize();
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-  renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-  renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
+  renderTarget->Clear(FromColor(themes.Mode.background));
+  // renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
-  renderTarget->DrawLine(D2D1::Point2F(20, 120), D2D1::Point2F(dsz.width - 20, 120), borderBrush, 1.0);
+  renderTarget->DrawLine(D2D1::Point2F(180, 110), D2D1::Point2F(dsz.width - 45, 110), borderBrush, 0.7f);
   if (bitmap != nullptr) {
     auto isz = bitmap->GetSize();
-    renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 160, 60 + isz.width, 160 + isz.height), 1.0,
+    renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 130, 60 + isz.width, 130 + isz.height), 1.0,
                              D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
   }
   for (const auto &label : labels) {
@@ -359,6 +375,7 @@ bool RecreateFont(HFONT &hFont, int dpiY, std::wstring_view name) {
  *  Message Action Function
  */
 LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  hBrush = CreateSolidBrush(themes.Mode.background);
   // Adjust window initialize use real DPI
   dpiX = GetDpiForWindow(m_hWnd);
   dpiY = dpiX;
@@ -366,7 +383,7 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   WINDOWPLACEMENT placement;
   placement.length = sizeof(WINDOWPLACEMENT);
   auto w = MulDiv(480, dpiX, 96);
-  auto h = MulDiv(320, dpiX, 96);
+  auto h = MulDiv(290, dpiX, 96);
   if (LoadPlacement(placement)) {
     ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top, w, h,
                    SWP_NOZORDER | SWP_NOACTIVATE);
@@ -393,6 +410,7 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     w.layout.right = X + nWidth;
     w.layout.bottom = Y + nHeight;
     w.mono = monofont;
+    w.text = lpWindowName;
     ::SendMessageW(hw, WM_SETFONT, monofont ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
     return true;
   };
@@ -403,10 +421,9 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
   // button
   MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 180, 130, 240, 27, nullptr, hcleanenv);
-  MakeWindow(WC_BUTTONW, L"Use Built-in Clang (VS)", chboxstyle, 180, 160, 240, 27, nullptr, hclang);
-  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 210, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
+  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 180, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
              hbaulkenv);
-
+  // SetWindowTheme(hcleanenv.hWnd, nullptr, nullptr);
   HMENU hSystemMenu = ::GetSystemMenu(m_hWnd, FALSE);
   InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_BAULK_DOCK_ABOUT, L"About Baulk environment dock\tAlt+F1");
 
@@ -414,6 +431,12 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
 
   InitializeControl();
+  if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
+    baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
+  }
+  // if (baulk::windows::mica_materials_enabled(systemVersion)) {
+  //   baulk::windows::EnableMicaMaterials(m_hWnd);
+  // }
   return S_OK;
 }
 
@@ -458,7 +481,6 @@ LRESULT MainWindow::OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &
   UpdateWindowPos(hvsarchbox);
   UpdateWindowPos(hvenvbox);
   UpdateWindowPos(hcleanenv);
-  UpdateWindowPos(hclang);
   UpdateWindowPos(hbaulkenv);
   return S_OK;
 }
@@ -473,11 +495,105 @@ LRESULT MainWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
   return hr;
 }
 
-LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) { return S_OK; }
+LRESULT MainWindow::OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  HDC hdc = (HDC)wParam;
+  SetBkColor(hdc, themes.Mode.background);
+  SetTextColor(hdc, themes.Mode.text);
+  // FIXME: dark mode checkbox color
+  // SetBkMode(hdc, TRANSPARENT);
+  return (LRESULT)((HBRUSH)hBrush);
+}
 
 LRESULT MainWindow::OnSysMemuAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled) {
   bela::BelaMessageBox(m_hWnd, L"About Baulk environment dock", BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
   return S_OK;
+}
+
+LRESULT MainWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle) {
+  auto *nmhdr = reinterpret_cast<NMHDR *>(lParam);
+  if (nmhdr == nullptr) {
+    return S_FALSE;
+  }
+  switch (nmhdr->code) {
+  case NM_CUSTOMDRAW: {
+    auto result = OnCustomDraw(reinterpret_cast<NMCUSTOMDRAW *>(lParam));
+    ::SetWindowLongPtr(m_hWnd, DWLP_MSGRESULT, result);
+    return result;
+  }
+  default:
+    break;
+  }
+  bHandle = FALSE;
+  return S_OK;
+}
+
+SIZE GetCheckBoxSize(HWND hWnd, int dpiX) {
+  if (IsAppThemed()) {
+    HTHEME theme{nullptr};
+    HDC hdc{nullptr};
+    auto closer = bela::finally([&] {
+      if (theme != nullptr) {
+        CloseThemeData(theme);
+      }
+      if (hdc != nullptr) {
+        ReleaseDC(nullptr, hdc);
+      }
+    });
+    if (theme = OpenThemeData(hWnd, L"Button"); theme != nullptr) {
+      hdc = GetDC(nullptr);
+      SIZE size{0};
+      if (GetThemePartSize(theme, hdc, BP_CHECKBOX, CBS_UNCHECKEDNORMAL, nullptr, TS_DRAW, &size) == S_OK) {
+        return size;
+      }
+    }
+  }
+  return {MulDiv(13, dpiX, USER_DEFAULT_SCREEN_DPI), MulDiv(13, dpiX, USER_DEFAULT_SCREEN_DPI)};
+}
+
+void MainWindow::DrawButtonText(const NMCUSTOMDRAW *customDraw) {
+  const Widget *w = nullptr;
+  if (customDraw->hdr.hwndFrom == hcleanenv.hWnd) {
+    w = &hcleanenv;
+  }
+  if (w == nullptr) {
+    return;
+  }
+  UINT dpi = GetDpiForWindow(customDraw->hdr.hwndFrom);
+  auto size = GetCheckBoxSize(w->hWnd, dpi);
+  RECT textRect = customDraw->rc;
+  textRect.left += size.cx + MulDiv(6, dpi, USER_DEFAULT_SCREEN_DPI);
+  COLORREF textColor;
+
+  if (::IsWindowEnabled(customDraw->hdr.hwndFrom)) {
+    textColor = themes.Mode.text;
+  } else {
+    textColor = themes.Mode.disable;
+  }
+
+  SetTextColor(customDraw->hdc, textColor);
+  UINT textFormat = ((customDraw->uItemState & CDIS_SHOWKEYBOARDCUES) != 0) ? DT_LEFT : DT_LEFT | DT_HIDEPREFIX;
+  RECT finalTextRect = textRect;
+  DrawText(customDraw->hdc, w->data(), static_cast<int>(w->size()), &finalTextRect, textFormat | DT_CALCRECT);
+  if (windows::rect_height(finalTextRect) < windows::rect_height(textRect)) {
+    textRect.top += (windows::rect_height(textRect) - windows::rect_height(finalTextRect)) / 2;
+  }
+  DrawText(customDraw->hdc, w->data(), static_cast<int>(w->size()), &textRect, textFormat);
+  if ((customDraw->uItemState & CDIS_FOCUS) != 0) {
+    DrawFocusRect(customDraw->hdc, &textRect);
+  }
+}
+
+INT_PTR MainWindow::OnCustomDraw(const NMCUSTOMDRAW *customDraw) {
+  if (customDraw->hdr.hwndFrom != hcleanenv.hWnd) {
+    return CDRF_DODEFAULT;
+  }
+  switch (customDraw->dwDrawStage) {
+  case CDDS_PREPAINT:
+    DrawButtonText(customDraw);
+    return CDRF_SKIPDEFAULT;
+  }
+
+  return CDRF_DODEFAULT;
 }
 
 } // namespace baulk::dock

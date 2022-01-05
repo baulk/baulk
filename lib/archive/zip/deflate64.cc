@@ -61,10 +61,12 @@ unsigned get(void *in_desc, unsigned char **buf) {
 
 // DEFLATE64
 bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_code &ec) const {
-  baulk::archive::Buffer window(65536);
-  baulk::archive::Buffer chunk(CHUNK);
+  Buffer window(65536);
+  Buffer chunk(CHUNK);
   z_stream zs;
   memset(&zs, 0, sizeof(zs));
+  zs.zalloc = baulk::mem::allocate_zlib;
+  zs.zfree = baulk::mem::deallocate_simple;
   auto ret = inflateBack9Init(&zs, window.data());
   if (ret != Z_OK) {
     ec = bela::make_error_code(ret == Z_MEM_ERROR ? L"not enough memory (!)" : L"internal error");

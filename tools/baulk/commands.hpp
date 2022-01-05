@@ -25,9 +25,13 @@ int cmd_sha256sum(const argv_t &argv);
 int cmd_cleancache(const argv_t &argv);
 //
 int cmd_bucket(const argv_t &argv);
+//
+int cmd_brand(const argv_t &);
 // archive
 int cmd_unzip(const argv_t &argv);
 int cmd_untar(const argv_t &argv);
+int cmd_extract(const argv_t &argv);
+//
 int cmd_version(const argv_t &argv);
 //
 void Version();
@@ -50,8 +54,10 @@ void usage_cleancache();
 void usage_bucket();
 void usage_untar();
 void usage_unzip();
+void usage_extract();
+void usage_brand();
 //
-int BaulkUpdateBucket(bool showUpdatable);
+int UpdateBucket(bool showUpdatable);
 } // namespace baulk::commands
 
 #endif

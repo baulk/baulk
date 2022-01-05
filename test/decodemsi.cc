@@ -7,7 +7,7 @@ struct Helper {
 };
 
 namespace baulk {
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, Args... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   const bela::format_internal::FormatArg arg_array[] = {args...};
   std::wstring str;
   str.append(L"\x1b[33m* ");
@@ -27,7 +27,7 @@ int FGetInteger(const wchar_t *&it, const wchar_t *end) {
   }
   std::wstring_view sv{pchPrev, static_cast<size_t>(it - pchPrev)};
   int i = 0;
-  bela::SimpleAtoi(sv, &i);
+  (void)bela::SimpleAtoi(sv, &i);
   return i;
 }
 

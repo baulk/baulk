@@ -11,7 +11,7 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
   }
   int n = 0;
   if (auto res = std::from_chars(sv->data(), sv->data() + pos, n); res.ec != std::errc{} || n > sv->size()) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"invalid number '", bela::ToWide(sv->substr(0, pos)), L"'");
+    ec = bela::make_error_code(bela::ErrGeneral, L"invalid number '", bela::encode_into<char, wchar_t>(sv->substr(0, pos)), L"'");
     return false;
   }
   auto rec = sv->substr(pos + 1, n - pos - 1);
@@ -38,7 +38,7 @@ int wmain() {
     std::string_view k;
     std::string_view v;
     if (!parsePAXRecord(&pax, &k, &v, ec)) {
-      bela::FPrintF(stderr, L"Error %s\n", ec.message);
+      bela::FPrintF(stderr, L"Error %s\n", ec);
       return 1;
     }
     bela::FPrintF(stderr, L"K %s = V %s\n", k, v);

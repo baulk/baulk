@@ -1,50 +1,45 @@
 //
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/fsmutex.hpp>
 #include "baulk.hpp"
-#include "fs.hpp"
 #include "bucket.hpp"
 #include "commands.hpp"
 
 namespace baulk::commands {
 
-inline std::wstring StringCategory(baulk::Package &pkg) {
-  if (pkg.venv.category.empty()) {
-    return L"";
-  }
-  return bela::StringCat(L" \x1b[36m[", pkg.venv.category, L"]\x1b[0m");
-}
-
 // check upgradable
 int cmd_list_all() {
   bela::fs::Finder finder;
   bela::error_code ec;
-  auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
   size_t upgradable = 0;
-  if (finder.First(locksdir, L"*.json", ec)) {
+  if (finder.First(vfs::AppLocks(), L"*.json", ec)) {
     do {
       if (finder.Ignore()) {
         continue;
       }
-      auto pkgname = finder.Name();
-      if (!bela::EndsWithIgnoreCase(pkgname, L".json")) {
+      auto pkgName = finder.Name();
+      if (!bela::EndsWithIgnoreCase(pkgName, L".json")) {
         continue;
       }
-      pkgname.remove_suffix(5);
-      auto opkg = baulk::bucket::PackageLocalMeta(pkgname, ec);
-      if (!opkg) {
+      pkgName.remove_suffix(5);
+      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
+      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
         upgradable++;
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
-                      opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                      baulk::BaulkIsFrozenPkg(pkgname) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(*opkg));
+                      localMeta->name, localMeta->bucket, localMeta->version, pkg.version, pkg.bucket,
+                      baulk::IsFrozenedPackage(pkgName) ? L" \x1b[33m(frozen)\x1b[0m" : L"",
+                      StringCategory(*localMeta));
         continue;
       }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket, opkg->version,
-                    StringCategory(*opkg));
+      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", localMeta->name, localMeta->bucket,
+                    localMeta->version, StringCategory(*localMeta));
     } while (finder.Next());
   }
   bela::FPrintF(stderr, L"\x1b[32m%d packages can be updated.\x1b[0m\n", upgradable);
@@ -66,25 +61,24 @@ int cmd_list(const argv_t &argv) {
   if (argv.empty()) {
     return cmd_list_all();
   }
-  auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
   bela::error_code ec;
   for (const auto a : argv) {
-    auto opkg = baulk::bucket::PackageLocalMeta(a, ec);
-    if (!opkg) {
-      baulk::DbgPrint(L"list package '%s' error: %s", a, ec.message);
+    auto localMeta = baulk::bucket::PackageLocalMeta(a, ec);
+    if (!localMeta) {
+      baulk::DbgPrint(L"list package '%s' error: %s", a, ec);
       continue;
     }
     baulk::Package pkg;
-    if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
+    if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
       bela::FPrintF(stderr,
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",
-                    opkg->name, opkg->bucket, opkg->version, pkg.version, pkg.bucket,
-                    baulk::BaulkIsFrozenPkg(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(*opkg));
+                    localMeta->name, localMeta->bucket, localMeta->version, pkg.version, pkg.bucket,
+                    baulk::IsFrozenedPackage(a) ? L" \x1b[33m(frozen)\x1b[0m" : L"", StringCategory(*localMeta));
       continue;
     }
-    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", opkg->name, opkg->bucket, opkg->version,
-                  StringCategory(*opkg));
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n", localMeta->name, localMeta->bucket,
+                  localMeta->version, StringCategory(*localMeta));
   }
   return 0;
 }

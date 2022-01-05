@@ -14,7 +14,7 @@ endif()
 
 target_link_libraries(
   baulk-dock
-  baulkenv
+  baulk.vfs
   belashl
   d2d1
   dwrite
@@ -22,7 +22,9 @@ target_link_libraries(
   shcore
   Winmm
   comctl32
-  ole32.lib
-  comsupp.lib)
+  uxtheme
+  dwmapi
+  ole32
+  comsupp)
 
 install(TARGETS "baulk-dock" DESTINATION bin)

@@ -3,7 +3,8 @@
 #include <bela/process.hpp>
 #include <bela/simulator.hpp>
 #include <bela/strip.hpp>
-#include "fs.hpp"
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
 
 namespace baulk::sevenzip {
 constexpr auto ok = ERROR_SUCCESS;
@@ -41,20 +42,14 @@ inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
 }
 
 inline std::optional<std::wstring> lookup_sevenzip() {
-  bela::error_code ec;
-  auto parent = bela::ExecutableParent(ec);
-  if (!parent) {
-    return std::nullopt;
-  }
-  // baulk7z - A derivative version of 7-Zip-zstd maintained by baulk
-  // contributors
-  if (auto s7z = bela::StringCat(*parent, L"\\links\\baulk7z.exe"); bela::PathExists(s7z)) {
+  if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\baulk7z.exe"); bela::PathExists(s7z)) {
     return std::make_optional(std::move(s7z));
   }
+  bela::error_code ec;
   if (auto ps7z = find7zInstallPath(ec); ps7z) {
     return std::make_optional(std::move(*ps7z));
   }
-  if (auto s7z = bela::StringCat(*parent, L"\\links\\7z.exe"); !bela::PathExists(s7z)) {
+  if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\7z.exe"); !bela::PathExists(s7z)) {
     return std::make_optional(std::move(s7z));
   }
   std::wstring s7z;

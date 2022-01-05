@@ -8,7 +8,9 @@ Reader::~Reader() {
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  zds = ZSTD_createDCtx();
+  // ZSTD_createDCtx_advanced
+  zds = ZSTD_createDCtx_advanced(ZSTD_customMem{
+      .customAlloc = baulk::mem::allocate_simple, .customFree = baulk::mem::deallocate_simple, .opaque = nullptr});
   if (zds == nullptr) {
     ec = bela::make_error_code(L"ZSTD_createDStream() out of memory");
     return false;
@@ -35,7 +37,8 @@ bool Reader::decompress(bela::error_code &ec) {
     ZSTD_outBuffer out{outb.data(), outb.capacity(), 0};
     auto result = ZSTD_decompressStream(zds, &out, &in);
     if (ZSTD_isError(result) != 0) {
-      ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ", bela::ToWide(ZSTD_getErrorName(result)));
+      ec = bela::make_error_code(ErrGeneral, L"ZSTD_decompressStream: ",
+                                 bela::encode_into<char, wchar_t>(ZSTD_getErrorName(result)));
       return false;
     }
     outb.pos() = 0;

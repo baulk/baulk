@@ -10,6 +10,6 @@ set(PPMD_LIBRARY_SOURCES
     Ppmd8Dec.c
     Ppmd8Enc.c)
 
-add_library(Ppmd STATIC ${PPMD_LIBRARY_SOURCES})
+add_library(ppmd STATIC ${PPMD_LIBRARY_SOURCES})
 
-target_include_directories(Ppmd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ppmd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

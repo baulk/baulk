@@ -1,6 +1,7 @@
 # archive libs
 
 add_subdirectory(chromium_zlib)
+add_subdirectory(ppmd)
 
 # liblzma
 add_library(
@@ -131,7 +132,6 @@ target_compile_definitions(zstd PRIVATE ZSTD_MULTITHREAD)
 target_include_directories(zstd PRIVATE zstd zstd/common zstd/legacy)
 
 add_subdirectory(ced)
-add_subdirectory(ppmd)
 
 # Brotli
 set(BROTLI_SOURCES
@@ -166,8 +166,10 @@ set(BROTLI_SOURCES
     brotli/enc/utf8_util.c)
 
 add_library(
-  baulkarchive STATIC
+  baulk.archive STATIC
   archive.cc
+  ced.cc
+  format.cc
   tar/brotli.cc
   tar/bzip.cc
   tar/decompressor.cc
@@ -183,7 +185,6 @@ add_library(
   zip/deflate.cc
   zip/deflate64.cc
   zip/filemode.cc
-  zip/path.cc
   zip/ppmd.cc
   zip/xz.cc
   zip/zip.cc
@@ -205,15 +206,16 @@ list(APPEND BAULK_ZIP_INC zstd)
 list(APPEND BAULK_ZIP_INC brotli/include)
 list(APPEND BAULK_ZIP_INC ced)
 
-target_include_directories(baulkarchive PRIVATE ${BAULK_ZIP_INC})
-target_compile_options(baulkarchive PRIVATE ${LZMA_DEF})
+target_include_directories(baulk.archive PRIVATE ${BAULK_ZIP_INC})
+target_compile_options(baulk.archive PRIVATE ${LZMA_DEF})
 target_link_libraries(
-  baulkarchive
+  baulk.archive
+  baulk.mem
   belawin
   deflate64
   lzma
+  ppmd
   zlib
   zstd
-  Ppmd
   ced
   advapi32)

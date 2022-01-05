@@ -84,6 +84,7 @@ Source: "..\build\bin\baulk.exe"; DestDir: "{app}\bin"; DestName: "baulk.exe"
 Source: "..\build\bin\baulk-dock.exe"; DestDir: "{app}\bin"; DestName: "baulk-dock.exe"
 Source: "..\build\bin\baulk-exec.exe"; DestDir: "{app}\bin"; DestName: "baulk-exec.exe"
 Source: "..\build\bin\baulk-lnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-lnk.exe"
+Source: "..\build\bin\baulk-winlnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-winlnk.exe"
 Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-update.exe"
 Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterminal.exe"
 Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
@@ -94,6 +95,11 @@ Source: "..\script\Fragments.bat"; DestDir: "{app}\script"; DestName: "Fragments
 Source: "..\script\FragmentsARM64.ps1"; DestDir: "{app}\script"; DestName: "FragmentsARM64.ps1"
 Source: "..\script\FragmentsARM64.bat"; DestDir: "{app}\script"; DestName: "FragmentsARM64.bat"
 Source: "..\script\FragmentsDel.bat"; DestDir: "{app}\script"; DestName: "FragmentsDel.bat"
+#if "user" == InstallTarget
+Source: "..\manifest\user-install.env"; DestDir: "{app}"; DestName: "baulk.env"
+#else
+Source: "..\manifest\system-install.env"; DestDir: "{app}"; DestName: "baulk.env"
+#endif
 
 [UninstallDelete]
 ; Delete Windows Terminal profile fragments
@@ -105,9 +111,9 @@ Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "A
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Icons]
-Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; AppUserModelID: "{#AppUserId}"
-Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs --clang"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
+Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; AppUserModelID: "{#AppUserId}"
+Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
 
 [Registry]
 ; Aides installing
@@ -144,7 +150,7 @@ begin
         '    {'#10+
         '      "name": "Baulk",'#10+
         '      "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'#10+
-        '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs --clang winsh",'#10+
+        '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs winsh",'#10+
         '      "icon": "'+AppPath+'/share/baulk/baulk.ico",'#10+
         '      "startingDirectory": "%USERPROFILE%",'#10+
         '      "tabTitle": "Windows Terminal \ud83d\udc96 Baulk"'#10+

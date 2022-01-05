@@ -1,6 +1,7 @@
 # Copyright (C) 2022. Baulk contributors. All Rights Reserved.
 cmake_minimum_required(VERSION 3.18)
 project(Baulk)
+enable_language(ASM_MASM)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
   message(
@@ -50,7 +51,7 @@ string(TIMESTAMP BAULK_COPYRIGHT_YEAR "%Y")
 # BAULK_REFNAME maybe defined by ci
 if("${BAULK_REFNAME}" STREQUAL "none")
   if(DEFINED ENV{GITHUB_REF})
-    set(BAULK_REFNAME $ENV{GITHUB_REF})
+    set(BAULK_REFNAME $ENV{GITHUB_REF_NAME})
   endif()
 endif()
 
@@ -70,7 +71,7 @@ else()
 endif()
 
 set(BAULK_VERSION_MAJOR 3)
-set(BAULK_VERSION_MINOR 0)
+set(BAULK_VERSION_MINOR 99)
 set(BAULK_VERSION_PATCH 1)
 set(PACKAGE_VERSION "${BAULK_VERSION_MAJOR}.${BAULK_VERSION_MINOR}.${BAULK_VERSION_PATCH}")
 
@@ -87,7 +88,7 @@ set(CPACK_PACKAGE_CONTACT "Baulk contributors")
 
 include(CPack)
 # Generate version code
-configure_file(${CMAKE_SOURCE_DIR}/include/baulkversion.h.cmake ${CMAKE_BINARY_DIR}/include/baulkversion.h)
+configure_file(${CMAKE_SOURCE_DIR}/include/revision.h.cmake ${CMAKE_BINARY_DIR}/include/revision.h)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -108,7 +109,10 @@ include_directories("${CMAKE_BINARY_DIR}/include" "./include" "./vendor/bela/inc
 
 configure_file("config/baulk.json" "${PROJECT_BINARY_DIR}/config/baulk.json" COPYONLY)
 install(FILES "config/baulk.json" DESTINATION config)
-install(FILES "res/screw-driver.ico" DESTINATION "share/baulk" RENAME baulk.ico)
+install(
+  FILES "res/screw-driver.ico"
+  DESTINATION "share/baulk"
+  RENAME baulk.ico)
 
 install(FILES "script/Fragments.ps1" DESTINATION script)
 install(FILES "script/Fragments.bat" DESTINATION script)
@@ -117,8 +121,7 @@ install(FILES "script/FragmentsARM64.bat" DESTINATION script)
 install(FILES "script/FragmentsDel.bat" DESTINATION script)
 
 add_subdirectory(vendor/bela)
-add_subdirectory(lib/archive)
-add_subdirectory(lib/env)
+add_subdirectory(lib)
 add_subdirectory(tools)
 
 if(BUILD_TEST)

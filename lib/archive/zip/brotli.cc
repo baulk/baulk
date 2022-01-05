@@ -7,7 +7,7 @@ namespace baulk::archive::zip {
 // https://github.com/google/brotli/blob/master/c/tools/brotli.c#L884
 // Brotli
 bool Reader::decompressBrotli(const File &file, const Writer &w, bela::error_code &ec) const {
-  auto state = BrotliDecoderCreateInstance(0, 0, 0);
+  auto state = BrotliDecoderCreateInstance(baulk::mem::allocate_simple, baulk::mem::deallocate_simple, 0);
   if (state == nullptr) {
     ec = bela::make_error_code(L"BrotliDecoderCreateInstance failed");
     return false;

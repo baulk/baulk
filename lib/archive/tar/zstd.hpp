@@ -2,6 +2,7 @@
 #ifndef BAULK_ARCHIVE_TAR_ZSTD_HPP
 #define BAULK_ARCHIVE_TAR_ZSTD_HPP
 #include "tarinternal.hpp"
+#define ZSTD_STATIC_LINKING_ONLY 1
 #include <zstd.h>
 
 namespace baulk::archive::tar::zstd {

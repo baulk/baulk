@@ -80,3 +80,11 @@ elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
 endif()
 
 target_include_directories(zlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(
+  zlib
+  PRIVATE -wd4244
+          -wd4100
+          -wd4702
+          -wd4127
+          -wd4996
+          -wd4267)

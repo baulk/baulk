@@ -10,7 +10,7 @@ int32_t OnEntry(void *handle, void *userdata, const char *path) {
     return 0;
   }
   auto suglen = static_cast<size_t>(termsz->columns) - 8;
-  auto filename = bela::ToWide(std::string_view{path});
+  auto filename = bela::encode_into<char, wchar_t>(std::string_view{path});
   if (auto n = bela::string_width<wchar_t>(filename); n <= suglen) {
     bela::FPrintF(stderr, L"\x1b[33mx %s\x1b[0m\n", filename);
     return 0;

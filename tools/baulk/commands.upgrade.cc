@@ -1,12 +1,12 @@
 ///
-#include <baulkrev.hpp>
+#include <version.hpp>
 #include <bela/match.hpp>
 #include <bela/strip.hpp>
-#include <jsonex.hpp>
-#include "net.hpp"
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
+#include <baulk/fsmutex.hpp>
 #include "commands.hpp"
 #include "baulk.hpp"
-#include "fs.hpp"
 #include "bucket.hpp"
 #include "pkg.hpp"
 
@@ -35,34 +35,33 @@ Example:
 
 int cmd_upgrade(const argv_t &argv) {
   bela::error_code ec;
-  auto locker = baulk::BaulkCloser::BaulkMakeLocker(ec);
-  if (!locker) {
-    bela::FPrintF(stderr, L"baulk upgrade: \x1b[31m%s\x1b[0m\n", ec.message);
+  auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
+  if (!mtx) {
+    bela::FPrintF(stderr, L"baulk upgrade: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
-  if (!baulk::BaulkInitializeExecutor(ec)) {
-    baulk::DbgPrint(L"unable initialize compiler executor: %s", ec.message);
+  if (!InitializeExecutor(ec)) {
+    baulk::DbgPrint(L"baulk upgrade: unable initialize compiler executor: %s", ec);
   }
 
   bela::fs::Finder finder;
-  auto locksdir = bela::StringCat(baulk::BaulkRoot(), L"\\bin\\locks");
-  if (finder.First(locksdir, L"*.json", ec)) {
+  if (finder.First(vfs::AppLocks(), L"*.json", ec)) {
     do {
       if (finder.Ignore()) {
         continue;
       }
-      auto pkgname = finder.Name();
-      if (!bela::EndsWithIgnoreCase(pkgname, L".json")) {
+      auto pkgName = finder.Name();
+      if (!bela::EndsWithIgnoreCase(pkgName, L".json")) {
         continue;
       }
-      pkgname.remove_suffix(5);
-      auto opkg = baulk::bucket::PackageLocalMeta(pkgname, ec);
-      if (!opkg) {
+      pkgName.remove_suffix(5);
+      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*opkg, pkg)) {
-        baulk::package::BaulkInstall(pkg);
+      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
+        baulk::package::PackageInstall(pkg);
         continue;
       }
     } while (finder.Next());

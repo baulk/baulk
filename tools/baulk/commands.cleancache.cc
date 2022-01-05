@@ -1,9 +1,9 @@
 // pkgclean command cleanup pkg cache
 #include <bela/terminal.hpp>
+#include <baulk/fs.hpp>
+#include <baulk/vfs.hpp>
 #include "baulk.hpp"
 #include "commands.hpp"
-#include "fs.hpp"
-#include "launcher.hpp"
 
 namespace baulk::commands {
 
@@ -13,14 +13,14 @@ bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
                                 OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"CreateFileW() %s: %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"CreateFileW() %s: %s\n", file, ec);
     return false;
   }
   auto closer = bela::finally([&] { CloseHandle(FileHandle); });
   // Retrieve the file times for the file.
   if (GetFileTime(FileHandle, &ftCreate, &ftAccess, &ftWrite) != TRUE) {
     auto ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec.message);
+    bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec);
     return false;
   }
   constexpr auto expires = 30 * 24 * 3600 * 1000LL; // ms
@@ -43,28 +43,27 @@ Example:
 }
 
 int cmd_cleancache(const argv_t &argv) {
-  auto pkgtemp = bela::StringCat(baulk::BaulkRoot(), L"\\", baulk::BaulkPkgTmpDir);
   bela::error_code ec;
   SYSTEMTIME now;
   GetSystemTime(&now);
   FILETIME fnow;
   if (SystemTimeToFileTime(&now, &fnow) != TRUE) {
     ec = bela::make_system_error_code();
-    bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec.message);
+    bela::FPrintF(stderr, L"SystemTimeToFileTime: %s\n", ec);
     return 1;
   }
   ULARGE_INTEGER ul;
   ul.LowPart = fnow.dwLowDateTime;
   ul.HighPart = fnow.dwHighDateTime;
-  for (auto &p : std::filesystem::directory_iterator(pkgtemp)) {
-    auto path_ = p.path().wstring();
+  for (auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
+    auto path_ = p.path();
     if (baulk::IsForceMode || p.is_directory()) {
-      bela::fs::ForceDeleteFolders(path_, ec);
+      bela::fs::ForceDeleteFolders(path_.native(), ec);
       continue;
     }
-    if (FileIsExpired(path_, ul.QuadPart)) {
-      DbgPrint(L"%s expired", path_);
-      bela::fs::ForceDeleteFolders(path_, ec);
+    if (FileIsExpired(path_.native(), ul.QuadPart)) {
+      DbgPrint(L"%s expired", path_.native());
+      bela::fs::ForceDeleteFolders(path_.native(), ec);
       continue;
     }
   }

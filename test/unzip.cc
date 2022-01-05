@@ -1,6 +1,6 @@
 //
-#include <zip.hpp>
-#include <archive.hpp>
+#include <baulk/archive.hpp>
+#include <baulk/archive/zip.hpp>
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
@@ -78,9 +78,8 @@ bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bel
   if (!ret) {
     return false;
   }
-  auto wn = bela::ToWide(linkname);
+  auto wn = bela::encode_into<char, wchar_t>(linkname);
   if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
-    ec = bela::make_error_code(ec.code, L"create symlink '", filename, L"' to linkname '", wn, L"' error ", ec.message);
     return false;
   }
   return true;
@@ -99,39 +98,39 @@ bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_
 }
 
 bool Extractor::extractFile(const File &file, bela::error_code &ec) {
-  auto dest = baulk::archive::zip::JoinSanitizePath(destination, file);
+  auto dest = baulk::archive::JoinSanitizePath(destination, file.name, file.IsFileNameUTF8());
   if (!dest) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
   auto showName = std::wstring_view(dest->data() + destsize, dest->size() - destsize);
-  bela::FPrintF(stderr,L" x %s\n",file.name);
-  //bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", showName);
+  bela::FPrintF(stderr, L" x %s\n", file.name);
+  // bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", showName);
   if (file.IsSymlink()) {
     return extractSymlink(file, *dest, ec);
   }
   if (file.IsDir()) {
     return extractDir(file, *dest, ec);
   }
-  auto fd = baulk::archive::NewFD(*dest, ec, owfile);
+  auto fd = baulk::archive::File::NewFile(*dest, owfile, ec);
   if (!fd) {
-    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec.message);
+    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec);
     return false;
   }
-  if (!fd->SetTime(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec.message);
+  if (!fd->Chtimes(file.time, ec)) {
+    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec);
     return false;
   }
-  bela::error_code ec2;
+  bela::error_code writeEc;
   auto ret = reader.Decompress(
       file,
       [&](const void *data, size_t len) {
         //
-        return fd->Write(data, len, ec2);
+        return fd->WriteFull(data, len, writeEc);
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec.message, ec2.message);
+    bela::FPrintF(stderr, L"unable Decompress %s error: %s (%s)\n", *dest, ec, writeEc);
     return false;
   }
   return true;
@@ -148,11 +147,11 @@ int unzip(std::wstring_view path) {
   extractor.OverwriteFile(true);
   bela::error_code ec;
   if (!extractor.OpenReader(path, ec)) {
-    bela::FPrintF(stderr, L"unable open zip file %s error: %s\n", path, ec.message);
+    bela::FPrintF(stderr, L"unable open zip file %s error: %s\n", path, ec);
     return 1;
   }
   if (!extractor.Extract(ec)) {
-    bela::FPrintF(stderr, L"unable extract file: %s error: %s\n", path, ec.message);
+    bela::FPrintF(stderr, L"unable extract file: %s error: %s\n", path, ec);
     return 1;
   }
   return 0;

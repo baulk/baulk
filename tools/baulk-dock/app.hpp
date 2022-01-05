@@ -1,7 +1,6 @@
 //
 #ifndef BAULK_DOCK_UI_HPP
 #define BAULK_DOCK_UI_HPP
-
 #include <atlbase.h>
 #include <atlwin.h>
 #include <atlctl.h>
@@ -11,8 +10,9 @@
 #include <dwrite.h>
 #include <wincodec.h>
 #include <vector>
+#include <bela/phmap.hpp>
 #include <bela/base.hpp>
-
+#include <baulk/graphics.hpp>
 #include "resource.h"
 
 #ifndef SYSCOMMAND_ID_HANDLER
@@ -69,13 +69,33 @@ struct BaulkDockTable {
 };
 
 struct Widget {
+  std::wstring text;
   HWND hWnd{nullptr};
   RECT layout;
   bool mono{false};
+  int Height() const { return layout.bottom - layout.top; }
+  int Width() const { return layout.right - layout.left; }
+  const wchar_t *data() const { return text.data(); }
+  auto size() const { return text.size(); }
   bool Enable(bool enable) { return ::EnableWindow(hWnd, enable ? TRUE : FALSE) == TRUE; }
 };
 
 class MainWindow : public CWindowImpl<MainWindow, CWindow, WindowTraits> {
+private:
+  HRESULT CreateDeviceIndependentResources();
+  HRESULT InitializeControl();
+  HRESULT CreateDeviceResources();
+  void DiscardDeviceResources();
+  HRESULT OnRender();
+  D2D1_SIZE_U CalculateD2DWindowSize();
+  void OnResize(UINT width, UINT height);
+  ///////////
+  bool InitializeBase(bela::error_code &ec);
+  bool LoadPlacement(WINDOWPLACEMENT &placement);
+  void SavePlacement(const WINDOWPLACEMENT &placement);
+  INT_PTR OnCustomDraw(const NMCUSTOMDRAW *customDraw);
+  void DrawButtonText(const NMCUSTOMDRAW *customDraw);
+
 public:
   MainWindow(HINSTANCE hInstance) : hInst(hInstance) {}
   ~MainWindow();
@@ -88,7 +108,9 @@ public:
   MESSAGE_HANDLER(WM_SIZE, OnSize)
   MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
   MESSAGE_HANDLER(WM_PAINT, OnPaint)
+  MESSAGE_HANDLER(WM_CTLCOLORDLG, OnCtlColorStatic)
   MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+  MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
   SYSCOMMAND_ID_HANDLER(IDM_BAULK_DOCK_ABOUT, OnSysMemuAbout)
   COMMAND_ID_HANDLER(IDC_BUTTON_STARTENV, OnStartupEnv)
   END_MSG_MAP()
@@ -99,6 +121,7 @@ public:
   LRESULT OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle);
   LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle);
   LRESULT OnCtlColorStatic(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle);
+  LRESULT OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle);
   LRESULT OnSysMemuAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
   LRESULT OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
   ////
@@ -113,21 +136,9 @@ private:
   ID2D1HwndRenderTarget *renderTarget{nullptr};
   ID2D1SolidColorBrush *textBrush{nullptr};
   ID2D1SolidColorBrush *borderBrush{nullptr};
-
-  int dpiX{0};
-  int dpiY{0};
-  HRESULT CreateDeviceIndependentResources();
-  HRESULT InitializeControl();
-  HRESULT CreateDeviceResources();
-  void DiscardDeviceResources();
-  HRESULT OnRender();
-  D2D1_SIZE_U CalculateD2DWindowSize();
+  baulk::windows::PersonalizeThemes themes;
+  bela::windows_version systemVersion;
   HICON hIcon{nullptr};
-  void OnResize(UINT width, UINT height);
-  ///////////
-  bool InitializeBase(bela::error_code &ec);
-  bool LoadPlacement(WINDOWPLACEMENT &placement);
-  void SavePlacement(const WINDOWPLACEMENT &placement);
   /// member
   HINSTANCE hInst{nullptr};
   HFONT hFont{nullptr};
@@ -137,12 +148,15 @@ private:
   Widget hvenvbox;
   // checkbox
   Widget hcleanenv;
-  Widget hclang;
   // button about
   Widget hbaulkenv;
   std::vector<Label> labels;
   std::wstring baulkroot;
   BaulkDockTable tables;
+  HBRUSH hBrush{nullptr};
+  int dpiX{0};
+  int dpiY{0};
+  bool isMicaEnabled{false};
 };
 } // namespace baulk::dock
 #endif

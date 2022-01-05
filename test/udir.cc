@@ -42,7 +42,7 @@ std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
   Finder finder;
   bela::error_code ec;
   if (!finder.First(dir, L"*", ec)) {
-    bela::FPrintF(stderr, L"bad %s\n", ec.message);
+    bela::FPrintF(stderr, L"bad %s\n", ec);
     return std::nullopt;
   }
   int count = 0;
@@ -53,7 +53,7 @@ std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
     }
     bela::FPrintF(stderr, L"%s\n", finder.Name());
     if (!finder.IsDir()) {
-      bela::FPrintF(stderr, L"not dir %s\n", ec.message);
+      bela::FPrintF(stderr, L"not dir %s\n", ec);
       return std::nullopt;
     }
     count++;

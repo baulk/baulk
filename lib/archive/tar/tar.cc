@@ -3,44 +3,24 @@
 #include <bela/str_cat_narrow.hpp>
 #include <bela/str_join_narrow.hpp>
 #include <bela/str_split_narrow.hpp>
+#include <baulk/allocate.hpp>
 #include <charconv>
 
 namespace baulk::archive::tar {
-// tar code
-FileReader::~FileReader() {
-  if (fd != INVALID_HANDLE_VALUE && needClosed) {
-    CloseHandle(fd);
-  }
-}
 
 ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
   DWORD drSize = {0};
-  if (::ReadFile(fd, buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
+  if (::ReadFile(fd.NativeFD(), buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
     ec = bela::make_system_error_code(L"ReadFile: ");
     return -1;
   }
   return static_cast<ssize_t>(drSize);
 }
-ssize_t FileReader::ReadAt(void *buffer, size_t len, int64_t pos, bela::error_code &ec) {
-  if (!PositionAt(pos, ec)) {
-    return -1;
-  }
-  return Read(buffer, len, ec);
-}
-bool FileReader::PositionAt(int64_t pos, bela::error_code &ec) {
-  auto li = *reinterpret_cast<LARGE_INTEGER *>(&pos);
-  LARGE_INTEGER oli{0};
-  if (SetFilePointerEx(fd, li, &oli, SEEK_SET) != TRUE) {
-    ec = bela::make_system_error_code(L"SetFilePointerEx: ");
-    return false;
-  }
-  return true;
-}
 
 bool FileReader::Discard(int64_t len, bela::error_code &ec) {
   auto li = *reinterpret_cast<LARGE_INTEGER *>(&len);
   LARGE_INTEGER oli{0};
-  if (SetFilePointerEx(fd, li, &oli, SEEK_CUR) != TRUE) {
+  if (SetFilePointerEx(fd.NativeFD(), li, &oli, SEEK_CUR) != TRUE) {
     ec = bela::make_system_error_code(L"SetFilePointerEx: ");
     return false;
   }
@@ -53,7 +33,7 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
   while (filesize > 0) {
     auto minsize = (std::min)(bufferSize, filesize);
     DWORD drSize = {0};
-    if (::ReadFile(fd, buffer, static_cast<DWORD>(minsize), &drSize, nullptr) != TRUE) {
+    if (::ReadFile(fd.NativeFD(), buffer, static_cast<DWORD>(minsize), &drSize, nullptr) != TRUE) {
       ec = bela::make_system_error_code(L"ReadFile: ");
       return false;
     }
@@ -64,21 +44,6 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
     }
   }
   return true;
-}
-
-std::shared_ptr<FileReader> OpenFile(std::wstring_view file, bela::error_code &ec) {
-  auto fd = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (fd == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
-    return nullptr;
-  }
-  LARGE_INTEGER li;
-  if (GetFileSizeEx(fd, &li) != TRUE) {
-    ec = bela::make_system_error_code(L"GetFileSizeEx: ");
-    return nullptr;
-  }
-  return std::make_shared<FileReader>(fd, li.QuadPart, true);
 }
 
 inline bool isZeroBlock(const ustar_header &th) {
@@ -197,7 +162,7 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
     return false;
   }
   if (h.Format = getFormat(hdr); h.Format == FormatUnknown) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
     return false;
   }
   h.Typeflag = hdr.typeflag;
@@ -467,6 +432,7 @@ std::optional<Header> Reader::Next(bela::error_code &ec) {
       h.Format = FormatUSTAR;
     }
     remainingSize = h.Size;
+    index++;
     return std::make_optional(std::move(h));
   }
   return std::nullopt;
@@ -480,18 +446,6 @@ bool Reader::WriteTo(const Writer &w, int64_t filesize, bela::error_code &ec) {
     remainingSize -= extracted;
   }
   return ret;
-}
-
-std::wstring_view PathRemoveExtension(std::wstring_view p) {
-  constexpr std::wstring_view extensions[] = {
-      L".tgz", L".tar.gz", L".tbz2",    L".tar.bz2", L".tar.xz", L".txz", L".tar.zst", L".tar.zstd", L".tar.br",
-      L".tbr", L".tlz4",   L".tar.lz4", L".tar",     L".zip",    L".rar", L".7z",      L".cab",      L".msi"};
-  for (const auto e : extensions) {
-    if (bela::EndsWithIgnoreCase(p, e)) {
-      return p.substr(0, p.size() - e.size());
-    }
-  }
-  return p;
 }
 
 } // namespace baulk::archive::tar
