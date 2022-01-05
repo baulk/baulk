@@ -310,11 +310,11 @@ bool PackageInstall(const baulk::Package &pkg) {
     return false;
   }
   if (!pkg.suggest.empty()) {
-    bela::FPrintF(stderr, L"Suggest installing: \x1b[32m%s\x1b[0m\n\n",
-                  bela::StrJoin(pkg.suggest, L"\x1b[0m\n  \x1b[32m"));
+    bela::FPrintF(stderr, L"'%s' suggests installing: '\x1b[32m%s\x1b[0m'\n", pkg.name,
+                  bela::StrJoin(pkg.suggest, L"\x1b[0m' or '\x1b[32m"));
   }
   if (!pkg.notes.empty()) {
-    bela::FPrintF(stderr, L"Notes: %s\n", pkg.notes);
+    bela::FPrintF(stderr, L"'%s' notes\n-----\n%s\n", pkg.name, pkg.notes);
   }
   DisplayDependencies(pkg);
   return true;

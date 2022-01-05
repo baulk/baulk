@@ -99,7 +99,23 @@ inline auto PackageMetaJoinScoop(const Bucket &bucket, std::wstring_view pkgName
 }
 
 std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
+  auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
+  auto pkj = baulk::json::parse_file(pkgMeta, ec);
+  if (!pkj) {
+    return std::nullopt;
+  }
+  auto jv = pkj->view();
+  Package pkg{
+      .name = std::wstring{pkgName},
+      .description = jv.fetch("description"),
+      .version = jv.fetch("version"),
+      .bucket = std::wstring{bucket.name},
+      .homepage = jv.fetch("homepage"),
+      .notes = jv.fetch("notes"),
+      .license = jv.fetch("license"),
+  };
 
+  ec = bela::make_error_code(bela::ErrUnimplemented, L"scoop bucket support unimplemented");
   return std::nullopt;
 }
 
