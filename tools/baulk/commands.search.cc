@@ -8,64 +8,6 @@
 #include "commands.hpp"
 
 namespace baulk::commands {
-// lldb/kali-rolling 1:9.0-49.1 amd64
-//   Next generation, high-performance debugger
-
-class Searcher {
-public:
-  Searcher(const argv_t &argv_) {
-    for (const auto a : argv_) {
-      argv.emplace_back(bela::AsciiStrToLower(a));
-    }
-  }
-  bool PackageMatched(std::wstring_view pkgName) {
-    for (const auto &a : argv) {
-      if (bela::FnMatch(a, pkgName)) {
-        return true;
-      }
-    }
-    return false;
-  };
-  bool SearchMatched(std::wstring_view pkgsUnderBucket, std::wstring_view bucket) {
-    DbgPrint(L"search bucket: %s", pkgsUnderBucket);
-    bela::fs::Finder finder;
-    bela::error_code ec;
-    if (!finder.First(pkgsUnderBucket, L"*.json", ec)) {
-      return false;
-    }
-    do {
-      if (finder.Ignore()) {
-        continue;
-      }
-      auto pkgName = finder.Name();
-      auto pkgMetaPath = bela::StringCat(pkgsUnderBucket, L"\\", pkgName);
-      pkgName.remove_suffix(5);
-      if (!PackageMatched(bela::AsciiStrToLower(pkgName))) {
-        continue;
-      }
-      auto pkg = baulk::bucket::PackageMeta(pkgMetaPath, pkgName, bucket, ec);
-      if (!pkg) {
-        bela::FPrintF(stderr, L"baulk search: parse package meta error: \x1b[31m%s\x1b[0m\n", ec);
-        continue;
-      }
-      auto lopkg = baulk::bucket::PackageLocalMeta(pkgName, ec);
-      if (lopkg && bela::EndsWithIgnoreCase(lopkg->bucket, pkg->bucket)) {
-        bela::FPrintF(stderr,
-                      L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s [installed "
-                      L"\x1b[33m%s\x1b[0m]%s\n  %s\n",
-                      pkg->name, pkg->bucket, pkg->version, lopkg->version, StringCategory(*pkg), pkg->description);
-        continue;
-      }
-      bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n  %s\n", pkg->name, pkg->bucket, pkg->version,
-                    StringCategory(*pkg), pkg->description);
-    } while (finder.Next());
-
-    return true;
-  }
-
-private:
-  std::vector<std::wstring> argv;
-};
 
 void usage_search() {
   bela::FPrintF(stderr, LR"(Usage: baulk search [package]...
@@ -84,12 +26,42 @@ int cmd_search(const argv_t &argv) {
     usage_search();
     return 1;
   }
-  Searcher searcher(argv);
-  auto buckets = vfs::AppBuckets();
-  DbgPrint(L"buckets: %s", buckets);
-  for (const auto &bk : LoadedBuckets()) {
-    auto pkgsUnderBucket = bela::StringCat(buckets, L"\\", bk.name, L"\\bucket");
-    searcher.SearchMatched(pkgsUnderBucket, bk.name);
+
+  std::vector<std::wstring> pattern;
+  for (const auto &a : argv) {
+    pattern.emplace_back(bela::AsciiStrToLower(a));
+  }
+  auto isMatched = [&](std::wstring_view pkgName) -> bool {
+    for (const auto &a : pattern) {
+      if (bela::FnMatch(a, pkgName)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  // lldb/kali-rolling 1:9.0-49.1 amd64
+  //   Next generation, high-performance debugger
+  auto onMatched = [](const Bucket &bucket, std::wstring_view pkgName) -> bool {
+    bela::error_code ec;
+    auto pkg = baulk::PackageMeta(bucket, pkgName, ec);
+    if (!pkg) {
+      bela::FPrintF(stderr, L"baulk search: parse package meta error: \x1b[31m%s\x1b[0m\n", ec);
+      return false;
+    }
+    auto pkgLocal = baulk::PackageLocalMeta(pkgName, ec);
+    if (pkgLocal && bela::EndsWithIgnoreCase(pkgLocal->bucket, pkg->bucket)) {
+      bela::FPrintF(stderr,
+                    L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s [installed "
+                    L"\x1b[33m%s\x1b[0m]%s\n  %s\n",
+                    pkg->name, pkg->bucket, pkg->version, pkgLocal->version, StringCategory(*pkg), pkg->description);
+      return true;
+    }
+    bela::FPrintF(stderr, L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s%s\n  %s\n", pkg->name, pkg->bucket, pkg->version,
+                  StringCategory(*pkg), pkg->description);
+    return true;
+  };
+  if (!PackageMatched(isMatched, onMatched)) {
+    return 1;
   }
   return 0;
 }

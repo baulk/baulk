@@ -55,12 +55,12 @@ int cmd_upgrade(const argv_t &argv) {
         continue;
       }
       pkgName.remove_suffix(5);
-      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      auto localMeta = baulk::PackageLocalMeta(pkgName, ec);
       if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
+      if (baulk::PackageUpdatableMeta(*localMeta, pkg)) {
         baulk::package::PackageInstall(pkg);
         continue;
       }

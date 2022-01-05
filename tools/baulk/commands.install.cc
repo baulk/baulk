@@ -48,14 +48,14 @@ void PackageInstaller::Update(std::wstring_view name) {
 
 bool PackageInstaller::Install(std::wstring_view name) {
   bela::error_code ec;
-  auto pkg = baulk::bucket::PackageMetaEx(name, ec);
+  auto pkg = baulk::PackageMetaEx(name, ec);
   if (!pkg) {
-    if (ec.code != baulk::bucket::ErrPackageNotYetPorted) {
+    if (ec.code != baulk::ErrPackageNotYetPorted) {
       bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
       return false;
     }
     Update(name);
-    if (pkg = baulk::bucket::PackageMetaEx(name, ec); !pkg) {
+    if (pkg = baulk::PackageMetaEx(name, ec); !pkg) {
       bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
       return 1;
     }

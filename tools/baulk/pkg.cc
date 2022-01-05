@@ -60,7 +60,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
 }
 
 bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
-  auto pkglocal = baulk::bucket::PackageLocalMeta(pkgName, ec);
+  auto pkglocal = baulk::PackageLocalMeta(pkgName, ec);
   if (!pkglocal) {
     return false;
   }
@@ -241,7 +241,7 @@ void DisplayDependencies(const baulk::Package &pkg) {
 
 bool PackageInstall(const baulk::Package &pkg) {
   bela::error_code ec;
-  auto pkgLocal = baulk::bucket::PackageLocalMeta(pkg.name, ec);
+  auto pkgLocal = baulk::PackageLocalMeta(pkg.name, ec);
   if (pkgLocal) {
     bela::version pkgVersion(pkg.version);
     bela::version localVersion(pkgLocal->version);

@@ -12,7 +12,7 @@
 #include "bucket.hpp"
 #include "decompress.hpp"
 
-namespace baulk::bucket {
+namespace baulk {
 // BucketNewestWithGithub github archive style bucket check latest
 std::optional<std::wstring> BucketNewestWithGithub(std::wstring_view bucketurl, bela::error_code &ec) {
   // default branch atom
@@ -100,7 +100,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   }
   // https://github.com/baulk/bucket/archive/master.zip
   auto master = bela::StringCat(bucket.url, L"/archive/", id, L".zip");
-  auto temp = baulk::vfs::AppTemp();
+  const auto temp = baulk::vfs::AppTemp();
   if (!baulk::fs::MakeDir(temp, ec)) {
     return false;
   }
@@ -140,88 +140,6 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   return true;
 }
 
-std::optional<baulk::Package> PackageMeta(std::wstring_view pkgMeta, std::wstring_view pkgName,
-                                          std::wstring_view bucket, bela::error_code &ec) {
-  auto pkj = baulk::json::parse_file(pkgMeta, ec);
-  if (!pkj) {
-    return std::nullopt;
-  }
-  auto jv = pkj->view();
-  Package pkg{
-      .name = std::wstring{pkgName},
-      .description = jv.fetch("description"),
-      .version = jv.fetch("version"),
-      .bucket = std::wstring{bucket},
-      .extension = bela::AsciiStrToLower(jv.fetch("extension")), // to lower
-      .rename = jv.fetch("rename"),
-      .homepage = jv.fetch("homepage"),
-      .notes = jv.fetch("notes"),
-      .license = jv.fetch("license"),
-  };
-  jv.fetch_strings_checked("suggest", pkg.suggest);
-  jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
-
-#if defined(_M_X64)
-  // x64
-  if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url64.hash");
-  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to x64 platform.");
-    return std::nullopt;
-  }
-  if (!jv.fetch_paths_checked("links64", pkg.links)) {
-    jv.fetch_paths_checked("links", pkg.links);
-  }
-  if (!jv.fetch_paths_checked("launchers64", pkg.launchers)) {
-    jv.fetch_paths_checked("launchers", pkg.launchers);
-  }
-#elif defined(_M_ARM64)
-  // ARM64 support
-  if (jv.fetch_strings_checked("urlarm64", pkg.urls)) {
-    pkg.hashValue = jv.fetch("urlarm64.hash");
-  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url.hash");
-  } else if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url64.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to ARM64 platform.");
-    return std::nullopt;
-  }
-  if (!jv.fetch_paths_checked("linksarm64", pkg.links)) {
-    if (!jv.fetch_paths_checked("links", pkg.links)) {
-      jv.fetch_paths_checked("links64", pkg.links);
-    }
-  }
-  if (!jv.fetch_paths_checked("launchersarm64", pkg.launchers)) {
-    if (!jv.fetch_paths_checked("launchers", pkg.launchers)) {
-      jv.fetch_paths_checked("launchers", pkg.links);
-    }
-  }
-#else
-  if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet ported.");
-    return std::nullopt;
-  }
-  jv.fetch_paths_checked("links", pkg.links);
-  jv.fetch_paths_checked("launchers", pkg.launchers);
-#endif
-  if (auto sv = jv.subview("venv"); sv) {
-    DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
-    pkg.venv.category = sv->fetch("category");
-    sv->fetch_paths_checked("path", pkg.venv.paths);
-    sv->fetch_paths_checked("include", pkg.venv.includes);
-    sv->fetch_paths_checked("lib", pkg.venv.libs);
-    sv->fetch_paths_checked("mkdir", pkg.venv.mkdirs);
-    sv->fetch_strings_checked("env", pkg.venv.envs);
-    sv->fetch_strings_checked("dependencies", pkg.venv.dependencies);
-  }
-  return std::make_optional(std::move(pkg));
-}
-
 // installed package meta;
 std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::error_code &ec) {
   auto pkglock = bela::StringCat(baulk::vfs::AppLocks(), L"\\", pkgName, L".json");
@@ -249,18 +167,17 @@ bool PackageUpdatableMeta(const baulk::Package &pkgLocal, baulk::Package &pkg) {
   auto weights = pkgLocal.weights;
   bool updated{false};
   auto bucketsDir = baulk::vfs::AppBuckets();
-  for (const auto &bk : baulk::LoadedBuckets()) {
-    auto pkgMeta = bela::StringCat(bucketsDir, L"\\", bk.name, L"\\bucket\\", pkgLocal.name, L".json");
+  for (const auto &bucket : baulk::LoadedBuckets()) {
     bela::error_code ec;
-    auto pkgN = PackageMeta(pkgMeta, pkgLocal.name, bk.name, ec);
+    auto pkgN = PackageMeta(bucket, pkgLocal.name, ec);
     if (!pkgN) {
       if (ec && ec.code != ENOENT) {
         bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec);
       }
       continue;
     }
-    pkgN->bucket = bk.name;
-    pkgN->weights = bk.weights;
+    pkgN->bucket = bucket.name;
+    pkgN->weights = bucket.weights;
     bela::version newVersion(pkgN->version);
     // compare version newVersion is > oldversion
     // newVersion == oldversion and strversion not equail compare weights
@@ -280,9 +197,8 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
   baulk::Package pkg;
   auto bucketsDir = baulk::vfs::AppBuckets();
   size_t pkgSame = 0;
-  for (const auto &bk : baulk::LoadedBuckets()) {
-    auto pkgMeta = bela::StringCat(bucketsDir, L"\\", bk.name, L"\\bucket\\", pkgName, L".json");
-    auto pkgN = PackageMeta(pkgMeta, pkgName, bk.name, ec);
+  for (const auto &bucket : baulk::LoadedBuckets()) {
+    auto pkgN = PackageMeta(bucket, pkgName, ec);
     if (!pkgN) {
       if (ec && ec.code != ENOENT) {
         bela::FPrintF(stderr, L"baulk: parse package meta error: %s\n", ec);
@@ -290,8 +206,8 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
       continue;
     }
     pkgSame++;
-    pkgN->bucket = bk.name;
-    pkgN->weights = bk.weights;
+    pkgN->bucket = bucket.name;
+    pkgN->weights = bucket.weights;
     bela::version newVersion(pkgN->version);
     // compare version newVersion is > oldversion
     // newVersion == oldversion and strversion not equail compare weights
@@ -316,4 +232,4 @@ bool PackageIsUpdatable(std::wstring_view pkgName, baulk::Package &pkg) {
   return PackageUpdatableMeta(*localMeta, pkg);
 }
 
-} // namespace baulk::bucket
+} // namespace baulk

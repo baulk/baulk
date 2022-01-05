@@ -91,7 +91,7 @@ bool BucketUpdater::Immobilized() {
 
 bool BucketUpdater::Update(const baulk::Bucket &bucket) {
   bela::error_code ec;
-  auto latest = baulk::bucket::BucketNewest(bucket, ec);
+  auto latest = baulk::BucketNewest(bucket, ec);
   if (!latest) {
     bela::FPrintF(stderr, L"baulk update \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec);
     return false;
@@ -102,7 +102,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
     return true;
   }
   baulk::DbgPrint(L"bucket: %s latest id: %s", bucket.name, *latest);
-  if (!baulk::bucket::BucketUpdate(bucket, *latest, ec)) {
+  if (!baulk::BucketUpdate(bucket, *latest, ec)) {
     bela::FPrintF(stderr, L"bucke download \x1b[34m%s\x1b[0m error: \x1b[31m%s\x1b[0m\n", bucket.name, ec);
     return false;
   }
@@ -126,12 +126,12 @@ bool PackageScanUpdatable() {
         continue;
       }
       pkgName.remove_suffix(5);
-      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      auto localMeta = baulk::PackageLocalMeta(pkgName, ec);
       if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
+      if (baulk::PackageUpdatableMeta(*localMeta, pkg)) {
         upgradable++;
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "

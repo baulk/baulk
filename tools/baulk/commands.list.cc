@@ -23,12 +23,12 @@ int cmd_list_all() {
         continue;
       }
       pkgName.remove_suffix(5);
-      auto localMeta = baulk::bucket::PackageLocalMeta(pkgName, ec);
+      auto localMeta = baulk::PackageLocalMeta(pkgName, ec);
       if (!localMeta) {
         continue;
       }
       baulk::Package pkg;
-      if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
+      if (baulk::PackageUpdatableMeta(*localMeta, pkg)) {
         upgradable++;
         bela::FPrintF(stderr,
                       L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
@@ -63,13 +63,13 @@ int cmd_list(const argv_t &argv) {
   }
   bela::error_code ec;
   for (const auto a : argv) {
-    auto localMeta = baulk::bucket::PackageLocalMeta(a, ec);
+    auto localMeta = baulk::PackageLocalMeta(a, ec);
     if (!localMeta) {
       baulk::DbgPrint(L"list package '%s' error: %s", a, ec);
       continue;
     }
     baulk::Package pkg;
-    if (baulk::bucket::PackageUpdatableMeta(*localMeta, pkg)) {
+    if (baulk::PackageUpdatableMeta(*localMeta, pkg)) {
       bela::FPrintF(stderr,
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m %s --> "
                     L"\x1b[32m%s\x1b[0m/\x1b[34m%s\x1b[0m%s%s\n",

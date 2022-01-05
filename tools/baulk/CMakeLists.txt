@@ -27,6 +27,7 @@ add_executable(
   context.cc
   decompress.cc
   launcher.cc
+  metadata.cc
   msi.cc
   pkg.cc
   tar.cc
