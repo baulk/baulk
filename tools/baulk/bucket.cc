@@ -10,7 +10,7 @@
 #include <xml.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
-#include "decompress.hpp"
+#include "extract.hpp"
 
 namespace baulk {
 // BucketNewestWithGithub github archive style bucket check latest
@@ -125,10 +125,10 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   });
 
   auto extractDir = bela::StringCat(temp, L"\\", bucket.name);
-  if (!baulk::zip::Decompress(*saveFile, extractDir, ec)) {
+  if (!baulk::extract_zip(*saveFile, extractDir, ec)) {
     return false;
   }
-  baulk::standard::Regularize(extractDir);
+  baulk::make_flattened(extractDir);
   auto bucketdir = bela::StringCat(baulk::vfs::AppBuckets(), L"\\", bucket.name);
   if (bela::PathExists(bucketdir)) {
     bela::fs::ForceDeleteFolders(bucketdir, ec);

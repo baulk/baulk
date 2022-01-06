@@ -3,7 +3,7 @@
 #include "commands.hpp"
 #include <bela/match.hpp>
 #include <baulk/archive.hpp>
-#include "decompress.hpp"
+#include "extract.hpp"
 
 namespace baulk::commands {
 void usage_unzip() {
@@ -25,7 +25,7 @@ int cmd_unzip(const argv_t &argv) {
   auto zipfile = argv[0];
   auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(zipfile);
   bela::error_code ec;
-  if (!baulk::zip::Decompress(zipfile, dest, ec)) {
+  if (!baulk::extract_zip(zipfile, dest, ec)) {
     bela::FPrintF(stderr, L"baulk unzip %s error: %s\n", zipfile, ec);
     return 1;
   }

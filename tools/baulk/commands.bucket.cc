@@ -288,6 +288,7 @@ Add, delete or list buckets.
   -U|--url            set bucket url
   -W|--weights        set bucket weights, default: 100
   -M|--mode           set bucket mode (Git/Github)
+  -A|--variant        set bucket variant (native/scoop)
   -D|--description    set bucket description
   -R|--replace        replace bucket with new attributes ('bucket add' support only)
 
@@ -308,6 +309,7 @@ Command Usage:
 Example:
   baulk bucket add baulk git@github.com:baulk/bucket.git
   baulk bucket add baulk-mirror https://gitee.com/baulk/bucket.git -MGit -W102
+  baulk bucket add scoop git@github.com:ScoopInstaller/Main.git -MGit -Ascoop
 
 )");
 }
@@ -328,6 +330,7 @@ int cmd_bucket(const argv_t &argv) {
       .Add(L"url", baulk::cli::required_argument, L'U')
       .Add(L"weights", baulk::cli::required_argument, L'W')
       .Add(L"mode", baulk::cli::required_argument, L'M')
+      .Add(L"variant", baulk::cli::required_argument, L'A')
       .Add(L"description", baulk::cli::required_argument, L'D')
       .Add(L"replace", baulk::cli::no_argument, L'R')
       .Add(L"force", baulk::cli::no_argument, L'F');
@@ -354,11 +357,11 @@ int cmd_bucket(const argv_t &argv) {
           }
           break;
         case L'M':
-          if (bela::EqualsIgnoreCase(oa, L"Github")) {
+          if (bela::EqualsIgnoreCase(oa, L"github") || bela::EqualsIgnoreCase(oa, L"github-zip")) {
             bucket.mode = baulk::BucketObserveMode::Github;
             break;
           }
-          if (bela::EqualsIgnoreCase(oa, L"Git")) {
+          if (bela::EqualsIgnoreCase(oa, L"git")) {
             bucket.mode = baulk::BucketObserveMode::Git;
             break;
           }
@@ -367,6 +370,21 @@ int cmd_bucket(const argv_t &argv) {
             break;
           }
           ec = bela::make_error_code(bela::ErrGeneral, L"unable parse mode: ", oa);
+          return false;
+        case L'A':
+          if (bela::EqualsIgnoreCase(oa, L"native")) {
+            bucket.variant = baulk::BucketVariant::Native;
+            break;
+          }
+          if (bela::EqualsIgnoreCase(oa, L"scoop")) {
+            bucket.variant = baulk::BucketVariant::Scoop;
+            break;
+          }
+          if (int v = 0; bela::SimpleAtoi(oa, &v)) {
+            bucket.variant = static_cast<baulk::BucketVariant>(v);
+            break;
+          }
+          ec = bela::make_error_code(bela::ErrGeneral, L"unable parse variant: ", oa);
           return false;
         case L'D':
           bucket.description = oa;

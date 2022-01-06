@@ -190,7 +190,8 @@ bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, 
     return false;
   }
   if (pefile.OverlayLength() < magic_size) {
-    return false;
+    // EXE
+    return true;
   }
   offset = pefile.OverlayOffset();
   if (!fd.ReadAt(magicBytes, offset, outlen, ec)) {

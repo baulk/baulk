@@ -6,7 +6,7 @@
 #include <Msi.h>
 #include "baulk.hpp"
 
-namespace baulk::msi {
+namespace baulk {
 // https://docs.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluiw
 class Progressor {
 public:
@@ -224,7 +224,7 @@ INT WINAPI msi_ui_callback(LPVOID ctx, UINT iMessageType, LPCWSTR szMessage) {
   return pg->Invoke(iMessageType, szMessage);
 }
 
-bool Decompress(std::wstring_view msi, std::wstring_view dest, bela::error_code &ec) {
+bool extract_msi(std::wstring_view msi, std::wstring_view dest, bela::error_code &ec) {
   Progressor pg(msi);
   auto cmd = bela::StringCat(L"ACTION=ADMIN TARGETDIR=\"", dest, L"\"");
   MsiSetInternalUI(INSTALLUILEVEL(INSTALLUILEVEL_NONE | INSTALLUILEVEL_SOURCERESONLY), nullptr);
@@ -246,7 +246,7 @@ bool Decompress(std::wstring_view msi, std::wstring_view dest, bela::error_code 
   return true;
 }
 
-inline void DecompressClear(std::wstring_view dir) {
+inline void cleanup_msi_archive(std::wstring_view dir) {
   constexpr std::wstring_view msiext = L".msi";
   std::error_code ec;
   for (auto &p : std::filesystem::directory_iterator(dir)) {
@@ -258,8 +258,8 @@ inline void DecompressClear(std::wstring_view dir) {
   }
 }
 
-bool Regularize(std::wstring_view path) {
-  DecompressClear(path);
+bool make_flattened_msi(std::wstring_view path) {
+  cleanup_msi_archive(path);
   bela::error_code ec;
   bela::fs::ForceDeleteFolders(bela::StringCat(path, L"\\Windows"), ec); //
   constexpr std::wstring_view destdirs[] = {L"\\Program Files", L"\\ProgramFiles64", L"\\PFiles", L"\\Files"};
@@ -277,4 +277,4 @@ bool Regularize(std::wstring_view path) {
   return baulk::fs::MakeFlattened(path, path, ec);
 }
 
-} // namespace baulk::msi
+} // namespace baulk

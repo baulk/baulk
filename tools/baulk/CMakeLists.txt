@@ -25,7 +25,7 @@ add_executable(
   commands.version.cc
   compiler.cc
   context.cc
-  decompress.cc
+  extract.cc
   launcher.cc
   metadata.cc
   msi.cc

@@ -1,21 +1,17 @@
 #include <bela/path.hpp>
-#include "baulk.hpp"
-#include "decompress.hpp"
 #include <baulk/fs.hpp>
 #include <baulk/archive/extract.hpp>
+#include "baulk.hpp"
+#include "extract.hpp"
 
 namespace baulk {
-
-namespace standard {
-bool Regularize(std::wstring_view path) {
+bool make_flattened(std::wstring_view path) {
   bela::error_code ec;
   // TODO some zip code
   return baulk::fs::MakeFlattened(path, path, ec);
 }
-} // namespace standard
 
-namespace exe {
-bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+bool extract_exe(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
   if (!baulk::fs::MakeDir(dest, ec)) {
     return false;
   }
@@ -34,8 +30,7 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
   }
   return true;
 }
-
-bool Regularize(std::wstring_view path) {
+bool make_flattened_exe(std::wstring_view path) {
   std::error_code ec;
   for (auto &p : std::filesystem::directory_iterator(path)) {
     if (p.path().extension() == L".old") {
@@ -44,11 +39,8 @@ bool Regularize(std::wstring_view path) {
   }
   return true;
 }
-} // namespace exe
 
-namespace zip {
-
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
+bool extract_zip(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   baulk::archive::ZipExtractor extractor(baulk::IsQuietMode);
   if (!extractor.OpenReader(src, outdir, ec)) {
     return false;
@@ -56,10 +48,7 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_cod
   return extractor.Extract(ec);
 }
 
-} // namespace zip
-
-namespace smart {
-bool zip_extract(bela::io::FD &fd, std::wstring_view dest, int64_t offset, bela::error_code &ec) {
+inline bool extract_zip_simple(bela::io::FD &fd, std::wstring_view dest, int64_t offset, bela::error_code &ec) {
   baulk::archive::ZipExtractor extractor(baulk::IsQuietMode);
   if (!extractor.OpenReader(fd, dest, bela::SizeUnInitialized, offset, ec)) {
     bela::FPrintF(stderr, L"baulk extract zip error: %s\n", ec);
@@ -72,7 +61,7 @@ bool zip_extract(bela::io::FD &fd, std::wstring_view dest, int64_t offset, bela:
   return true;
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+bool extract_auto_with_mode(std::wstring_view src, std::wstring_view dest, bool bucket_mode, bela::error_code &ec) {
   using archive::file_format_t;
   file_format_t afmt{file_format_t::none};
   int64_t baseOffest = 0;
@@ -84,13 +73,13 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
   DbgPrint(L"detect file format: %s", archive::FormatToMIME(afmt));
   switch (afmt) {
   case file_format_t::none:
-    ec = bela::make_error_code(bela::ErrUnimplemented, L"this archive format detect unimplemented");
+    bela::FPrintF(stderr, L"unable detect %s format\n", src);
     return false;
   case file_format_t::zip:
-    if (!zip_extract(*fd, dest, baseOffest, ec)) {
+    if (!extract_zip_simple(*fd, dest, baseOffest, ec)) {
       return false;
     }
-    if (!standard::Regularize(dest)) {
+    if (!make_flattened(dest)) {
       bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
     }
     return true;
@@ -103,38 +92,56 @@ bool Decompress(std::wstring_view src, std::wstring_view dest, bela::error_code 
   case file_format_t::bz2:
     [[fallthrough]];
   case file_format_t::tar:
-    if (!tar::TarExtract(*fd, baseOffest, afmt, src, dest, ec)) {
+    if (!extract_tar(*fd, baseOffest, afmt, src, dest, ec)) {
       bela::FPrintF(stderr, L"baulk extract %s error: %s\n", src, ec);
       return false;
     }
-    if (!standard::Regularize(dest)) {
+    if (!make_flattened(dest)) {
       bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
     }
     return true;
   case file_format_t::msi:
     fd->Assgin(INVALID_HANDLE_VALUE, false);
-    if (!msi::Decompress(src, dest, ec)) {
+    if (!extract_msi(src, dest, ec)) {
       bela::FPrintF(stderr, L"baulk extract %s error: %s\n", src, ec);
       return false;
     }
-    if (!msi::Regularize(dest)) {
+    if (!make_flattened_msi(dest)) {
       bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
     }
     return true;
+  case file_format_t::exe:
+    if (bucket_mode) {
+      fd->Assgin(INVALID_HANDLE_VALUE, false);
+      if (!extract_exe(src, dest, ec)) {
+        bela::FPrintF(stderr, L"baulk extract %s error: %s\n", src, ec);
+        return false;
+      }
+      if (!make_flattened_exe(dest)) {
+        bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
+      }
+      return true;
+    }
+    bela::FPrintF(stderr, L"extract pure PE/COFF not support\n");
+    return false;
   default:
     break;
   }
   fd->Assgin(INVALID_HANDLE_VALUE, false);
-  if (!sevenzip::Decompress(src, dest, ec)) {
+  if (!extract_7z(src, dest, ec)) {
     bela::FPrintF(stderr, L"baulk extract %s error: %s\n", src, ec);
-    return 1;
+    return false;
   }
-  if (!standard::Regularize(dest)) {
+  if (!make_flattened(dest)) {
     bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
   }
   return false;
+
+  return false;
 }
 
-} // namespace smart
+bool extract_auto(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+  return extract_auto_with_mode(src, dest, true, ec);
+}
 
 } // namespace baulk

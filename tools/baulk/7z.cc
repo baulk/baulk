@@ -6,7 +6,7 @@
 #include <baulk/fs.hpp>
 #include <baulk/vfs.hpp>
 
-namespace baulk::sevenzip {
+namespace baulk {
 constexpr auto ok = ERROR_SUCCESS;
 inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
   HKEY hkey = nullptr;
@@ -59,7 +59,7 @@ inline std::optional<std::wstring> lookup_sevenzip() {
   return std::nullopt;
 }
 
-bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
+bool extract_7z(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
   auto s7z = lookup_sevenzip();
   if (!s7z) {
     ec = bela::make_error_code(ERROR_NOT_FOUND, L"7z not install");
@@ -72,4 +72,4 @@ bool Decompress(std::wstring_view src, std::wstring_view outdir, bela::error_cod
   }
   return true;
 }
-} // namespace baulk::sevenzip
+} // namespace baulk

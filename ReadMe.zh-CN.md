@@ -101,6 +101,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |bucket|添加，删除，列出 buckets||
 |untar|内置的 tar 文件提取原生支持 |支持格式有： tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
 |unzip|内置的 zip 文件提取原生支持|zip 压缩方法支持 deflate/deflate64/bzip2/lzma/zstd/ppmd<br>支持文件名编码检测避免解压缩时文件名乱码|
+|extract|检测文件格式然后解压|N/A|
 
 例子:
 
@@ -144,10 +145,35 @@ baulk 的配置文件默认路径为 `$ExecutableDir/../config/baulk.json`，可
 添加源命令帮助：
 
 ```txt
-usage: baulk bucket add URL
-       baulk bucket add BucketName URL
-       baulk bucket add BucketName URL Weights
-       baulk bucket add BucketName URL Weights Description
+Usage: baulk bucket <option> [bucket]...
+Add, delete or list buckets.
+  -N|--name           set bucket name
+  -U|--url            set bucket url
+  -W|--weights        set bucket weights, default: 100
+  -M|--mode           set bucket mode (Git/Github)
+  -A|--variant        set bucket variant (native/scoop)
+  -D|--description    set bucket description
+  -R|--replace        replace bucket with new attributes ('bucket add' support only)
+
+Option:
+  list, add, delete
+
+Command Usage:
+  baulk bucket list
+  baulk bucket list BucketName
+
+  baulk bucket add URL
+  baulk bucket add BucketName URL
+  baulk bucket add BucketName URL Weights
+  baulk bucket add BucketName URL Weights Description
+
+  baulk bucket delete BucketName
+
+Example:
+  baulk bucket add baulk git@github.com:baulk/bucket.git
+  baulk bucket add baulk-mirror https://gitee.com/baulk/bucket.git -MGit -W102
+  baulk bucket add scoop git@github.com:ScoopInstaller/Main.git -MGit -Ascoop
+
 ```
 
 删除某个 bucket:

@@ -13,8 +13,7 @@
 #include "bucket.hpp"
 #include "launcher.hpp"
 #include "pkg.hpp"
-
-#include "decompress.hpp"
+#include "extract.hpp"
 
 namespace baulk::package {
 

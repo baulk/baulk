@@ -103,6 +103,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 |bucket|add, delete or list buckets|N/A|
 |untar|built-in tar file extraction support |support tar/tar.gz/tar.bz2/tar.xz/tar.zst/tar.br(brotli)|
 |unzip|built-in zip file extraction support |zip method support deflate/deflate64/bzip2/lzma/zstd/ppmd<br>Support file name encoding detection to avoid file name garbled when decompressing. |
+|extract|detect file format and extract|N/A|
 
 Example:
 
@@ -146,10 +147,35 @@ In `bucket`, we designed the `weights` mechanism. In different `buckets`, if the
 `baulk bucket add` usage：
 
 ```txt
-usage: baulk bucket add URL
-       baulk bucket add BucketName URL
-       baulk bucket add BucketName URL Weights
-       baulk bucket add BucketName URL Weights Description
+Usage: baulk bucket <option> [bucket]...
+Add, delete or list buckets.
+  -N|--name           set bucket name
+  -U|--url            set bucket url
+  -W|--weights        set bucket weights, default: 100
+  -M|--mode           set bucket mode (Git/Github)
+  -A|--variant        set bucket variant (native/scoop)
+  -D|--description    set bucket description
+  -R|--replace        replace bucket with new attributes ('bucket add' support only)
+
+Option:
+  list, add, delete
+
+Command Usage:
+  baulk bucket list
+  baulk bucket list BucketName
+
+  baulk bucket add URL
+  baulk bucket add BucketName URL
+  baulk bucket add BucketName URL Weights
+  baulk bucket add BucketName URL Weights Description
+
+  baulk bucket delete BucketName
+
+Example:
+  baulk bucket add baulk git@github.com:baulk/bucket.git
+  baulk bucket add baulk-mirror https://gitee.com/baulk/bucket.git -MGit -W102
+  baulk bucket add scoop git@github.com:ScoopInstaller/Main.git -MGit -Ascoop
+
 ```
 
 Delete some bucket:

@@ -1,7 +1,7 @@
 #include "baulk.hpp"
 #include <bela/terminal.hpp>
 #include <baulk/archive.hpp>
-#include "decompress.hpp"
+#include "extract.hpp"
 #include "commands.hpp"
 
 namespace baulk::commands {
@@ -27,7 +27,7 @@ int cmd_extract(const argv_t &argv) {
   auto arfile = argv[0];
   auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(arfile);
   bela::error_code ec;
-  return smart::Decompress(arfile, dest, ec) ? 0 : 1;
+  return extract_auto_with_mode(arfile, dest,false, ec) ? 0 : 1;
 }
 
 } // namespace baulk::commands

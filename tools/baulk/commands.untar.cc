@@ -1,7 +1,7 @@
 //
 #include "baulk.hpp"
 #include "commands.hpp"
-#include "decompress.hpp"
+#include "extract.hpp"
 #include <baulk/archive.hpp>
 
 namespace baulk::commands {
@@ -24,7 +24,7 @@ int cmd_untar(const argv_t &argv) {
   auto tarfile = bela::PathAbsolute(argv[0]);
   auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(tarfile);
   bela::error_code ec;
-  if (!baulk::tar::Decompress(tarfile, dest, ec)) {
+  if (!baulk::extract_tar(tarfile, dest, ec)) {
     bela::FPrintF(stderr, L"baulk untar %s error: %s\n", tarfile, ec);
     return 1;
   }
