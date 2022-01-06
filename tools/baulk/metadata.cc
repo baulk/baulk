@@ -98,6 +98,7 @@ inline auto PackageMetaJoinScoop(const Bucket &bucket, std::wstring_view pkgName
   return bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name, L"\\bucket\\", pkgName, L".json");
 }
 
+// Not support multi file and ....
 std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
   auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
   auto pkj = baulk::json::parse_file(pkgMeta, ec);
@@ -110,13 +111,47 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
       .description = jv.fetch("description"),
       .version = jv.fetch("version"),
       .bucket = std::wstring{bucket.name},
+      .extension = L"auto", // always auto
       .homepage = jv.fetch("homepage"),
       .notes = jv.fetch("notes"),
       .license = jv.fetch("license"),
   };
+  pkg.variant = BucketVariant::Scoop;
+  jv.fetch_paths_checked("bin", pkg.launchers);
+#if defined(_M_X64)
+  if (auto sv = jv.subview("architecture"); sv) {
+    if (auto av = sv->subview("64bit"); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hashValue = av->fetch("hash");
+    }
+  } else {
+    pkg.urls.emplace_back(jv.fetch("url"));
+    pkg.hashValue = jv.fetch("hash");
+  }
 
-  ec = bela::make_error_code(bela::ErrUnimplemented, L"scoop bucket support unimplemented");
-  return std::nullopt;
+#elif defined(_M_ARM64)
+  if (auto sv = jv.subview("architecture"); sv) {
+    if (auto av = sv->subview("64bit"); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hashValue = av->fetch("hash");
+    }
+  } else {
+    pkg.urls.emplace_back(jv.fetch("url"));
+    pkg.hashValue = jv.fetch("hash");
+  }
+#else
+  if (auto sv = jv.subview("architecture"); sv) {
+    if (auto av = sv->subview("32bit"); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hashValue = av->fetch("hash");
+    }
+  } else {
+    pkg.urls.emplace_back(jv.fetch("url"));
+    pkg.hashValue = jv.fetch("hash");
+  }
+#endif
+
+  return std::make_optional(std::move(pkg));
 }
 
 std::optional<baulk::Package> PackageMeta(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {

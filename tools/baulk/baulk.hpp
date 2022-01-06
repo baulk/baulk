@@ -154,6 +154,7 @@ struct Package {
   std::vector<LinkMeta> launchers;
   PackageEnv venv;
   int weights{0}; // Weights derived from bucket
+  BucketVariant variant{BucketVariant::Native};
 };
 
 inline std::wstring StringCategory(baulk::Package &pkg) {
