@@ -8,7 +8,9 @@
 namespace baulk::commands {
 
 bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
-  FILETIME ftCreate, ftAccess, ftWrite;
+  FILETIME ftCreate{0};
+  FILETIME ftAccess{0};
+  FILETIME ftWrite{0};
   HANDLE FileHandle = CreateFileW(file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {

@@ -12,8 +12,8 @@ public:
   SectionReader(HANDLE fd_, int64_t len) : fd(fd_), size(len) { cacheb.grow(32 * 1024); }
   SectionReader(const SectionReader &) = delete;
   SectionReader &operator=(const SectionReader &) = delete;
-  ssize_t Buffered() const { return w - r; }
-  int64_t AvailableBytes() const { return size - offset; }
+  [[nodiscard]] ssize_t Buffered() const { return w - r; }
+  [[nodiscard]] int64_t AvailableBytes() const { return size - offset; }
   ssize_t Read(void *buffer, ssize_t len) {
     if (buffer == nullptr || len == 0) {
       ec = bela::make_error_code(L"buffer is nil");
@@ -124,7 +124,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
   CByteInToLook s;
   s.vt.Read = ppmd_read;
   s.sr = &sr;
-  CPpmd8 _ppmd = {0};
+  CPpmd8 _ppmd = {nullptr};
   _ppmd.Stream.In = reinterpret_cast<IByteIn *>(&s);
   Ppmd8_Construct(&_ppmd);
   auto closer = bela::finally([&] { Ppmd8_Free(&_ppmd, &g_BigAlloc); });

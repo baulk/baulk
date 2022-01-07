@@ -1,7 +1,7 @@
 #include "baulk-lnk.hpp"
 #include <bela/picker.hpp>
 
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
+int WINAPI wWinMain(HINSTANCE /*unused*/, HINSTANCE /*unused*/, LPWSTR /*unused*/, int /*unused*/) {
   IsDebugMode = IsTrue(bela::GetEnv(L"BAULK_DEBUG"));
   bela::error_code ec;
   auto target = ResolveTarget(ec);

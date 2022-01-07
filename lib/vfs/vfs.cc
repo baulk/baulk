@@ -12,13 +12,13 @@
 namespace baulk::vfs {
 std::optional<std::wstring> PackageFamilyName() {
   UINT32 len = 0;
-  auto rc = GetCurrentPackageFamilyName(&len, 0);
+  auto rc = GetCurrentPackageFamilyName(&len, nullptr);
   if (rc == APPMODEL_ERROR_NO_PACKAGE) {
     return std::nullopt;
   }
   std::wstring packageName;
   packageName.resize(len);
-  if (rc = GetCurrentPackageFamilyName(&len, packageName.data()) != 0) {
+  if (rc = GetCurrentPackageFamilyName(&len, packageName.data()); rc != 0) {
     return std::nullopt;
   }
   packageName.resize(len);

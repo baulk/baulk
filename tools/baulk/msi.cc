@@ -72,7 +72,7 @@ void Progressor::Update(int64_t total, int64_t rate) {
 
 int64_t FGetInteger(wchar_t *&rpch) {
   wchar_t *pchPrev = rpch;
-  while (*rpch != 0u && *rpch != ' ') {
+  while (*rpch != 0U && *rpch != ' ') {
     rpch++;
   }
   *rpch = '\0';

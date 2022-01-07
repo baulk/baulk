@@ -49,7 +49,7 @@ struct Summarizer {
   bela::Duration kernelTime;
   bela::Duration userTime;
   void SummarizeTime(HANDLE hProcess);
-  void PrintTime();
+  void PrintTime() const;
 };
 
 class Executor {
@@ -68,7 +68,7 @@ private:
   bool console{true};
   bool summarizeTime{false};
   Summarizer summarizer;
-  bool LookPath(std::wstring_view exe, std::wstring &file);
+  bool LookPath(std::wstring_view cmd, std::wstring &file);
   bool FindArg0(std::wstring_view arg0, std::wstring &target);
 };
 

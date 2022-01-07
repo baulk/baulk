@@ -31,7 +31,7 @@ void Summarizer::SummarizeTime(HANDLE hProcess) {
   userTime = FromKernelTick(user_time);
 }
 
-void Summarizer::PrintTime() {
+void Summarizer::PrintTime() const {
   bela::FPrintF(stderr, L"Creation: %s\n", bela::FormatDuration(creationTime - startTime));
   bela::FPrintF(stderr, L"Kernel:   %s\n", bela::FormatDuration(kernelTime));
   bela::FPrintF(stderr, L"User:     %s\n", bela::FormatDuration(userTime));

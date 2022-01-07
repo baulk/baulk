@@ -22,7 +22,7 @@ namespace baulk::update {
 bool IsDebugMode = false;
 bool IsForceMode = false;
 
-constexpr const std::wstring_view archfilesuffix() {
+constexpr std::wstring_view archfilesuffix() {
 #if defined(_M_X64)
   return L"win-x64.zip";
 #elif defined(_M_X86)
@@ -40,8 +40,8 @@ bool detect_baulk_revision(std::wstring &releasename) {
   bela::process::Process ps;
   auto baulkexe = vfs::AppLocationPath(L"baulk-exec.exe");
   if (ps.Capture(baulkexe, L"--version") != 0) {
-    if (auto ec = ps.ErrorCode(); ec) {
-      bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ec);
+    if (ps.ErrorCode()) {
+      bela::FPrintF(stderr, L"run %s error %s\n", baulkexe, ps.ErrorCode());
     }
     releasename.assign(BAULK_REFNAME);
     return false;

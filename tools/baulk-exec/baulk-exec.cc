@@ -110,7 +110,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
           bela::FPrintF(stderr, L"baulk-exec: unsupport arch '%s'\n", oa);
         } break;
         case 'E':
-          packageEnvs.push_back(oa);
+          packageEnvs.emplace_back(oa);
           break;
         case 1000:
           if (!initializeVSPreviewEnv) {

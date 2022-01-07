@@ -11,7 +11,7 @@ Reader::~Reader() {
 }
 
 bool Reader::Initialize(bela::error_code &ec) {
-  state = BrotliDecoderCreateInstance(baulk::mem::allocate_simple, baulk::mem::deallocate_simple, 0);
+  state = BrotliDecoderCreateInstance(baulk::mem::allocate_simple, baulk::mem::deallocate_simple, nullptr);
   if (state == nullptr) {
     ec = bela::make_error_code(L"BrotliDecoderCreateInstance failed");
     return false;

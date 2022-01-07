@@ -52,9 +52,9 @@ $checks = $(
     "-*",
     "clang-analyzer-*",
     "-clang-analyzer-cplusplus*",
-    "boost-*",
     "performance-*",
     "cert-*",
+    "bugprone-*",
     "readability-*",
     "-readability-magic-numbers",
     "-readability-qualified-auto",
@@ -100,14 +100,17 @@ $inputArgsPrefix = [string]::Join(" ", $inputArgs)
 
 Write-Host "Use $clangtidy`n$inputArgsPrefix"
 
-$includes = ("*.cc", "*.cxx", "*.cpp", "*.c++");
+$extensions = (".cc", ".cxx", ".cpp", ".c++");
 
 foreach ($d in $SOURCE_DIRS) {
-    Get-ChildItem -Force -File -Path $d -Include $includes | ForEach-Object {
-        $FileName = $_.FullName
-        Write-Host -ForegroundColor Magenta "check $FileName"
-        $exitCode = Start-Process -FilePath $clangtidy -ArgumentList "`"$FileName`" $inputArgsPrefix" -Wait -PassThru -NoNewWindow -WorkingDirectory $PSScriptRoot
-        $exitCode | Out-Null
+    Write-Host -ForegroundColor Magenta "check $d"
+    Get-ChildItem -Force -File -Path $d | ForEach-Object {
+        if ($extensions.Contains($_.Extension)) {
+            $FileName = $_.FullName
+            Write-Host -ForegroundColor Magenta "check $FileName"
+            $exitCode = Start-Process -FilePath $clangtidy -ArgumentList "`"$FileName`" $inputArgsPrefix" -Wait -PassThru -NoNewWindow -WorkingDirectory $PSScriptRoot
+            $exitCode | Out-Null
+        }
     }
 }
 

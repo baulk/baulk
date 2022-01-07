@@ -5,7 +5,7 @@
 namespace baulk::archive::zip {
 // bzip2
 bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &ec) const {
-  bz_stream bzs{0};
+  bz_stream bzs{nullptr};
   bzs.bzalloc = baulk::mem::allocate_bz;
   bzs.bzfree = baulk::mem::deallocate_simple;
   if (auto ret = BZ2_bzDecompressInit(&bzs, 0, 0); ret != BZ_OK) {

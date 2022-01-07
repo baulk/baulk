@@ -73,15 +73,15 @@ bool ResolveName(std::wstring_view host, int port, PADDRINFOEX4 *rhints, bela::e
   hints.ai_version = ADDRINFOEX_VERSION_4;
   DWORD QueryTimeout = 5 * 1000; // 5 seconds
   QUERY_CONTEXT QueryContext;
-  HANDLE CancelHandle = NULL;
+  HANDLE CancelHandle = nullptr;
   ZeroMemory(&QueryContext, sizeof(QueryContext));
   if (QueryContext.CompleteEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); QueryContext.CompleteEvent == nullptr) {
     ec = bela::make_system_error_code(L"ResolveName.CreateEvent() ");
     return false;
   }
   auto closer = bela::finally([&] { CloseHandle(QueryContext.CompleteEvent); });
-  if (auto error = GetAddrInfoExW(host.data(), bela::AlphaNum(port).data(), NS_DNS, NULL,
-                                  reinterpret_cast<const ADDRINFOEXW *>(&hints), &QueryContext.QueryResults, NULL,
+  if (auto error = GetAddrInfoExW(host.data(), bela::AlphaNum(port).data(), NS_DNS, nullptr,
+                                  reinterpret_cast<const ADDRINFOEXW *>(&hints), &QueryContext.QueryResults, nullptr,
                                   &QueryContext.QueryOverlapped, QueryCompleteCallback, &CancelHandle);
       error != WSA_IO_PENDING) {
     ec = make_wsa_error_code(WSAGetLastError(), L"GetAddrInfoExW() ");
