@@ -25,7 +25,7 @@ bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
     bela::FPrintF(stderr, L"GetFileTime() %s: %s\n", file, ec);
     return false;
   }
-  constexpr auto expires = 30 * 24 * 3600 * 1000LL; // ms
+  constexpr auto expires = 30LL * 24 * 3600 * 1000; // ms
   ULARGE_INTEGER uc;
   uc.HighPart = ftCreate.dwHighDateTime;
   uc.LowPart = ftCreate.dwLowDateTime;

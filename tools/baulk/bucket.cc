@@ -43,7 +43,7 @@ std::optional<std::wstring> BucketRepoNewest(std::wstring_view giturl, bela::err
   bela::process::Process process;
   if (process.Capture(L"git", L"ls-remote", giturl, L"HEAD") != 0) {
     if (ec = process.ErrorCode(); !ec) {
-      ec = bela::make_error_code(process.ExitCode(), L"git exit with: ", process.ExitCode());
+      ec = bela::make_error_code(bela::ErrGeneral, L"git exit with: ", process.ExitCode());
     }
     return std::nullopt;
   }
