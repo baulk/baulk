@@ -75,7 +75,7 @@ bool Reader::decompress(bela::error_code &ec) {
     if (xzs->avail_in == 0 || xzs->total_in == 0) {
       auto n = r->Read(in.data(), xzinsize, ec);
       if (n < 0) {
-        return n;
+        return false;
       }
       xzs->next_in = in.data();
       xzs->avail_in = static_cast<size_t>(n);

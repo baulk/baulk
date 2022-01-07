@@ -60,7 +60,6 @@ void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes, _In_ LPOVE
   //  Notify caller that the query completed
   //
   SetEvent(QueryContext->CompleteEvent);
-  return;
 }
 // query dns timeout use IOCP
 // https://docs.microsoft.com/en-us/windows/win32/api/ws2def/ns-ws2def-ADDRINFOEX4

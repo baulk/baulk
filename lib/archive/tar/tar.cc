@@ -225,7 +225,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
     return false;
   }
   std::vector<std::string_view> sparseMap = bela::narrow::StrSplit(iter->second, bela::narrow::ByChar(','));
-  if (sparseMap.size() == 1 && sparseMap[0] == "") {
+  if (sparseMap.size() == 1 && sparseMap[0].empty()) {
     sparseMap.clear();
   }
   if (sparseMap.size() != static_cast<size_t>(2 * numEntries)) {
@@ -339,11 +339,11 @@ bool Reader::readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_co
 
 // handleSparseFile tar support sparse file
 // https://www.gnu.org/software/tar/manual/html_node/sparse.html
-bool Reader::handleSparseFile(Header &h, const gnutar_header *gh, bela::error_code &ec) {
+bool Reader::handleSparseFile(Header &h, const gnutar_header *th, bela::error_code &ec) {
   std::vector<sparseEntry> spd;
   bool ret = false;
   if (h.Typeflag == TypeGNUSparse) {
-    ret = readOldGNUSparseMap(h, spd, gh, ec);
+    ret = readOldGNUSparseMap(h, spd, th, ec);
   } else {
     ret = readGNUSparsePAXHeaders(h, spd, ec);
   }

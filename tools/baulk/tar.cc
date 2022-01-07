@@ -131,8 +131,8 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
   return true;
 }
 
-bool single_decompress(baulk::archive::tar::FileReader &fr, int64_t offset, baulk::archive::file_format_t afmt,
-                       std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
+bool single_decompress(std::wstring_view src, baulk::archive::tar::FileReader &fr, int64_t offset,
+                       baulk::archive::file_format_t afmt, std::wstring_view dest, bela::error_code &ec) {
   auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec);
   if (!wr) {
     bela::FPrintF(stderr, L"unable decompress file: %s no filter\n", src);
@@ -174,7 +174,7 @@ bool extract_tar(const bela::io::FD &fd, int64_t offset, baulk::archive::file_fo
     if (ec.code != ErrParseCompressedFile) {
       return false;
     }
-    return single_decompress(fr, offset, afmt, src, dest, ec);
+    return single_decompress(src, fr, offset, afmt, dest, ec);
   }
   if (ec.code == baulk::archive::tar::ErrNoFilter) {
     return extract_tar(&fr, dest, ec);

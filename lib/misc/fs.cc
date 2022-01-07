@@ -101,10 +101,7 @@ bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_co
     auto newpath = destpath / p.path().filename();
     std::filesystem::rename(p.path(), newpath, e);
   }
-  if (!bela::fs::ForceDeleteFolders(*subfirst, ec)) {
-    return false;
-  }
-  return true;
+  return bela::fs::ForceDeleteFolders(*subfirst, ec);
 }
 
 std::optional<std::wstring> NewTempFolder(bela::error_code &ec) {

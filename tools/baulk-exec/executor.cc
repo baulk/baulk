@@ -141,7 +141,7 @@ int Executor::Exec() {
   }
   DWORD exitCode;
   GetExitCodeProcess(pi.hProcess, &exitCode);
-  return exitCode;
+  return static_cast<int>(exitCode);
 }
 
 } // namespace baulk::exec

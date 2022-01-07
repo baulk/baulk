@@ -28,7 +28,7 @@ bool Reader::decompress(bela::error_code &ec) {
     if (zs->avail_out != 0 || pickBytes == 0) {
       auto n = r->Read(in.data(), in.capacity(), ec);
       if (n <= 0) {
-        return n;
+        return false;
       }
       pickBytes += static_cast<int64_t>(n);
       zs->next_in = in.data();
@@ -69,7 +69,7 @@ ssize_t Reader::Read(void *buffer, size_t len, bela::error_code &ec) {
   auto minsize = (std::min)(len, out.size() - out.pos());
   memcpy(buffer, out.data() + out.pos(), minsize);
   out.pos() += minsize;
-  return minsize;
+  return static_cast<ssize_t>(minsize);
 }
 
 bool Reader::Discard(int64_t len, bela::error_code &ec) {
