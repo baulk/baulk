@@ -197,7 +197,10 @@ bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, 
   if (!fd.ReadAt(magicBytes, offset, outlen, ec)) {
     return false;
   }
-  afmt = analyze_format_internal(bela::bytes_view(magicBytes, static_cast<size_t>(outlen)));
+  if (auto nfmt = analyze_format_internal(bela::bytes_view(magicBytes, static_cast<size_t>(outlen)));
+      nfmt != file_format_t::none) {
+    afmt = nfmt;
+  }
   return true;
 }
 
