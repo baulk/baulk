@@ -60,7 +60,7 @@ void displayURLs(const std::vector<std::wstring> &urls) {
 }
 
 int PackageDisplayInfo(std::wstring_view name) {
-  bela::error_code ec, oec;
+  bela::error_code ec;
   auto pkg = baulk::PackageMetaEx(name, ec);
   if (!pkg) {
     bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
@@ -72,8 +72,8 @@ int PackageDisplayInfo(std::wstring_view name) {
                 L"%s\nLicense:      %s\nVersion:      %s\n",
                 pkg->description, pkg->name, pkg->bucket, pkg->homepage, pkg->license, pkg->version);
 
-  if (auto lpkg = baulk::PackageLocalMeta(name, oec); lpkg) {
-    bela::FPrintF(stderr, L"Installed:    \x1b[36m%s\x1b[0m\n", lpkg->version);
+  if (auto pkgLocal = baulk::PackageLocalMeta(name, ec); pkgLocal) {
+    bela::FPrintF(stderr, L"Installed:    \x1b[36m%s\x1b[0m\n", pkgLocal->version);
   }
   displayInfoVector(L"Links", pkg->links);
   displayInfoVector(L"Launchers", pkg->launchers);

@@ -72,7 +72,7 @@ void Progressor::Update(int64_t total, int64_t rate) {
 
 int64_t FGetInteger(wchar_t *&rpch) {
   wchar_t *pchPrev = rpch;
-  while (*rpch && *rpch != ' ') {
+  while (*rpch != 0u && *rpch != ' ') {
     rpch++;
   }
   *rpch = '\0';
@@ -130,7 +130,7 @@ bool Progressor::DoProgress(LPWSTR szMessage) {
   case 0:
     mProgressTotal = field[1];
     mForwardProgress = (field[2] == 0);
-    mProgress = (mForwardProgress != 0 ? 0 : mProgressTotal);
+    mProgress = (mForwardProgress ? 0 : mProgressTotal);
     Update(mProgressTotal, mScriptInProgress ? mProgressTotal : mProgress);
     iCurPos = 0;
     mScriptInProgress = (field[3] == 1);
@@ -165,7 +165,7 @@ int Progressor::Invoke(UINT iMessageType, LPCWSTR szMessage) {
     return 0;
   }
   auto mt = static_cast<INSTALLMESSAGE>(0xFF000000 & iMessageType);
-  auto uiflags = 0x00FFFFFF & iMessageType;
+  // auto uiflags = 0x00FFFFFFul & iMessageType;
 
   switch (mt) {
   case INSTALLMESSAGE_FATALEXIT:
@@ -249,7 +249,7 @@ bool extract_msi(std::wstring_view msi, std::wstring_view dest, bela::error_code
 inline void cleanup_msi_archive(std::wstring_view dir) {
   constexpr std::wstring_view msiext = L".msi";
   std::error_code ec;
-  for (auto &p : std::filesystem::directory_iterator(dir)) {
+  for (const auto &p : std::filesystem::directory_iterator(dir)) {
     auto extension = p.path().extension().wstring();
     if (bela::EqualsIgnoreCase(extension, msiext)) {
       baulk::DbgPrint(L"remove msi %s\n", p.path().native());

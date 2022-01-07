@@ -9,8 +9,8 @@ namespace baulk::commands {
 
 bool FileIsExpired(std::wstring_view file, uint64_t ufnow) {
   FILETIME ftCreate, ftAccess, ftWrite;
-  auto FileHandle = CreateFileW(file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
-                                OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  HANDLE FileHandle = CreateFileW(file.data(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                  OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     auto ec = bela::make_system_error_code();
     bela::FPrintF(stderr, L"CreateFileW() %s: %s\n", file, ec);
@@ -42,7 +42,7 @@ Example:
 )");
 }
 
-int cmd_cleancache(const argv_t &argv) {
+int cmd_cleancache(const argv_t & /*unused*/) {
   bela::error_code ec;
   SYSTEMTIME now;
   GetSystemTime(&now);
@@ -55,7 +55,7 @@ int cmd_cleancache(const argv_t &argv) {
   ULARGE_INTEGER ul;
   ul.LowPart = fnow.dwLowDateTime;
   ul.HighPart = fnow.dwHighDateTime;
-  for (auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
+  for (const auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
     auto path_ = p.path();
     if (baulk::IsForceMode || p.is_directory()) {
       bela::fs::ForceDeleteFolders(path_.native(), ec);

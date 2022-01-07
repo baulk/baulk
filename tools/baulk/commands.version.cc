@@ -17,7 +17,7 @@ Build Time:    %s
                 BAULK_VERSION, vfs::AppMode(), BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
 }
 
-int cmd_version(const baulk::commands::argv_t &) {
+int cmd_version(const baulk::commands::argv_t & /*unused*/) {
   Version();
   return 0;
 }

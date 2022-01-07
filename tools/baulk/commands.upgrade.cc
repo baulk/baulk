@@ -34,6 +34,7 @@ Example:
 }
 
 int cmd_upgrade(const argv_t &argv) {
+  (void)argv;
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {

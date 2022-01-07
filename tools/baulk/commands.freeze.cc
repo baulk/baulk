@@ -67,7 +67,7 @@ int cmd_freeze(const argv_t &argv) {
   auto text = jo->obj.dump(4);
   if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
     bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
-    return false;
+    return 1;
   }
   bela::FPrintF(stderr, L"baulk freeze package success, freezed: %d\n", pkgs.size());
   return 0;
@@ -103,7 +103,7 @@ int cmd_unfreeze(const argv_t &argv) {
     return false;
   };
 
-  for (auto pkgName : pkgs) {
+  for (const auto &pkgName : pkgs) {
     if (!contains(bela::encode_into<char, wchar_t>(pkgName))) {
       newFrozened.emplace_back(pkgName);
     }
@@ -113,7 +113,7 @@ int cmd_unfreeze(const argv_t &argv) {
   auto text = jo->obj.dump(4);
   if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
     bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
-    return false;
+    return 1;
   }
   bela::FPrintF(stderr, L"baulk unfreeze package success, freezed: %d\n", pkgs.size());
   return 0;

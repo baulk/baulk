@@ -12,7 +12,7 @@ public:
   Executor() = default;
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
-  bool Initialize(bela::error_code &ec);
+  bool Initialize(bela::error_code &init_ec);
   template <typename... Args> int Execute(std::wstring_view cwd, std::wstring_view cmd, const Args &...args) {
     ec.clear();
     bela::process::Process process(&simulator);

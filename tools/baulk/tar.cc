@@ -40,12 +40,8 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
   bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", BaseName(filename));
 }
 
-bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
-  auto wn = bela::encode_into<char, wchar_t>(linkname);
-  if (!baulk::archive::NewSymlink(filename, wn, ec, true)) {
-    return false;
-  }
-  return true;
+inline bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), ec, true);
 }
 
 bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {

@@ -9,7 +9,7 @@
 
 namespace baulk::commands {
 // https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
-constexpr const std::wstring_view architecture() {
+constexpr std::wstring_view architecture() {
 #if defined(_M_X64)
   return L"x64";
 #elif defined(_M_X86)
@@ -57,7 +57,7 @@ bool PackageInstaller::Install(std::wstring_view name) {
     Update(name);
     if (pkg = baulk::PackageMetaEx(name, ec); !pkg) {
       bela::FPrintF(stderr, L"\x1b[31mbaulk: %s\x1b[0m\n", ec);
-      return 1;
+      return false;
     }
   }
   if (pkg->urls.empty()) {

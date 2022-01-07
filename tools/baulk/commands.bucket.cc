@@ -24,7 +24,7 @@ public:
   int List(std::wstring_view bucketName = L"");
   int Add(const baulk::Bucket &bucket, bool replace);
   int Del(const baulk::Bucket &bucket, bool forcemode);
-  const bela::error_code &ErrorCode() const { return ec; }
+  [[nodiscard]] const bela::error_code &ErrorCode() const { return ec; }
 
 private:
   bela::error_code ec;
@@ -55,7 +55,7 @@ bool BucketModifier::Apply() {
 bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket) {
   try {
     const auto &bks = meta["bucket"];
-    for (auto &b : bks) {
+    for (const auto &b : bks) {
       auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       if (!bela::EqualsIgnoreCase(bucketName, name)) {
         continue;
@@ -97,7 +97,7 @@ int BucketModifier::List(std::wstring_view bucketName) {
   }
   try {
     const auto &bks = meta["bucket"];
-    for (auto &b : bks) {
+    for (const auto &b : bks) {
       auto desc = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
       auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       auto url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());

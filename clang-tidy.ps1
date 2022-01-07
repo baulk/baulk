@@ -34,18 +34,80 @@ if ($null -eq $clangtidy) {
     $clangtidy = $clangtidyobj[0].Source
 }
 
-$checks = "-*,clang-analyzer-*,-clang-analyzer-cplusplus*,boost-*,performance-*,cert-*,readability-*,-readability-magic-numbers,modernize-*,-modernize-avoid-c-arrays,-header-filter=.*"
+$SOURCE_DIRS = $(
+    "$PSScriptRoot\tools\baulk",
+    "$PSScriptRoot\tools\baulk-exec",
+    "$PSScriptRoot\tools\baulk-lnk",
+    "$PSScriptRoot\tools\baulk-update",
+    "$PSScriptRoot\lib\archive",
+    "$PSScriptRoot\lib\archive\zip",
+    "$PSScriptRoot\lib\archive\tar",
+    "$PSScriptRoot\lib\mem",
+    "$PSScriptRoot\lib\misc",
+    "$PSScriptRoot\lib\net",
+    "$PSScriptRoot\lib\vfs"
+)
 
-Write-Host "Use $clangtidy`n$checks"
+$checks = $(
+    "-*",
+    "clang-analyzer-*",
+    "-clang-analyzer-cplusplus*",
+    "boost-*",
+    "performance-*",
+    "cert-*",
+    "readability-*",
+    "-readability-magic-numbers",
+    "-readability-qualified-auto",
+    "modernize-*",
+    "-modernize-use-trailing-return-type",
+    "-modernize-avoid-c-arrays",
+    "-header-filter=.*"
+)
+
+$checksText = [string]::Join(",", $checks)
+
+
+$inputArgs = $(
+    "-checks=$checksText",
+    "--",
+    "-m64",
+    "-x", 
+    "c++" , 
+    "-std=c++20",
+    "-ferror-limit=1000",
+    "-D_WIN64",
+    "-DNDEBUG",
+    "-DUNICODE",
+    "-D_UNICODE",
+    "-D_WIN32_WINNT=0x0A00",
+    "-DWINVER=0x0A00", 
+    "-Iinclude",
+    "-Ivendor/bela/include",
+    "-Ivendor/pugixml",
+    "-Ilib/archive/brotli/include",
+    "-Ilib/archive/bzip2",
+    "-Ilib/archive/ced",
+    "-Ilib/archive/chromium_zlib",
+    "-Ilib/archive/liblzma/api",
+    "-Ilib/archive/zstd",
+    "-Wall", 
+    "-Wextra",
+    "-Wshadow",
+    "-Wimplicit-fallthrough"
+)
+
+$inputArgsPrefix = [string]::Join(" ", $inputArgs)
+
+Write-Host "Use $clangtidy`n$inputArgsPrefix"
 
 $includes = ("*.cc", "*.cxx", "*.cpp", "*.c++");
-Get-ChildItem -Force -Recurse -File -Path "$PSScriptRoot\tools\baulk" -Include $includes | ForEach-Object {
-    $FileName = $_.FullName
-    Write-Host -ForegroundColor Magenta "check $FileName"
-    if ([string]::IsNullOrEmpty($Out)) {
-        &"$clangtidy" $FileName -checks=$checks -- -m64 -x c++ -std=c++20 -ferror-limit=1000 -D_WIN64 -DNDEBUG -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -I"$PSScriptRoot/include" -I"$PSScriptRoot/vendor/bela/include" -I"$PSScriptRoot/vendor/pugixml" -Wall -Wextra -Wshadow -Wimplicit-fallthrough 
-    }
-    else {
-        &"$clangtidy" $FileName -checks=$checks -- -m64 -x c++ -std=c++20 -ferror-limit=1000 -D_WIN64 -DNDEBUG -DUNICODE -D_UNICODE -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -I"$PSScriptRoot/include" -I"$PSScriptRoot/vendor/bela/include" -I"$PSScriptRoot/vendor/pugixml" -Wall -Wextra -Wshadow -Wimplicit-fallthrough | Out-File -Append -Encoding utf8 -FilePath "$Out"
+
+foreach ($d in $SOURCE_DIRS) {
+    Get-ChildItem -Force -File -Path $d -Include $includes | ForEach-Object {
+        $FileName = $_.FullName
+        Write-Host -ForegroundColor Magenta "check $FileName"
+        $exitCode = Start-Process -FilePath $clangtidy -ArgumentList "`"$FileName`" $inputArgsPrefix" -Wait -PassThru -NoNewWindow -WorkingDirectory $PSScriptRoot
+        $exitCode | Out-Null
     }
 }
+

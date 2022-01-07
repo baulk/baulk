@@ -80,11 +80,13 @@ bool BucketRepoUpdate(const baulk::Bucket &bucket, bela::error_code &ec) {
     process.Chdir(bucketDir);
     // Force update
     if (process.Execute(L"git", L"pull", L"--force", bucket.url) != 0) {
+      ec = process.ErrorCode();
       return false;
     }
     return true;
   }
   if (process.Execute(L"git", L"clone", L"--depth=1", bucket.url, bucketDir) != 0) {
+    ec = process.ErrorCode();
     return false;
   }
   return true;
@@ -166,7 +168,6 @@ bool PackageUpdatableMeta(const baulk::Package &pkgLocal, baulk::Package &pkg) {
   bela::version pkgVersion(pkgLocal.version);
   auto weights = pkgLocal.weights;
   bool updated{false};
-  auto bucketsDir = baulk::vfs::AppBuckets();
   for (const auto &bucket : baulk::LoadedBuckets()) {
     bela::error_code ec;
     auto pkgN = PackageMeta(bucket, pkgLocal.name, ec);
@@ -195,7 +196,6 @@ std::optional<baulk::Package> PackageMetaEx(std::wstring_view pkgName, bela::err
   ec.clear();
   bela::version pkgVersion; // 0.0.0.0
   baulk::Package pkg;
-  auto bucketsDir = baulk::vfs::AppBuckets();
   size_t pkgSame = 0;
   for (const auto &bucket : baulk::LoadedBuckets()) {
     auto pkgN = PackageMeta(bucket, pkgName, ec);

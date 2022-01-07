@@ -32,7 +32,7 @@ bool extract_exe(std::wstring_view src, std::wstring_view dest, bela::error_code
 }
 bool make_flattened_exe(std::wstring_view path) {
   std::error_code ec;
-  for (auto &p : std::filesystem::directory_iterator(path)) {
+  for (const auto &p : std::filesystem::directory_iterator(path)) {
     if (p.path().extension() == L".old") {
       std::filesystem::remove_all(p.path(), ec);
     }
@@ -40,9 +40,9 @@ bool make_flattened_exe(std::wstring_view path) {
   return true;
 }
 
-bool extract_zip(std::wstring_view src, std::wstring_view outdir, bela::error_code &ec) {
+bool extract_zip(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
   baulk::archive::ZipExtractor extractor(baulk::IsQuietMode);
-  if (!extractor.OpenReader(src, outdir, ec)) {
+  if (!extractor.OpenReader(src, dest, ec)) {
     return false;
   }
   return extractor.Extract(ec);

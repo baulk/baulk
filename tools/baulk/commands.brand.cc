@@ -8,7 +8,7 @@ void usage_brand() {
   bela::FPrintF(stderr, L"Usage: baulk brand\n"); //
 }
 
-int cmd_brand(const argv_t &) {
+int cmd_brand(const argv_t & /*unused*/) {
   baulk::brand::Detector detector;
   bela::error_code ec;
   if (!detector.Execute(ec)) {

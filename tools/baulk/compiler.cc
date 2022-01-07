@@ -8,9 +8,9 @@
 
 namespace baulk::compiler {
 
-bool Executor::Initialize(bela::error_code &ec) {
+bool Executor::Initialize(bela::error_code &init_ec) {
   simulator.InitializeCleanupEnv();
-  if (!baulk::env::InitializeVisualStudioEnv(simulator, baulk::env::HostArch, false, ec)) {
+  if (!baulk::env::InitializeVisualStudioEnv(simulator, baulk::env::HostArch, false, init_ec)) {
     return false;
   }
   initialized = true;

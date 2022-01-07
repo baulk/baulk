@@ -11,7 +11,7 @@ bool IsForceDelete = false;
 bool IsQuietMode = false;
 bool IsTraceMode = false;
 
-int cmd_uninitialized(const baulk::commands::argv_t &argv) {
+int cmd_uninitialized(const baulk::commands::argv_t & /*unused*/) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
   return 1;
 }

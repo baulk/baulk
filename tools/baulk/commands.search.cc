@@ -28,7 +28,7 @@ int cmd_search(const argv_t &argv) {
   }
 
   std::vector<std::wstring> pattern;
-  for (const auto &a : argv) {
+  for (const auto a : argv) {
     pattern.emplace_back(bela::AsciiStrToLower(a));
   }
   auto isMatched = [&](std::wstring_view pkgName) -> bool {

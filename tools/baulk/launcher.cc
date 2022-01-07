@@ -129,7 +129,7 @@ public:
   bool Initialize(bela::error_code &ec);
   bool Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view appLinks,
                const baulk::LinkMeta &linkMeta, bela::error_code &ec);
-  const std::vector<LinkMeta> &LinkMetas() const { return linkmetas; }
+  [[nodiscard]] const std::vector<LinkMeta> &LinkMetas() const { return linkmetas; }
 
 private:
   std::wstring buildTemp;
@@ -252,6 +252,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
 }
 
 bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
+  (void)forceoverwrite;
   auto packageRoot = vfs::AppPackageFolder(pkg.name);
   auto appLinks = vfs::AppLinks();
   if (!baulk::fs::MakeDir(appLinks, ec)) {
