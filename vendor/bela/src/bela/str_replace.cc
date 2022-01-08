@@ -56,13 +56,13 @@ int ApplySubstitutions(std::wstring_view s, std::vector<strings_internal::Viable
       substitutions += 1;
     }
     sub.offset = s.find(sub.old, pos);
-    if (sub.offset == s.npos) {
+    if (sub.offset == std::wstring_view::npos) {
       subs.pop_back();
     } else {
       // Insertion sort to ensure the last ViableSubstitution continues to be
       // before all the others.
       size_t index = subs.size();
-      while (--index && subs[index - 1].OccursBefore(subs[index])) {
+      while ((--index != 0U) && subs[index - 1].OccursBefore(subs[index])) {
         std::swap(subs[index], subs[index - 1]);
       }
     }

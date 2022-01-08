@@ -223,7 +223,7 @@ bool FindExecutable(std::wstring_view file, const std::vector<std::wstring> &ext
 bool Simulator::InitializeEnv() {
   LPWCH envs{nullptr};
   auto deleter = bela::finally([&] {
-    if (envs) {
+    if (envs != nullptr) {
       FreeEnvironmentStringsW(envs);
       envs = nullptr;
     }
@@ -262,7 +262,7 @@ bool Simulator::InitializeEnv() {
 bool Simulator::InitializeCleanupEnv() {
   LPWCH envs{nullptr};
   auto deleter = bela::finally([&] {
-    if (envs) {
+    if (envs != nullptr) {
       FreeEnvironmentStringsW(envs);
       envs = nullptr;
     }
@@ -305,7 +305,7 @@ bool Simulator::LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath)
       return true;
     }
   }
-  for (auto p : paths) {
+  for (const auto& p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
     if (FindExecutable(exefile, pathexts, exe)) {
       return true;
@@ -368,7 +368,7 @@ bool LookPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::w
       return true;
     }
   }
-  for (auto p : paths) {
+  for (const auto& p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
     if (FindExecutable(exefile, exts, exe)) {
       return true;

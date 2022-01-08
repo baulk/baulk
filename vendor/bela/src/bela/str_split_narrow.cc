@@ -68,17 +68,17 @@ std::string_view GenericFind(std::string_view text, std::string_view delimiter, 
 // Finds using std::string_view::find(), therefore the length of the found
 // delimiter is delimiter.length().
 struct LiteralPolicy {
-  size_t Find(std::string_view text, std::string_view delimiter, size_t pos) { return text.find(delimiter, pos); }
-  size_t Length(std::string_view delimiter) { return delimiter.length(); }
+  static size_t Find(std::string_view text, std::string_view delimiter, size_t pos) { return text.find(delimiter, pos); }
+  static size_t Length(std::string_view delimiter) { return delimiter.length(); }
 };
 
 // Finds using std::string_view::find_first_of(), therefore the length of the
 // found delimiter is 1.
 struct AnyOfPolicy {
-  size_t Find(std::string_view text, std::string_view delimiter, size_t pos) {
+  static size_t Find(std::string_view text, std::string_view delimiter, size_t pos) {
     return text.find_first_of(delimiter, pos);
   }
-  size_t Length(std::string_view /* delimiter */) { return 1; }
+  static size_t Length(std::string_view /* delimiter */) { return 1; }
 };
 ByString::ByString(std::string_view sp) : delimiter_(sp) {}
 
@@ -87,8 +87,9 @@ std::string_view ByString::Find(std::string_view text, size_t pos) const {
     // Much faster to call find on a single character than on an
     // std::string_view.
     size_t found_pos = text.find(delimiter_[0], pos);
-    if (found_pos == std::string_view::npos)
+    if (found_pos == std::string_view::npos) {
       return std::string_view(text.data() + text.size(), 0);
+}
     return text.substr(found_pos, 1);
   }
   return GenericFind(text, delimiter_, pos, LiteralPolicy());
@@ -100,8 +101,9 @@ std::string_view ByString::Find(std::string_view text, size_t pos) const {
 
 std::string_view ByChar::Find(std::string_view text, size_t pos) const {
   size_t found_pos = text.find(c_, pos);
-  if (found_pos == std::string_view::npos)
+  if (found_pos == std::string_view::npos) {
     return std::string_view(text.data() + text.size(), 0);
+}
   return text.substr(found_pos, 1);
 }
 
@@ -127,8 +129,9 @@ std::string_view ByLength::Find(std::string_view text, size_t pos) const {
   std::string_view substr = text.substr(pos);
   // If the std::string is shorter than the chunk size we say we
   // "can't find the delimiter" so this will be the last chunk.
-  if (substr.length() <= static_cast<size_t>(length_))
+  if (substr.length() <= static_cast<size_t>(length_)) {
     return std::string_view(text.data() + text.size(), 0);
+}
 
   return std::string_view(substr.data() + length_, 0);
 }

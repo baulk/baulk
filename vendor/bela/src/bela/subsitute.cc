@@ -32,8 +32,7 @@
 // ---------------------------------------------------------------------------
 #include <bela/subsitute.hpp>
 
-namespace bela {
-namespace substitute_internal {
+namespace bela::substitute_internal {
 void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format, const std::wstring_view *args_array,
                               size_t num_args) {
   size_t size = 0;
@@ -86,5 +85,4 @@ void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format, co
     }
   }
 }
-} // namespace substitute_internal
 } // namespace bela

@@ -83,7 +83,14 @@ void Hasher::Initialize(HashBits hb_) {
  * @param block the message block to process
  */
 static void sha256_process_block(unsigned hash[8], unsigned block[16]) {
-  unsigned A, B, C, D, E, F, G, H;
+  unsigned A;
+  unsigned B;
+  unsigned C;
+  unsigned D;
+  unsigned E;
+  unsigned F;
+  unsigned G;
+  unsigned H;
   unsigned W[16];
   const unsigned *k;
   int i;
@@ -138,7 +145,7 @@ void Hasher::Update(const void *input, size_t input_len) {
   length += input_len;
 
   /* fill partial block */
-  if (index) {
+  if (index != 0U) {
     size_t left = sha256_block_size - index;
     memcpy((char *)message + index, msg, (input_len < left ? input_len : left));
     if (input_len < left) {
@@ -176,8 +183,8 @@ void Hasher::Finalize(uint8_t *out, size_t out_len) {
   /* pad message and run for last block */
 
   /* append the byte 0x80 to the message */
-  message[index] &= bela::fromle(~(0xFFFFFFFFu << shift));
-  message[index++] ^= bela::fromle(0x80u << shift);
+  message[index] &= bela::fromle(~(0xFFFFFFFFU << shift));
+  message[index++] ^= bela::fromle(0x80U << shift);
 
   /* if no room left in the message to store 64-bit message length */
   if (index > 14) {

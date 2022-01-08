@@ -126,8 +126,9 @@ Time FromChrono(const std::chrono::system_clock::time_point &tp) {
 std::chrono::system_clock::time_point ToChronoTime(bela::Time t) {
   using D = std::chrono::system_clock::duration;
   auto d = time_internal::ToUnixDuration(t);
-  if (d < ZeroDuration())
+  if (d < ZeroDuration()) {
     d = Floor(d, FromChrono(D{1}));
+}
   return std::chrono::system_clock::from_time_t(0) + time_internal::ToChronoDuration<D>(d);
 }
 

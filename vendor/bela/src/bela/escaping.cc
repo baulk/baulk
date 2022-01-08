@@ -75,7 +75,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
       *d++ = *p++;
     } else {
       if (++p > last_byte) { // skip past the '\\'
-        if (error) {
+        if (error != nullptr) {
           *error = L"String cannot end with \\";
         }
         return false;
@@ -132,7 +132,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           ch = ch * 8 + *++p - L'0'; // now points at last digit
         }
         if (ch > 0xff) {
-          if (error) {
+          if (error != nullptr) {
             *error =
                 bela::StringCat(L"Value of \\", std::wstring_view(octal_start, p + 1 - octal_start), L" exceeds 0xff");
           }
@@ -152,23 +152,25 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
       case L'x':
       case L'X': {
         if (p >= last_byte) {
-          if (error) {
+          if (error != nullptr) {
             *error = L"String cannot end with \\x";
           }
           return false;
-        } else if (!bela::ascii_isxdigit(p[1])) {
-          if (error) {
+        }
+        if (!bela::ascii_isxdigit(p[1])) {
+          if (error != nullptr) {
             *error = L"\\x cannot be followed by a non-hex digit";
           }
           return false;
         }
         unsigned int ch = 0;
         const wchar_t *hex_start = p;
-        while (p < last_byte && bela::ascii_isxdigit(p[1]))
+        while (p < last_byte && bela::ascii_isxdigit(p[1])) {
           // Arbitrarily many hex digits
           ch = (ch << 4) + hex_digit_to_int(*++p);
+        }
         if (ch > 0xFF) {
-          if (error) {
+          if (error != nullptr) {
             *error = bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start), L" exceeds 0xff");
           }
           return false;
@@ -189,7 +191,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         char32_t rune = 0;
         const wchar_t *hex_start = p;
         if (p + 4 >= end) {
-          if (error) {
+          if (error != nullptr) {
             *error = bela::StringCat(L"\\u must be followed by 4 hex digits: \\",
                                      std::wstring_view(hex_start, p + 1 - hex_start));
           }
@@ -200,7 +202,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
           if (bela::ascii_isxdigit(p[1])) {
             rune = (rune << 4) + hex_digit_to_int(*++p); // Advance p.
           } else {
-            if (error) {
+            if (error != nullptr) {
               *error = bela::StringCat(L"\\u must be followed by 4 hex digits: \\",
                                        std::wstring_view(hex_start, p + 1 - hex_start));
             }
@@ -222,7 +224,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         char32_t rune = 0;
         const wchar_t *hex_start = p;
         if (p + 8 >= end) {
-          if (error) {
+          if (error != nullptr) {
             *error = bela::StringCat(L"\\U must be followed by 8 hex digits: \\",
                                      std::wstring_view(hex_start, p + 1 - hex_start));
           }
@@ -235,16 +237,16 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
             // is within the Unicode limit, but do advance p.
             uint32_t newrune = (rune << 4) + hex_digit_to_int(*++p);
             if (newrune > 0x10FFFF) {
-              if (error) {
+              if (error != nullptr) {
                 *error = bela::StringCat(L"Value of \\", std::wstring_view(hex_start, p + 1 - hex_start),
                                          L" exceeds Unicode limit (0x10FFFF)");
               }
               return false;
-            } else {
-              rune = newrune;
             }
+            rune = newrune;
+
           } else {
-            if (error) {
+            if (error != nullptr) {
               *error = bela::StringCat(L"\\U must be followed by 8 hex digits: \\",
                                        std::wstring_view(hex_start, p + 1 - hex_start));
             }
@@ -262,7 +264,7 @@ bool CUnescapeInternal(std::wstring_view source, bool leave_nulls_escaped, wchar
         break;
       }
       default: {
-        if (error) {
+        if (error != nullptr) {
           *error = bela::StringCat(L"Unknown escape sequence: \\", *p);
         }
         return false;

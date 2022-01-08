@@ -113,7 +113,14 @@ void Hasher::Initialize(HashBits hb_) {
  * @param block the message block to process
  */
 static void sha512_process_block(uint64_t hash[8], uint64_t block[16]) {
-  uint64_t A, B, C, D, E, F, G, H;
+  uint64_t A;
+  uint64_t B;
+  uint64_t C;
+  uint64_t D;
+  uint64_t E;
+  uint64_t F;
+  uint64_t G;
+  uint64_t H;
   uint64_t W[16];
   const uint64_t *k;
   int i;
@@ -168,7 +175,7 @@ void Hasher::Update(const void *input, size_t input_len) {
   length += input_len;
 
   /* fill partial block */
-  if (index) {
+  if (index != 0U) {
     size_t left = sha512_block_size - index;
     memcpy((char *)message + index, msg, (input_len < left ? input_len : left));
     if (input_len < left) {

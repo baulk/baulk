@@ -72,7 +72,7 @@ struct mach_header_64 {
   uint32_t reserved;   /* reserved */
 };
 
-status_t LookupExecutableFile(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupExecutableFile(const bela::bytes_view &bv, hazel_result &hr) {
   if (bv.size() < 4) {
     return None;
   }
@@ -193,8 +193,9 @@ status_t LookupExecutableFile(bela::bytes_view bv, hazel_result &hr) {
       } else {
         minsize = sizeof(mach_header_64);
       }
-      if (bv.size() >= minsize)
+      if (bv.size() >= minsize) {
         type = bv[12] << 24 | bv[13] << 12 | bv[14] << 8 | bv[15];
+      }
     } else if (bv.starts_with("\xCE\xFA\xED\xFE") || bv.starts_with("\xCF\xFA\xED\xFE")) {
       /* Reverse endian */
       size_t minsize;
@@ -275,7 +276,7 @@ status_t LookupExecutableFile(bela::bytes_view bv, hazel_result &hr) {
   case 'M':
     if (bv.starts_with("MZ") && bv.size() >= 0x3c + 4) {
       // read32le
-      uint32_t off = bela::cast_fromle<uint32_t>(bv.data() + 0x3c);
+      auto off = bela::cast_fromle<uint32_t>(bv.data() + 0x3c);
       auto sv = bv.subview(off);
       if (sv.starts_bytes_with(PEMagic)) {
         hr.assign(types::pecoff_executable, L"PE executable file");

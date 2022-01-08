@@ -389,7 +389,7 @@ struct sqlite_header_t {
   uint16_t version;
 };
 
-status_t lookup_sqliteinternal(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_sqliteinternal(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const uint8_t sqliteMagic[] = {'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't'};
   if (!bv.starts_bytes_with(sqliteMagic)) {
     return None;
@@ -517,7 +517,7 @@ inline bool IsZip(const uint8_t *buf, size_t size) {
           (buf[3] == 0x4 || buf[3] == 0x6 || buf[3] == 0x8));
 }
 
-status_t LookupArchives(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupArchives(const bela::bytes_view &bv, hazel_result &hr) {
   if (IsZip(bv.data(), bv.size())) {
     hr.assign(types::zip, L"ZIP file");
     return Found;

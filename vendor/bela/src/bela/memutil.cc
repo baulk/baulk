@@ -34,9 +34,7 @@
 // https://en.cppreference.com/w/cpp/header/cwctype
 #include <bela/memutil.hpp>
 
-namespace bela {
-
-namespace strings_internal {
+namespace bela::strings_internal {
 
 int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) noexcept {
   for (size_t i = 0; i < len; i++) {
@@ -58,5 +56,4 @@ int memcasecmp(const char *s1, const char *s2, size_t len) noexcept {
   return 0;
 }
 
-} // namespace strings_internal
-} // namespace bela
+} // namespace bela::strings_internal

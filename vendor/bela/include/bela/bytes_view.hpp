@@ -11,7 +11,8 @@ namespace bela {
 class bytes_view {
 public:
   static constexpr size_t npos = static_cast<size_t>(-1);
-  bytes_view() = default;
+  constexpr bytes_view() = default;
+  constexpr bytes_view(const uint8_t *data, size_t size) : data_(data), size_(size) {}
   template <typename T>
   requires bela::standard_layout<T> bytes_view(const T *d, size_t l)
       : data_(reinterpret_cast<const uint8_t *>(d)), size_(l * sizeof(T)) {}
@@ -55,21 +56,21 @@ public:
     return n + pos <= size_ && (memcmp(data_ + pos, p, n) == 0);
   }
 
-  [[nodiscard]] bytes_view subview(std::size_t pos, std::size_t n = npos) const {
+  [[nodiscard]] constexpr bytes_view subview(std::size_t pos, std::size_t n = npos) const {
     if (pos >= size_) {
       return bytes_view();
     }
     return bytes_view(data_ + pos, (std::min)(n, size_ - pos));
   }
-  [[nodiscard]] auto size() const { return size_; }
-  [[nodiscard]] const auto *data() const { return data_; }
+  [[nodiscard]] constexpr auto size() const { return size_; }
+  [[nodiscard]] constexpr const auto *data() const { return data_; }
 
-  void remove_prefix(const size_t count) noexcept {
+  constexpr void remove_prefix(const size_t count) noexcept {
     auto minSize = (std::min)(count, size_);
     size_ -= minSize;
     data_ += minSize;
   }
-  void remove_suffix(const size_t count) noexcept {
+  constexpr void remove_suffix(const size_t count) noexcept {
     auto minSize = (std::min)(count, size_);
     size_ -= minSize;
   }
@@ -100,7 +101,7 @@ public:
     }
     return data_[off];
   }
-  [[nodiscard]] auto make_const_span() const { return std::span{data_, size_}; }
+  [[nodiscard]] constexpr auto make_const_span() const { return std::span{data_, size_}; }
 
   template <typename T>
   requires bela::standard_layout<T>

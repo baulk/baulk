@@ -22,10 +22,7 @@ bool TerminalEnabled(HANDLE fd) {
     return false;
   }
   dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-  if (SetConsoleMode(fd, dwMode) != TRUE) {
-    return false;
-  }
-  return true;
+  return SetConsoleMode(fd, dwMode) == TRUE;
 }
 
 bool IsTerminal(FILE *fd) {
@@ -100,7 +97,7 @@ bool TerminalSize(FILE *fd, terminal_size &sz) {
 // Write data to windows terminal (windows console)
 bela::ssize_t WriteTerminal(HANDLE fd, std::wstring_view data) {
   DWORD dwWrite = 0;
-  if (!WriteConsoleW(fd, data.data(), (DWORD)data.size(), &dwWrite, nullptr)) {
+  if (WriteConsoleW(fd, data.data(), (DWORD)data.size(), &dwWrite, nullptr) != TRUE) {
     return -1;
   }
   return static_cast<ssize_t>(dwWrite);
@@ -109,7 +106,7 @@ bela::ssize_t WriteTerminal(HANDLE fd, std::wstring_view data) {
 bela::ssize_t WriteSameFile(HANDLE fd, std::wstring_view data) {
   auto ndata = bela::encode_into<wchar_t, char>(data);
   DWORD dwWrite = 0;
-  if (!::WriteFile(fd, ndata.data(), (DWORD)ndata.size(), &dwWrite, nullptr)) {
+  if (::WriteFile(fd, ndata.data(), (DWORD)ndata.size(), &dwWrite, nullptr) != TRUE) {
     return -1;
   }
   return static_cast<ssize_t>(dwWrite);
@@ -118,7 +115,7 @@ bela::ssize_t WriteSameFile(HANDLE fd, std::wstring_view data) {
 // Write data to same file not windows terminal
 bela::ssize_t WriteSameFile(HANDLE fd, std::string_view data) {
   DWORD dwWrite = 0;
-  if (!::WriteFile(fd, data.data(), (DWORD)data.size(), &dwWrite, nullptr)) {
+  if (::WriteFile(fd, data.data(), (DWORD)data.size(), &dwWrite, nullptr) != TRUE) {
     return -1;
   }
   return static_cast<ssize_t>(dwWrite);
@@ -129,6 +126,26 @@ enum class TerminalMode {
   ConPTY,
   Cygwin
 };
+
+inline bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::wstring_view data) {
+  if (fd == nullptr) {
+    return -1;
+  }
+  if (mode == TerminalMode::ConPTY) {
+    return WriteTerminal(fd, data);
+  }
+  return WriteSameFile(fd, data);
+}
+
+inline bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::string_view data) {
+  if (fd == nullptr) {
+    return -1;
+  }
+  if (mode == TerminalMode::ConPTY) {
+    return WriteTerminal(fd, bela::encode_into<char, wchar_t>(data));
+  }
+  return WriteSameFile(fd, data);
+}
 
 class Filter {
 public:
@@ -177,24 +194,6 @@ private:
         errmode = TerminalMode::Cygwin;
       }
     }
-  }
-  bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::wstring_view data) {
-    if (fd == nullptr) {
-      return -1;
-    }
-    if (mode == TerminalMode::ConPTY) {
-      return WriteTerminal(fd, data);
-    }
-    return WriteSameFile(fd, data);
-  }
-  bela::ssize_t WriteAutoInternal(HANDLE fd, TerminalMode mode, std::string_view data) {
-    if (fd == nullptr) {
-      return -1;
-    }
-    if (mode == TerminalMode::ConPTY) {
-      return WriteTerminal(fd, bela::encode_into<char, wchar_t>(data));
-    }
-    return WriteSameFile(fd, data);
   }
   HANDLE fdout{nullptr};
   HANDLE fderr{nullptr};

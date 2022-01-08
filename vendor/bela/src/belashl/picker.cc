@@ -60,7 +60,7 @@ bool BelaMessageBox(HWND hWnd, LPCWSTR pszWindowTitle, LPCWSTR pszContent, LPCWS
     tc.pszMainIcon = TD_ERROR_ICON;
     break;
   case mbs_t::ABOUT:
-    if (hWnd) {
+    if (hWnd != nullptr) {
       if (auto hIcon = reinterpret_cast<HICON>(SendMessageW(hWnd, WM_GETICON, ICON_BIG, 0)); hIcon != nullptr) {
         tc.hMainIcon = hIcon;
         tc.dwFlags |= TDF_USE_HICON_MAIN;

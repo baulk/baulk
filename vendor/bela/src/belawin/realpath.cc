@@ -6,25 +6,25 @@
 
 namespace bela {
 // Thanks MSVC STL filesystem
-template <class _Ty> [[nodiscard]] _Ty _Unaligned_load(const void *_Ptr) { // load a _Ty from _Ptr
-  static_assert(std::is_trivial_v<_Ty>, "Unaligned loads require trivial types");
-  _Ty _Tmp;
-  std::memcpy(&_Tmp, _Ptr, sizeof(_Tmp));
-  return _Tmp;
+template <class Ty> [[nodiscard]] Ty Unaligned_load(const void *Ptr) { // load a _Ty from _Ptr
+  static_assert(std::is_trivial_v<Ty>, "Unaligned loads require trivial types");
+  Ty Tmp;
+  std::memcpy(&Tmp, Ptr, sizeof(Tmp));
+  return Tmp;
 }
 
-[[nodiscard]] inline bool _Is_drive_prefix(const wchar_t *const _First) {
+[[nodiscard]] inline bool Is_drive_prefix(const wchar_t *const First) {
   // test if _First points to a prefix of the form X:
   // pre: _First points to at least 2 wchar_t instances
   // pre: Little endian
-  auto _Value = _Unaligned_load<unsigned int>(_First);
-  _Value &= 0xFFFF'FFDFu; // transform lowercase drive letters into uppercase ones
-  _Value -= (static_cast<unsigned int>(L':') << (sizeof(wchar_t) * CHAR_BIT)) | L'A';
-  return _Value < 26;
+  auto Value = Unaligned_load<unsigned int>(First);
+  Value &= 0xFFFF'FFDFU; // transform lowercase drive letters into uppercase ones
+  Value -= (static_cast<unsigned int>(L':') << (sizeof(wchar_t) * CHAR_BIT)) | L'A';
+  return Value < 26;
 }
 
-inline bool _Is_drive_prefix_with_slash_slash_question(const std::wstring_view text) {
-  return text.size() > 6 && bela::StartsWith(text, LR"(\\?\)") && _Is_drive_prefix(text.data() + 4);
+inline bool Is_drive_prefix_with_slash_slash_question(const std::wstring_view text) {
+  return text.size() > 6 && bela::StartsWith(text, LR"(\\?\)") && Is_drive_prefix(text.data() + 4);
 }
 
 std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code &ec) {
@@ -55,7 +55,7 @@ std::optional<std::wstring> RealPathByHandle(HANDLE FileHandle, bela::error_code
     return bela::StringCat(ntprefix, buffer);
   }
   // '\\?\C:\Path'
-  if (_Is_drive_prefix_with_slash_slash_question(buffer)) {
+  if (Is_drive_prefix_with_slash_slash_question(buffer)) {
     return std::make_optional(buffer.substr(4));
   }
   if (bela::StartsWithIgnoreCase(buffer, LR"(\\?\UNC\)")) {
@@ -103,7 +103,7 @@ std::optional<std::wstring> ExecutableFinalPath(bela::error_code &ec) {
 }
 
 inline bool DecodeAppLink(const REPARSE_DATA_BUFFER *buffer, AppExecTarget &target) {
-  LPWSTR szString = (LPWSTR)buffer->AppExecLinkReparseBuffer.StringList;
+  auto szString = (LPWSTR)buffer->AppExecLinkReparseBuffer.StringList;
   std::vector<std::wstring_view> strv;
   for (ULONG i = 0; i < buffer->AppExecLinkReparseBuffer.StringCount; i++) {
     auto len = wcslen(szString);

@@ -42,7 +42,7 @@ BelaImageRvaToVa(PIMAGE_NT_HEADERS nh, PVOID BaseAddress, ULONG rva, PIMAGE_SECT
     if (section == nullptr) {
       return nullptr;
     }
-    if (sh) {
+    if (sh != nullptr) {
       *sh = section;
     }
   }

@@ -28,7 +28,7 @@ inline bool Mpeg(const uint8_t *buf, size_t size) {
   return (size > 3 && buf[0] == 0x0 && buf[1] == 0x0 && buf[2] == 0x1 && buf[3] >= 0xb0 && buf[3] <= 0xbf);
 }
 
-status_t lookup_mediaaudio(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_mediaaudio(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const uint8_t midiMagic[] = {0x4D, 0x54, 0x68, 0x64};
   constexpr const uint8_t oggMagic[] = {0x4F, 0x67, 0x67, 0x53};
   constexpr const uint8_t flacMagic[] = {0x66, 0x4C, 0x61, 0x43};
@@ -122,7 +122,7 @@ inline bool IsMp4(const uint8_t *buf, size_t size) {
            (buf[8] == 'F' && buf[9] == '4' && buf[10] == 'P' && buf[11] == ' ')));
 }
 
-status_t lookup_mediavideo(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_mediavideo(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const uint8_t webmMagic[] = {0x1A, 0x45, 0xDF, 0xA3};
   constexpr const uint8_t wbvMagic[] = {0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD6};
   constexpr const uint8_t flvMagic[] = {0x46, 0x4C, 0x56, 0x01};
@@ -161,7 +161,7 @@ status_t lookup_mediavideo(bela::bytes_view bv, hazel_result &hr) {
   return None;
 }
 
-status_t LookupMedia(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupMedia(const bela::bytes_view &bv, hazel_result &hr) {
   if (lookup_mediaaudio(bv, hr) == Found) {
     return Found;
   }

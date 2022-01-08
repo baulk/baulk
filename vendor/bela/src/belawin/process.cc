@@ -59,7 +59,7 @@ struct process_capture_helper {
     memset(&saAttr, 0, sizeof(SECURITY_ATTRIBUTES));
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
-    saAttr.lpSecurityDescriptor = NULL;
+    saAttr.lpSecurityDescriptor = nullptr;
     // Create a pipe for the child process's STDOUT.
     if (CreatePipe(&fdout, &si.hStdOutput, &saAttr, 0) != TRUE) {
       ec = bela::make_system_error_code(bela::StringCat(L"run command '", cmdline, L"' CreatePipe: "));
@@ -91,11 +91,11 @@ struct process_capture_helper {
     Free(si.hStdOutput);
     return true;
   }
-  void close_handles() {
+  void close_handles() const {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
   }
-  unsigned int wait_and_close_handles() {
+  [[nodiscard]] unsigned int wait_and_close_handles() const {
     CloseHandle(pi.hThread);
     WaitForSingleObject(pi.hProcess, INFINITE);
     DWORD exit_code = 0;
@@ -104,7 +104,7 @@ struct process_capture_helper {
     return exit_code;
   }
 
-  int wait_and_stream_output(std::string &out) {
+  int wait_and_stream_output(std::string &out) const {
     unsigned long bytes_read = 0;
     static constexpr int buffer_size = 1024 * 32;
     auto buf = std::make_unique<char[]>(buffer_size);

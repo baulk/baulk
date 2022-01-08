@@ -3,7 +3,7 @@
 
 namespace hazel::elf {
 bool File::gnuVersionInit(std::span<const uint8_t> str) {
-  if (gnuNeed.size() != 0) {
+  if (!gnuNeed.empty()) {
     // Already initialized
     return true;
   }

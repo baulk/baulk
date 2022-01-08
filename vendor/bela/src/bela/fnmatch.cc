@@ -87,12 +87,12 @@ int CharUnicode(char32_t *c, const char16_t *str, size_t n) {
 
 static int PatternNext(const char16_t *pat, size_t m, size_t *step, int flags) {
   int esc = 0;
-  if (!m || !*pat) {
+  if ((m == 0U) || (*pat == 0U)) {
     *step = 0;
     return END;
   }
   *step = 1;
-  if (pat[0] == '\\' && pat[1] && (flags & fnmatch::NoEscape) == 0) {
+  if (pat[0] == '\\' && (pat[1] != 0U) && (flags & fnmatch::NoEscape) == 0) {
     *step = 2;
     pat++;
     esc = 1;
@@ -110,22 +110,22 @@ static int PatternNext(const char16_t *pat, size_t m, size_t *step, int flags) {
         k++;
       }
     }
-    for (; k < m && pat[k] && pat[k] != ']'; k++) {
-      if (k + 1 < m && pat[k + 1] && pat[k] == '[' && (pat[k + 1] == ':' || pat[k + 1] == '.' || pat[k + 1] == '=')) {
+    for (; k < m && (pat[k] != 0U) && pat[k] != ']'; k++) {
+      if (k + 1 < m && (pat[k + 1] != 0U) && pat[k] == '[' && (pat[k + 1] == ':' || pat[k + 1] == '.' || pat[k + 1] == '=')) {
         int z = pat[k + 1];
         k += 2;
-        if (k < m && pat[k]) {
+        if (k < m && (pat[k] != 0U)) {
           k++;
         }
-        while (k < m && pat[k] && (pat[k - 1] != z || pat[k] != ']')) {
+        while (k < m && (pat[k] != 0U) && (pat[k - 1] != z || pat[k] != ']')) {
           k++;
         }
-        if (k == m || !pat[k]) {
+        if (k == m || (pat[k] == 0U)) {
           break;
         }
       }
     }
-    if (k == m || !pat[k]) {
+    if (k == m || (pat[k] == 0U)) {
       *step = 1;
       return '[';
     }
@@ -168,12 +168,12 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
   }
   if (*p == ']') {
     if (k == ']') {
-      return !inv;
+      return static_cast<int>(static_cast<int>(inv) == 0);
     }
     p++;
   } else if (*p == '-') {
     if (k == '-') {
-      return !inv;
+      return static_cast<int>(static_cast<int>(inv) == 0);
     }
     p++;
   }
@@ -187,7 +187,7 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
       }
       if (wc <= wc2) {
         if ((unsigned)k - wc <= wc2 - wc || (unsigned)kfold - wc <= wc2 - wc) {
-          return !inv;
+          return static_cast<int>(static_cast<int>(inv) == 0);
         }
       }
       p += l - 1;
@@ -205,7 +205,7 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
         std::u16string_view sv{p0, static_cast<size_t>(svlen)};
         if (same_character_matched(static_cast<wint_t>(k), sv) ||
             same_character_matched(static_cast<wint_t>(kfold), sv)) {
-          return !inv;
+          return static_cast<int>(static_cast<int>(inv) == 0);
         }
       }
       continue;
@@ -220,21 +220,30 @@ static int MatchBracket(const char16_t *p, int k, int kfold) {
       p += l - 1;
     }
     if (wc == static_cast<char32_t>(k) || wc == static_cast<char32_t>(kfold)) {
-      return !inv;
+      return static_cast<int>(static_cast<int>(inv) == 0);
     }
   }
   return inv;
 }
 
 static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, size_t n, int flags) {
-  const char16_t *p, *ptail, *endpat;
-  const char16_t *s, *stail, *endstr;
-  size_t pinc, sinc, tailcnt = 0;
-  int c, k, kfold;
+  const char16_t *p;
+  const char16_t *ptail;
+  const char16_t *endpat;
+  const char16_t *s;
+  const char16_t *stail;
+  const char16_t *endstr;
+  size_t pinc;
+  size_t sinc;
+  size_t tailcnt = 0;
+  int c;
+  int k;
+  int kfold;
 
-  if (flags & fnmatch::Period) {
-    if (*str == '.' && *pat != '.')
+  if ((flags & fnmatch::Period) != 0) {
+    if (*str == '.' && *pat != '.') {
       return 1;
+}
   }
   for (;;) {
     switch ((c = PatternNext(pat, m, &pinc, flags))) {
@@ -251,9 +260,9 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
       }
       str += sinc;
       n -= sinc;
-      kfold = flags & fnmatch::CaseFold ? CaseFold(k) : k;
+      kfold = (flags & fnmatch::CaseFold) != 0 ? CaseFold(k) : k;
       if (c == BRACKET) {
-        if (!MatchBracket(pat, k, kfold)) {
+        if (MatchBracket(pat, k, kfold) == 0) {
           return 1;
         }
       } else if (c != QUESTION && k != c && kfold != c) {
@@ -293,7 +302,7 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
   /* Find the final tailcnt chars of str, accounting for UTF-8.
    * On illegal sequences we may get it wrong, but in that case
    * we necessarily have a matching failure anyway. */
-  for (s = endstr; s > str && tailcnt; tailcnt--) {
+  for (s = endstr; s > str && (tailcnt != 0U); tailcnt--) {
     if (s[-1] < 128U || MB_CUR_MAX == 1) {
       s--;
       continue;
@@ -301,7 +310,7 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
     while ((unsigned char)*--s - 0x80U < 0x40 && s > str) {
     }
   }
-  if (tailcnt) {
+  if (tailcnt != 0U) {
     return 1;
   }
   stail = s;
@@ -318,9 +327,9 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
       break;
     }
     s += sinc;
-    kfold = flags & fnmatch::CaseFold ? CaseFold(k) : k;
+    kfold = (flags & fnmatch::CaseFold) != 0 ? CaseFold(k) : k;
     if (c == BRACKET) {
-      if (!MatchBracket(p - pinc, k, kfold)) {
+      if (MatchBracket(p - pinc, k, kfold) == 0) {
         return 1;
       }
     } else if (c != QUESTION && k != c && kfold != c) {
@@ -346,12 +355,12 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
         break;
       }
       k = CharNext(s, endstr - s, &sinc);
-      if (!k) {
+      if (k == 0) {
         return 1;
       }
-      kfold = flags & fnmatch::CaseFold ? CaseFold(k) : k;
+      kfold = (flags & fnmatch::CaseFold) != 0 ? CaseFold(k) : k;
       if (c == BRACKET) {
-        if (!MatchBracket(p - pinc, k, kfold)) {
+        if (MatchBracket(p - pinc, k, kfold) == 0) {
           break;
         }
       } else if (c != QUESTION && k != c && kfold != c) {
@@ -359,8 +368,9 @@ static int FnMatchInternal(const char16_t *pat, size_t m, const char16_t *str, s
       }
       s += sinc;
     }
-    if (c == STAR)
+    if (c == STAR) {
       continue;
+}
     /* If we failed, advance str, by 1 char if it's a valid
      * char, or past all invalid bytes otherwise. */
     k = CharNext(str, endstr - str, &sinc);

@@ -8,22 +8,22 @@ inline bool remove_file_hide_attribute(HANDLE FileHandle) {
     return false;
   }
   bi.FileAttributes = bi.FileAttributes & ~(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
-  return SetFileInformationByHandle(FileHandle, FileBasicInfo, &bi, sizeof(bi));
+  return SetFileInformationByHandle(FileHandle, FileBasicInfo, &bi, sizeof(bi)) == TRUE;
 }
 
 bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec) {
-  struct _File_disposition_info_ex {
-    DWORD _Flags;
+  struct File_disposition_info_ex {
+    DWORD Flags;
   };
   DWORD e = NOERROR;
-  _File_disposition_info_ex _Info_ex{0x3};
-  constexpr auto _FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
-  if (SetFileInformationByHandle(FileHandle, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex)) == TRUE) {
+  File_disposition_info_ex Info_ex{0x3};
+  constexpr auto FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
+  if (SetFileInformationByHandle(FileHandle, FileDispositionInfoExClass, &Info_ex, sizeof(Info_ex)) == TRUE) {
     return true;
   }
   if (e = GetLastError(); e == ERROR_ACCESS_DENIED) {
     remove_file_hide_attribute(FileHandle);
-    if (SetFileInformationByHandle(FileHandle, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex)) == TRUE) {
+    if (SetFileInformationByHandle(FileHandle, FileDispositionInfoExClass, &Info_ex, sizeof(Info_ex)) == TRUE) {
       return true;
     }
     e = GetLastError();
@@ -39,14 +39,14 @@ bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec) {
     ec = bela::from_system_error_code(e, L"SetFileInformationByHandle ");
     return false;
   }
-  FILE_DISPOSITION_INFO _Info{/* .Delete= */ TRUE};
-  if (SetFileInformationByHandle(FileHandle, FileDispositionInfo, &_Info, sizeof(_Info)) == TRUE) {
+  FILE_DISPOSITION_INFO Info{/* .Delete= */ TRUE};
+  if (SetFileInformationByHandle(FileHandle, FileDispositionInfo, &Info, sizeof(Info)) == TRUE) {
     return true;
   }
 
   if (e = GetLastError(); e == ERROR_ACCESS_DENIED) {
     remove_file_hide_attribute(FileHandle);
-    if (SetFileInformationByHandle(FileHandle, FileDispositionInfo, &_Info, sizeof(_Info)) == TRUE) {
+    if (SetFileInformationByHandle(FileHandle, FileDispositionInfo, &Info, sizeof(Info)) == TRUE) {
       return true;
     }
     e = GetLastError();
@@ -100,10 +100,7 @@ bool force_delete_folders(std::wstring_view path, bela::error_code &ec) {
       return false;
     }
   } while (finder.Next());
-  if (!bela::fs::ForceDeleteFile(path, ec)) {
-    return false;
-  }
-  return true;
+  return bela::fs::ForceDeleteFile(path, ec);
 }
 
 bool ForceDeleteFolders(std::wstring_view path, bela::error_code &ec) {

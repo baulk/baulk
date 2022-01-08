@@ -2,12 +2,12 @@
 #include "internal.hpp"
 
 namespace bela::pe {
-typedef enum ReplacesGeneralNumericDefines {
+using ReplacesGeneralNumericDefines = enum ReplacesGeneralNumericDefines {
 // Directory entry macro for CLR data.
 #ifndef IMAGE_DIRECTORY_ENTRY_COMHEADER
   IMAGE_DIRECTORY_ENTRY_COMHEADER = 14,
 #endif // IMAGE_DIRECTORY_ENTRY_COMHEADER
-} ReplacesGeneralNumericDefines;
+};
 
 // https://github.com/dotnet/runtime/blob/main/src/coreclr/inc/mdfileformat.h
 // https://github.com/dotnet/runtime/blob/main/src/coreclr/utilcode/pedecoder.cpp

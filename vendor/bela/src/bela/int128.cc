@@ -85,7 +85,7 @@ inline void DivModImpl(uint128 dividend, uint128 divisor, uint128 *quotient_ret,
 }
 
 template <typename T> uint128 MakeUint128FromFloat(T v) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point<T>::value);
 
   // Rounding behavior is towards zero, same as for built-in types.
 
@@ -94,8 +94,8 @@ template <typename T> uint128 MakeUint128FromFloat(T v) {
          (std::numeric_limits<T>::max_exponent <= 128 || v < std::ldexp(static_cast<T>(1), 128)));
 
   if (v >= std::ldexp(static_cast<T>(1), 64)) {
-    uint64_t hi = static_cast<uint64_t>(std::ldexp(v, -64));
-    uint64_t lo = static_cast<uint64_t>(v - std::ldexp(static_cast<T>(hi), 64));
+    auto hi = static_cast<uint64_t>(std::ldexp(v, -64));
+    auto lo = static_cast<uint64_t>(v - std::ldexp(static_cast<T>(hi), 64));
     return MakeUint128(hi, lo);
   }
 
@@ -108,17 +108,17 @@ template <typename T> uint128 MakeUint128FromFloat(T v) {
 // It is more work, so only use when we need the workaround.
 uint128 MakeUint128FromFloat(long double v) {
   // Go 50 bits at a time, that fits in a double
-  static_assert(std::numeric_limits<double>::digits >= 50, "");
-  static_assert(std::numeric_limits<long double>::digits <= 150, "");
+  static_assert(std::numeric_limits<double>::digits >= 50);
+  static_assert(std::numeric_limits<long double>::digits <= 150);
   // Undefined behavior if v is not finite or cannot fit into uint128.
   assert(std::isfinite(v) && v > -1 && v < std::ldexp(1.0L, 128));
 
   v = std::ldexp(v, -100);
-  uint64_t w0 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
+  auto w0 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
   v = std::ldexp(v - static_cast<double>(w0), 50);
-  uint64_t w1 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
+  auto w1 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
   v = std::ldexp(v - static_cast<double>(w1), 50);
-  uint64_t w2 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
+  auto w2 = static_cast<uint64_t>(static_cast<double>(std::trunc(v)));
   return (static_cast<uint128>(w0) << 100) | (static_cast<uint128>(w1) << 50) | static_cast<uint128>(w2);
 }
 #endif // __clang__ && !__SSE3__
@@ -182,8 +182,9 @@ int128 operator/(int128 lhs, int128 rhs) {
   uint128 quotient = 0;
   uint128 remainder = 0;
   DivModImpl(UnsignedAbsoluteValue(lhs), UnsignedAbsoluteValue(rhs), &quotient, &remainder);
-  if ((Int128High64(lhs) < 0) != (Int128High64(rhs) < 0))
+  if ((Int128High64(lhs) < 0) != (Int128High64(rhs) < 0)) {
     quotient = -quotient;
+  }
   return MakeInt128(int128_internal::BitCastToSigned(Uint128High64(quotient)), Uint128Low64(quotient));
 }
 
@@ -193,60 +194,11 @@ int128 operator%(int128 lhs, int128 rhs) {
   uint128 quotient = 0;
   uint128 remainder = 0;
   DivModImpl(UnsignedAbsoluteValue(lhs), UnsignedAbsoluteValue(rhs), &quotient, &remainder);
-  if (Int128High64(lhs) < 0)
+  if (Int128High64(lhs) < 0) {
     remainder = -remainder;
+  }
   return MakeInt128(int128_internal::BitCastToSigned(Uint128High64(remainder)), Uint128Low64(remainder));
 }
 #endif // BELA_HAVE_INTRINSIC_INT128
 
 } // namespace bela
-
-namespace std {
-constexpr bool numeric_limits<bela::uint128>::is_specialized;
-constexpr bool numeric_limits<bela::uint128>::is_signed;
-constexpr bool numeric_limits<bela::uint128>::is_integer;
-constexpr bool numeric_limits<bela::uint128>::is_exact;
-constexpr bool numeric_limits<bela::uint128>::has_infinity;
-constexpr bool numeric_limits<bela::uint128>::has_quiet_NaN;
-constexpr bool numeric_limits<bela::uint128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<bela::uint128>::has_denorm;
-constexpr bool numeric_limits<bela::uint128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<bela::uint128>::round_style;
-constexpr bool numeric_limits<bela::uint128>::is_iec559;
-constexpr bool numeric_limits<bela::uint128>::is_bounded;
-constexpr bool numeric_limits<bela::uint128>::is_modulo;
-constexpr int numeric_limits<bela::uint128>::digits;
-constexpr int numeric_limits<bela::uint128>::digits10;
-constexpr int numeric_limits<bela::uint128>::max_digits10;
-constexpr int numeric_limits<bela::uint128>::radix;
-constexpr int numeric_limits<bela::uint128>::min_exponent;
-constexpr int numeric_limits<bela::uint128>::min_exponent10;
-constexpr int numeric_limits<bela::uint128>::max_exponent;
-constexpr int numeric_limits<bela::uint128>::max_exponent10;
-constexpr bool numeric_limits<bela::uint128>::traps;
-constexpr bool numeric_limits<bela::uint128>::tinyness_before;
-
-constexpr bool numeric_limits<bela::int128>::is_specialized;
-constexpr bool numeric_limits<bela::int128>::is_signed;
-constexpr bool numeric_limits<bela::int128>::is_integer;
-constexpr bool numeric_limits<bela::int128>::is_exact;
-constexpr bool numeric_limits<bela::int128>::has_infinity;
-constexpr bool numeric_limits<bela::int128>::has_quiet_NaN;
-constexpr bool numeric_limits<bela::int128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<bela::int128>::has_denorm;
-constexpr bool numeric_limits<bela::int128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<bela::int128>::round_style;
-constexpr bool numeric_limits<bela::int128>::is_iec559;
-constexpr bool numeric_limits<bela::int128>::is_bounded;
-constexpr bool numeric_limits<bela::int128>::is_modulo;
-constexpr int numeric_limits<bela::int128>::digits;
-constexpr int numeric_limits<bela::int128>::digits10;
-constexpr int numeric_limits<bela::int128>::max_digits10;
-constexpr int numeric_limits<bela::int128>::radix;
-constexpr int numeric_limits<bela::int128>::min_exponent;
-constexpr int numeric_limits<bela::int128>::min_exponent10;
-constexpr int numeric_limits<bela::int128>::max_exponent;
-constexpr int numeric_limits<bela::int128>::max_exponent10;
-constexpr bool numeric_limits<bela::int128>::traps;
-constexpr bool numeric_limits<bela::int128>::tinyness_before;
-} // namespace std

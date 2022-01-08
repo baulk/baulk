@@ -29,7 +29,7 @@
 
 #include <bela/city.hpp>
 
-#include <string.h> // for memcpy and memset
+#include <cstring> // for memcpy and memset
 #include <algorithm>
 
 using std::make_pair;
@@ -37,7 +37,7 @@ using std::pair;
 
 #ifdef _MSC_VER
 
-#include <stdlib.h>
+#include <cstdlib>
 #define bswap_32(x) _byteswap_ulong(x)
 #define bswap_64(x) _byteswap_uint64(x)
 
@@ -86,9 +86,7 @@ using std::pair;
 
 #endif
 
-namespace bela {
-namespace internal {
-namespace cityhash_v111 {
+namespace bela::internal::cityhash_v111 {
 
 #ifdef WORDS_BIGENDIAN
 #define uint32_in_expected_order(x) (bswap_32(x))
@@ -170,7 +168,7 @@ static uint32 Hash32Len13to24(const char *s, size_t len) {
   uint32 d = Fetch32(s + (len >> 1));
   uint32 e = Fetch32(s);
   uint32 f = Fetch32(s + len - 4);
-  uint32 h = static_cast<uint32>(len);
+  auto h = static_cast<uint32>(len);
 
   return fmix(Mur(f, Mur(e, Mur(d, Mur(c, Mur(b, Mur(a, h)))))));
 }
@@ -187,7 +185,10 @@ static uint32 Hash32Len0to4(const char *s, size_t len) {
 }
 
 static uint32 Hash32Len5to12(const char *s, size_t len) {
-  uint32 a = static_cast<uint32>(len), b = static_cast<uint32>(len * 5), c = 9, d = b;
+  auto a = static_cast<uint32>(len);
+  auto b = static_cast<uint32>(len * 5);
+  uint32 c = 9;
+  uint32 d = b;
   a += Fetch32(s);
   b += Fetch32(s + len - 4);
   c += Fetch32(s + ((len >> 1) & 4));
@@ -200,7 +201,9 @@ uint32 CityHash32(const char *s, size_t len) {
   }
 
   // len > 24
-  uint32 h = static_cast<uint32>(len), g = static_cast<uint32>(c1 * len), f = g;
+  auto h = static_cast<uint32>(len);
+  auto g = static_cast<uint32>(c1 * len);
+  uint32 f = g;
   uint32 a0 = Rotate32(Fetch32(s + len - 4) * c1, 17) * c2;
   uint32 a1 = Rotate32(Fetch32(s + len - 8) * c1, 17) * c2;
   uint32 a2 = Rotate32(Fetch32(s + len - 16) * c1, 17) * c2;
@@ -301,7 +304,7 @@ static uint64 HashLen0to16(const char *s, size_t len) {
     uint8 b = s[len >> 1];
     uint8 c = s[len - 1];
     uint32 y = static_cast<uint32>(a) + (static_cast<uint32>(b) << 8);
-    uint32 z = static_cast<uint32>(len + (static_cast<uint32>(c) << 2));
+    auto z = static_cast<uint32>(len + (static_cast<uint32>(c) << 2));
     return ShiftMix(y * k2 ^ z * k0) * k2;
   }
   return k2;
@@ -361,10 +364,10 @@ uint64 CityHash64(const char *s, size_t len) {
   if (len <= 32) {
     if (len <= 16) {
       return HashLen0to16(s, len);
-    } else {
-      return HashLen17to32(s, len);
     }
-  } else if (len <= 64) {
+    return HashLen17to32(s, len);
+
+  } if (len <= 64) {
     return HashLen33to64(s, len);
   }
 
@@ -407,7 +410,7 @@ static uint128 CityMurmur(const char *s, size_t len, uint128 seed) {
   uint64 b = Uint128High64(seed);
   uint64 c = 0;
   uint64 d = 0;
-  signed long l = static_cast<signed long>(len - 16);
+  auto l = static_cast<signed long>(len - 16);
   if (l <= 0) { // len <= 16
     a = ShiftMix(a * k1) * k1;
     c = b * k1 + HashLen0to16(s, len);
@@ -439,7 +442,8 @@ uint128 CityHash128WithSeed(const char *s, size_t len, uint128 seed) {
 
   // We expect len >= 128 to be the common case.  Keep 56 bytes of state:
   // v, w, x, y, and z.
-  pair<uint64, uint64> v, w;
+  pair<uint64, uint64> v;
+  pair<uint64, uint64> w;
   uint64 x = Uint128Low64(seed);
   uint64 y = Uint128High64(seed);
   uint64 z = len * k1;
@@ -499,6 +503,4 @@ uint128 CityHash128(const char *s, size_t len) {
                    : CityHash128WithSeed(s, len, bela::MakeUint128(k0, k1));
 }
 
-} // namespace cityhash_v111
-} // namespace internal
-} // namespace bela
+} // namespace bela::internal::cityhash_v111

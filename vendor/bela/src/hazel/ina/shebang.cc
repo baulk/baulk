@@ -143,7 +143,7 @@ constexpr Language languages[] = {
     {L"zsh", L"Shell"},
 };
 
-const std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
+std::wstring_view LanguagesByInterpreter(const std::wstring_view ie) {
   int max = static_cast<int>(std::size(languages) - 1);
   int min = 0;
   while (min <= max) {

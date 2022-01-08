@@ -34,7 +34,7 @@ struct git_midx_header_t {
 };
 #pragma pack()
 // https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
-status_t explore_git_file(bela::bytes_view bv, hazel_result &hr) {
+status_t explore_git_file(const bela::bytes_view& bv, hazel_result &hr) {
   constexpr const uint8_t packMagic[] = {'P', 'A', 'C', 'K'};
   constexpr const uint8_t midxMagic[] = {'M', 'I', 'D', 'X'};
   constexpr const uint8_t indexMagic[] = {0xFF, 0x74, 0x4F, 0x63};

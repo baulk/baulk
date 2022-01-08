@@ -62,7 +62,7 @@ static inline std::wstring shl_fromascii(std::string_view sv) {
 
 class shl_memview {
 public:
-  shl_memview(const char *data__, size_t size__) : data_(data__), size_(size__) {
+  shl_memview(const char *data_, size_t size_) : data_(data_), size_(size_) {
     //
   }
   // --> perpare shl memview
@@ -83,17 +83,17 @@ public:
     return true;
   }
 
-  const char *data() const { return data_; }
-  size_t size() const { return size_; }
+  [[nodiscard]] const char *data() const { return data_; }
+  [[nodiscard]] size_t size() const { return size_; }
 
-  template <typename T> const T *cast(size_t off) const {
+  template <typename T> [[nodiscard]] const T *cast(size_t off) const {
     if (off + sizeof(T) >= size_) {
       return nullptr;
     }
     return reinterpret_cast<const T *>(data_ + off);
   }
 
-  uint32_t linkflags() const { return linkflags_; }
+  [[nodiscard]] uint32_t linkflags() const { return linkflags_; }
 
   bool stringdata(size_t pos, std::wstring &sd, size_t &sdlen) const {
     if (pos + 2 > size_) {
@@ -224,7 +224,7 @@ private:
 // This field can be present only if the value of the LinkInfoHeaderSize field
 // is greater than or equal to 0x00000024
 
-status_t LookupShellLink(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupShellLink(const bela::bytes_view &bv, hazel_result &hr) {
   shl_memview shm(reinterpret_cast<const char *>(bv.data()), bv.size());
   if (!shm.prepare()) {
     return None;

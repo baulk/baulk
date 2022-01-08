@@ -3,13 +3,13 @@
 
 namespace hazel::internal {
 
-inline bool IsEot(bela::bytes_view bv) {
+inline bool IsEot(const bela::bytes_view& bv) {
   return bv.size() > 35 && bv[34] == 0x4C && bv[35] == 0x50 &&
          ((bv[8] == 0x02 && bv[9] == 0x00 && bv[10] == 0x01) || (bv[8] == 0x01 && bv[9] == 0x00 && bv[10] == 0x00) ||
           (bv[8] == 0x02 && bv[9] == 0x00 && bv[10] == 0x02));
 }
 
-status_t LookupFonts(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupFonts(const bela::bytes_view& bv, hazel_result &hr) {
   switch (bv[0]) {
   case 0x00:
     if (bv.size() > 4 && bv[1] == 0x01 && bv[2] == 0x00 && bv[3] == 0x00 && bv[4] == 0x00) {

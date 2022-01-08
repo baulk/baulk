@@ -32,8 +32,7 @@
 // ---------------------------------------------------------------------------
 #include <bela/subsitute_narrow.hpp>
 
-namespace bela::narrow {
-namespace substitute_internal {
+namespace bela::narrow::substitute_internal {
 void SubstituteAndAppendArray(std::string *output, std::string_view format, const std::string_view *args_array,
                               size_t num_args) {
   size_t size = 0;
@@ -86,5 +85,4 @@ void SubstituteAndAppendArray(std::string *output, std::string_view format, cons
     }
   }
 }
-} // namespace substitute_internal
 } // namespace bela::narrow

@@ -11,7 +11,7 @@ struct image_offset_detect {
   types::hazel_types_t t;
 };
 
-status_t LookupNewImages(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupNewImages(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const image_offset_detect images[]{
       {8, "mif1", L"image/heif", L"HEIF Image", types::mif1},
       {8, "msf1", L"image/heif-sequence", L"HEIF Image Sequence", types::msf1},
@@ -55,7 +55,7 @@ status_t LookupNewImages(bela::bytes_view bv, hazel_result &hr) {
 // };
 // https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
 
-status_t LookupImages(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupImages(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const uint8_t icoMagic[] = {0x00, 0x00, 0x01, 0x00};
   constexpr const uint8_t jpegMagic[] = {0xFF, 0xD8, 0xFF};
   constexpr const uint8_t jpeg2000Magic[] = {0x0, 0x0, 0x0, 0xC, 0x6A, 0x50, 0x20, 0xD, 0xA, 0x87, 0xA, 0x0};

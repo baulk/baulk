@@ -158,30 +158,34 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
 
   if (i < 100) {
     digits = i;
-    if (i >= 10)
+    if (i >= 10) {
       goto lt100;
+}
     strings_internal::memcopy(buffer, one_ASCII_final_digits[i], 2);
     return buffer + 1;
   }
   if (i < 10000) { //    10,000
-    if (i >= 1000)
+    if (i >= 1000) {
       goto lt10_000;
+}
     digits = i / 100;
     i -= digits * 100;
     *buffer++ = static_cast<wchar_t>('0' + digits);
     goto lt100;
   }
   if (i < 1000000) { //    1,000,000
-    if (i >= 100000)
+    if (i >= 100000) {
       goto lt1_000_000;
+}
     digits = i / 10000; //    10,000
     i -= digits * 10000;
     *buffer++ = static_cast<wchar_t>('0' + digits);
     goto lt10_000;
   }
   if (i < 100000000) { //    100,000,000
-    if (i >= 10000000)
+    if (i >= 10000000) {
       goto lt100_000_000;
+}
     digits = i / 1000000; //   1,000,000
     i -= digits * 1000000;
     *buffer++ = static_cast<wchar_t>('0' + digits);
@@ -207,21 +211,22 @@ wchar_t *FastIntToBuffer(int32_t i, wchar_t *buffer) {
 }
 
 wchar_t *FastIntToBuffer(uint64_t i, wchar_t *buffer) {
-  uint32_t u32 = static_cast<uint32_t>(i);
-  if (u32 == i)
+  auto u32 = static_cast<uint32_t>(i);
+  if (u32 == i) {
     return FastIntToBuffer(u32, buffer);
+}
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
   u32 = static_cast<uint32_t>(i - top_1to11 * 1000000000);
-  uint32_t top_1to11_32 = static_cast<uint32_t>(top_1to11);
+  auto top_1to11_32 = static_cast<uint32_t>(top_1to11);
 
   if (top_1to11_32 == top_1to11) {
     buffer = FastIntToBuffer(top_1to11_32, buffer);
   } else {
     // top_1to11 has more than 32 bits too; print it in two steps.
-    uint32_t top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
-    uint32_t mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
+    auto top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
+    auto mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
     buffer = FastIntToBuffer(top_8to9, buffer);
     PutTwoDigits(mid_2, buffer);
     buffer += 2;
@@ -302,24 +307,27 @@ char *FastIntToBuffer(uint32_t i, char *buffer) {
     return buffer + 1;
   }
   if (i < 10000) { //    10,000
-    if (i >= 1000)
+    if (i >= 1000) {
       goto lt10_000;
+}
     digits = i / 100;
     i -= digits * 100;
     *buffer++ = static_cast<char>('0' + digits);
     goto lt100;
   }
   if (i < 1000000) { //    1,000,000
-    if (i >= 100000)
+    if (i >= 100000) {
       goto lt1_000_000;
+}
     digits = i / 10000; //    10,000
     i -= digits * 10000;
     *buffer++ = static_cast<char>('0' + digits);
     goto lt10_000;
   }
   if (i < 100000000) { //    100,000,000
-    if (i >= 10000000)
+    if (i >= 10000000) {
       goto lt100_000_000;
+}
     digits = i / 1000000; //   1,000,000
     i -= digits * 1000000;
     *buffer++ = static_cast<char>('0' + digits);
@@ -345,21 +353,22 @@ char *FastIntToBuffer(int32_t i, char *buffer) {
 }
 
 char *FastIntToBuffer(uint64_t i, char *buffer) {
-  uint32_t u32 = static_cast<uint32_t>(i);
-  if (u32 == i)
+  auto u32 = static_cast<uint32_t>(i);
+  if (u32 == i) {
     return FastIntToBuffer(u32, buffer);
+}
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
   u32 = static_cast<uint32_t>(i - top_1to11 * 1000000000);
-  uint32_t top_1to11_32 = static_cast<uint32_t>(top_1to11);
+  auto top_1to11_32 = static_cast<uint32_t>(top_1to11);
 
   if (top_1to11_32 == top_1to11) {
     buffer = FastIntToBuffer(top_1to11_32, buffer);
   } else {
     // top_1to11 has more than 32 bits too; print it in two steps.
-    uint32_t top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
-    uint32_t mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
+    auto top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
+    auto mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
     buffer = FastIntToBuffer(top_8to9, buffer);
     PutTwoDigits(mid_2, buffer);
     buffer += 2;
@@ -426,10 +435,11 @@ inline std::pair<uint64_t, uint64_t> Mul32(std::pair<uint64_t, uint64_t> num, ui
   // eventually:        [ bits128_up | ...bits64_127.... | ..bits0_63... ]
 
   uint64_t bits0_63 = bits0_31 + (bits32_63 << 32);
-  uint64_t bits64_127 = bits64_95 + (bits96_127 << 32) + (bits32_63 >> 32) + (bits0_63 < bits0_31);
-  uint64_t bits128_up = (bits96_127 >> 32) + (bits64_127 < bits64_95);
-  if (bits128_up == 0)
+  uint64_t bits64_127 = bits64_95 + (bits96_127 << 32) + (bits32_63 >> 32) + static_cast<unsigned long long>(bits0_63 < bits0_31);
+  uint64_t bits128_up = (bits96_127 >> 32) + static_cast<unsigned long long>(bits64_127 < bits64_95);
+  if (bits128_up == 0) {
     return {bits64_127, bits0_63};
+}
 
   int shift = 64 - std::countl_zero(bits128_up);
   uint64_t lo = (bits0_63 >> shift) + (bits64_127 << (64 - shift));
@@ -573,7 +583,7 @@ inline ExpDigits SplitToSix(const double value) {
   // Since we'd like to know if the fractional part of d is close to a half,
   // we multiply it by 65536 and see if the fractional part is close to 32768.
   // (The number doesn't have to be a power of two,but powers of two are faster)
-  uint64_t d64k = static_cast<uint64_t>(d * 65536);
+  auto d64k = static_cast<uint64_t>(d * 65536);
   int dddddd; // A 6-digit decimal integer.
   if ((d64k % 65536) == 32767 || (d64k % 65536) == 32768) {
     // OK, it's fairly likely that precision was lost above, which is
@@ -587,7 +597,7 @@ inline ExpDigits SplitToSix(const double value) {
     // value we're representing, of course, is M.mmm... * 2^exp2.
     int exp2;
     double m = std::frexp(value, &exp2);
-    uint64_t mantissa = static_cast<uint64_t>(m * (32768.0 * 65536.0 * 65536.0 * 65536.0));
+    auto mantissa = static_cast<uint64_t>(m * (32768.0 * 65536.0 * 65536.0 * 65536.0));
     // std::frexp returns an m value in the range [0.5, 1.0), however we
     // can't multiply it by 2^64 and convert to an integer because some FPUs
     // throw an exception when converting an number higher than 2^63 into an
@@ -605,7 +615,8 @@ inline ExpDigits SplitToSix(const double value) {
     // the math since the 2^exp2 calculation is unnecessary and the power-of-10
     // calculation can become a power-of-5 instead.
 
-    std::pair<uint64_t, uint64_t> edge, val;
+    std::pair<uint64_t, uint64_t> edge;
+    std::pair<uint64_t, uint64_t> val;
     if (exp >= 6) {
       // Compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa
       // Since we're tossing powers of two, 2 * dddddd + 1 is the
@@ -756,7 +767,7 @@ inline ExpDigitsA SplitToSixA(const double value) {
   // Since we'd like to know if the fractional part of d is close to a half,
   // we multiply it by 65536 and see if the fractional part is close to 32768.
   // (The number doesn't have to be a power of two,but powers of two are faster)
-  uint64_t d64k = static_cast<uint64_t>(d * 65536);
+  auto d64k = static_cast<uint64_t>(d * 65536);
   int dddddd; // A 6-digit decimal integer.
   if ((d64k % 65536) == 32767 || (d64k % 65536) == 32768) {
     // OK, it's fairly likely that precision was lost above, which is
@@ -770,7 +781,7 @@ inline ExpDigitsA SplitToSixA(const double value) {
     // value we're representing, of course, is M.mmm... * 2^exp2.
     int exp2;
     double m = std::frexp(value, &exp2);
-    uint64_t mantissa = static_cast<uint64_t>(m * (32768.0 * 65536.0 * 65536.0 * 65536.0));
+    auto mantissa = static_cast<uint64_t>(m * (32768.0 * 65536.0 * 65536.0 * 65536.0));
     // std::frexp returns an m value in the range [0.5, 1.0), however we
     // can't multiply it by 2^64 and convert to an integer because some FPUs
     // throw an exception when converting an number higher than 2^63 into an
@@ -788,7 +799,8 @@ inline ExpDigitsA SplitToSixA(const double value) {
     // the math since the 2^exp2 calculation is unnecessary and the power-of-10
     // calculation can become a power-of-5 instead.
 
-    std::pair<uint64_t, uint64_t> edge, val;
+    std::pair<uint64_t, uint64_t> edge;
+    std::pair<uint64_t, uint64_t> val;
     if (exp >= 6) {
       // Compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa
       // Since we're tossing powers of two, 2 * dddddd + 1 is the
@@ -848,8 +860,9 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     return 3;
   }
   if (d == 0) { // +0 and -0 are handled here
-    if (std::signbit(d))
+    if (std::signbit(d)) {
       *out++ = '-';
+}
     *out++ = '0';
     *out = 0;
     return out - buffer;
@@ -886,8 +899,9 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     if ((digits[5] | digits[4]) != '0') {
       *out++ = '.';
       *out++ = digits[4];
-      if (digits[5] != '0')
+      if (digits[5] != '0') {
         *out++ = digits[5];
+}
     }
     *out = 0;
     return out - buffer;
@@ -896,10 +910,12 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out++ = '.';
     strings_internal::memcopy(out, &digits[3], 3);
     out += 3;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case 1:
@@ -907,10 +923,12 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out++ = '.';
     strings_internal::memcopy(out, &digits[2], 4);
     out += 4;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case 0:
@@ -918,10 +936,12 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out++ = '.';
     strings_internal::memcopy(out, &digits[1], 5);
     out += 5;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case -4:
@@ -940,18 +960,21 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     out += 2;
     strings_internal::memcopy(out, &digits[0], 6);
     out += 6;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
+}
     *out = 0;
     return out - buffer;
   }
   out[0] = digits[0];
   out += 2;
   strings_internal::memcopy(out, &digits[1], 5), out += 5;
-  while (out[-1] == '0')
+  while (out[-1] == '0') {
     --out;
-  if (out[-1] == '.')
+}
+  if (out[-1] == '.') {
     --out;
+}
   *out++ = 'e';
   if (exp > 0) {
     *out++ = '+';
@@ -984,8 +1007,9 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     return 3;
   }
   if (d == 0) { // +0 and -0 are handled here
-    if (std::signbit(d))
+    if (std::signbit(d)) {
       *out++ = '-';
+}
     *out++ = '0';
     *out = 0;
     return out - buffer;
@@ -1022,8 +1046,9 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     if ((digits[5] | digits[4]) != '0') {
       *out++ = '.';
       *out++ = digits[4];
-      if (digits[5] != '0')
+      if (digits[5] != '0') {
         *out++ = digits[5];
+}
     }
     *out = 0;
     return out - buffer;
@@ -1032,10 +1057,12 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     *out++ = '.';
     memcpy(out, &digits[3], 3);
     out += 3;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case 1:
@@ -1043,10 +1070,12 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     *out++ = '.';
     memcpy(out, &digits[2], 4);
     out += 4;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case 0:
@@ -1054,10 +1083,12 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     *out++ = '.';
     memcpy(out, &digits[1], 5);
     out += 5;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
-    if (out[-1] == '.')
+}
+    if (out[-1] == '.') {
       --out;
+}
     *out = 0;
     return out - buffer;
   case -4:
@@ -1076,18 +1107,21 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     out += 2;
     memcpy(out, &digits[0], 6);
     out += 6;
-    while (out[-1] == '0')
+    while (out[-1] == '0') {
       --out;
+}
     *out = 0;
     return out - buffer;
   }
   out[0] = digits[0];
   out += 2;
   memcpy(out, &digits[1], 5), out += 5;
-  while (out[-1] == '0')
+  while (out[-1] == '0') {
     --out;
-  if (out[-1] == '.')
+}
+  if (out[-1] == '.') {
     --out;
+}
   *out++ = 'e';
   if (exp > 0) {
     *out++ = '+';
@@ -1314,41 +1348,41 @@ template <>
 const uint128 LookupTables<uint128>::kVmaxOverBase[] = {
     0,
     0,
-    MakeUint128(9223372036854775807u, 18446744073709551615u),
-    MakeUint128(6148914691236517205u, 6148914691236517205u),
-    MakeUint128(4611686018427387903u, 18446744073709551615u),
-    MakeUint128(3689348814741910323u, 3689348814741910323u),
-    MakeUint128(3074457345618258602u, 12297829382473034410u),
-    MakeUint128(2635249153387078802u, 5270498306774157604u),
-    MakeUint128(2305843009213693951u, 18446744073709551615u),
-    MakeUint128(2049638230412172401u, 14347467612885206812u),
-    MakeUint128(1844674407370955161u, 11068046444225730969u),
-    MakeUint128(1676976733973595601u, 8384883669867978007u),
-    MakeUint128(1537228672809129301u, 6148914691236517205u),
-    MakeUint128(1418980313362273201u, 4256940940086819603u),
-    MakeUint128(1317624576693539401u, 2635249153387078802u),
-    MakeUint128(1229782938247303441u, 1229782938247303441u),
-    MakeUint128(1152921504606846975u, 18446744073709551615u),
-    MakeUint128(1085102592571150095u, 1085102592571150095u),
-    MakeUint128(1024819115206086200u, 16397105843297379214u),
-    MakeUint128(970881267037344821u, 16504981539634861972u),
-    MakeUint128(922337203685477580u, 14757395258967641292u),
-    MakeUint128(878416384462359600u, 14054662151397753612u),
-    MakeUint128(838488366986797800u, 13415813871788764811u),
-    MakeUint128(802032351030850070u, 4812194106185100421u),
-    MakeUint128(768614336404564650u, 12297829382473034410u),
-    MakeUint128(737869762948382064u, 11805916207174113034u),
-    MakeUint128(709490156681136600u, 11351842506898185609u),
-    MakeUint128(683212743470724133u, 17080318586768103348u),
-    MakeUint128(658812288346769700u, 10540996613548315209u),
-    MakeUint128(636094623231363848u, 15266270957552732371u),
-    MakeUint128(614891469123651720u, 9838263505978427528u),
-    MakeUint128(595056260442243600u, 9520900167075897608u),
-    MakeUint128(576460752303423487u, 18446744073709551615u),
-    MakeUint128(558992244657865200u, 8943875914525843207u),
-    MakeUint128(542551296285575047u, 9765923333140350855u),
-    MakeUint128(527049830677415760u, 8432797290838652167u),
-    MakeUint128(512409557603043100u, 8198552921648689607u),
+    MakeUint128(9223372036854775807U, 18446744073709551615U),
+    MakeUint128(6148914691236517205U, 6148914691236517205U),
+    MakeUint128(4611686018427387903U, 18446744073709551615U),
+    MakeUint128(3689348814741910323U, 3689348814741910323U),
+    MakeUint128(3074457345618258602U, 12297829382473034410U),
+    MakeUint128(2635249153387078802U, 5270498306774157604U),
+    MakeUint128(2305843009213693951U, 18446744073709551615U),
+    MakeUint128(2049638230412172401U, 14347467612885206812U),
+    MakeUint128(1844674407370955161U, 11068046444225730969U),
+    MakeUint128(1676976733973595601U, 8384883669867978007U),
+    MakeUint128(1537228672809129301U, 6148914691236517205U),
+    MakeUint128(1418980313362273201U, 4256940940086819603U),
+    MakeUint128(1317624576693539401U, 2635249153387078802U),
+    MakeUint128(1229782938247303441U, 1229782938247303441U),
+    MakeUint128(1152921504606846975U, 18446744073709551615U),
+    MakeUint128(1085102592571150095U, 1085102592571150095U),
+    MakeUint128(1024819115206086200U, 16397105843297379214U),
+    MakeUint128(970881267037344821U, 16504981539634861972U),
+    MakeUint128(922337203685477580U, 14757395258967641292U),
+    MakeUint128(878416384462359600U, 14054662151397753612U),
+    MakeUint128(838488366986797800U, 13415813871788764811U),
+    MakeUint128(802032351030850070U, 4812194106185100421U),
+    MakeUint128(768614336404564650U, 12297829382473034410U),
+    MakeUint128(737869762948382064U, 11805916207174113034U),
+    MakeUint128(709490156681136600U, 11351842506898185609U),
+    MakeUint128(683212743470724133U, 17080318586768103348U),
+    MakeUint128(658812288346769700U, 10540996613548315209U),
+    MakeUint128(636094623231363848U, 15266270957552732371U),
+    MakeUint128(614891469123651720U, 9838263505978427528U),
+    MakeUint128(595056260442243600U, 9520900167075897608U),
+    MakeUint128(576460752303423487U, 18446744073709551615U),
+    MakeUint128(558992244657865200U, 8943875914525843207U),
+    MakeUint128(542551296285575047U, 9765923333140350855U),
+    MakeUint128(527049830677415760U, 8432797290838652167U),
+    MakeUint128(512409557603043100U, 8198552921648689607U),
 };
 
 // This kVmaxOverBase generated with
@@ -1366,41 +1400,41 @@ template <>
 const int128 LookupTables<int128>::kVmaxOverBase[] = {
     0,
     0,
-    MakeInt128(4611686018427387903, 18446744073709551615u),
-    MakeInt128(3074457345618258602, 12297829382473034410u),
-    MakeInt128(2305843009213693951, 18446744073709551615u),
-    MakeInt128(1844674407370955161, 11068046444225730969u),
-    MakeInt128(1537228672809129301, 6148914691236517205u),
-    MakeInt128(1317624576693539401, 2635249153387078802u),
-    MakeInt128(1152921504606846975, 18446744073709551615u),
-    MakeInt128(1024819115206086200, 16397105843297379214u),
-    MakeInt128(922337203685477580, 14757395258967641292u),
-    MakeInt128(838488366986797800, 13415813871788764811u),
-    MakeInt128(768614336404564650, 12297829382473034410u),
-    MakeInt128(709490156681136600, 11351842506898185609u),
-    MakeInt128(658812288346769700, 10540996613548315209u),
-    MakeInt128(614891469123651720, 9838263505978427528u),
-    MakeInt128(576460752303423487, 18446744073709551615u),
-    MakeInt128(542551296285575047, 9765923333140350855u),
-    MakeInt128(512409557603043100, 8198552921648689607u),
-    MakeInt128(485440633518672410, 17475862806672206794u),
-    MakeInt128(461168601842738790, 7378697629483820646u),
-    MakeInt128(439208192231179800, 7027331075698876806u),
-    MakeInt128(419244183493398900, 6707906935894382405u),
-    MakeInt128(401016175515425035, 2406097053092550210u),
-    MakeInt128(384307168202282325, 6148914691236517205u),
-    MakeInt128(368934881474191032, 5902958103587056517u),
-    MakeInt128(354745078340568300, 5675921253449092804u),
-    MakeInt128(341606371735362066, 17763531330238827482u),
-    MakeInt128(329406144173384850, 5270498306774157604u),
-    MakeInt128(318047311615681924, 7633135478776366185u),
-    MakeInt128(307445734561825860, 4919131752989213764u),
-    MakeInt128(297528130221121800, 4760450083537948804u),
-    MakeInt128(288230376151711743, 18446744073709551615u),
-    MakeInt128(279496122328932600, 4471937957262921603u),
-    MakeInt128(271275648142787523, 14106333703424951235u),
-    MakeInt128(263524915338707880, 4216398645419326083u),
-    MakeInt128(256204778801521550, 4099276460824344803u),
+    MakeInt128(4611686018427387903, 18446744073709551615U),
+    MakeInt128(3074457345618258602, 12297829382473034410U),
+    MakeInt128(2305843009213693951, 18446744073709551615U),
+    MakeInt128(1844674407370955161, 11068046444225730969U),
+    MakeInt128(1537228672809129301, 6148914691236517205U),
+    MakeInt128(1317624576693539401, 2635249153387078802U),
+    MakeInt128(1152921504606846975, 18446744073709551615U),
+    MakeInt128(1024819115206086200, 16397105843297379214U),
+    MakeInt128(922337203685477580, 14757395258967641292U),
+    MakeInt128(838488366986797800, 13415813871788764811U),
+    MakeInt128(768614336404564650, 12297829382473034410U),
+    MakeInt128(709490156681136600, 11351842506898185609U),
+    MakeInt128(658812288346769700, 10540996613548315209U),
+    MakeInt128(614891469123651720, 9838263505978427528U),
+    MakeInt128(576460752303423487, 18446744073709551615U),
+    MakeInt128(542551296285575047, 9765923333140350855U),
+    MakeInt128(512409557603043100, 8198552921648689607U),
+    MakeInt128(485440633518672410, 17475862806672206794U),
+    MakeInt128(461168601842738790, 7378697629483820646U),
+    MakeInt128(439208192231179800, 7027331075698876806U),
+    MakeInt128(419244183493398900, 6707906935894382405U),
+    MakeInt128(401016175515425035, 2406097053092550210U),
+    MakeInt128(384307168202282325, 6148914691236517205U),
+    MakeInt128(368934881474191032, 5902958103587056517U),
+    MakeInt128(354745078340568300, 5675921253449092804U),
+    MakeInt128(341606371735362066, 17763531330238827482U),
+    MakeInt128(329406144173384850, 5270498306774157604U),
+    MakeInt128(318047311615681924, 7633135478776366185U),
+    MakeInt128(307445734561825860, 4919131752989213764U),
+    MakeInt128(297528130221121800, 4760450083537948804U),
+    MakeInt128(288230376151711743, 18446744073709551615U),
+    MakeInt128(279496122328932600, 4471937957262921603U),
+    MakeInt128(271275648142787523, 14106333703424951235U),
+    MakeInt128(263524915338707880, 4216398645419326083U),
+    MakeInt128(256204778801521550, 4099276460824344803U),
 };
 
 // This kVminOverBase generated with
@@ -1419,41 +1453,41 @@ template <>
 const int128 LookupTables<int128>::kVminOverBase[] = {
     0,
     0,
-    MakeInt128(-4611686018427387904, 0u),
-    MakeInt128(-3074457345618258603, 6148914691236517206u),
-    MakeInt128(-2305843009213693952, 0u),
-    MakeInt128(-1844674407370955162, 7378697629483820647u),
-    MakeInt128(-1537228672809129302, 12297829382473034411u),
-    MakeInt128(-1317624576693539402, 15811494920322472814u),
-    MakeInt128(-1152921504606846976, 0u),
-    MakeInt128(-1024819115206086201, 2049638230412172402u),
-    MakeInt128(-922337203685477581, 3689348814741910324u),
-    MakeInt128(-838488366986797801, 5030930201920786805u),
-    MakeInt128(-768614336404564651, 6148914691236517206u),
-    MakeInt128(-709490156681136601, 7094901566811366007u),
-    MakeInt128(-658812288346769701, 7905747460161236407u),
-    MakeInt128(-614891469123651721, 8608480567731124088u),
-    MakeInt128(-576460752303423488, 0u),
-    MakeInt128(-542551296285575048, 8680820740569200761u),
-    MakeInt128(-512409557603043101, 10248191152060862009u),
-    MakeInt128(-485440633518672411, 970881267037344822u),
-    MakeInt128(-461168601842738791, 11068046444225730970u),
-    MakeInt128(-439208192231179801, 11419412998010674810u),
-    MakeInt128(-419244183493398901, 11738837137815169211u),
-    MakeInt128(-401016175515425036, 16040647020617001406u),
-    MakeInt128(-384307168202282326, 12297829382473034411u),
-    MakeInt128(-368934881474191033, 12543785970122495099u),
-    MakeInt128(-354745078340568301, 12770822820260458812u),
-    MakeInt128(-341606371735362067, 683212743470724134u),
-    MakeInt128(-329406144173384851, 13176245766935394012u),
-    MakeInt128(-318047311615681925, 10813608594933185431u),
-    MakeInt128(-307445734561825861, 13527612320720337852u),
-    MakeInt128(-297528130221121801, 13686293990171602812u),
-    MakeInt128(-288230376151711744, 0u),
-    MakeInt128(-279496122328932601, 13974806116446630013u),
-    MakeInt128(-271275648142787524, 4340410370284600381u),
-    MakeInt128(-263524915338707881, 14230345428290225533u),
-    MakeInt128(-256204778801521551, 14347467612885206813u),
+    MakeInt128(-4611686018427387904, 0U),
+    MakeInt128(-3074457345618258603, 6148914691236517206U),
+    MakeInt128(-2305843009213693952, 0U),
+    MakeInt128(-1844674407370955162, 7378697629483820647U),
+    MakeInt128(-1537228672809129302, 12297829382473034411U),
+    MakeInt128(-1317624576693539402, 15811494920322472814U),
+    MakeInt128(-1152921504606846976, 0U),
+    MakeInt128(-1024819115206086201, 2049638230412172402U),
+    MakeInt128(-922337203685477581, 3689348814741910324U),
+    MakeInt128(-838488366986797801, 5030930201920786805U),
+    MakeInt128(-768614336404564651, 6148914691236517206U),
+    MakeInt128(-709490156681136601, 7094901566811366007U),
+    MakeInt128(-658812288346769701, 7905747460161236407U),
+    MakeInt128(-614891469123651721, 8608480567731124088U),
+    MakeInt128(-576460752303423488, 0U),
+    MakeInt128(-542551296285575048, 8680820740569200761U),
+    MakeInt128(-512409557603043101, 10248191152060862009U),
+    MakeInt128(-485440633518672411, 970881267037344822U),
+    MakeInt128(-461168601842738791, 11068046444225730970U),
+    MakeInt128(-439208192231179801, 11419412998010674810U),
+    MakeInt128(-419244183493398901, 11738837137815169211U),
+    MakeInt128(-401016175515425036, 16040647020617001406U),
+    MakeInt128(-384307168202282326, 12297829382473034411U),
+    MakeInt128(-368934881474191033, 12543785970122495099U),
+    MakeInt128(-354745078340568301, 12770822820260458812U),
+    MakeInt128(-341606371735362067, 683212743470724134U),
+    MakeInt128(-329406144173384851, 13176245766935394012U),
+    MakeInt128(-318047311615681925, 10813608594933185431U),
+    MakeInt128(-307445734561825861, 13527612320720337852U),
+    MakeInt128(-297528130221121801, 13686293990171602812U),
+    MakeInt128(-288230376151711744, 0U),
+    MakeInt128(-279496122328932601, 13974806116446630013U),
+    MakeInt128(-271275648142787524, 4340410370284600381U),
+    MakeInt128(-263524915338707881, 14230345428290225533U),
+    MakeInt128(-256204778801521551, 14347467612885206813U),
 };
 
 template <typename IntType>
@@ -1475,7 +1509,7 @@ template <typename IntType> inline bool safe_parse_positive_int(std::wstring_vie
   const wchar_t *end = start + text.size();
   // loop over digits
   for (; start < end; ++start) {
-    unsigned char c = static_cast<unsigned char>(start[0]);
+    auto c = static_cast<unsigned char>(start[0]);
     int digit = kAsciiToInt[c];
     if (digit >= base) {
       *value_p = value;
@@ -1514,7 +1548,7 @@ template <typename IntType> inline bool safe_parse_negative_int(std::wstring_vie
   const wchar_t *end = start + text.size();
   // loop over digits
   for (; start < end; ++start) {
-    unsigned char c = static_cast<unsigned char>(start[0]);
+    auto c = static_cast<unsigned char>(start[0]);
     int digit = kAsciiToInt[c];
     if (digit >= base) {
       *value_p = value;
@@ -1545,9 +1579,8 @@ template <typename IntType> inline bool safe_int_internal(std::wstring_view text
   }
   if (!negative) {
     return safe_parse_positive_int(text, base, value_p);
-  } else {
-    return safe_parse_negative_int(text, base, value_p);
-  }
+  }     return safe_parse_negative_int(text, base, value_p);
+ 
 }
 
 template <typename IntType> inline bool safe_uint_internal(std::wstring_view text, IntType *value_p, int base) {
@@ -1593,7 +1626,7 @@ template <typename IntType> inline bool safe_parse_positive_int(std::string_view
   const char *end = start + text.size();
   // loop over digits
   for (; start < end; ++start) {
-    unsigned char c = static_cast<unsigned char>(start[0]);
+    auto c = static_cast<unsigned char>(start[0]);
     int digit = kAsciiToInt[c];
     if (digit >= base) {
       *value_p = value;
@@ -1632,7 +1665,7 @@ template <typename IntType> inline bool safe_parse_negative_int(std::string_view
   const char *end = start + text.size();
   // loop over digits
   for (; start < end; ++start) {
-    unsigned char c = static_cast<unsigned char>(start[0]);
+    auto c = static_cast<unsigned char>(start[0]);
     int digit = kAsciiToInt[c];
     if (digit >= base) {
       *value_p = value;
@@ -1663,9 +1696,8 @@ template <typename IntType> inline bool safe_int_internal(std::string_view text,
   }
   if (!negative) {
     return safe_parse_positive_int(text, base, value_p);
-  } else {
-    return safe_parse_negative_int(text, base, value_p);
-  }
+  }     return safe_parse_negative_int(text, base, value_p);
+ 
 }
 
 template <typename IntType> inline bool safe_uint_internal(std::string_view text, IntType *value_p, int base) {

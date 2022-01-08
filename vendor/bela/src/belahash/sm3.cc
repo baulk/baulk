@@ -47,10 +47,26 @@ void Hasher::Initialize() {
 }
 
 static void sm3_process_block(Hasher *ctx, const uint8_t data[64]) {
-  uint32_t SS1, SS2, TT1, TT2, W[68], W1[64];
-  uint32_t A, B, C, D, E, F, G, H;
+  uint32_t SS1;
+  uint32_t SS2;
+  uint32_t TT1;
+  uint32_t TT2;
+  uint32_t W[68];
+  uint32_t W1[64];
+  uint32_t A;
+  uint32_t B;
+  uint32_t C;
+  uint32_t D;
+  uint32_t E;
+  uint32_t F;
+  uint32_t G;
+  uint32_t H;
   uint32_t T[64];
-  uint32_t T1, T2, T3, T4, T5;
+  uint32_t T1;
+  uint32_t T2;
+  uint32_t T3;
+  uint32_t T4;
+  uint32_t T5;
   int j;
 
   for (j = 0; j < 16; j++) {
@@ -169,7 +185,7 @@ void Hasher::Update(const void *input, size_t input_len) {
     Nh++;
   }
 
-  if (left && static_cast<int32_t>(input_len) >= fill) {
+  if ((left != 0U) && static_cast<int32_t>(input_len) >= fill) {
     memcpy(block + left, input, fill);
     sm3_process_block(this, block);
     data += fill;

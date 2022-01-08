@@ -440,7 +440,7 @@ std::chrono::minutes ToChronoMinutes(Duration d);
 std::chrono::hours ToChronoHours(Duration d);
 
 std::wstring FormatDuration(Duration d);
-bool ParseDuration(std::wstring_view dur_string, Duration *d);
+bool ParseDuration(std::wstring_view dur_sv, Duration *d);
 
 class Time {
 public:

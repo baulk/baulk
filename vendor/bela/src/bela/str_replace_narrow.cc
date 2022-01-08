@@ -56,13 +56,13 @@ int ApplySubstitutions(std::string_view s, std::vector<strings_internal::ViableS
       substitutions += 1;
     }
     sub.offset = s.find(sub.old, pos);
-    if (sub.offset == s.npos) {
+    if (sub.offset == std::string_view::npos) {
       subs.pop_back();
     } else {
       // Insertion sort to ensure the last ViableSubstitution continues to be
       // before all the others.
       size_t index = subs.size();
-      while (--index && subs[index - 1].OccursBefore(subs[index])) {
+      while ((--index != 0U) && subs[index - 1].OccursBefore(subs[index])) {
         std::swap(subs[index], subs[index - 1]);
       }
     }
@@ -88,4 +88,4 @@ std::string StrReplaceAll(std::string_view s, strings_internal::FixedMapping rep
 int StrReplaceAll(strings_internal::FixedMapping replacements, std::string *target) {
   return StrReplaceAll<strings_internal::FixedMapping>(replacements, target);
 }
-} // namespace bela
+} // namespace bela::narrow

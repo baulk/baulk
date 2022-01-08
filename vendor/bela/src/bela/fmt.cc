@@ -1,6 +1,6 @@
 //////
 #include <cstring>
-#include <wchar.h>
+#include <cwchar>
 #include <algorithm>
 #include <vector>
 #include <cmath>

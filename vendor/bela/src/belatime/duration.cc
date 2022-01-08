@@ -229,14 +229,16 @@ template <template <typename> class Operation> inline Duration ScaleDouble(Durat
   double lo_frac = std::modf(lo_doub, &lo_int);
 
   // Rolls lo into hi if necessary.
-  int64_t lo64 = static_cast<int64_t>(std::round(lo_frac * kTicksPerSecond));
+  auto lo64 = static_cast<int64_t>(std::round(lo_frac * kTicksPerSecond));
 
   Duration ans;
-  if (!SafeAddRepHi(hi_int, lo_int, &ans))
+  if (!SafeAddRepHi(hi_int, lo_int, &ans)) {
     return ans;
+  }
   int64_t hi64 = time_internal::GetRepHi(ans);
-  if (!SafeAddRepHi(static_cast<double>(hi64), static_cast<double>(lo64 / kTicksPerSecond), &ans))
+  if (!SafeAddRepHi(static_cast<double>(hi64), static_cast<double>(lo64 / kTicksPerSecond), &ans)) {
     return ans;
+  }
   hi64 = time_internal::GetRepHi(ans);
   lo64 %= kTicksPerSecond;
   NormalizeTicks(&hi64, &lo64);
@@ -248,8 +250,9 @@ template <template <typename> class Operation> inline Duration ScaleDouble(Durat
 // in *rem and true will be returned.
 inline bool IDivFastPath(const Duration num, const Duration den, int64_t *q, Duration *rem) {
   // Bail if num or den is an infinity.
-  if (time_internal::IsInfiniteDuration(num) || time_internal::IsInfiniteDuration(den))
+  if (time_internal::IsInfiniteDuration(num) || time_internal::IsInfiniteDuration(den)) {
     return false;
+  }
 
   int64_t num_hi = time_internal::GetRepHi(num);
   uint32_t num_lo = time_internal::GetRepLo(num);
@@ -373,10 +376,12 @@ int64_t IDivDuration(bool satq, const Duration num, const Duration den, Duration
 //
 
 Duration &Duration::operator+=(Duration rhs) {
-  if (time_internal::IsInfiniteDuration(*this))
+  if (time_internal::IsInfiniteDuration(*this)) {
     return *this;
-  if (time_internal::IsInfiniteDuration(rhs))
+  }
+  if (time_internal::IsInfiniteDuration(rhs)) {
     return *this = rhs;
+  }
   const int64_t orig_rep_hi = rep_hi_;
   rep_hi_ = DecodeTwosComp(EncodeTwosComp(rep_hi_) + EncodeTwosComp(rhs.rep_hi_));
   if (rep_lo_ >= kTicksPerSecond - rhs.rep_lo_) {
@@ -391,8 +396,9 @@ Duration &Duration::operator+=(Duration rhs) {
 }
 
 Duration &Duration::operator-=(Duration rhs) {
-  if (time_internal::IsInfiniteDuration(*this))
+  if (time_internal::IsInfiniteDuration(*this)) {
     return *this;
+  }
   if (time_internal::IsInfiniteDuration(rhs)) {
     return *this = rhs.rep_hi_ >= 0 ? -InfiniteDuration() : InfiniteDuration();
   }
@@ -423,7 +429,7 @@ Duration &Duration::operator*=(int64_t r) {
 
 Duration &Duration::operator*=(double r) {
   if (time_internal::IsInfiniteDuration(*this) || !IsFinite(r)) {
-    const bool is_neg = (std::signbit(r) != 0) != (rep_hi_ < 0);
+    const bool is_neg = (static_cast<int>(std::signbit(r)) != 0) != (rep_hi_ < 0);
     return *this = is_neg ? -InfiniteDuration() : InfiniteDuration();
   }
   return *this = ScaleDouble<std::multiplies>(*this, r);
@@ -439,7 +445,7 @@ Duration &Duration::operator/=(int64_t r) {
 
 Duration &Duration::operator/=(double r) {
   if (time_internal::IsInfiniteDuration(*this) || !IsValidDivisor(r)) {
-    const bool is_neg = (std::signbit(r) != 0) != (rep_hi_ < 0);
+    const bool is_neg = (static_cast<int>(std::signbit(r)) != 0) != (rep_hi_ < 0);
     return *this = is_neg ? -InfiniteDuration() : InfiniteDuration();
   }
   return *this = ScaleDouble<std::divides>(*this, r);
@@ -644,7 +650,7 @@ wchar_t *Format64(wchar_t *ep, int width, int64_t v) {
   do {
     --width;
     *--ep = L'0' + (v % 10); // contiguous digits
-  } while (v /= 10);
+  } while ((v /= 10) != 0);
   while (--width >= 0) {
     *--ep = L'0'; // zero pad
   }
@@ -695,8 +701,8 @@ void AppendNumberUnit(std::wstring *out, double n, DisplayUnit unit) {
   wchar_t buf[kBufferSize]; // also large enough to hold integer part
   wchar_t *ep = buf + kBufferSize;
   double d = 0;
-  int64_t frac_part = static_cast<int64_t>(std::round(std::modf(n, &d) * unit.pow10));
-  int64_t int_part = static_cast<int64_t>(d);
+  auto frac_part = static_cast<int64_t>(std::round(std::modf(n, &d) * unit.pow10));
+  auto int_part = static_cast<int64_t>(d);
   if (int_part != 0 || frac_part != 0) {
     wchar_t *bp = Format64(ep, 0, int_part); // always < 1000
     out->append(bp, ep - bp);
@@ -871,8 +877,9 @@ bool ParseDuration(std::wstring_view dur_sv, Duration *d) {
   } else {
     bela::ConsumePrefix(&dur_sv, L"+");
   }
-  if (dur_sv.empty())
+  if (dur_sv.empty()) {
     return false;
+  }
 
   // Special case for a string of "0".
   if (dur_sv == L"0") {
@@ -898,10 +905,12 @@ bool ParseDuration(std::wstring_view dur_sv, Duration *d) {
         !ConsumeDurationUnit(&start, end, &unit)) {
       return false;
     }
-    if (int_part != 0)
+    if (int_part != 0) {
       dur += sign * int_part * unit;
-    if (frac_part != 0)
+    }
+    if (frac_part != 0) {
       dur += sign * frac_part * unit / frac_scale;
+    }
   }
   *d = dur;
   return true;

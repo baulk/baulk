@@ -76,10 +76,10 @@ static inline uint32_t updatestate(uint32_t *state, uint32_t byte) {
 }
 
 bool validate_utf8(const char *c, size_t len) {
-  const unsigned char *cu = (const unsigned char *)c;
+  const auto *cu = (const unsigned char *)c;
   uint32_t state = 0;
   for (size_t i = 0; i < len; i++) {
-    uint32_t byteval = (uint32_t)cu[i];
+    auto byteval = (uint32_t)cu[i];
     if (updatestate(&state, byteval) == UTF8_REJECT) {
       return false;
     }
@@ -94,7 +94,7 @@ FE FF	UTF-16, big-endian
 FF FE	UTF-16, little-endian
 EF BB BF	UTF-8
 */
-status_t lookup_text(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_text(const bela::bytes_view &bv, hazel_result &hr) {
   //
   switch (bv[0]) {
   case 0x2B:
@@ -140,7 +140,7 @@ status_t lookup_text(bela::bytes_view bv, hazel_result &hr) {
 }
 
 //////// --------------> use chardet
-status_t lookup_chardet(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_chardet(const bela::bytes_view &bv, hazel_result &hr) {
   if (hr.ZeroExists()) {
     hr.assign(types::none, L"Binary data");
     return Found;
@@ -149,7 +149,7 @@ status_t lookup_chardet(bela::bytes_view bv, hazel_result &hr) {
   return Found;
 }
 
-status_t LookupText(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupText(const bela::bytes_view &bv, hazel_result &hr) {
   if (lookup_text(bv, hr) != Found) {
     lookup_chardet(bv, hr);
   }

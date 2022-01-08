@@ -115,7 +115,7 @@ static bool DecodeAppTargetLink(const REPARSE_DATA_BUFFER *p, FileReparsePoint &
                                p->AppExecLinkReparseBuffer.StringCount);
     return false;
   }
-  LPWSTR szString = (LPWSTR)p->AppExecLinkReparseBuffer.StringList;
+  auto szString = (LPWSTR)p->AppExecLinkReparseBuffer.StringList;
   /// push_back
   const std::wstring_view attrnames[] = {L"PackageID", L"AppUserID", L"Target"};
   for (ULONG i = 0; i < p->AppExecLinkReparseBuffer.StringCount; i++) {

@@ -45,7 +45,7 @@ bool FatFile::parseFile(bela::error_code &ec) {
                                static_cast<int>(ident[3]), L"']");
     return false;
   }
-  auto offset = 4ll;
+  auto offset = 4LL;
   uint32_t narch{0};
   if (!fd.ReadFull(narch, ec)) {
     return false;

@@ -33,7 +33,7 @@ bool FD::ReadAt(std::span<uint8_t> buffer, int64_t pos, int64_t &outlen, bela::e
 }
 
 bool FD::ReadFull(std::span<uint8_t> buffer, bela::error_code &ec) const {
-  if (buffer.size() == 0) {
+  if (buffer.empty()) {
     return true;
   }
   // auto bytes=std::as_writable_bytes(buffer);

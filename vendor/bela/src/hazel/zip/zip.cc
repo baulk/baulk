@@ -134,8 +134,8 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
 }
 using bufioReader = bela::bufio::Reader<4096>;
 
-constexpr uint32_t SizeMin = 0xFFFFFFFFu;
-constexpr uint64_t OffsetMin = 0xFFFFFFFFull;
+constexpr uint32_t SizeMin = 0xFFFFFFFFU;
+constexpr uint64_t OffsetMin = 0xFFFFFFFFULL;
 
 // Thanks github.com\klauspost\compress@v1.11.3\zip\reader.go
 

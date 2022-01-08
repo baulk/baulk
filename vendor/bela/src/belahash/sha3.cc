@@ -129,7 +129,8 @@ static void keccak_pi(uint64_t *A) {
 
 /* Keccak chi() transformation */
 static void keccak_chi(uint64_t *A) {
-  uint64_t A0, A1;
+  uint64_t A0;
+  uint64_t A1;
   CHI_STEP(0);
   CHI_STEP(5);
   CHI_STEP(10);
@@ -138,7 +139,7 @@ static void keccak_chi(uint64_t *A) {
 }
 
 static void sha3_permutation(uint64_t *state) {
-  for (int round = 0; round < NumberOfRounds; round++) {
+  for (unsigned long long keccak_round_constant : keccak_round_constants) {
     keccak_theta(state);
 
     /* apply Keccak rho() transformation */
@@ -171,7 +172,7 @@ static void sha3_permutation(uint64_t *state) {
     keccak_chi(state);
 
     /* apply iota(state, round) */
-    *state ^= keccak_round_constants[round];
+    *state ^= keccak_round_constant;
   }
 }
 
@@ -231,14 +232,14 @@ static void sha3_process_block(uint64_t hash[25], const uint64_t *block, size_t 
 
 void Hasher::Update(const void *input, size_t input_len) {
   auto msg = reinterpret_cast<const uint8_t *>(input);
-  size_t index = (size_t)rest;
+  auto index = (size_t)rest;
   if ((rest & SHA3_FINALIZED) != 0) {
     return; /* too late for additional input */
   }
   rest = (uint32_t)((rest + input_len) % block_size);
 
   /* fill partial block */
-  if (index) {
+  if (index != 0U) {
     size_t left = block_size - index;
     memcpy((char *)message + index, msg, (input_len < left ? input_len : left));
     if (input_len < left) {
@@ -271,7 +272,7 @@ void Hasher::Update(const void *input, size_t input_len) {
 }
 void Hasher::Finalize(uint8_t *out, size_t out_len) {
   size_t digest_length = 100 - block_size / 2;
-  if (!(rest & SHA3_FINALIZED)) {
+  if ((rest & SHA3_FINALIZED) == 0U) {
     /* clear the rest of the data queue */
     memset((char *)message + rest, 0, block_size - rest);
     ((char *)message)[rest] |= 0x06;

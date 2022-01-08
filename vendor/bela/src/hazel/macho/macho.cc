@@ -221,7 +221,7 @@ bool File::parseFile(bela::error_code &ec) {
   }
   std::string_view dat{reinterpret_cast<const char *>(buffer.data()), fh.Cmdsz};
   loads.resize(fh.Ncmd);
-  for (size_t i = 0; i < loads.size(); i++) {
+  for (auto & load : loads) {
     if (dat.size() < 8) {
       ec = bela::make_error_code(L"command block too small");
       return false;
@@ -235,7 +235,7 @@ bool File::parseFile(bela::error_code &ec) {
     auto cmddat = dat.substr(0, siz);
     dat.remove_prefix(siz);
     offset += siz;
-    loads[i].Cmd = cmd;
+    load.Cmd = cmd;
     switch (cmd) {
     case LoadCmdRpath: {
       if (cmddat.size() < 12) {
@@ -250,8 +250,8 @@ bool File::parseFile(bela::error_code &ec) {
         ec = bela::make_error_code(L"invalid path in rpath command");
         return false;
       }
-      loads[i].Path = new std::string(bela::cstring_view(cmddat.substr(hdr.Path)));
-      loads[i].bytes = cmddat;
+      load.Path = new std::string(bela::cstring_view(cmddat.substr(hdr.Path)));
+      load.bytes = cmddat;
     } break;
     case LoadCmdDylib: {
       if (cmddat.size() < sizeof(DylibCmd)) {
@@ -264,12 +264,12 @@ bool File::parseFile(bela::error_code &ec) {
         ec = bela::make_error_code(L"invalid name in dynamic library command");
         return false;
       }
-      loads[i].bytes = cmddat;
-      loads[i].DyLib = new hazel::macho::DyLib();
-      loads[i].DyLib->Name = bela::cstring_view(cmddat.substr(NameLen));
-      loads[i].DyLib->Time = endian_cast(p->Time);
-      loads[i].DyLib->CurrentVersion = endian_cast(p->CurrentVersion);
-      loads[i].DyLib->CompatVersion = endian_cast(p->CompatVersion);
+      load.bytes = cmddat;
+      load.DyLib = new hazel::macho::DyLib();
+      load.DyLib->Name = bela::cstring_view(cmddat.substr(NameLen));
+      load.DyLib->Time = endian_cast(p->Time);
+      load.DyLib->CurrentVersion = endian_cast(p->CurrentVersion);
+      load.DyLib->CompatVersion = endian_cast(p->CompatVersion);
     } break;
     case LoadCmdSymtab: {
       if (cmddat.size() < sizeof(SymtabCmd)) {
@@ -343,8 +343,8 @@ bool File::parseFile(bela::error_code &ec) {
         return false;
       }
       auto p = reinterpret_cast<const Segment32 *>(cmddat.data());
-      loads[i].Segment = new hazel::macho::Segment();
-      auto s = loads[i].Segment;
+      load.Segment = new hazel::macho::Segment();
+      auto s = load.Segment;
       s->Bytes = cmddat;
       s->Cmd = cmd;
       s->Len = siz;
@@ -387,8 +387,8 @@ bool File::parseFile(bela::error_code &ec) {
         return false;
       }
       auto p = reinterpret_cast<const Segment64 *>(cmddat.data());
-      loads[i].Segment = new hazel::macho::Segment();
-      auto s = loads[i].Segment;
+      load.Segment = new hazel::macho::Segment();
+      auto s = load.Segment;
       s->Bytes = cmddat;
       s->Cmd = cmd;
       s->Len = siz;
@@ -426,13 +426,13 @@ bool File::parseFile(bela::error_code &ec) {
       }
     } break;
     default:
-      loads[i].bytes = cmddat;
+      load.bytes = cmddat;
       break;
     }
   }
   return true;
 }
-bool File::Depends(std::vector<std::string> &libs, bela::error_code &) {
+bool File::Depends(std::vector<std::string> &libs, bela::error_code & /*unused*/) {
   for (const auto &l : loads) {
     if (l.Cmd == LoadCmdDylib && l.DyLib != nullptr) {
       libs.emplace_back(l.DyLib->Name);

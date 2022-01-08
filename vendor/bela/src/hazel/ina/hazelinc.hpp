@@ -10,14 +10,14 @@ typedef enum hazel_status_e : int {
   Found, ///
   Break
 } status_t;
-status_t LookupExecutableFile(bela::bytes_view bv, hazel::hazel_result &hr);
-status_t LookupArchives(bela::bytes_view bv, hazel::hazel_result &hr);
-status_t LookupDocs(bela::bytes_view bv, hazel_result &hr);
-status_t LookupFonts(bela::bytes_view bv, hazel_result &hr);
-status_t LookupShellLink(bela::bytes_view bv, hazel_result &hr);
-status_t LookupMedia(bela::bytes_view bv, hazel_result &hr);
-status_t LookupImages(bela::bytes_view bv, hazel_result &hr);
-status_t LookupText(bela::bytes_view bv, hazel_result &hr);
+status_t LookupExecutableFile(const bela::bytes_view &bv, hazel::hazel_result &hr);
+status_t LookupArchives(const bela::bytes_view &bv, hazel::hazel_result &hr);
+status_t LookupDocs(const bela::bytes_view &bv, hazel_result &hr);
+status_t LookupFonts(const bela::bytes_view &bv, hazel_result &hr);
+status_t LookupShellLink(const bela::bytes_view &bv, hazel_result &hr);
+status_t LookupMedia(const bela::bytes_view &bv, hazel_result &hr);
+status_t LookupImages(const bela::bytes_view &bv, hazel_result &hr);
+status_t LookupText(const bela::bytes_view &bv, hazel_result &hr);
 bool LookupShebang(const std::wstring_view line, hazel_result &hr);
 } // namespace hazel::internal
 

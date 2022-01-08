@@ -9,7 +9,7 @@ namespace hazel::internal {
 // RTF format
 // https://en.wikipedia.org/wiki/Rich_Text_Format
 /*{\rtf1*/
-status_t lookup_rtfinternal(bela::bytes_view bv, hazel_result &hr) {
+status_t lookup_rtfinternal(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr uint8_t rtfMagic[] = {0x7B, 0x5C, 0x72, 0x74, 0x66};
   if (!bv.starts_bytes_with(rtfMagic) || bv.size() < 6) {
     return None;
@@ -29,7 +29,7 @@ status_t lookup_rtfinternal(bela::bytes_view bv, hazel_result &hr) {
 // http://www.openoffice.org/sc/compdocfileformat.pdf
 // https://interoperability.blob.core.windows.net/files/MS-PPT/[MS-PPT].pdf
 
-status_t LookupDocs(bela::bytes_view bv, hazel_result &hr) {
+status_t LookupDocs(const bela::bytes_view &bv, hazel_result &hr) {
   constexpr const uint8_t msoleMagic[] = {0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1};
   if (lookup_rtfinternal(bv, hr) == Found) {
     return Found;

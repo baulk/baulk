@@ -7,9 +7,9 @@
 
 namespace hazel {
 
-typedef hazel::internal::status_t (*lookup_handle_t)(bela::bytes_view bv, hazel_result &hr);
+using lookup_handle_t = hazel::internal::status_t (*)(const bela::bytes_view &, hazel_result &);
 
-bool LookupBytes(bela::bytes_view bv, hazel_result &hr, bela::error_code &) {
+bool LookupBytes(const bela::bytes_view &bv, hazel_result &hr, bela::error_code & /*unused*/) {
   if (auto p = memchr(bv.data(), 0, bv.size()); p != nullptr) {
     hr.zeroPosition = static_cast<int64_t>(reinterpret_cast<const uint8_t *>(p) - bv.data());
   }
@@ -41,7 +41,7 @@ bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, 
     return false;
   }
   uint8_t buffer[4096];
-  auto minSize = (std::min)(hr.size_ - offset, 4096ll);
+  auto minSize = (std::min)(hr.size_ - offset, 4096LL);
   if (!fd.ReadAt({buffer, static_cast<size_t>(minSize)}, offset, ec)) {
     return false;
   }

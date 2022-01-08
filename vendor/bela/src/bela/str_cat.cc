@@ -68,8 +68,9 @@ AlphaNum::AlphaNum(Dec dec) {
     value /= 10;
   }
   *--writer = static_cast<wchar_t>('0' + value);
-  if (neg)
+  if (neg) {
     *--writer = '-';
+  }
 
   ptrdiff_t fillers = writer - minfill;
   if (fillers > 0) {
@@ -82,8 +83,9 @@ AlphaNum::AlphaNum(Dec dec) {
     }
     writer -= fillers;
     std::fill_n(writer, fillers, dec.fill);
-    if (add_sign_again)
+    if (add_sign_again) {
       *--writer = '-';
+    }
   }
 
   piece_ = std::wstring_view(writer, end - writer);
@@ -148,8 +150,9 @@ namespace strings_internal {
 std::wstring CatPieces(std::initializer_list<std::wstring_view> pieces) {
   std::wstring result;
   size_t total_size = 0;
-  for (const std::wstring_view piece : pieces)
+  for (const std::wstring_view piece : pieces) {
     total_size += piece.size();
+  }
   result.resize(total_size);
 
   wchar_t *const begin = &result[0];

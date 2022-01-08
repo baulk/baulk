@@ -1,9 +1,7 @@
 ////
 #include <bela/unicode.hpp>
 
-namespace bela {
-namespace unicode {
-namespace details {
+namespace bela::unicode::details {
 LookupTables const smTables = {
     //- Initialize the maFirstUnitTable member array.  This array implements a
     // lookup table that
@@ -382,6 +380,4 @@ char const *smStateNames[9] = {
     "BGN", "ERR", "CS1", "CS2", "CS3", "P3A", "P3B", "P4A", "P4B",
 };
 
-} // namespace details
-} // namespace unicode
 } // namespace bela
