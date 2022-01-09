@@ -27,7 +27,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"unscrew - Baulk modern extraction commands"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"unscrew.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"unscrew.exe"
 VALUE "ProductName", L"unscrew - Baulk modern extraction commands"
 VALUE "ProductVersion", BAULK_VERSION

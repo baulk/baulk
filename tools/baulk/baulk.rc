@@ -25,7 +25,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk - Minimal Package Manager for Windows"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulk.exe"
 VALUE "ProductName", L"baulk - Minimal Package Manager for Windows"
 VALUE "ProductVersion", BAULK_VERSION

@@ -24,7 +24,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk-winlnk - Baulk extended launcher (GUI)"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-winlnk.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulk-winlnk.exe"
 VALUE "ProductName", L"baulk-winlnk - Baulk extended launcher (GUI)"
 VALUE "ProductVersion", BAULK_VERSION

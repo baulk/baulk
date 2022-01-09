@@ -63,8 +63,8 @@
 #define BAULK_APPVERSION L"Version: 0.1.0\nCopyright \xA9 2022, Baulk contributors."
 #endif
 
-#ifndef BAULKUI_COPYRIGHT
-#define BAULKUI_COPYRIGHT L"Copyright \xA9 2022, Baulk contributors."
+#ifndef BAULK_COPYRIGHT
+#define BAULK_COPYRIGHT L"Copyright \xA9 2022, Baulk contributors."
 #endif
 
 #endif

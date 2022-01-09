@@ -31,7 +31,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk-dock - Baulk environment dock"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-dock.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulk-dock.exe"
 VALUE "ProductName", L"baulk-dock - Baulk environment dock"
 VALUE "ProductVersion", BAULK_VERSION

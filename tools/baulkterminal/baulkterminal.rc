@@ -26,7 +26,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulkterminal - Baulk Windows Terminal Launcher"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulkterminal.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulkterminal.exe"
 VALUE "ProductName", L"baulkterminal - Baulk Windows Terminal Launcher"
 VALUE "ProductVersion", BAULK_VERSION

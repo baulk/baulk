@@ -24,7 +24,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk-update - Baulk Self Update Utility"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-update.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulk-update.exe"
 VALUE "ProductName", L"baulk - Minimal Package Manager for Windows"
 VALUE "ProductVersion", BAULK_VERSION

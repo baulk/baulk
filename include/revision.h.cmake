@@ -28,6 +28,6 @@
   L"Version: ${BAULK_VERSION_MAJOR}.${BAULK_VERSION_MINOR}.${BAULK_VERSION_PATCH}\nCopyright "     \
   L"\xA9 ${BAULK_COPYRIGHT_YEAR}, Baulk contributors."
 
-#define BAULKUI_COPYRIGHT L"Copyright \xA9 ${BAULK_COPYRIGHT_YEAR}, Baulk contributors."
+#define BAULK_COPYRIGHT L"Copyright \xA9 ${BAULK_COPYRIGHT_YEAR}, Baulk contributors."
 
 #endif

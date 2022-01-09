@@ -24,7 +24,7 @@ VALUE "CompanyName", L"Baulk contributors"
 VALUE "FileDescription", L"baulk-migrate - Baulk easy migration tool"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-migrate.exe"
-VALUE "LegalCopyright", BAULKUI_COPYRIGHT
+VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", L"baulk-migrate.exe"
 VALUE "ProductName", L"baulk-migrate - Baulk easy migration tool"
 VALUE "ProductVersion", BAULK_VERSION
