@@ -1,4 +1,7 @@
 ///
+#ifndef LZMA_API_STATIC
+#define LZMA_API_STATIC 1
+#endif
 #include "zipinternal.hpp"
 #include <lzma.h>
 
