@@ -4,7 +4,7 @@
 #include <baulk/fs.hpp>
 
 namespace baulk::fs {
-std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir) {
+std::optional<std::wstring> findSingleChildPath(std::wstring_view dir) {
   bela::fs::Finder finder;
   bela::error_code ec;
   if (!finder.First(dir, L"*", ec)) {
@@ -83,13 +83,13 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
 }
 
 bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec) {
-  auto subfirst = UniqueSubdirectory(dir);
+  auto subfirst = findSingleChildPath(dir);
   if (!subfirst) {
     return true;
   }
   std::wstring currentdir = *subfirst;
   for (int i = 0; i < 10; i++) {
-    auto subdir_ = UniqueSubdirectory(currentdir);
+    auto subdir_ = findSingleChildPath(currentdir);
     if (!subdir_) {
       break;
     }
