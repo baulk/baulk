@@ -101,7 +101,7 @@ constexpr bool is_zip_magic(const uint8_t *buf, size_t size) {
 bool is_msi_archive(bela::bytes_view bv) {
   constexpr const uint8_t msoleMagic[] = {0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1};
   constexpr const auto olesize = sizeof(oleheader_t);
-  if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 513) {
+  if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 520) {
     return false;
   }
   if (bv[512] == 0xEC && bv[513] == 0xA5) {

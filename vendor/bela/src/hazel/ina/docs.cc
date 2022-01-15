@@ -35,7 +35,7 @@ status_t LookupDocs(const bela::bytes_view &bv, hazel_result &hr) {
     return Found;
   }
   constexpr const auto olesize = sizeof(oleheader_t);
-  if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 513) {
+  if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 520) {
     return None;
   }
   if (bv[512] == 0xEC && bv[513] == 0xA5) {
