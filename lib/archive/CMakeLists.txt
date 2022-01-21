@@ -65,7 +65,7 @@ target_include_directories(
           liblzma/lzma
           liblzma/rangecoder
           liblzma/simple)
-target_compile_definitions(lzma PRIVATE -DLZMA_API_STATIC)
+target_compile_definitions(lzma PRIVATE LZMA_API_STATIC)
 
 # ppmd
 add_subdirectory(ppmd)
@@ -81,7 +81,7 @@ file(
 
 add_library(zstd STATIC ${ZSTD_SOURCES})
 
-target_compile_definitions(zstd PRIVATE XXH_PRIVATE_API ZSTD_MULTITHREAD)
+target_compile_definitions(zstd PRIVATE XXH_PRIVATE_API ZSTD_MULTITHREAD ZSTD_DISABLE_ASM)
 target_include_directories(zstd PRIVATE zstd zstd/common)
 
 file(
