@@ -103,28 +103,28 @@ inline bool ZipExtractor::extractDir(const zip::File &file, std::wstring_view di
 }
 
 inline bool ZipExtractor::extractFile(const zip::File &file, bela::error_code &ec) {
-  auto dest = baulk::archive::JoinSanitizePath(destination, file.name, file.IsFileNameUTF8());
-  if (!dest) {
+  auto out = baulk::archive::JoinSanitizePath(destination, file.name, file.IsFileNameUTF8());
+  if (!out) {
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
-  auto showName = std::wstring_view(dest->data() + destsize, dest->size() - destsize);
+  auto showName = std::wstring_view(out->data() + destsize, out->size() - destsize);
   if (termsz.columns != 0) {
     showProgress(showName);
   }
   if (file.IsSymlink()) {
-    return extractSymlink(file, *dest, ec);
+    return extractSymlink(file, *out, ec);
   }
   if (file.IsDir()) {
-    return extractDir(file, *dest, ec);
+    return extractDir(file, *out, ec);
   }
-  auto fd = baulk::archive::File::NewFile(*dest, owfile, ec);
+  auto fd = baulk::archive::File::NewFile(*out, owfile, ec);
   if (!fd) {
-    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec);
+    bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *out, ec);
     return false;
   }
   if (!fd->Chtimes(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec);
+    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *out, ec);
     return false;
   }
   bela::error_code writeEc;
@@ -136,7 +136,7 @@ inline bool ZipExtractor::extractFile(const zip::File &file, bela::error_code &e
       },
       ec);
   if (!ret) {
-    bela::FPrintF(stderr, L"unable decompress %s error: %s (%s)\n", *dest, ec, writeEc);
+    bela::FPrintF(stderr, L"unable decompress %s error: %s (%s)\n", *out, ec, writeEc);
     return false;
   }
   return true;

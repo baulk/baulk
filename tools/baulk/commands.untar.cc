@@ -21,7 +21,7 @@ int cmd_untar(const argv_t &argv) {
     usage_untar();
     return 1;
   }
-  auto tarfile = bela::PathAbsolute(argv[0]);
+  auto tarfile = argv[0];
   auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(tarfile);
   bela::error_code ec;
   if (!baulk::extract_tar(tarfile, dest, ec)) {

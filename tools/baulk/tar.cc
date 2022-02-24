@@ -70,6 +70,7 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
       }
     }
   }
+  auto destination = bela::PathAbsolute(dest);
   auto tr = std::make_shared<baulk::archive::tar::Reader>(reader);
   for (;;) {
     auto fh = tr->Next(ec);
@@ -80,7 +81,7 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
       break;
     }
     showProgress(termsz, fh->Name);
-    auto out = baulk::archive::JoinSanitizePath(dest, fh->Name);
+    auto out = baulk::archive::JoinSanitizePath(destination, fh->Name);
     if (!out) {
       continue;
     }
