@@ -120,8 +120,22 @@ bool PathFs::NewFsPaths(bela::error_code &ec) {
       return false;
     }
   }
-  std::filesystem::create_directories(table.appLinks, e);
-  std::filesystem::create_directories(table.temp, e);
+  const std::filesystem::path paths[] = {
+      // Paths
+      table.etc,      // etc
+      table.appData,  // appdata
+      table.vfs,      // vfs
+      table.packages, // packages
+      table.temp,     // temp
+      table.locks,    // locks
+      table.buckets,  // buckets
+      table.appLinks, // local/bin
+  };
+  for (const auto &p : paths) {
+    if (!std::filesystem::exists(p, e)) {
+      (void)std::filesystem::create_directories(p, e);
+    }
+  }
   return true;
 }
 

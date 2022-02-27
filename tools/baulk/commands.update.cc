@@ -170,13 +170,7 @@ int UpdateBucket(bool showUpdatable) {
   return 0;
 }
 
-void delay_create_directories() {
-  std::error_code e;
-  std::filesystem::path bucketPath(vfs::AppBuckets());
-}
-
 int cmd_update(const argv_t & /*unused argv*/) {
-  delay_create_directories();
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {

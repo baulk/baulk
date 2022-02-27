@@ -2,11 +2,12 @@
     "bucket": [
         {
             "description": "Baulk official bucket",
+            "mode": 1,
             "name": "baulk",
-            "url": "https://github.com/baulk/bucket",
+            "url": "git@github.com:baulk/bucket.git",
             "weights": 100
         }
     ],
-    "freeze": [],
-    "channel": "insider"
+    "channel": "insider",
+    "freeze": []
 }
