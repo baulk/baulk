@@ -318,6 +318,7 @@ enum {
   EM_BPF = 247,           // Linux kernel bpf virtual machine
   EM_VE = 251,            // NEC SX-Aurora VE
   EM_CSKY = 252,          // C-SKY 32-bit processor
+  EM_LOONGARCH = 258,     // LoongArch
 };
 
 // Object file classes.
@@ -371,6 +372,8 @@ enum {
   // was never defined for V1.
   ELFABIVERSION_AMDGPU_HSA_V2 = 0,
   ELFABIVERSION_AMDGPU_HSA_V3 = 1,
+  ELFABIVERSION_AMDGPU_HSA_V4 = 2,
+  ELFABIVERSION_AMDGPU_HSA_V5 = 3
 };
 
 #define ELF_RELOC(name, value) name = value,
@@ -485,7 +488,12 @@ enum : unsigned {
   EF_AVR_ARCH_XMEGA4 = 104,
   EF_AVR_ARCH_XMEGA5 = 105,
   EF_AVR_ARCH_XMEGA6 = 106,
-  EF_AVR_ARCH_XMEGA7 = 107
+  EF_AVR_ARCH_XMEGA7 = 107,
+
+  EF_AVR_ARCH_MASK = 0x7f, // EF_AVR_ARCH_xxx selection mask
+
+  EF_AVR_LINKRELAX_PREPARED = 0x80, // The file is prepared for linker
+                                    // relaxation to be applied
 };
 
 // ELF Relocation types for AVR
@@ -599,6 +607,9 @@ enum {
   EF_HEXAGON_MACH_V66 = 0x00000066,  // Hexagon V66
   EF_HEXAGON_MACH_V67 = 0x00000067,  // Hexagon V67
   EF_HEXAGON_MACH_V67T = 0x00008067, // Hexagon V67T
+  EF_HEXAGON_MACH_V68 = 0x00000068,  // Hexagon V68
+  EF_HEXAGON_MACH_V69 = 0x00000069,  // Hexagon V69
+  EF_HEXAGON_MACH = 0x000003ff,      // Hexagon V..
 
   // Highest ISA version flags
   EF_HEXAGON_ISA_MACH = 0x00000000, // Same as specified in bits[11:0]
@@ -613,6 +624,9 @@ enum {
   EF_HEXAGON_ISA_V65 = 0x00000065,  // Hexagon V65 ISA
   EF_HEXAGON_ISA_V66 = 0x00000066,  // Hexagon V66 ISA
   EF_HEXAGON_ISA_V67 = 0x00000067,  // Hexagon V67 ISA
+  EF_HEXAGON_ISA_V68 = 0x00000068,  // Hexagon V68 ISA
+  EF_HEXAGON_ISA_V69 = 0x00000069,  // Hexagon V69 ISA
+  EF_HEXAGON_ISA = 0x000003ff,      // Hexagon V.. ISA
 };
 
 // Hexagon-specific section indexes for common small data
@@ -642,12 +656,19 @@ enum : unsigned {
   EF_RISCV_FLOAT_ABI_SINGLE = 0x0002,
   EF_RISCV_FLOAT_ABI_DOUBLE = 0x0004,
   EF_RISCV_FLOAT_ABI_QUAD = 0x0006,
-  EF_RISCV_RVE = 0x0008
+  EF_RISCV_RVE = 0x0008,
+  EF_RISCV_TSO = 0x0010,
 };
 
 // ELF Relocation types for RISC-V
 enum {
 #include "ELFRelocs/RISCV.def"
+};
+
+enum {
+  // Symbol may follow different calling convention than the standard calling
+  // convention.
+  STO_RISCV_VARIANT_CC = 0x80
 };
 
 // ELF Relocation types for S390/zSeries
@@ -729,17 +750,67 @@ enum : unsigned {
   EF_AMDGPU_MACH_AMDGCN_GFX602        = 0x03a,
   EF_AMDGPU_MACH_AMDGCN_GFX705        = 0x03b,
   EF_AMDGPU_MACH_AMDGCN_GFX805        = 0x03c,
+  EF_AMDGPU_MACH_AMDGCN_GFX1035       = 0x03d,
+  EF_AMDGPU_MACH_AMDGCN_GFX1034       = 0x03e,
+  EF_AMDGPU_MACH_AMDGCN_GFX90A        = 0x03f,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X40 = 0x040,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X41 = 0x041,
+  EF_AMDGPU_MACH_AMDGCN_GFX1013       = 0x042,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X43 = 0x043,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X44 = 0x044,
+  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X45 = 0x045,
 
   // First/last AMDGCN-based processors.
   EF_AMDGPU_MACH_AMDGCN_FIRST = EF_AMDGPU_MACH_AMDGCN_GFX600,
-  EF_AMDGPU_MACH_AMDGCN_LAST = EF_AMDGPU_MACH_AMDGCN_GFX805,
+  EF_AMDGPU_MACH_AMDGCN_LAST = EF_AMDGPU_MACH_AMDGCN_RESERVED_0X45,
 
   // Indicates if the "xnack" target feature is enabled for all code contained
   // in the object.
-  EF_AMDGPU_XNACK = 0x100,
-  // Indicates if the "sram-ecc" target feature is enabled for all code
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V2.
+  EF_AMDGPU_FEATURE_XNACK_V2 = 0x01,
+  // Indicates if the trap handler is enabled for all code contained
+  // in the object.
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V2.
+  EF_AMDGPU_FEATURE_TRAP_HANDLER_V2 = 0x02,
+
+  // Indicates if the "xnack" target feature is enabled for all code contained
+  // in the object.
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V3.
+  EF_AMDGPU_FEATURE_XNACK_V3 = 0x100,
+  // Indicates if the "sramecc" target feature is enabled for all code
   // contained in the object.
-  EF_AMDGPU_SRAM_ECC = 0x200,
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V3.
+  EF_AMDGPU_FEATURE_SRAMECC_V3 = 0x200,
+
+  // XNACK selection mask for EF_AMDGPU_FEATURE_XNACK_* values.
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V4.
+  EF_AMDGPU_FEATURE_XNACK_V4 = 0x300,
+  // XNACK is not supported.
+  EF_AMDGPU_FEATURE_XNACK_UNSUPPORTED_V4 = 0x000,
+  // XNACK is any/default/unspecified.
+  EF_AMDGPU_FEATURE_XNACK_ANY_V4 = 0x100,
+  // XNACK is off.
+  EF_AMDGPU_FEATURE_XNACK_OFF_V4 = 0x200,
+  // XNACK is on.
+  EF_AMDGPU_FEATURE_XNACK_ON_V4 = 0x300,
+
+  // SRAMECC selection mask for EF_AMDGPU_FEATURE_SRAMECC_* values.
+  //
+  // Only valid for ELFOSABI_AMDGPU_HSA and ELFABIVERSION_AMDGPU_HSA_V4.
+  EF_AMDGPU_FEATURE_SRAMECC_V4 = 0xc00,
+  // SRAMECC is not supported.
+  EF_AMDGPU_FEATURE_SRAMECC_UNSUPPORTED_V4 = 0x000,
+  // SRAMECC is any/default/unspecified.
+  EF_AMDGPU_FEATURE_SRAMECC_ANY_V4 = 0x400,
+  // SRAMECC is off.
+  EF_AMDGPU_FEATURE_SRAMECC_OFF_V4 = 0x800,
+  // SRAMECC is on.
+  EF_AMDGPU_FEATURE_SRAMECC_ON_V4 = 0xc00,
 };
 
 // ELF Relocation types for AMDGPU
@@ -756,7 +827,6 @@ enum {
 enum {
 #include "ELFRelocs/M68k.def"
 };
-
 
 // MSP430 specific e_flags
 enum : unsigned {
@@ -799,6 +869,11 @@ enum {
 // ELF Relocation types for CSKY
 enum {
 #include "ELFRelocs/CSKY.def"
+};
+
+// ELF Relocation types for LoongArch
+enum {
+#include "ELFRelocs/LoongArch.def"
 };
 
 #undef ELF_RELOC
@@ -872,17 +947,17 @@ enum : unsigned {
   // https://android.googlesource.com/platform/bionic/+/6f12bfece5dcc01325e0abba56a46b1bcf991c69/tools/relocation_packer/src/elf_file.cc#37
   SHT_ANDROID_REL = 0x60000001,
   SHT_ANDROID_RELA = 0x60000002,
-  SHT_LLVM_ODRTAB = 0x6fff4c00,             // LLVM ODR table.
-  SHT_LLVM_LINKER_OPTIONS = 0x6fff4c01,     // LLVM Linker Options.
-  SHT_LLVM_CALL_GRAPH_PROFILE = 0x6fff4c02, // LLVM Call Graph Profile.
-  SHT_LLVM_ADDRSIG = 0x6fff4c03, // List of address-significant symbols
-                                 // for safe ICF.
+  SHT_LLVM_ODRTAB = 0x6fff4c00,         // LLVM ODR table.
+  SHT_LLVM_LINKER_OPTIONS = 0x6fff4c01, // LLVM Linker Options.
+  SHT_LLVM_ADDRSIG = 0x6fff4c03,        // List of address-significant symbols
+                                        // for safe ICF.
   SHT_LLVM_DEPENDENT_LIBRARIES =
       0x6fff4c04,                    // LLVM Dependent Library Specifiers.
   SHT_LLVM_SYMPART = 0x6fff4c05,     // Symbol partition specification.
   SHT_LLVM_PART_EHDR = 0x6fff4c06,   // ELF header for loadable partition.
   SHT_LLVM_PART_PHDR = 0x6fff4c07,   // Phdrs for loadable partition.
   SHT_LLVM_BB_ADDR_MAP = 0x6fff4c08, // LLVM Basic Block Address Map.
+  SHT_LLVM_CALL_GRAPH_PROFILE = 0x6fff4c09, // LLVM Call Graph Profile.
   // Android's experimental support for SHT_RELR sections.
   // https://android.googlesource.com/platform/bionic/+/b7feec74547f84559a1467aca02708ff61346d2a/libc/include/elf.h#512
   SHT_ANDROID_RELR = 0x6fffff00,   // Relocation entries; only offsets.
@@ -956,12 +1031,18 @@ enum : unsigned {
   // Identifies a section containing compressed data.
   SHF_COMPRESSED = 0x800U,
 
+  // This section should not be garbage collected by the linker.
+  SHF_GNU_RETAIN = 0x200000,
+
   // This section is excluded from the final executable or shared library.
   SHF_EXCLUDE = 0x80000000U,
 
   // Start of target-specific flags.
 
   SHF_MASKOS = 0x0ff00000,
+
+  // Solaris equivalent of SHF_GNU_RETAIN.
+  SHF_SUNW_NODISCARD = 0x00100000,
 
   // Bits indicating processor-specific flags.
   SHF_MASKPROC = 0xf0000000,
@@ -1287,153 +1368,9 @@ struct Elf64_Dyn {
 
 // Dynamic table entry tags.
 enum {
-// #define DYNAMIC_TAG(name, value) DT_##name = value,
-// #include "DynamicTags.def"
-// #undef DYNAMIC_TAG
-  DT_NULL = 0,             /* Terminating entry. */
-  DT_NEEDED = 1,           /* String table offset of a needed shared library. */
-  DT_PLTRELSZ = 2,         /* Total size in bytes of PLT relocations. */
-  DT_PLTGOT = 3,           /* Processor-dependent address. */
-  DT_HASH = 4,             /* Address of symbol hash table. */
-  DT_STRTAB = 5,           /* Address of string table. */
-  DT_SYMTAB = 6,           /* Address of symbol table. */
-  DT_RELA = 7,             /* Address of ElfNN_Rela relocations. */
-  DT_RELASZ = 8,           /* Total size of ElfNN_Rela relocations. */
-  DT_RELAENT = 9,          /* Size of each ElfNN_Rela relocation entry. */
-  DT_STRSZ = 10,           /* Size of string table. */
-  DT_SYMENT = 11,          /* Size of each symbol table entry. */
-  DT_INIT = 12,            /* Address of initialization function. */
-  DT_FINI = 13,            /* Address of finalization function. */
-  DT_SONAME = 14,          /* String table offset of shared object name. */
-  DT_RPATH = 15,           /* String table offset of library path. [sup] */
-  DT_SYMBOLIC = 16,        /* Indicates "symbolic" linking. [sup] */
-  DT_REL = 17,             /* Address of ElfNN_Rel relocations. */
-  DT_RELSZ = 18,           /* Total size of ElfNN_Rel relocations. */
-  DT_RELENT = 19,          /* Size of each ElfNN_Rel relocation. */
-  DT_PLTREL = 20,          /* Type of relocation used for PLT. */
-  DT_DEBUG = 21,           /* Reserved (not used). */
-  DT_TEXTREL = 22,         /* Indicates there may be relocations in non-writable segments. [sup] */
-  DT_JMPREL = 23,          /* Address of PLT relocations. */
-  DT_BIND_NOW = 24,        /* [sup] */
-  DT_INIT_ARRAY = 25,      /* Address of the array of pointers to initialization functions */
-  DT_FINI_ARRAY = 26,      /* Address of the array of pointers to termination functions */
-  DT_INIT_ARRAYSZ = 27,    /* Size in bytes of the array of initialization functions. */
-  DT_FINI_ARRAYSZ = 28,    /* Size in bytes of the array of termination functions. */
-  DT_RUNPATH = 29,         /* String table offset of a null-terminated library search path string. */
-  DT_FLAGS = 30,           /* Object specific flag values. */
-  DT_ENCODING = 32,        /* Values greater than or equal to DT_ENCODING
-        and less than DT_LOOS follow the rules for
-        the interpretation of the d_un union
-        as follows: even == 'd_ptr', even == 'd_val'
-        or none */
-  DT_PREINIT_ARRAY = 32,   /* Address of the array of pointers to pre-initialization functions. */
-  DT_PREINIT_ARRAYSZ = 33, /* Size in bytes of the array of pre-initialization functions. */
-  DT_SYMTAB_SHNDX = 34,    /* Address of SHT_SYMTAB_SHNDX section. */
-
-  DT_LOOS = 0x6000000d, /* First OS-specific */
-  DT_HIOS = 0x6ffff000, /* Last OS-specific */
-
-  DT_VALRNGLO = 0x6ffffd00,
-  DT_GNU_PRELINKED = 0x6ffffdf5,
-  DT_GNU_CONFLICTSZ = 0x6ffffdf6,
-  DT_GNU_LIBLISTSZ = 0x6ffffdf7,
-  DT_CHECKSUM = 0x6ffffdf8,
-  DT_PLTPADSZ = 0x6ffffdf9,
-  DT_MOVEENT = 0x6ffffdfa,
-  DT_MOVESZ = 0x6ffffdfb,
-  DT_FEATURE = 0x6ffffdfc,
-  DT_POSFLAG_1 = 0x6ffffdfd,
-  DT_SYMINSZ = 0x6ffffdfe,
-  DT_SYMINENT = 0x6ffffdff,
-  DT_VALRNGHI = 0x6ffffdff,
-
-  DT_ADDRRNGLO = 0x6ffffe00,
-  DT_GNU_HASH = 0x6ffffef5,
-  DT_TLSDESC_PLT = 0x6ffffef6,
-  DT_TLSDESC_GOT = 0x6ffffef7,
-  DT_GNU_CONFLICT = 0x6ffffef8,
-  DT_GNU_LIBLIST = 0x6ffffef9,
-  DT_CONFIG = 0x6ffffefa,
-  DT_DEPAUDIT = 0x6ffffefb,
-  DT_AUDIT = 0x6ffffefc,
-  DT_PLTPAD = 0x6ffffefd,
-  DT_MOVETAB = 0x6ffffefe,
-  DT_SYMINFO = 0x6ffffeff,
-  DT_ADDRRNGHI = 0x6ffffeff,
-
-  DT_VERSYM = 0x6ffffff0,
-  DT_RELACOUNT = 0x6ffffff9,
-  DT_RELCOUNT = 0x6ffffffa,
-  DT_FLAGS_1 = 0x6ffffffb,
-  DT_VERDEF = 0x6ffffffc,
-  DT_VERDEFNUM = 0x6ffffffd,
-  DT_VERNEED = 0x6ffffffe,
-  DT_VERNEEDNUM = 0x6fffffff,
-
-  DT_LOPROC = 0x70000000, /* First processor-specific type. */
-
-  DT_MIPS_RLD_VERSION = 0x70000001,
-  DT_MIPS_TIME_STAMP = 0x70000002,
-  DT_MIPS_ICHECKSUM = 0x70000003,
-  DT_MIPS_IVERSION = 0x70000004,
-  DT_MIPS_FLAGS = 0x70000005,
-  DT_MIPS_BASE_ADDRESS = 0x70000006,
-  DT_MIPS_MSYM = 0x70000007,
-  DT_MIPS_CONFLICT = 0x70000008,
-  DT_MIPS_LIBLIST = 0x70000009,
-  DT_MIPS_LOCAL_GOTNO = 0x7000000a,
-  DT_MIPS_CONFLICTNO = 0x7000000b,
-  DT_MIPS_LIBLISTNO = 0x70000010,
-  DT_MIPS_SYMTABNO = 0x70000011,
-  DT_MIPS_UNREFEXTNO = 0x70000012,
-  DT_MIPS_GOTSYM = 0x70000013,
-  DT_MIPS_HIPAGENO = 0x70000014,
-  DT_MIPS_RLD_MAP = 0x70000016,
-  DT_MIPS_DELTA_CLASS = 0x70000017,
-  DT_MIPS_DELTA_CLASS_NO = 0x70000018,
-  DT_MIPS_DELTA_INSTANCE = 0x70000019,
-  DT_MIPS_DELTA_INSTANCE_NO = 0x7000001a,
-  DT_MIPS_DELTA_RELOC = 0x7000001b,
-  DT_MIPS_DELTA_RELOC_NO = 0x7000001c,
-  DT_MIPS_DELTA_SYM = 0x7000001d,
-  DT_MIPS_DELTA_SYM_NO = 0x7000001e,
-  DT_MIPS_DELTA_CLASSSYM = 0x70000020,
-  DT_MIPS_DELTA_CLASSSYM_NO = 0x70000021,
-  DT_MIPS_CXX_FLAGS = 0x70000022,
-  DT_MIPS_PIXIE_INIT = 0x70000023,
-  DT_MIPS_SYMBOL_LIB = 0x70000024,
-  DT_MIPS_LOCALPAGE_GOTIDX = 0x70000025,
-  DT_MIPS_LOCAL_GOTIDX = 0x70000026,
-  DT_MIPS_HIDDEN_GOTIDX = 0x70000027,
-  DT_MIPS_PROTECTED_GOTIDX = 0x70000028,
-  DT_MIPS_OPTIONS = 0x70000029,
-  DT_MIPS_INTERFACE = 0x7000002a,
-  DT_MIPS_DYNSTR_ALIGN = 0x7000002b,
-  DT_MIPS_INTERFACE_SIZE = 0x7000002c,
-  DT_MIPS_RLD_TEXT_RESOLVE_ADDR = 0x7000002d,
-  DT_MIPS_PERF_SUFFIX = 0x7000002e,
-  DT_MIPS_COMPACT_SIZE = 0x7000002f,
-  DT_MIPS_GP_VALUE = 0x70000030,
-  DT_MIPS_AUX_DYNAMIC = 0x70000031,
-  DT_MIPS_PLTGOT = 0x70000032,
-  DT_MIPS_RWPLT = 0x70000034,
-  DT_MIPS_RLD_MAP_REL = 0x70000035,
-
-  DT_PPC_GOT = 0x70000000,
-  DT_PPC_OPT = 0x70000001,
-
-  DT_PPC64_GLINK = 0x70000000,
-  DT_PPC64_OPD = 0x70000001,
-  DT_PPC64_OPDSZ = 0x70000002,
-  DT_PPC64_OPT = 0x70000003,
-
-  DT_SPARC_REGISTER = 0x70000001,
-
-  DT_AUXILIARY = 0x7ffffffd,
-  DT_USED = 0x7ffffffe,
-  DT_FILTER = 0x7fffffff,
-
-  DT_HIPROC = 0x7fffffff, /* Last processor-specific type. */
+#define DYNAMIC_TAG(name, value) DT_##name = value,
+#include "DynamicTags.def"
+#undef DYNAMIC_TAG
 };
 
 // DT_FLAGS values.
@@ -1518,21 +1455,9 @@ enum {
 // ElfXX_VerNeed structure version (GNU versioning)
 enum { VER_NEED_NONE = 0, VER_NEED_CURRENT = 1 };
 
-// SHT_NOTE section types
-enum {
-  NT_FREEBSD_THRMISC = 7,
-  NT_FREEBSD_PROCSTAT_PROC = 8,
-  NT_FREEBSD_PROCSTAT_FILES = 9,
-  NT_FREEBSD_PROCSTAT_VMMAP = 10,
-  NT_FREEBSD_PROCSTAT_GROUPS = 11,
-  NT_FREEBSD_PROCSTAT_UMASK = 12,
-  NT_FREEBSD_PROCSTAT_RLIMIT = 13,
-  NT_FREEBSD_PROCSTAT_OSREL = 14,
-  NT_FREEBSD_PROCSTAT_PSSTRINGS = 15,
-  NT_FREEBSD_PROCSTAT_AUXV = 16,
-};
+// SHT_NOTE section types.
 
-// Generic note types
+// Generic note types.
 enum : unsigned {
   NT_VERSION = 1,
   NT_ARCH = 2,
@@ -1540,7 +1465,7 @@ enum : unsigned {
   NT_GNU_BUILD_ATTRIBUTE_FUNC = 0x101,
 };
 
-// Core note types
+// Core note types.
 enum : unsigned {
   NT_PRSTATUS = 1,
   NT_FPREGSET = 2,
@@ -1605,7 +1530,7 @@ enum {
   NT_LLVM_HWASAN_GLOBALS = 3,
 };
 
-// GNU note types
+// GNU note types.
 enum {
   NT_GNU_ABI_TAG = 1,
   NT_GNU_HWCAP = 2,
@@ -1620,10 +1545,14 @@ enum : unsigned {
   GNU_PROPERTY_NO_COPY_ON_PROTECTED = 2,
   GNU_PROPERTY_AARCH64_FEATURE_1_AND = 0xc0000000,
   GNU_PROPERTY_X86_FEATURE_1_AND = 0xc0000002,
-  GNU_PROPERTY_X86_ISA_1_NEEDED = 0xc0008000,
-  GNU_PROPERTY_X86_FEATURE_2_NEEDED = 0xc0008001,
-  GNU_PROPERTY_X86_ISA_1_USED = 0xc0010000,
-  GNU_PROPERTY_X86_FEATURE_2_USED = 0xc0010001,
+
+  GNU_PROPERTY_X86_UINT32_OR_LO = 0xc0008000,
+  GNU_PROPERTY_X86_FEATURE_2_NEEDED = GNU_PROPERTY_X86_UINT32_OR_LO + 1,
+  GNU_PROPERTY_X86_ISA_1_NEEDED = GNU_PROPERTY_X86_UINT32_OR_LO + 2,
+
+  GNU_PROPERTY_X86_UINT32_OR_AND_LO = 0xc0010000,
+  GNU_PROPERTY_X86_FEATURE_2_USED = GNU_PROPERTY_X86_UINT32_OR_AND_LO + 1,
+  GNU_PROPERTY_X86_ISA_1_USED = GNU_PROPERTY_X86_UINT32_OR_AND_LO + 2,
 };
 
 // aarch64 processor feature bits.
@@ -1637,31 +1566,6 @@ enum : unsigned {
   GNU_PROPERTY_X86_FEATURE_1_IBT = 1 << 0,
   GNU_PROPERTY_X86_FEATURE_1_SHSTK = 1 << 1,
 
-  GNU_PROPERTY_X86_ISA_1_CMOV = 1 << 0,
-  GNU_PROPERTY_X86_ISA_1_SSE = 1 << 1,
-  GNU_PROPERTY_X86_ISA_1_SSE2 = 1 << 2,
-  GNU_PROPERTY_X86_ISA_1_SSE3 = 1 << 3,
-  GNU_PROPERTY_X86_ISA_1_SSSE3 = 1 << 4,
-  GNU_PROPERTY_X86_ISA_1_SSE4_1 = 1 << 5,
-  GNU_PROPERTY_X86_ISA_1_SSE4_2 = 1 << 6,
-  GNU_PROPERTY_X86_ISA_1_AVX = 1 << 7,
-  GNU_PROPERTY_X86_ISA_1_AVX2 = 1 << 8,
-  GNU_PROPERTY_X86_ISA_1_FMA = 1 << 9,
-  GNU_PROPERTY_X86_ISA_1_AVX512F = 1 << 10,
-  GNU_PROPERTY_X86_ISA_1_AVX512CD = 1 << 11,
-  GNU_PROPERTY_X86_ISA_1_AVX512ER = 1 << 12,
-  GNU_PROPERTY_X86_ISA_1_AVX512PF = 1 << 13,
-  GNU_PROPERTY_X86_ISA_1_AVX512VL = 1 << 14,
-  GNU_PROPERTY_X86_ISA_1_AVX512DQ = 1 << 15,
-  GNU_PROPERTY_X86_ISA_1_AVX512BW = 1 << 16,
-  GNU_PROPERTY_X86_ISA_1_AVX512_4FMAPS = 1 << 17,
-  GNU_PROPERTY_X86_ISA_1_AVX512_4VNNIW = 1 << 18,
-  GNU_PROPERTY_X86_ISA_1_AVX512_BITALG = 1 << 19,
-  GNU_PROPERTY_X86_ISA_1_AVX512_IFMA = 1 << 20,
-  GNU_PROPERTY_X86_ISA_1_AVX512_VBMI = 1 << 21,
-  GNU_PROPERTY_X86_ISA_1_AVX512_VBMI2 = 1 << 22,
-  GNU_PROPERTY_X86_ISA_1_AVX512_VNNI = 1 << 23,
-
   GNU_PROPERTY_X86_FEATURE_2_X86 = 1 << 0,
   GNU_PROPERTY_X86_FEATURE_2_X87 = 1 << 1,
   GNU_PROPERTY_X86_FEATURE_2_MMX = 1 << 2,
@@ -1672,6 +1576,60 @@ enum : unsigned {
   GNU_PROPERTY_X86_FEATURE_2_XSAVE = 1 << 7,
   GNU_PROPERTY_X86_FEATURE_2_XSAVEOPT = 1 << 8,
   GNU_PROPERTY_X86_FEATURE_2_XSAVEC = 1 << 9,
+
+  GNU_PROPERTY_X86_ISA_1_BASELINE = 1 << 0,
+  GNU_PROPERTY_X86_ISA_1_V2 = 1 << 1,
+  GNU_PROPERTY_X86_ISA_1_V3 = 1 << 2,
+  GNU_PROPERTY_X86_ISA_1_V4 = 1 << 3,
+};
+
+// FreeBSD note types.
+enum {
+  NT_FREEBSD_ABI_TAG = 1,
+  NT_FREEBSD_NOINIT_TAG = 2,
+  NT_FREEBSD_ARCH_TAG = 3,
+  NT_FREEBSD_FEATURE_CTL = 4,
+};
+
+// NT_FREEBSD_FEATURE_CTL values (see FreeBSD's sys/sys/elf_common.h).
+enum {
+  NT_FREEBSD_FCTL_ASLR_DISABLE = 0x00000001,
+  NT_FREEBSD_FCTL_PROTMAX_DISABLE = 0x00000002,
+  NT_FREEBSD_FCTL_STKGAP_DISABLE = 0x00000004,
+  NT_FREEBSD_FCTL_WXNEEDED = 0x00000008,
+  NT_FREEBSD_FCTL_LA48 = 0x00000010,
+  NT_FREEBSD_FCTL_ASG_DISABLE = 0x00000020,
+};
+
+// FreeBSD core note types.
+enum {
+  NT_FREEBSD_THRMISC = 7,
+  NT_FREEBSD_PROCSTAT_PROC = 8,
+  NT_FREEBSD_PROCSTAT_FILES = 9,
+  NT_FREEBSD_PROCSTAT_VMMAP = 10,
+  NT_FREEBSD_PROCSTAT_GROUPS = 11,
+  NT_FREEBSD_PROCSTAT_UMASK = 12,
+  NT_FREEBSD_PROCSTAT_RLIMIT = 13,
+  NT_FREEBSD_PROCSTAT_OSREL = 14,
+  NT_FREEBSD_PROCSTAT_PSSTRINGS = 15,
+  NT_FREEBSD_PROCSTAT_AUXV = 16,
+};
+
+// NetBSD core note types.
+enum {
+  NT_NETBSDCORE_PROCINFO = 1,
+  NT_NETBSDCORE_AUXV = 2,
+  NT_NETBSDCORE_LWPSTATUS = 24,
+};
+
+// OpenBSD core note types.
+enum {
+  NT_OPENBSD_PROCINFO = 10,
+  NT_OPENBSD_AUXV = 11,
+  NT_OPENBSD_REGS = 20,
+  NT_OPENBSD_FPREGS = 21,
+  NT_OPENBSD_XFPREGS = 22,
+  NT_OPENBSD_WCOOKIE = 23,
 };
 
 // AMDGPU-specific section indices.
@@ -1679,18 +1637,28 @@ enum {
   SHN_AMDGPU_LDS = 0xff00, // Variable in LDS; symbol encoded like SHN_COMMON
 };
 
-// AMD specific notes. (Code Object V2)
+// AMD vendor specific notes. (Code Object V2)
 enum {
-  // Note types with values between 0 and 9 (inclusive) are reserved.
-  NT_AMD_AMDGPU_HSA_METADATA = 10,
-  NT_AMD_AMDGPU_ISA = 11,
-  NT_AMD_AMDGPU_PAL_METADATA = 12
+  NT_AMD_HSA_CODE_OBJECT_VERSION = 1,
+  NT_AMD_HSA_HSAIL = 2,
+  NT_AMD_HSA_ISA_VERSION = 3,
+  // Note types with values between 4 and 9 (inclusive) are reserved.
+  NT_AMD_HSA_METADATA = 10,
+  NT_AMD_HSA_ISA_NAME = 11,
+  NT_AMD_PAL_METADATA = 12
 };
 
-// AMDGPU specific notes. (Code Object V3)
+// AMDGPU vendor specific notes. (Code Object V3)
 enum {
   // Note types with values between 0 and 31 (inclusive) are reserved.
   NT_AMDGPU_METADATA = 32
+};
+
+// LLVMOMPOFFLOAD specific notes.
+enum : unsigned {
+  NT_LLVM_OPENMP_OFFLOAD_VERSION = 1,
+  NT_LLVM_OPENMP_OFFLOAD_PRODUCER = 2,
+  NT_LLVM_OPENMP_OFFLOAD_PRODUCER_VERSION = 3
 };
 
 enum {
@@ -1728,14 +1696,14 @@ struct Elf64_Chdr {
   Elf64_Xword ch_addralign;
 };
 
-// Node header for ELF32.
+// Note header for ELF32.
 struct Elf32_Nhdr {
   Elf32_Word n_namesz;
   Elf32_Word n_descsz;
   Elf32_Word n_type;
 };
 
-// Node header for ELF64.
+// Note header for ELF64.
 struct Elf64_Nhdr {
   Elf64_Word n_namesz;
   Elf64_Word n_descsz;
@@ -1750,6 +1718,7 @@ enum {
   ELFCOMPRESS_LOPROC = 0x70000000, // Start of processor-specific.
   ELFCOMPRESS_HIPROC = 0x7fffffff  // End of processor-specific.
 };
+
 
 } // end namespace ELF
 } // end namespace llvm
