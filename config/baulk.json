@@ -2,9 +2,8 @@
     "bucket": [
         {
             "description": "Baulk official bucket",
-            "mode": 1,
             "name": "baulk",
-            "url": "git@github.com:baulk/bucket.git",
+            "url": "https://github.com/baulk/bucket",
             "weights": 100
         }
     ],
