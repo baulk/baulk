@@ -59,9 +59,6 @@ inline std::optional<FsMutex> MakeFsMutex(std::wstring_view pidfile, bela::error
       return std::nullopt;
     }
   }
-  std::error_code e;
-  std::filesystem::path p(pidfile);
-  std::filesystem::create_directories(p.parent_path(), e);
   auto FileHandle = ::CreateFileW(pidfile.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {

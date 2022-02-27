@@ -121,6 +121,7 @@ bool PathFs::NewFsPaths(bela::error_code &ec) {
     }
   }
   std::filesystem::create_directories(table.appLinks, e);
+  std::filesystem::create_directories(table.temp, e);
   return true;
 }
 
