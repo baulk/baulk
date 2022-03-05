@@ -8,8 +8,9 @@
 #include <version.hpp>
 #include "baulk-exec.hpp"
 
-namespace baulk::exec {
+namespace baulk {
 bool IsDebugMode = false;
+
 // Usage
 void Usage() {
   constexpr std::wstring_view usage = LR"(baulk-exec - Baulk extend executor
@@ -194,17 +195,17 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
     }
   }
   simulator.PathPushFront(std::move(paths));
-  baulk::env::Constructor ctor(baulk::exec::IsDebugMode);
+  baulk::env::Constructor ctor(baulk::IsDebugMode);
   if (!ctor.InitializeEnvs(packageEnvs, simulator, ec)) {
     bela::FPrintF(stderr, L"baulk-exec constructor venvs error %s\n", ec);
     return false;
   }
   return true;
 }
-} // namespace baulk::exec
+} // namespace baulk
 
 int wmain(int argc, wchar_t **argv) {
-  baulk::exec::Executor executor;
+  baulk::Executor executor;
   if (!executor.ParseArgv(argc, argv)) {
     return 1;
   }

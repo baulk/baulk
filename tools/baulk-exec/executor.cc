@@ -8,7 +8,7 @@
 #include <baulk/pwsh.hpp>
 #include "baulk-exec.hpp"
 
-namespace baulk::exec {
+namespace baulk {
 inline bela::Duration FromKernelTick(FILETIME ft) {
   auto tick = std::bit_cast<int64_t, FILETIME>(ft);
   return bela::Microseconds(tick / 10);
@@ -144,4 +144,4 @@ int Executor::Exec() {
   return static_cast<int>(exitCode);
 }
 
-} // namespace baulk::exec
+} // namespace baulk

@@ -21,6 +21,7 @@
 namespace baulk::update {
 bool IsDebugMode = false;
 bool IsForceMode = false;
+bool IsPreview = false;
 
 constexpr std::wstring_view archfilesuffix() {
 #if defined(_M_X64)
@@ -341,6 +342,7 @@ Usage: baulk-update [option]
   -F|--force       Turn on force mode. such as force update frozen package
   -A|--user-agent  Send User-Agent <name> to server
   -k|--insecure    Allow insecure server connections when using SSL
+  --preview        Download the latest preview version
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
 
 )";
@@ -358,11 +360,11 @@ bool ParseArgv(int argc, wchar_t **argv) {
       .Add(L"version", bela::no_argument, 'v')
       .Add(L"verbose", bela::no_argument, 'V')
       .Add(L"force", bela::no_argument, L'F')
-      .Add(L"", bela::no_argument, L'f')
       .Add(L"insecure", bela::no_argument, L'k')
       .Add(L"profile", bela::required_argument, 'P')
       .Add(L"user-agent", bela::required_argument, 'A')
-      .Add(L"https-proxy", bela::required_argument, 1001);
+      .Add(L"preview", bela::no_argument, 1001)
+      .Add(L"https-proxy", bela::required_argument, 1002);
 
   bela::error_code ec;
   auto result = pa.Execute(
@@ -379,8 +381,6 @@ bool ParseArgv(int argc, wchar_t **argv) {
           baulk::update::IsDebugMode = true;
           HttpClient::DefaultClient().DebugMode() = true;
           break;
-        case 'f':
-          [[fallthrough]];
         case 'F':
           baulk::update::IsForceMode = true;
           break;
@@ -393,6 +393,9 @@ bool ParseArgv(int argc, wchar_t **argv) {
           }
           break;
         case 1001:
+          baulk::update::IsPreview = true;
+          break;
+        case 1002:
           SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
           break;
         default:

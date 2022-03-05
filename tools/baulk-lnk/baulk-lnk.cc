@@ -1,14 +1,18 @@
 #include "baulk-lnk.hpp"
 
+namespace baulk {
+bool IsDebugMode = false;
+}
+
 int wmain(int argc, wchar_t **argv) {
-  IsDebugMode = IsTrue(bela::GetEnv(L"BAULK_DEBUG"));
+  baulk::IsDebugMode = IsTrue(bela::GetEnv(L"BAULK_DEBUG"));
   bela::error_code ec;
   auto target = ResolveTarget(ec);
   if (!target) {
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec);
     return 1;
   }
-  DbgPrint(L"resolve target: %s\n", *target);
+  baulk::DbgPrint(L"resolve target: %s\n", *target);
   auto isconsole = IsSubsytemConsole(*target);
   std::wstring newcmd(GetCommandLineW());
   STARTUPINFOW si;
