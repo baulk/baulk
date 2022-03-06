@@ -251,9 +251,46 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
   return true;
 }
 
+std::optional<std::wstring> path_reachable_cat(const std::filesystem::path &packageRoot, std::wstring_view relativePath,
+                                               std::wstring &newRelativePath) {
+  std::filesystem::path relativePath_(relativePath);
+  auto linkPath = packageRoot / relativePath_;
+  std::error_code e;
+  if (std::filesystem::exists(linkPath, e)) {
+    return std::make_optional(linkPath.wstring());
+  }
+  std::vector<std::filesystem::path> items;
+  for (auto it = relativePath_.begin(); it != relativePath_.end(); it++) {
+    items.emplace_back(*it);
+  }
+  auto make_reachable_path = [&](const std::span<std::filesystem::path> pv) -> std::filesystem::path {
+    std::filesystem::path path(packageRoot);
+    newRelativePath.clear();
+    for (auto p : pv) {
+      path /= p;
+      if (!newRelativePath.empty()) {
+        newRelativePath.append(L"\\");
+      }
+      newRelativePath.append(p.c_str());
+    }
+    return path;
+  };
+  for (size_t i = 1; i < items.size(); i++) {
+    std::span itemSpan(items.data() + i, items.size() - i);
+    if (itemSpan.empty()) {
+      break;
+    }
+    auto newLinkPath = make_reachable_path(itemSpan);
+    if (std::filesystem::exists(newLinkPath, e)) {
+      return std::make_optional(newLinkPath.wstring());
+    }
+  }
+  return std::nullopt;
+}
+
 bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
   (void)forceoverwrite;
-  auto packageRoot = vfs::AppPackageFolder(pkg.name);
+  auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
   if (!baulk::fs::MakeDir(appLinks, ec)) {
     return false;
@@ -263,10 +300,15 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
     return false;
   }
   for (const auto &lm : pkg.launchers) {
-    auto source = bela::PathCat(packageRoot, L"\\", lm.path);
-    DbgPrint(L"make launcher %s", source);
-    if (!builder.Compile(pkg, source, appLinks, lm, ec)) {
-      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", bela::BaseName(source), ec);
+    std::wstring relativePath(lm.path);
+    auto source = path_reachable_cat(packageRoot, lm.path, relativePath);
+    if (!source) {
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
+      continue;
+    }
+    bela::FPrintF(stderr, L"new launcher: \x1b[35m%v\x1b[0m@\x1b[36m%v\x1b[0m\n", pkg.name, relativePath);
+    if (!builder.Compile(pkg, *source, appLinks, lm, ec)) {
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
     }
   }
   if (!LinkMetaStore(builder.LinkMetas(), pkg, ec)) {
@@ -283,7 +325,6 @@ std::optional<std::wstring> FindProxyLauncher(bela::error_code &ec) {
     return std::nullopt;
   }
   if (!vfs::IsPackaged()) {
-
     return std::make_optional(std::move(proxyLauncher));
   }
   auto localLauncher = bela::StringCat(vfs::AppBasePath(), L"\\bin\\baulk-lnk.exe");
@@ -309,19 +350,20 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
   if (!proxyLauncher) {
     return false;
   }
-  auto packageRoot = vfs::AppPackageFolder(pkg.name);
+  auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
   if (!baulk::fs::MakeDir(appLinks, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;
   for (const auto &lm : pkg.launchers) {
-    auto src = bela::PathCat(packageRoot, L"\\", lm.path);
-    DbgPrint(L"make simulated launcher %s", src);
-    if (!bela::PathExists(src)) {
-      bela::FPrintF(stderr, L"%s not exist\n", src);
+    std::wstring relativePath(lm.path);
+    auto source = path_reachable_cat(packageRoot, lm.path, relativePath);
+    if (!source) {
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
       continue;
     }
+    bela::FPrintF(stderr, L"new proxy link: \x1b[35m%v\x1b[0m@\x1b[36m%v\x1b[0m\n", pkg.name, relativePath);
     auto lnk = bela::StringCat(appLinks, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
@@ -332,7 +374,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
     if (!baulk::fs::SymLink(*proxyLauncher, lnk, ec)) {
       return false;
     }
-    linkmetas.emplace_back(lm);
+    linkmetas.emplace_back(relativePath, lm.alias);
   }
   if (!LinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,
@@ -346,30 +388,31 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
 
 // create symlink
 bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
-  auto packageRoot = vfs::AppPackageFolder(pkg.name);
+  auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
   if (!baulk::fs::MakeDir(appLinks, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;
-  for (const auto &lm : pkg.links) {
-    auto src = bela::PathCat(packageRoot, L"\\", lm.path);
-    DbgPrint(L"make symlink %s", src);
-    if (!bela::PathExists(src)) {
-      bela::FPrintF(stderr, L"%s not exist\n", src);
+  for (auto &lm : pkg.links) {
+    std::wstring relativePath(lm.path);
+    auto source = path_reachable_cat(packageRoot, lm.path, relativePath);
+    if (!source) {
+      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
       continue;
     }
+    bela::FPrintF(stderr, L"new link: \x1b[35m%v\x1b[0m@\x1b[36m%v\x1b[0m\n", pkg.name, relativePath);
     auto lnk = bela::StringCat(appLinks, L"\\", lm.alias);
     if (bela::PathExists(lnk)) {
       if (forceoverwrite) {
         bela::fs::ForceDeleteFolders(lnk, ec);
       }
     }
-    if (!baulk::fs::SymLink(src, lnk, ec)) {
-      DbgPrint(L"make %s -> %s: %s\n", src, lnk, ec);
+    if (!baulk::fs::SymLink(*source, lnk, ec)) {
+      DbgPrint(L"make %s -> %s: %s\n", *source, lnk, ec);
       return false;
     }
-    linkmetas.emplace_back(lm);
+    linkmetas.emplace_back(relativePath, lm.alias);
   }
   if (!LinkMetaStore(linkmetas, pkg, ec)) {
     bela::FPrintF(stderr,

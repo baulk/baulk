@@ -12,6 +12,23 @@
 #include "commands.hpp"
 
 namespace baulk::commands {
+
+inline void displayBucket(const Bucket &bk) {
+  bela::FPrintF(stderr,
+                L"bucket:      \x1b[34m%v\x1b[0m\n"    //
+                L"description: \x1b[36m%v\x1b[0m\n"    //
+                L"url:         \x1b[36m%v\x1b[0m\n"    //
+                L"variant:     \x1b[36m%v\x1b[0m\n"    //
+                L"mode:        \x1b[36m%v\x1b[0m\n"    //
+                L"weights:     \x1b[36m%v\x1b[0m\n",   //
+                bk.name,                               //
+                bk.description,                        //
+                bk.url,                                //
+                baulk::BucketVariantName(bk.variant),  //
+                baulk::BucketObserveModeName(bk.mode), //
+                bk.weights);
+}
+
 // Bucket Modifier
 class BucketModifier {
 public:
@@ -90,9 +107,7 @@ int BucketModifier::List(std::wstring_view bucketName) {
       bela::FPrintF(stderr, L"baulk bucket: bucket -> '\x1b[31m%s\x1b[0m' not found\n", bucketName);
       return 1;
     }
-    bela::FPrintF(stderr,
-                  L"\x1b[34m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%s (%s)\x1b[0m\n    \x1b[36m%d\x1b[0m\n",
-                  bk.name, bk.description, bk.url, baulk::BucketObserveModeName(bk.mode), bk.weights);
+    displayBucket(bk);
     return 0;
   }
   try {
@@ -111,9 +126,12 @@ int BucketModifier::List(std::wstring_view bucketName) {
           mode = BucketObserveMode::Git;
         }
       }
-      bela::FPrintF(stderr,
-                    L"\x1b[34m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%s (%s)\x1b[0m\n    \x1b[36m%d\x1b[0m\n",
-                    name, desc, url, baulk::BucketObserveModeName(mode), weights);
+      BucketVariant variant{BucketVariant::Native};
+      if (auto it = b.find("variant"); it != b.end()) {
+        variant = static_cast<BucketVariant>(it.value().get<int>());
+      }
+      Bucket bucket(desc, name, url, weights, mode, variant);
+      displayBucket(bucket);
     }
   } catch (const std::exception &e) {
     bela::FPrintF(stderr, L"baulk bucket list: %s\n", e.what());
@@ -167,11 +185,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
   if (nbk.weights == 99 || nbk.weights == 0) {
     nbk.weights = 101;
   }
-  bela::FPrintF(
-      stderr,
-      L"New bucket: \x1b[34m%s\x1b[0m\n    \x1b[36m%s\x1b[0m\n    \x1b[36m%s (%s)\x1b[0m\n    \x1b[36m%d\x1b[0m\n",
-      nbk.name, nbk.description, nbk.url, baulk::BucketObserveModeName(nbk.mode), nbk.weights);
-
+  displayBucket(nbk);
   try {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
@@ -188,6 +202,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     jbk["url"] = bela::encode_into<wchar_t, char>(nbk.url);
     jbk["mode"] = static_cast<int>(nbk.mode);
     jbk["weights"] = nbk.weights;
+    jbk["variant"] = nbk.variant;
     buckets.emplace_back(std::move(jbk));
     meta["bucket"] = buckets;
     if (!Apply()) {
@@ -293,7 +308,7 @@ Add, delete or list buckets.
   -R|--replace        replace bucket with new attributes ('bucket add' support only)
 
 Option:
-  list, add, delete
+  list, add, delete, help
 
 Command Usage:
   baulk bucket list
@@ -411,6 +426,10 @@ int cmd_bucket(const argv_t &argv) {
   }
   const auto sa = ua[0];
   size_t index = 1;
+  if (bela::EqualsIgnoreCase(sa, L"help")) {
+    usage_bucket();
+    return 0;
+  }
   if (bela::EqualsIgnoreCase(sa, L"list")) {
     if (bucket.name.empty() && index < ua.size()) {
       bucket.name = ua[index];

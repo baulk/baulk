@@ -9,25 +9,22 @@
 #include "commands.hpp"
 
 namespace baulk::commands {
-
 int uninstall_package(std::wstring_view pkgName) {
-  auto lockfile = bela::StringCat(vfs::AppLocks(), pkgName, L".json");
+  auto metaLock = bela::StringCat(vfs::AppLocks(), L"\\", pkgName, L".json");
   bela::error_code ec;
-  if (bela::PathExists(lockfile)) {
-    if (baulk::IsForceDelete) {
-      if (!baulk::package::PackageForceDelete(pkgName, ec)) {
-        bela::FPrintF(stderr, L"baulk uninstall '%s' force-delete: \x1b[31m%s\x1b[0m\n", pkgName, ec);
-      }
-    }
-  } else if (!baulk::IsForceMode) {
+  if (!bela::PathExists(metaLock) && !baulk::IsForceMode) {
     bela::FPrintF(stderr, L"No local metadata found, \x1b[34m%s\x1b[0m may not be installed.\n", pkgName);
     return 1;
   }
-
+  if (baulk::IsForceDelete) {
+    if (!baulk::package::PackageForceDelete(pkgName, ec)) {
+      bela::FPrintF(stderr, L"baulk uninstall '%s' force-delete: \x1b[31m%s\x1b[0m\n", pkgName, ec);
+    }
+  }
   if (!baulk::RemovePackageLinks(pkgName, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgName, ec);
   }
-  bela::fs::ForceDeleteFolders(lockfile, ec);
+  bela::fs::ForceDeleteFolders(metaLock, ec);
   auto packageRoot = vfs::AppPackageFolder(pkgName);
   if (!bela::fs::ForceDeleteFolders(packageRoot, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n", pkgName, ec);

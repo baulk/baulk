@@ -11,7 +11,7 @@
 namespace baulk::archive {
 class ZipExtractor {
 public:
-  ZipExtractor(bool quietMode_ = false, bool debugMode_ = true) noexcept {
+  ZipExtractor(bool quietMode_ = false, bool debugMode_ = false) noexcept {
     quietMode = quietMode_;
     debugMode = debugMode_;
     if (!quietMode) {

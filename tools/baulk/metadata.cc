@@ -40,7 +40,7 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
   } else if (jv.fetch_strings_checked("url", pkg.urls)) {
     pkg.hashValue = jv.fetch("url.hash");
   } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to x64 platform.");
+    ec = bela::make_error_code(bela::ErrGeneral, pkgName, L"@", bucket.name, L" not yet port to x64 platform.");
     return std::nullopt;
   }
   if (!jv.fetch_paths_checked("links64", pkg.links)) {
@@ -100,6 +100,9 @@ inline auto PackageMetaJoinScoop(const Bucket &bucket, std::wstring_view pkgName
 
 // Not support multi file and ....
 std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
+#if !defined(_M_X64) && !defined(_M_ARM64)
+  return std::nullopt;
+#endif
   auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
   auto pkj = baulk::json::parse_file(pkgMeta, ec);
   if (!pkj) {
@@ -118,39 +121,16 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
   };
   pkg.variant = BucketVariant::Scoop;
   jv.fetch_paths_checked("bin", pkg.launchers);
-#if defined(_M_X64)
+
   if (auto sv = jv.subview("architecture"); sv) {
     if (auto av = sv->subview("64bit"); av) {
       pkg.urls.emplace_back(av->fetch("url"));
       pkg.hashValue = av->fetch("hash");
+      return std::make_optional(std::move(pkg));
     }
-  } else {
-    pkg.urls.emplace_back(jv.fetch("url"));
-    pkg.hashValue = jv.fetch("hash");
   }
-
-#elif defined(_M_ARM64)
-  if (auto sv = jv.subview("architecture"); sv) {
-    if (auto av = sv->subview("64bit"); av) {
-      pkg.urls.emplace_back(av->fetch("url"));
-      pkg.hashValue = av->fetch("hash");
-    }
-  } else {
-    pkg.urls.emplace_back(jv.fetch("url"));
-    pkg.hashValue = jv.fetch("hash");
-  }
-#else
-  if (auto sv = jv.subview("architecture"); sv) {
-    if (auto av = sv->subview("32bit"); av) {
-      pkg.urls.emplace_back(av->fetch("url"));
-      pkg.hashValue = av->fetch("hash");
-    }
-  } else {
-    pkg.urls.emplace_back(jv.fetch("url"));
-    pkg.hashValue = jv.fetch("hash");
-  }
-#endif
-
+  pkg.urls.emplace_back(jv.fetch("url"));
+  pkg.hashValue = jv.fetch("hash");
   return std::make_optional(std::move(pkg));
 }
 
