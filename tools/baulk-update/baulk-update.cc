@@ -28,8 +28,13 @@ Usage: baulk-update [option]
   -F|--force       Turn on force mode. such as force update frozen package
   -A|--user-agent  Send User-Agent <name> to server
   -k|--insecure    Allow insecure server connections when using SSL
-  --preview        Download the latest preview version
+  -S|--specified   Download and install the specified version of baulk
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
+
+Example:
+  baulk-update                  # Update to the latest version released
+  baulk-update -F               # Force update to latest version released 
+  baulk-update "-S4.0.0-beta.2" # Install the specified version
 
 )";
   bela::terminal::WriteAuto(stderr, usage);
@@ -49,7 +54,7 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
       .Add(L"insecure", bela::no_argument, L'k')
       .Add(L"profile", bela::required_argument, 'P')
       .Add(L"user-agent", bela::required_argument, 'A')
-      .Add(L"preview", bela::no_argument, 1001)
+      .Add(L"specified", bela::required_argument, 'S')
       .Add(L"https-proxy", bela::required_argument, 1002);
 
   bela::error_code ec;
@@ -68,7 +73,6 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
           HttpClient::DefaultClient().DebugMode() = true;
           break;
         case 'F':
-
           forceMode = true;
           break;
         case 'k':
@@ -79,8 +83,11 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
             HttpClient::DefaultClient().UserAgent() = oa;
           }
           break;
-        case 1001:
-          usePreview = true;
+        case 'S':
+          specified = oa;
+          if (!specified.empty()) {
+            forceMode = true;
+          }
           break;
         case 1002:
           SetEnvironmentVariableW(L"HTTPS_PROXY", oa);

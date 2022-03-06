@@ -22,10 +22,10 @@ private:
   bool apply_baulk_files();
   bool replace_baulk_files();
   void cleanup();
+  std::wstring specified;
   std::wstring download_url;
   std::wstring extract_dest;
   bela::version latest_version;
   bool forceMode{false};
-  bool usePreview{false};
 };
 } // namespace baulk

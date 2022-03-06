@@ -62,10 +62,20 @@ bool Executor::latest_download_url() {
   }
   return latest_download_url(version);
 }
-
+//
 bool Executor::latest_download_url(const bela::version &ov) {
+  // https://docs.github.com/en/rest/reference/releases#get-a-release-by-tag-name
+  // https://api.github.com/repos/baulk/baulk/releases/tags/${tag_name}
+  auto make_api_release_url = [&]() -> std::wstring {
+    if (specified.empty()) {
+      return L"https://api.github.com/repos/baulk/baulk/releases/latest";
+    }
+    return bela::StringCat(L"https://api.github.com/repos/baulk/baulk/releases/tags/", specified);
+  };
   bela::error_code ec;
-  auto resp = baulk::net::RestGet(L"https://api.github.com/repos/baulk/baulk/releases/latest", ec);
+  auto release_api_url = make_api_release_url();
+  DbgPrint(L"release api: %v", release_api_url);
+  auto resp = baulk::net::RestGet(release_api_url, ec);
   if (!resp) {
     bela::FPrintF(stderr, L"baulk-update check latest version: \x1b[31m%s\x1b[0m\n", ec);
     return false;
@@ -99,14 +109,19 @@ bool Executor::latest_download_url(const bela::version &ov) {
 }
 
 bool Executor::latest_download_url_fallback(const bela::version &ov) {
-  constexpr std::wstring_view latest = L"https://github.com/baulk/baulk/releases/latest";
+  auto make_release_url = [&]() -> std::wstring {
+    if (specified.empty()) {
+      return L"https://github.com/baulk/baulk/releases/latest";
+    }
+    return bela::StringCat(L"https://github.com/baulk/baulk/releases/tag/", specified);
+  };
   constexpr std::string_view urlPrefix = "/baulk/baulk/releases/download/";
   // <a href="/baulk/baulk/releases/download/3.0.0/Baulk-3.0.0-win-arm64.zip" rel="nofollow" data-skip-pjax="">
   //             <span class="px-1 text-bold">Baulk-3.0.0-win-arm64.zip</span>
   //           </a>
   // constexpr std::string_view matchStringPrefix = R"(href="/baulk/baulk/releases/download/)";
   bela::error_code ec;
-  auto resp = baulk::net::RestGet(latest, ec);
+  auto resp = baulk::net::RestGet(make_release_url(), ec);
   if (!resp) {
     bela::FPrintF(stderr, L"baulk upgrade get latest: \x1b[31m%s\x1b[0m\n", ec);
     return false;
