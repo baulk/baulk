@@ -13,6 +13,23 @@
 
 A minimalist Windows package manager, installation-free, without modifying system environment variables, easy to use, can be integrated with Windows Terminal, can be added to the right-click menu...
 
+## Baulk 4.0 Event
+
+We plan to release baulk 4.0 version on April 1, 2022. This version adds a vfs mechanism to avoid mixing program data and installed packages when installing packages. It also adds the following features: 
+
+- Better **VFS** design
+- More C++20/23 experience
+- Better file extraction experience, add `baulk extract` command.
+- Limited compatibility with scoop manifest (?) 
+- baulk breakpoint download support
+- Integrate a better memory allocator, such as mimalloc
+- baulk brand command
+
+
+The following functions were not completed because I didn't have enough time:
+
+- Windows 11 context menu support
+
 ## Get Started
 
 Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), You can choose to download the installation program corresponding to the Windows platform. The installation program provided by Baulk can be run without administrator rights. You can install it to any directory with non-administrator rights. You can check to create a desktop shortcut: 
