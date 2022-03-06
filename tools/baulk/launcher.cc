@@ -360,7 +360,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
     std::wstring relativePath(lm.path);
     auto source = path_reachable_cat(packageRoot, lm.path, relativePath);
     if (!source) {
-      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
+      bela::FPrintF(stderr, L"unable proxy link '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
       continue;
     }
     bela::FPrintF(stderr, L"new proxy link: \x1b[35m%v\x1b[0m@\x1b[36m%v\x1b[0m\n", pkg.name, relativePath);
@@ -377,10 +377,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
     linkmetas.emplace_back(relativePath, lm.alias);
   }
   if (!LinkMetaStore(linkmetas, pkg, ec)) {
-    bela::FPrintF(stderr,
-                  L"%s create links error: %s\nYour can run 'baulk uninstall' "
-                  L"and retry\n",
-                  pkg.name, ec);
+    bela::FPrintF(stderr, L"%s create links error: %s\nYour can run 'baulk uninstall' and retry\n", pkg.name, ec);
     return false;
   }
   return true;
@@ -398,7 +395,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
     std::wstring relativePath(lm.path);
     auto source = path_reachable_cat(packageRoot, lm.path, relativePath);
     if (!source) {
-      bela::FPrintF(stderr, L"unable create launcher '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
+      bela::FPrintF(stderr, L"unable create link '%s': \x1b[31m%s\x1b[0m\n", lm.path, ec);
       continue;
     }
     bela::FPrintF(stderr, L"new link: \x1b[35m%v\x1b[0m@\x1b[36m%v\x1b[0m\n", pkg.name, relativePath);
@@ -415,10 +412,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
     linkmetas.emplace_back(relativePath, lm.alias);
   }
   if (!LinkMetaStore(linkmetas, pkg, ec)) {
-    bela::FPrintF(stderr,
-                  L"%s create links error: %s\nYour can run 'baulk uninstall' "
-                  L"and retry\n",
-                  pkg.name, ec);
+    bela::FPrintF(stderr, L"%s create links error: %s\nYour can run 'baulk uninstall' and retry\n", pkg.name, ec);
     return false;
   }
   return true;

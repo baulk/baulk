@@ -20,10 +20,10 @@ We plan to release baulk 4.0 version on April 1, 2022. This version adds a vfs m
 - Better **VFS** design
 - More C++20/23 experience
 - Better file extraction experience, add `baulk extract` command.
-- Limited compatibility with scoop manifest (?) 
+- Limited compatibility with scoop manifest (Compatibility mode operation, with certain limitations) 
 - baulk breakpoint download support
 - Integrate a better memory allocator, such as mimalloc
-- baulk brand command
+- baulk brand command (such as neofetch)
 
 
 The following functions were not completed because I didn't have enough time:

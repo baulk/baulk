@@ -168,7 +168,7 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
     if (nbk.description.empty()) {
       nbk.description = obk.description;
     }
-    if (nbk.weights == 99 || nbk.weights == 0) {
+    if (nbk.weights == 0) {
       nbk.weights = obk.weights;
     }
     if (nbk.url.empty()) {
@@ -182,8 +182,8 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
   if (nbk.description.empty()) {
     nbk.description = bela::StringCat(nbk.name, L" no description");
   }
-  if (nbk.weights == 99 || nbk.weights == 0) {
-    nbk.weights = 101;
+  if (nbk.weights == 0) {
+    nbk.weights = 99;
   }
   displayBucket(nbk);
   try {
@@ -301,7 +301,7 @@ void usage_bucket() {
 Add, delete or list buckets.
   -N|--name           set bucket name
   -U|--url            set bucket url
-  -W|--weights        set bucket weights, default: 100
+  -W|--weights        set bucket weights, default: 99 (baulk is 100)
   -M|--mode           set bucket mode (Git/Github)
   -A|--variant        set bucket variant (native/scoop)
   -D|--description    set bucket description

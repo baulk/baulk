@@ -46,7 +46,7 @@ template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
     _snwprintf_s(buf, N, L"%.2fM", (double)x / MB);
     return;
   }
-  if (x > 10 * KB) {
+  if (x > 2 * KB) {
     _snwprintf_s(buf, N, L"%.2fK", (double)x / KB);
     return;
   }
