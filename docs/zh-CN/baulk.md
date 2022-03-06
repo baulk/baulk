@@ -8,7 +8,7 @@
 
 ## 安装和使用 Baulk
 
-这个步骤只有四五步，下载 baulk 二进制包，解压 baulk 二进制包，点击 baulkterminal，更新元数据，安装你需要的软件，🆗，你可以使用 baulk 安装的软件了。
+这个步骤只有四五步，下载 baulk 二进制包，解压 baulk 二进制包，点击 baulk-terminal，更新元数据，安装你需要的软件，🆗，你可以使用 baulk 安装的软件了。
 
 ```powershell
 baulk update
@@ -54,7 +54,7 @@ baulk 提供了 baulk-exec 在命令行中执行 baulk-exec 可以初始化 baul
 
 ![](https://s1.ax1x.com/2020/07/19/UW9O3D.png)
 
-在 baulk 中我引入了 VirtualEnv 机制，这种机制能够使得用户并行安装多个软件版本，在 baulk-exec，baulkterminal 中通过指定参数支持启动任意的 VENV，baulk 还提供了 baulk-dock 能够选择按照特定的 VENV 启动环境：
+在 baulk 中我引入了 VirtualEnv 机制，这种机制能够使得用户并行安装多个软件版本，在 baulk-exec，baulk-terminal 中通过指定参数支持启动任意的 VENV，baulk 还提供了 baulk-dock 能够选择按照特定的 VENV 启动环境：
 
 ![](https://s1.ax1x.com/2020/07/19/UW9wcQ.png)
 
@@ -93,7 +93,7 @@ baulk 提供了 baulk-exec 在命令行中执行 baulk-exec 可以初始化 baul
 |`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
 |`tar`|优先级：</br>baulktar - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 deflate64|
 
-baulk 的哲学是不要修改系统和用户环境变量，环境变量的生效应该是和终端关联或者启动器关联，因此，在 baulk 中，我编写了 baulkterminal 和 baulk-exec 以及 baulk-dock 程序，baulkterminal 主要用于用户通过创建桌面快捷方式或者将 baulkterminal 添加到桌面、文件夹右键菜单，通过用户点击快速打开初始化 Baulk 环境的 Windows Terminal（如果没有安装 Windows Terminal 则打开 Windows 控制台），而 baulk-exec 则是一个启动器，在运行 baulk-exec 时，根据输入的命令行参数 baulk-exec 初始化环境变量，然后启动相关的子命令，比如 Windows 操作系统中没有安装 cmake，而 baulk 安装了 cmake，以下命令就能够正常运行：
+baulk 的哲学是不要修改系统和用户环境变量，环境变量的生效应该是和终端关联或者启动器关联，因此，在 baulk 中，我编写了 baulk-terminal 和 baulk-exec 以及 baulk-dock 程序，baulk-terminal 主要用于用户通过创建桌面快捷方式或者将 baulk-terminal 添加到桌面、文件夹右键菜单，通过用户点击快速打开初始化 Baulk 环境的 Windows Terminal（如果没有安装 Windows Terminal 则打开 Windows 控制台），而 baulk-exec 则是一个启动器，在运行 baulk-exec 时，根据输入的命令行参数 baulk-exec 初始化环境变量，然后启动相关的子命令，比如 Windows 操作系统中没有安装 cmake，而 baulk 安装了 cmake，以下命令就能够正常运行：
 
 ```powershell
 # 打印 cmake 版本信息
@@ -127,7 +127,7 @@ baulk 内置了 zip 提取能力，支持使用 ZSTD 压缩算法的 ZIP 文件�
 
 ![](https://s1.ax1x.com/2020/07/19/UW1obq.png)
 
-目前 baulkterminal 和 baulk-exec 能够加载任意的 venv，baulk-dock 仅支持一个。
+目前 baulk-terminal 和 baulk-exec 能够加载任意的 venv，baulk-dock 仅支持一个。
 
 ## 最后
 

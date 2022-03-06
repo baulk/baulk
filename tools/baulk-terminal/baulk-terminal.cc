@@ -7,15 +7,15 @@
 #include <bela/str_replace.hpp>
 #include <shellapi.h>
 #include <version.hpp>
-#include "baulkterminal.hpp"
+#include "baulk-terminal.hpp"
 
-namespace baulkterminal {
+namespace baulk {
 
 bool IsDebugMode = false;
 
 void BaulkMessage() {
-  constexpr wchar_t usage[] = LR"(baulkterminal - Baulk Terminal Launcher
-Usage: baulkterminal [option] ...
+  constexpr wchar_t usage[] = LR"(baulk-terminal - Baulk Terminal Launcher
+Usage: baulk-terminal [option] ...
   -h|--help
                Show usage text and quit
   -v|--version
@@ -126,7 +126,7 @@ bool Executor::ParseArgv(bela::error_code &ec) {
   }
   return true;
 }
-} // namespace baulkterminal
+} // namespace baulk
 
 class dotcom_global_initializer {
 public:
@@ -143,7 +143,7 @@ public:
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   dotcom_global_initializer di;
-  baulkterminal::Executor executor;
+  baulk::Executor executor;
   bela::error_code ec;
   if (!executor.ParseArgv(ec)) {
     bela::BelaMessageBox(nullptr, L"BaulkTerminal: Parse Argv error", ec.data(), BAULK_APPLINKE, bela::mbs_t::FATAL);
@@ -159,7 +159,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   SecureZeroMemory(&si, sizeof(si));
   SecureZeroMemory(&pi, sizeof(pi));
   si.cb = sizeof(si);
-  baulkterminal::DbgPrint(L"commandline: %s", ea.sv());
+  baulk::DbgPrint(L"commandline: %s", ea.sv());
   if (CreateProcessW(nullptr, ea.data(), nullptr, nullptr, FALSE, CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &si,
                      &pi) != TRUE) {
     auto ec = bela::make_system_error_code();

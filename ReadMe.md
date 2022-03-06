@@ -19,7 +19,7 @@ Download the latest version of Baulk: [https://github.com/baulk/baulk/releases/l
 
 ![](./docs/images/setup.png)
 
-Or you can download the compressed package and unzip it to any directory, click on `baulkterminal.exe` to run Windows Terminal. 
+Or you can download the compressed package and unzip it to any directory, click on `baulk-terminal.exe` to run Windows Terminal. 
 
 ![](./docs/images/getstarted.png)
 
@@ -286,7 +286,7 @@ Baulk provides sha256sum b3sum two commands to help users calculate file hashes.
 
 ## Baulk Virtual environment mechanism
 
-In order to install different versions of the same software at the same time, baulk implements a virtual environment mechanism. By specifying `-Exxx` in baulkterminal or baulk-exec to load a specific package environment, for example, `-Eopenjdk15` loads openjdk15, `-Eopenjdk14` can load Openjdk14, these packages need to be configured in the bucket warehouse. In addition, baulk-dock can be switched graphically. Unlike baulk-exec, baulk-exec can load multiple VENVs at the same time, while baulk-dock only supports one.
+In order to install different versions of the same software at the same time, baulk implements a virtual environment mechanism. By specifying `-Exxx` in baulk-terminal or baulk-exec to load a specific package environment, for example, `-Eopenjdk15` loads openjdk15, `-Eopenjdk14` can load Openjdk14, these packages need to be configured in the bucket warehouse. In addition, baulk-dock can be switched graphically. Unlike baulk-exec, baulk-exec can load multiple VENVs at the same time, while baulk-dock only supports one.
 
 ## Baulk executor
 
@@ -315,13 +315,13 @@ example:
 
 ## Baulk Windows Terminal integration
 
-Baulk also provides the `baulkterminal.exe` program, which is highly integrated with Windows Terminal and can start Windows Terminal after setting the Baulk environment variable, which solves the problem of avoiding conflicts caused by tool modification of system environment variables and anytime. In addition, Baulk added a custom installation option integrated into the Windows Terminal plug-in during the installation process. You can also use Fragments.bat to manually integrate Baulk into Windows Terminal.
+Baulk also provides the `baulk-terminal.exe` program, which is highly integrated with Windows Terminal and can start Windows Terminal after setting the Baulk environment variable, which solves the problem of avoiding conflicts caused by tool modification of system environment variables and anytime. In addition, Baulk added a custom installation option integrated into the Windows Terminal plug-in during the installation process. You can also use Fragments.bat to manually integrate Baulk into Windows Terminal.
 
-baulkterminal usage:
+baulk-terminal (`baulk < 4.0 aka baulkterminal`) usage:
 
 ```txt
-baulkterminal - Baulk Terminal Launcher
-Usage: baulkterminal [option] ...
+baulk-terminal - Baulk Terminal Launcher
+Usage: baulk-terminal [option] ...
   -h|--help
                Show usage text and quit
   -v|--version

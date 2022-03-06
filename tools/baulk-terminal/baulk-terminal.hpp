@@ -8,10 +8,10 @@
 #include <bela/fmt.hpp>
 #include <vector>
 
-namespace baulkterminal {
+namespace baulk {
 extern bool IsDebugMode;
 int WriteTrace(std::wstring_view msg);
-template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &... args) {
+template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
   if (!IsDebugMode) {
     return 0;
   }
@@ -56,6 +56,6 @@ private:
   bool conhost{false};
 };
 
-} // namespace baulkterminal
+} // namespace baulk
 
 #endif

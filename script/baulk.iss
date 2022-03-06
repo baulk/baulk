@@ -86,7 +86,7 @@ Source: "..\build\bin\baulk-exec.exe"; DestDir: "{app}\bin"; DestName: "baulk-ex
 Source: "..\build\bin\baulk-lnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-lnk.exe"
 Source: "..\build\bin\baulk-winlnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-winlnk.exe"
 Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-update.exe"
-Source: "..\build\bin\baulkterminal.exe"; DestDir: "{app}"; DestName: "baulkterminal.exe"
+Source: "..\build\bin\baulk-terminal.exe"; DestDir: "{app}"; DestName: "baulk-terminal.exe"
 Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
 Source: "..\res\screw-driver.ico"; DestDir: "{app}\share\baulk"; DestName: "baulk.ico"
@@ -111,9 +111,9 @@ Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "A
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Icons]
-Name: "{group}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; AppUserModelID: "{#AppUserId}"
-Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulkterminal.exe"; Parameters: "--vs"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
+Name: "{group}\Baulk Terminal"; Filename: "{app}\baulk-terminal.exe"; Parameters: "--vs"; AppUserModelID: "{#AppUserId}"
+Name: "{autodesktop}\Baulk Terminal"; Filename: "{app}\baulk-terminal.exe"; Parameters: "--vs"; Tasks: desktopicon; AppUserModelID: "{#AppUserId}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Baulk Terminal"; Filename: "{app}\baulk-terminal.exe"; Parameters: "--vs"; Tasks: quicklaunchicon; AppUserModelID: "{#AppUserId}"
 
 [Registry]
 ; Aides installing

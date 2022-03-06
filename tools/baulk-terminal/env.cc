@@ -7,9 +7,9 @@
 #include <filesystem>
 #include <baulk/registry.hpp>
 #include <baulk/pwsh.hpp>
-#include "baulkterminal.hpp"
+#include "baulk-terminal.hpp"
 
-namespace baulkterminal {
+namespace baulk {
 
 inline bool NameEquals(std::wstring_view arg, std::wstring_view exe) {
   auto argexe = bela::StripSuffix(arg, L".exe");
@@ -175,4 +175,4 @@ bool Executor::PrepareArgv(bela::EscapeArgv &ea, bela::error_code &ec) {
   return true;
 }
 
-} // namespace baulkterminal
+} // namespace baulk

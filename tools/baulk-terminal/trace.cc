@@ -3,9 +3,9 @@
 #include <bela/str_cat_narrow.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
-#include "baulkterminal.hpp"
+#include "baulk-terminal.hpp"
 
-namespace baulkterminal {
+namespace baulk {
 class TraceHelper {
 public:
   TraceHelper(const TraceHelper &) = delete;
@@ -40,7 +40,7 @@ private:
     if (!p) {
       return false;
     }
-    auto file = bela::StringCat(*p, L"\\baulkterminal.trace.log");
+    auto file = bela::StringCat(*p, L"\\baulk-terminal.trace.log");
     if (fd = CreateFileW(file.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_ALWAYS,
                          FILE_ATTRIBUTE_NORMAL, nullptr);
         fd == INVALID_HANDLE_VALUE) {
@@ -59,10 +59,10 @@ int WriteTraceInternal(std::wstring_view msg) {
 }
 
 int WriteTrace(std::wstring_view msg) {
-  if (!baulkterminal::IsDebugMode) {
+  if (!IsDebugMode) {
     return 0;
   }
   return WriteTraceInternal(msg);
 }
 
-} // namespace baulkterminal
+} // namespace baulk

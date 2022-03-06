@@ -95,4 +95,4 @@ catch {
     exit 1
 }
 
-&"$DestinationPath\baulk\baulkterminal.exe"
+&"$DestinationPath\baulk\baulk-terminal.exe"
