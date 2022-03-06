@@ -39,8 +39,16 @@ Built-in alias:
 }
 
 void Version() {
-  bela::FPrintF(stdout, L"baulk-exec %s\nRelease:    %s\nCommit:     %s\nBuild Time: %s\n", BAULK_VERSION,
-                BAULK_REFNAME, BAULK_REVISION, BAULK_BUILD_TIME);
+  bela::FPrintF(stdout, LR"(baulk-exec %s
+Release:    %d.%d.%d.%d
+Commit:     %s
+Build Time: %s
+)",
+                BAULK_VERSION,                                                                      // version short
+                BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD, // version full
+                BAULK_REVISION,                                                                     // version commit
+                BAULK_BUILD_TIME                                                                    // build time
+  );
 }
 
 bool InitializeGitEnv(bool isCleanupEnv, bela::env::Simulator &sm, bela::error_code &ec) {

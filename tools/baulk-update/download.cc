@@ -32,20 +32,19 @@ bool resolve_baulk_version(bela::version &version) {
     return false;
   }
   // eg:
-  // baulk-exec 3.0.1
-  // Release:    refs/tags/3.0.1
-  // Commit:     e134c8afd08c0fe58e7c446c0bc41609b954e181
-  // Build Time: 2021-10-13T13:26:22Z
+  // baulk-exec 4.0.0
+  // Release:    4.0.0.1
+  // Commit:     7c0d17c334331d66ec3da1101fc76d3c6167e634
+  // Build Time: none
+  constexpr std::string_view releasePrefix = "Release:";
   std::vector<std::string_view> lines =
       bela::narrow::StrSplit(ps.Out(), bela::narrow::ByChar('\n'), bela::narrow::SkipEmpty());
-  if (lines.empty()) {
-    return false;
-  }
-  std::vector<std::string_view> parts =
-      bela::narrow::StrSplit(lines[0], bela::narrow::ByChar(' '), bela::narrow::SkipEmpty());
-  for (size_t i = 1; i < parts.size(); i++) {
-    if (version = bela::version(parts[i]); version != zero_version) {
-      return true;
+  for (auto line : lines) {
+    if (line.starts_with(releasePrefix)) {
+      auto versionstr = bela::StripAsciiWhitespace(line.substr(releasePrefix.size()));
+      if (version = bela::version(versionstr); version != zero_version) {
+        return true;
+      }
     }
   }
   return false;
@@ -56,6 +55,9 @@ bool Executor::latest_download_url() {
   if (!resolve_baulk_version(version)) {
     bela::FPrintF(stderr, L"baulk-update: \x1b[31munable detect baulk version\x1b[0m\n");
     return false;
+  }
+  if (IsDebugMode) {
+    bela::FPrintF(stderr, L"\x1b[33m* current baulk version: %v\x1b[0m\n", version.make_string_version());
   }
   return latest_download_url(version);
 }
