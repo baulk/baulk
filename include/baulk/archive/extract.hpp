@@ -4,14 +4,16 @@
 #include <bela/terminal.hpp>
 #include <baulk/archive.hpp>
 #include <baulk/indicators.hpp>
+#include <functional>
 #include <filesystem>
 #include "zip.hpp"
 
 namespace baulk::archive {
 class ZipExtractor {
 public:
-  ZipExtractor(bool quietMode_ = false) noexcept {
+  ZipExtractor(bool quietMode_ = false, bool debugMode_ = true) noexcept {
     quietMode = quietMode_;
+    debugMode = debugMode_;
     if (!quietMode) {
       if (bela::terminal::IsSameTerminal(stderr)) {
         if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
@@ -43,7 +45,23 @@ public:
         return false;
       }
     }
-    if (!quietMode) {
+    if (!quietMode && !debugMode) {
+      bela::FPrintF(stderr, L"\n");
+    }
+    return true;
+  }
+  using Filter = std::function<bool(const baulk::archive::zip::File &)>;
+  bool Extract(const Filter &filter, bela::error_code &ec) {
+    destsize = destination.size() + 1;
+    for (const auto &file : reader.Files()) {
+      if (filter(file)) {
+        continue;
+      }
+      if (!extractFile(file, ec)) {
+        return false;
+      }
+    }
+    if (!quietMode && !debugMode) {
       bela::FPrintF(stderr, L"\n");
     }
     return true;
@@ -56,11 +74,16 @@ private:
   int64_t decompressed{0};
   size_t destsize{0};
   bool quietMode{false};
+  bool debugMode{false};
   bool owfile{true};
   bool extractFile(const zip::File &file, bela::error_code &ec);
   bool extractDir(const zip::File &file, std::wstring_view dir, bela::error_code &ec);
   bool extractSymlink(const zip::File &file, std::wstring_view filename, bela::error_code &ec);
   void showProgress(const std::wstring_view filename) {
+    if (debugMode) {
+      bela::FPrintF(stderr, L"\x1b[33m* x %s\x1b[0m\n", filename);
+      return;
+    }
     auto suglen = static_cast<size_t>(termsz.columns) - 8;
     if (auto n = bela::string_width<wchar_t>(filename); n <= suglen) {
       bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
@@ -108,9 +131,8 @@ inline bool ZipExtractor::extractFile(const zip::File &file, bela::error_code &e
     bela::FPrintF(stderr, L"skip dangerous path %s\n", file.name);
     return true;
   }
-  auto showName = std::wstring_view(out->data() + destsize, out->size() - destsize);
   if (termsz.columns != 0) {
-    showProgress(showName);
+    showProgress(std::wstring_view(out->data() + destsize, out->size() - destsize));
   }
   if (file.IsSymlink()) {
     return extractSymlink(file, *out, ec);

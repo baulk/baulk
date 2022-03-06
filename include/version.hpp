@@ -25,7 +25,7 @@
 #endif
 
 #ifndef BAULK_VERSION
-#define BAULK_VERSION L"0.1.0"
+#define BAULK_VERSION L"3.1.0"
 #endif
 
 #ifndef BAULK_REVISION

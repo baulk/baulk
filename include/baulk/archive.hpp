@@ -35,7 +35,13 @@ bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_
 std::wstring_view PathRemoveExtension(std::wstring_view p);
 
 inline std::wstring FileDestination(std::wstring_view arfile) {
-  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size()) {
+  auto ends_with_path_separator = [](std::wstring_view p) -> bool {
+    if (p.empty()) {
+      return false;
+    }
+    return bela::IsPathSeparator(p.back());
+  };
+  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
     return std::wstring(d);
   }
   return bela::StringCat(arfile, L".out");
