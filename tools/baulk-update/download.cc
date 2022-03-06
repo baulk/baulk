@@ -33,10 +33,11 @@ bool resolve_baulk_version(bela::version &version) {
   }
   // eg:
   // baulk-exec 4.0.0
-  // Release:    4.0.0.1
+  // Version:    4.0.0.1
+  // Branch:     refs/heads/master
   // Commit:     7c0d17c334331d66ec3da1101fc76d3c6167e634
-  // Build Time: none
-  constexpr std::string_view releasePrefix = "Release:";
+  // BuildTime:  none
+  constexpr std::string_view releasePrefix = "Version:";
   std::vector<std::string_view> lines =
       bela::narrow::StrSplit(ps.Out(), bela::narrow::ByChar('\n'), bela::narrow::SkipEmpty());
   for (auto line : lines) {

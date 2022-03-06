@@ -39,15 +39,17 @@ Built-in alias:
 }
 
 void Version() {
-  bela::FPrintF(stdout, LR"(baulk-exec %s
-Release:    %d.%d.%d.%d
+  bela::FPrintF(stdout, LR"(baulk-exec - Baulk extended executor [%s]
+Version:    %d.%d.%d.%d
+Branch:     %s
 Commit:     %s
-Build Time: %s
+BuildTime:  %s
 )",
                 BAULK_VERSION,                                                                      // version short
                 BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD, // version full
-                BAULK_REVISION,                                                                     // version commit
-                BAULK_BUILD_TIME                                                                    // build time
+                BAULK_REFNAME,   // version for refname
+                BAULK_REVISION,  // version commit
+                BAULK_BUILD_TIME // build time
   );
 }
 
