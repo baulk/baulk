@@ -366,6 +366,18 @@ Baulk Dock **Dark Mode**:
 
 目前我们使用 Github Release Latest 机制实现 Baulk 自身的升级，在执行 Github Actions 时，当推送的新的 tag，Github Actions 会自动创建发行版并将二进制压缩包上传。在此过程中，tag 的信息会编译到 baulk 程序中，本地运行 `baulk-update` （请注意 baulk update 是更新 bucket 与 baulk-update 不是同一个命令）时，会检查本地的 baulk 是否处于 tag ，如果不是基于 Github Actions 构建，除非设置 `--force` 参数否则不会进行下一步检查，如果是基于 Github Actions 构建的 tag，则检查是否与 Github Release Latest 是否一致，不一致下载相应平台的二进制，然后更新 Baulk。
 
+## 开启长路径支持
+
+在使用 baulk 解压时，如果因为文件名太长无法而无法解压，可以尝试修改长路径支持，很遗憾，Windows 10/11 在这里做的不够好，需要注册表开启和应用程序清单同时设置才支持没有 UNC（`\\?\`） 前缀的长路径。
+
+你可以使用管理员权限运行 Powershell（win+X）:
+
+```powershell
+Set-ItemProperty `
+  -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem `
+  -Name LongPathsEnabled -Value 1
+```
+
 ## 文章
 
 [《Baulk - 开发一个简单的包管理工具历程》](https://forcemz.net/toolset/2020/07/18/Baulk/)

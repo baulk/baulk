@@ -88,8 +88,14 @@ std::optional<File> File::NewFile(std::wstring_view path, bool overwrite, bela::
       return std::nullopt;
     }
   } else {
-    std::filesystem::create_directories(p.parent_path(), sec);
+    if (std::filesystem::create_directories(p.parent_path(), sec); sec) {
+      ec = bela::from_std_error_code(sec, L"create_directories() ");
+      return std::nullopt;
+    }
   }
+  /*
+  * 
+  */
   auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
                         FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (fd == INVALID_HANDLE_VALUE) {

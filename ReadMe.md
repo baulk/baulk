@@ -384,6 +384,18 @@ Baulk Dock **Dark Mode**:
 
 At present, we use the Github Release Latest mechanism to upgrade Baulk itself. When executing Github Actions, when new tags are pushed, Github Actions will automatically create a release version and upload the binary compressed package. In this process, the tag information will be compiled into the baulk program. When running `baulk-update` locally (please note that baulk update is to update the bucket and baulk-update are not the same command), it will check whether the local baulk is in the tag, If it is not built on Github Actions, the next step will not be checked unless the `--force` parameter is set. If it is a tag built on Github Actions, check whether it is consistent with Github Release Latest, inconsistently download the binary of the corresponding platform, and then Update Baulk.
 
+## Enabling Long Paths in Windows
+
+When extracting files with baulk, if you encounter a file that cannot be created because the name is too long, you can modify the long path setting. Unfortunately, Windows is not user-friendly here. 
+
+You can use Powershell from an Adminstrative Terminal:
+
+```powershell
+Set-ItemProperty `
+  -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem `
+  -Name LongPathsEnabled -Value 1
+```
+
 ## Article
 
 [《Baulk - 开发一个简单的包管理工具历程》](https://forcemz.net/toolset/2020/07/18/Baulk/)

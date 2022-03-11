@@ -62,7 +62,7 @@ inline std::optional<FsMutex> MakeFsMutex(std::wstring_view pidfile, bela::error
   auto FileHandle = ::CreateFileW(pidfile.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
-    ec = bela::make_system_error_code();
+    ec = bela::make_system_error_code(L"CreateFsMutex: ");
     return std::nullopt;
   }
   bela::narrow::AlphaNum an(GetCurrentProcessId());
