@@ -1,12 +1,11 @@
 #!/usr/bin/env pwsh
 param(
-    [ValidateSet("win64", "win32", "arm64")]
+    [ValidateSet("win64", "arm64")]
     [string]$Target = "win64"
 )
 
 $TargetWithHost64s = @{
     "win64" = "amd64";
-    "win32" = "amd64_x86";
     "arm64" = "amd64_arm64";
 }
 
@@ -68,7 +67,7 @@ Function Execute {
 $VisualCxxBatchFiles = $(
     "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat",
     "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsall.bat",
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+    "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
 )
 
 $VisualCxxBatchFile = $null

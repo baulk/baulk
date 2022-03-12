@@ -37,6 +37,9 @@ jobs:
       - name: Package Release
         if: startsWith(github.ref, 'refs/tags/')
         run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/package.ps1" -Target "${{ matrix.short_target }}"
+      - name: Make Appx
+        if: startsWith(github.ref, 'refs/tags/')
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeAppx.ps1" -Target "${{ matrix.short_target }}"
       - name: Upload Release
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -53,5 +56,14 @@ jobs:
           file_glob: true
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/Baulk*.exe
+          tag: ${{ github.ref }}
+          overwrite: true
+      - name: Upload Appx
+        uses: svenstaro/upload-release-action@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          file_glob: true
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/Baulk*.appx
           tag: ${{ github.ref }}
           overwrite: true

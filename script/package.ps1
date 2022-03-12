@@ -1,19 +1,17 @@
 #!/usr/bin/env pwsh
 
 param(
-    [ValidateSet("win64", "win32", "arm64")]
+    [ValidateSet("win64",  "arm64")]
     [string]$Target = "win64",
     [string]$RefName = ""
 )
 
 $ArchitecturesAlloweds = @{
     "win64" = "x64";
-    "win32" = "";
     "arm64" = "arm64";
 }
 $ArchitecturesInstallIn64BitModes = @{
     "win64" = "x64";
-    "win32" = "";
     "arm64" = "arm64";
 }
 
