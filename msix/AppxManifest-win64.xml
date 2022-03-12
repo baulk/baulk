@@ -20,13 +20,6 @@
         <DisplayName>Baulk</DisplayName>
         <PublisherDisplayName>Force Charlie</PublisherDisplayName>
         <Logo>Assets\StoreLogo.scale-400.png</Logo>
-        <virtualization:FileSystemWriteVirtualization>
-            <virtualization:ExcludedDirectories>
-                <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppData)</virtualization:ExcludedDirectory>
-                <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppDataLow)</virtualization:ExcludedDirectory>
-                <virtualization:ExcludedDirectory>$(KnownFolder:RoamingAppData)</virtualization:ExcludedDirectory>
-            </virtualization:ExcludedDirectories>
-        </virtualization:FileSystemWriteVirtualization>
     </Properties>
     <Dependencies>
         <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.22000.0" />
@@ -107,23 +100,23 @@
                         <desktop:ExecutionAlias Alias="baulk-terminal.exe" />
                     </uap3:AppExecutionAlias>
                 </uap3:Extension>
-                <!-- <desktop4:Extension Category="windows.fileExplorerContextMenus">
-          <desktop4:FileExplorerContextMenus>
-            <desktop5:ItemType Type="Directory">
-              <desktop5:Verb Id="baulk-extension" Clsid="469D94E9-6AF4-4395-B396-99B1308F8CE5" />
-            </desktop5:ItemType>
-            <desktop5:ItemType Type="*">
-              <desktop5:Verb Id="baulk-extension" Clsid="469D94E9-6AF4-4395-B396-99B1308F8CE5" />
-            </desktop5:ItemType>
-          </desktop4:FileExplorerContextMenus>
-        </desktop4:Extension> -->
-                <!-- <com:Extension Category="windows.comServer">
-          <com:ComServer>
-            <com:SurrogateServer DisplayName="NanaZip Shell Extension">
-              <com:Class Id="469D94E9-6AF4-4395-B396-99B1308F8CE5" Path="baulk-extension.dll" ThreadingModel="STA"/>
-            </com:SurrogateServer>
-          </com:ComServer>
-        </com:Extension> -->
+                <desktop4:Extension Category="windows.fileExplorerContextMenus">
+                    <desktop4:FileExplorerContextMenus>
+                        <desktop5:ItemType Type="Directory">
+                            <desktop5:Verb Id="OpenBaulkDev" Clsid="803A733E-9F73-4F38-BB43-1005CEC3B19D" />
+                        </desktop5:ItemType>
+                        <desktop5:ItemType Type="Directory\Background">
+                            <desktop5:Verb Id="OpenBaulkDev" Clsid="803A733E-9F73-4F38-BB43-1005CEC3B19D" />
+                        </desktop5:ItemType>
+                    </desktop4:FileExplorerContextMenus>
+                </desktop4:Extension>
+                <com:Extension Category="windows.comServer">
+                    <com:ComServer>
+                        <com:SurrogateServer DisplayName="Baulk Shell Extension">
+                            <com:Class Id="803A733E-9F73-4F38-BB43-1005CEC3B19D" Path="bin\baulk-extension.dll" ThreadingModel="STA"/>
+                        </com:SurrogateServer>
+                    </com:ComServer>
+                </com:Extension>
             </Extensions>
         </Application>
     </Applications>

@@ -123,6 +123,7 @@ install(FILES "script/FragmentsDel.bat" DESTINATION script)
 add_subdirectory(vendor/bela)
 add_subdirectory(lib)
 add_subdirectory(tools)
+add_subdirectory(extension)
 
 if(BUILD_TEST)
   add_subdirectory(test)

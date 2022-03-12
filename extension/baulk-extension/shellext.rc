@@ -1,0 +1,36 @@
+// Baulk resources
+#include "windows.h"
+#include "revision.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+PRODUCTVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "000904b0"
+BEGIN
+VALUE "CompanyName", L"Baulk contributors"
+VALUE "FileDescription", L"Baulk Shell Extension"
+VALUE "FileVersion", BAULK_VERSION
+VALUE "InternalName", L"baulk-extension.dll"
+VALUE "LegalCopyright", BAULK_COPYRIGHT
+VALUE "OriginalFilename", L"baulk-extension.dll"
+VALUE "ProductName", L"baulk - Minimal Package Manager for Windows"
+VALUE "ProductVersion", BAULK_VERSION
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x9, 1200
+END
+END

@@ -55,6 +55,8 @@ New-Item -ItemType Directory -Force "$AppxBuildRoot\config"
 New-Item -ItemType Directory -Force "$AppxBuildRoot\share\baulk"
 New-Item -ItemType Directory -Force "$AppxBuildRoot\script"
 
+Copy-Item -Recurse "$WD\lib\baulk-extension.dll" -Destination "$AppxBuildRoot\bin"
+
 # bin
 Copy-Item -Recurse "$WD\bin\baulk.exe" -Destination "$AppxBuildRoot\bin"
 Copy-Item -Recurse "$WD\bin\baulk-dock.exe" -Destination "$AppxBuildRoot\bin"
