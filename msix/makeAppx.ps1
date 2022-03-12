@@ -8,20 +8,47 @@ $ArchitecturesAlloweds = @{
     "arm64" = "arm64";
 }
 
+$microsoftSDKs = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0'
+if (!(Test-Path $microsoftSDKs)) {
+    $microsoftSDKs = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0' 
+}
+
+$sdkObject = Get-ItemProperty -Path $microsoftSDKs -ErrorAction SilentlyContinue
+if ($null -eq $sdkObject) {
+    Write-Host "Read $microsoftSDKs failed"
+    exit 1
+}
+$InstallationFolder = $sdkObject.InstallationFolder
+$ProductVersion = $sdkObject.ProductVersion
+$binPath = Join-Path -Path $InstallationFolder -ChildPath "bin"
+[string]$SdkPath = ""
+Get-ChildItem -Path $binPath | ForEach-Object {
+    $Name = $_.BaseName
+    if ($Name.StartsWith($ProductVersion)) {
+        $SdkPath = Join-Path -Path $binPath "$Name\x64";
+        Write-Host "Found $SdkPath"
+    }
+}
+if ($SdkPath.Length -ne 0) {
+    $env:PATH = "$SdkPath;$env:PATH"
+}
+
 $ArchitecturesAllowed = $ArchitecturesAlloweds[$Target]
 $BaulkAppxName = "Baulk-$ArchitecturesAllowed.appx"
 
-Remove-Item -Force "$BaulkAppxName"
+
 Write-Host "build $BaulkAppxName "
 
 $SourceRoot = Split-Path -Parent $PSScriptRoot
 $WD = Join-Path -Path $SourceRoot -ChildPath "build"
 Set-Location $WD
 
+Remove-Item -Force "$BaulkAppxName"  -ErrorAction SilentlyContinue
+
 $BaulkAppxPfx = Join-Path -Path $WD -ChildPath "Key.pfx"
 
 $AppxBuildRoot = Join-Path -Path $WD -ChildPath "appx"
-Remove-Item -Force -Recurse "$AppxBuildRoot"
+Remove-Item -Force -Recurse "$AppxBuildRoot" -ErrorAction SilentlyContinue
 
 New-Item -ItemType Directory -Force "$AppxBuildRoot\bin"
 New-Item -ItemType Directory -Force "$AppxBuildRoot\config"
