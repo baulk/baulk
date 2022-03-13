@@ -34,15 +34,18 @@ public:
   }
   std::wstring JoinEtc(std::wstring_view p) { return (etc / p).wstring(); }
   std::wstring JoinPath(std::wstring_view p) { return (basePath / p).wstring(); }
+  std::wstring JoinAppData(std::wstring_view p) { return (appdata / p).wstring(); }
 
 private:
   std::filesystem::path etc;
   std::filesystem::path basePath;
+  std::filesystem::path appdata;
   PathSearcher() {
     bela::error_code ec;
     if (!vfsInitialize(ec)) {
       etc = std::filesystem::path{L"."};
       basePath = std::filesystem::path{L"."};
+      appdata = std::filesystem::path{L"."};
     }
   }
 
@@ -74,6 +77,7 @@ private:
         auto mode = it->get<std::string>();
         if (!bela::EqualsIgnoreCase(mode, "Legacy")) {
           etc = basePath / L"etc";
+          appdata = basePath / L"appdata";
           return true;
         }
       }
@@ -81,6 +85,7 @@ private:
       return false;
     }
     etc = basePath / L"bin\\etc";
+    appdata = basePath / L"bin\\appdata";
     return true;
   }
 
@@ -92,6 +97,7 @@ private:
       auto baulkExePath = basePath / baulkExe;
       if (std::filesystem::exists(baulkExePath, e)) {
         etc = basePath / L"bin\\etc";
+        appdata = basePath / L"bin\\appdata";
         return true;
       }
       basePath = basePath.parent_path();
@@ -99,6 +105,7 @@ private:
     return false;
   }
 };
+
 
 } // namespace example
 #endif
