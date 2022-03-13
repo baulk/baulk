@@ -32,7 +32,7 @@ if (!(Test-Path $WindowsTerminalFragments)) {
 $FileName = Join-Path $WindowsTerminalFragments -ChildPath "baulk.json"
 
 $profileAMD64 = @{
-    name        = "Baulk";
+    name        = "Baulk Termianl";
     guid        = "`{70972808-9457-5826-a04a-cf51f621d544`}";
     commandline = "`"$BaulkLauncher`" --vs winsh";
     icon        = "$BaulkIcon";

@@ -85,3 +85,6 @@ target_link_libraries(pathext_test belatime belawin)
 
 add_executable(extract_test extract.cc base.manifest)
 target_link_libraries(extract_test baulk.archive)
+
+add_executable(vfsenv_test vfsenv.cc base.manifest)
+target_link_libraries(vfsenv_test belawin)

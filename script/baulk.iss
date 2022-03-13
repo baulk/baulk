@@ -148,7 +148,7 @@ begin
         '{'+#10
         '  "profiles": ['#10+
         '    {'#10+
-        '      "name": "Baulk",'#10+
+        '      "name": "Baulk Terminal",'#10+
         '      "guid": "{70972808-9457-5826-a04a-cf51f621d544}",'#10+
         '      "commandline": "\"'+AppPath+'/bin/baulk-exec.exe\" --vs winsh",'#10+
         '      "icon": "'+AppPath+'/share/baulk/baulk.ico",'#10+

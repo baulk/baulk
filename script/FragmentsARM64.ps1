@@ -32,7 +32,7 @@ if (!(Test-Path $WindowsTerminalFragments)) {
 $FileName = Join-Path $WindowsTerminalFragments -ChildPath "baulk-arm64.json"
 
 $profileARM64 = @{
-    name        = "Baulk ARM64";
+    name        = "Baulk Termianl (arm64)";
     guid        = "`{df2527a1-229a-4b40-9d0b-664fb88ed230`}";
     commandline = "`"$BaulkLauncher`" --vs -Aarm64 winsh";
     icon        = "$BaulkIcon";
