@@ -62,7 +62,8 @@ bool Executor::ParseArgv(bela::error_code &ec) {
       .Add(L"venv", bela::required_argument, L'E') // virtual env support
       .Add(L"vs", bela::no_argument, 1000)         // load visual studio environment
       .Add(L"vs-preview", bela::no_argument, 1001) // load visual studio (Preview) environment
-      .Add(L"conhost", bela::no_argument, 1002);   // disable windows termainl
+      .Add(L"conhost", bela::no_argument, 1002)    // disable windows termainl
+      .Add(L"clang", bela::no_argument, 99999);    // Deprecated --clang.
   auto ret = pa.Execute(
       [this](int val, const wchar_t *oa, const wchar_t *) {
         switch (val) {

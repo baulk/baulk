@@ -30,7 +30,7 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
   zs.avail_in = 0;
   zs.next_out = out.data();
   zs.avail_out = xzoutsize;
-  uint32_t crc32val = 0;
+  Summator sum(file.crc32sum);
   for (;;) {
     if (zs.avail_in == 0 && csize != 0) {
       auto minsize = (std::min)(csize, static_cast<uint64_t>(xzinsize));
@@ -47,7 +47,7 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
     ret = lzma_code(&zs, action);
     if (zs.avail_out == 0 || ret == LZMA_STREAM_END) {
       auto have = xzoutsize - zs.avail_out;
-      crc32val = crc32_fast(out.data(), have, crc32val);
+      sum.Update(out.data(), have);
       if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
@@ -81,8 +81,8 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
       }
     }
   }
-  if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+  if (!sum.Valid()) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

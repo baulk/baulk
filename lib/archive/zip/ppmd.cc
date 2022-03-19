@@ -151,7 +151,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
   }
   Ppmd8_Init(&_ppmd, order, restor);
   Buffer out(BufferSize);
-  uint32_t crc32val = 0;
+  Summator sum(file.crc32sum);
   for (;;) {
     auto ob = out.data();
     auto size = BufferSize;
@@ -167,7 +167,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
     if (i == 0) {
       break;
     }
-    crc32val = crc32_fast(ob, i, crc32val);
+    sum.Update(ob, i);
     if (!w(ob, i)) {
       ec = bela::make_error_code(ErrCanceled, L"canceled");
       return false;
@@ -176,8 +176,8 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
       break;
     }
   }
-  if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+  if (!sum.Valid()) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

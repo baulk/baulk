@@ -17,7 +17,7 @@
 // - crc32_16bytes  needs all of Crc32Lookup
 
 
-#include "Crc32.h"
+#include <baulk/archive/details/crc32.h>
 
 #ifndef __LITTLE_ENDIAN
   #define __LITTLE_ENDIAN 1234

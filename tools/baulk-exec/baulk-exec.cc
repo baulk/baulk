@@ -87,8 +87,8 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
       .Add(L"venv", bela::required_argument, L'E')
       .Add(L"vs", bela::no_argument, 1000) // load visual studio environment
       .Add(L"vs-preview", bela::no_argument, 1001)
-      .Add(L"clang", bela::no_argument, 1002)
-      .Add(L"time", bela::no_argument, 1004);
+      .Add(L"time", bela::no_argument, 1004)
+      .Add(L"clang", bela::no_argument, 9999); // Deprecated
   bool initializeVSEnv = false;
   bool initializeVSPreviewEnv = false;
   std::wstring arch(baulk::env::HostArch);

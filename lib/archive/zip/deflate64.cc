@@ -9,13 +9,14 @@ namespace baulk::archive::zip {
 constexpr DWORD CHUNK = 131072;
 struct inflate64Writer {
   const Writer &w;
-  uint32_t crc32val{0};
+  Summator sum;
   uint64_t count{0};
   bool canceled{false};
 };
 int put(void *out_desc, unsigned char *buf, unsigned len) {
   auto w = reinterpret_cast<inflate64Writer *>(out_desc);
-  w->crc32val = crc32_fast(buf, len, w->crc32val);
+  // w->crc32val = crc32_fast(buf, len, w->crc32val);
+  w->sum.Update(buf, len);
   w->count += len;
   if (!w->w(buf, len)) {
     w->canceled = true;
@@ -73,7 +74,13 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
     return false;
   }
   auto closer = bela::finally([&] { inflateBack9End(&zs); });
-  inflate64Writer iw{w, 0, 0, false};
+  inflate64Writer iw{
+      //
+      .w = w,
+      .sum = Summator(file.crc32sum), //
+      .count = 0,
+      .canceled = false //
+  };
   inflate64Reader r{fd.NativeFD(), chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
   ret = inflateBack9(&zs, get, &r, put, &iw);
   if (iw.canceled) {
@@ -84,8 +91,8 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
     ec = bela::make_error_code(L"deflate64 compressed data corrupted");
     return false;
   }
-  if (iw.crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", iw.crc32val, L" not match");
+  if (!iw.sum.Valid()) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", iw.sum.Current(), L" not match");
     return false;
   }
   return true;

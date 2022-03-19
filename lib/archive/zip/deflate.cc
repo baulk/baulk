@@ -20,7 +20,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
   int64_t uncsize = 0;
   auto csize = file.compressedSize;
   int ret = Z_OK;
-  uint32_t crc32val = 0;
+  Summator sum(file.crc32sum);
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!fd.ReadFull({in.data(), static_cast<size_t>(minsize)}, ec)) {
@@ -48,7 +48,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
         break;
       }
       auto have = outsize - zs.avail_out;
-      crc32val = crc32_fast(out.data(), have, crc32val);
+      sum.Update(out.data(), have); // CRC32 update
       if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
@@ -59,8 +59,8 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
       break;
     }
   }
-  if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+  if (!sum.Valid()) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

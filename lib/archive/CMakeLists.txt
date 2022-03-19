@@ -89,8 +89,7 @@ file(
   BAULK_ARCHIVE_SOURCES
   *.cc
   tar/*.cc
-  zip/*.cc
-  zip/*.cpp)
+  zip/*.cc)
 
 add_library(baulk.archive STATIC ${BAULK_ARCHIVE_SOURCES})
 

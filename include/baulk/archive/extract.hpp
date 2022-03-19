@@ -11,16 +11,15 @@
 namespace baulk::archive {
 class ZipExtractor {
 public:
-  ZipExtractor(bool quietMode_ = false, bool debugMode_ = false) noexcept {
-    quietMode = quietMode_;
-    debugMode = debugMode_;
+  ZipExtractor(bool quietMode_ = false, bool debugMode_ = false) noexcept
+      : quietMode(quietMode_), debugMode(debugMode_) {
     if (!quietMode) {
-      if (bela::terminal::IsSameTerminal(stderr)) {
-        if (auto cygwinterminal = bela::terminal::IsCygwinTerminal(stderr); cygwinterminal) {
-          CygwinTerminalSize(termsz);
-          return;
-        }
+      if (bela::terminal::IsTerminal(stderr)) {
         bela::terminal::TerminalSize(stderr, termsz);
+        return;
+      }
+      if (bela::terminal::IsCygwinTerminal(stderr)) {
+        CygwinTerminalSize(termsz);
       }
     }
   }

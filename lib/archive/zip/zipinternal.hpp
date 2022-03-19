@@ -5,7 +5,7 @@
 #include <baulk/archive/zip.hpp>
 #include <baulk/allocate.hpp>
 #include <baulk/archive.hpp>
-#include "Crc32.h"
+#include <baulk/archive/crc32.hpp>
 
 namespace baulk::archive::zip {
 using baulk::mem::Buffer;
