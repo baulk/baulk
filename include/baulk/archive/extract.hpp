@@ -74,7 +74,7 @@ private:
   size_t destsize{0};
   bool quietMode{false};
   bool debugMode{false};
-  bool owfile{true};
+  bool overwrite_file{true};
   bool extractFile(const zip::File &file, bela::error_code &ec);
   bool extractDir(const zip::File &file, std::wstring_view dir, bela::error_code &ec);
   bool extractSymlink(const zip::File &file, std::wstring_view filename, bela::error_code &ec);
@@ -104,11 +104,7 @@ inline bool ZipExtractor::extractSymlink(const zip::File &file, std::wstring_vie
   if (!ret) {
     return false;
   }
-  auto wn = bela::encode_into<char, wchar_t>(linkname);
-  if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
-    return false;
-  }
-  return true;
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), ec, overwrite_file);
 }
 
 inline bool ZipExtractor::extractDir(const zip::File &file, std::wstring_view dir, bela::error_code &ec) {
@@ -139,7 +135,7 @@ inline bool ZipExtractor::extractFile(const zip::File &file, bela::error_code &e
   if (file.IsDir()) {
     return extractDir(file, *out, ec);
   }
-  auto fd = baulk::archive::File::NewFile(*out, owfile, ec);
+  auto fd = baulk::archive::File::NewFile(*out, overwrite_file, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *out, ec);
     return false;

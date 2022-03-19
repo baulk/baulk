@@ -51,7 +51,7 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child_path,
                                              bool always_utf8 = true);
 std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,
-                                                        bool always_utf8 = true);
+                                                        bool always_utf8, std::wstring &encoded_path);
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
 // OpenArchiveFile open file and detect archive file format and offset
 inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,

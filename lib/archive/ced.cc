@@ -128,11 +128,12 @@ inline bool is_harmful_path(std::string_view child_path) {
 }
 
 std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,
-                                                        bool always_utf8) {
+                                                        bool always_utf8, std::wstring &encoded_path) {
   if (is_harmful_path(child_path)) {
     return std::nullopt;
   }
-  return std::make_optional(root / encode_into_native(child_path, always_utf8));
+  encoded_path = encode_into_native(child_path, always_utf8);
+  return std::make_optional(root / encoded_path);
 }
 
 } // namespace baulk::archive
