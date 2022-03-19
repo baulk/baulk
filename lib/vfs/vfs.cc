@@ -108,11 +108,9 @@ constexpr std::wstring_view envTemplate = LR"({
 
 bool PathFs::NewFsPaths(bela::error_code &ec) {
   std::error_code e;
-  if (!bela::PathExists(table.basePath, bela::FileAttribute::Dir)) {
-    if (!std::filesystem::create_directories(table.basePath, e)) {
-      ec = bela::from_std_error_code(e, L"create_directories: ");
-      return false;
-    }
+  if (std::filesystem::create_directories(table.basePath, e); e) {
+    ec = bela::from_std_error_code(e, L"create_directories: ");
+    return false;
   }
   auto baulkEnv = bela::StringCat(table.basePath, L"\\baulk.env");
   if (!bela::PathFileIsExists(baulkEnv)) {

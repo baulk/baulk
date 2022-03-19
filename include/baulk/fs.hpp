@@ -18,7 +18,7 @@ inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   if (std::filesystem::exists(path, e)) {
     return true;
   }
-  if (!std::filesystem::create_directories(path, e)) {
+  if (std::filesystem::create_directories(path, e); e) {
     ec = bela::from_std_error_code(e);
     return false;
   }
@@ -32,7 +32,7 @@ inline bool MakeParentDir(std::wstring_view path, bela::error_code &ec) {
   if (std::filesystem::exists(parent, e)) {
     return true;
   }
-  if (!std::filesystem::create_directories(parent, e)) {
+  if (std::filesystem::create_directories(parent, e); e) {
     ec = bela::from_std_error_code(e);
     return false;
   }

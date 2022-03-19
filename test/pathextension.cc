@@ -1,6 +1,7 @@
 ///
 #include <bela/terminal.hpp>
 #include <bela/path.hpp>
+#include <bela/str_split_narrow.hpp>
 #include <filesystem>
 
 constexpr bool is_dot_or_separator(wchar_t ch) { return bela::IsPathSeparator(ch) || ch == L'.'; }
@@ -77,7 +78,44 @@ void pathfstest() {
   }
 }
 
+inline bool IsHarmfulPath(std::string_view path) {
+  const std::string_view dot = ".";
+  const std::string_view dotdot = "..";
+  std::vector<std::string_view> paths =
+      bela::narrow::StrSplit(path, bela::narrow::ByAnyChar("\\/"), bela::narrow::SkipEmpty());
+  int items = 0;
+  for (auto p : paths) {
+    if (p == dot) {
+      continue;
+    }
+    if (p != dotdot) {
+      items++;
+      continue;
+    }
+    items--;
+    if (items < 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 int wmain() {
+  constexpr std::string_view svs[] = {
+      //
+      "../",                 // bad
+      "././jack",            // good
+      "../zzz",              // bad
+      "zzz/../zz",           // good
+      "zzz/../../zzz",       // bad
+      "abc/file.zip"         // good
+      "ac/././././file.zip", // good
+      "../../"               // bad
+  };
+  for (const auto s : svs) {
+    bela::FPrintF(stderr, L"[%v] is harmful path: %v\n", s, IsHarmfulPath(s));
+  }
+
   constexpr std::wstring_view paths[] = {L"",
                                          L"//////////////////",
                                          L"/home/path/some.tgz",

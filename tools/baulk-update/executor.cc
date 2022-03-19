@@ -77,7 +77,7 @@ bool Executor::apply_baulk_files() {
   auto checked_move_file = [&](const std::filesystem::path &source, const std::filesystem::path &relativePath) -> bool {
     std::filesystem::path newPath = location / relativePath;
     std::error_code e;
-    if (!std::filesystem::create_directories(newPath.parent_path(), e) && e) {
+    if (std::filesystem::create_directories(newPath.parent_path(), e); e) {
       auto ec = bela::from_std_error_code(e, L"create_directories ");
       bela::FPrintF(stderr, L"create_directories for new path: %s\n", newPath.parent_path().wstring());
       return false;

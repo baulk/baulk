@@ -1,7 +1,9 @@
 #include <bela/codecvt.hpp>
 #include <bela/path.hpp>
+#include <bela/str_split_narrow.hpp>
 #include <baulk/archive.hpp>
 #include <compact_enc_det/compact_enc_det.h>
+#include <filesystem>
 
 namespace baulk::archive {
 // https://codereview.chromium.org/2081653007/
@@ -85,8 +87,8 @@ constexpr bool IsDangerousPath(std::wstring_view p) {
   return false;
 }
 
-std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view filename, bool always_utf8) {
-  auto fileName = encode_into_native(filename, always_utf8);
+std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child_path, bool always_utf8) {
+  auto fileName = encode_into_native(child_path, always_utf8);
   auto path = bela::PathCat(root, fileName);
   if (IsDangerousPath(path)) {
     return std::nullopt; // Windows BUG
@@ -101,6 +103,36 @@ std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string
     return std::nullopt;
   }
   return std::make_optional(std::move(path));
+}
+
+inline bool is_harmful_path(std::string_view child_path) {
+  const std::string_view dot = ".";
+  const std::string_view dotdot = "..";
+  std::vector<std::string_view> paths =
+      bela::narrow::StrSplit(child_path, bela::narrow::ByAnyChar("\\/"), bela::narrow::SkipEmpty());
+  int items = 0;
+  for (auto p : paths) {
+    if (p == dot) {
+      continue;
+    }
+    if (p != dotdot) {
+      items++;
+      continue;
+    }
+    items--;
+    if (items < 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,
+                                                        bool always_utf8) {
+  if (is_harmful_path(child_path)) {
+    return std::nullopt;
+  }
+  return std::make_optional(root / encode_into_native(child_path, always_utf8));
 }
 
 } // namespace baulk::archive
