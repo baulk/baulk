@@ -132,7 +132,7 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
     ec = bela::make_error_code(L"LZMA stream initialization error");
     return false;
   }
-  uint32_t crc32val = 0;
+  Summator sum(file.crc32sum);
   auto csize = file.compressedSize - 9;
   lzma_action action = LZMA_RUN;
   for (;;) {
@@ -151,7 +151,7 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
     ret = lzma_code(&zs, action);
     if (zs.avail_out == 0 || ret == LZMA_STREAM_END) {
       auto have = xzoutsize - zs.avail_out;
-      crc32val = crc32_fast(out.data(), have, crc32val);
+      sum.Update(out.data(), have);
       if (!w(out.data(), have)) {
         ec = bela::make_error_code(ErrCanceled, L"canceled");
         return false;
@@ -185,8 +185,8 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
       }
     }
   }
-  if (crc32val != file.crc32sum) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", crc32val, L" not match");
+  if (!sum.Valid()) {
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;
