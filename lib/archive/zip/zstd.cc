@@ -42,7 +42,7 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
     }
     csize -= minsize;
   }
-  if (sum.Valid()) {
+  if (!sum.Valid()) {
     ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
     return false;
   }
