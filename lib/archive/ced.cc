@@ -110,21 +110,21 @@ inline bool is_harmful_path(std::string_view child_path) {
   const std::string_view dotdot = "..";
   std::vector<std::string_view> paths =
       bela::narrow::StrSplit(child_path, bela::narrow::ByAnyChar("\\/"), bela::narrow::SkipEmpty());
-  int items = 0;
+  int entries = 0;
   for (auto p : paths) {
     if (p == dot) {
       continue;
     }
     if (p != dotdot) {
-      items++;
+      entries++;
       continue;
     }
-    items--;
-    if (items < 0) {
+    entries--;
+    if (entries < 0) {
       return true;
     }
   }
-  return false;
+  return entries <= 0;
 }
 
 std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,

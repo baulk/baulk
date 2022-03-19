@@ -78,26 +78,26 @@ void pathfstest() {
   }
 }
 
-inline bool IsHarmfulPath(std::string_view path) {
+inline bool is_harmful_path(std::string_view child_path) {
   const std::string_view dot = ".";
   const std::string_view dotdot = "..";
   std::vector<std::string_view> paths =
-      bela::narrow::StrSplit(path, bela::narrow::ByAnyChar("\\/"), bela::narrow::SkipEmpty());
-  int items = 0;
+      bela::narrow::StrSplit(child_path, bela::narrow::ByAnyChar("\\/"), bela::narrow::SkipEmpty());
+  int entries = 0;
   for (auto p : paths) {
     if (p == dot) {
       continue;
     }
     if (p != dotdot) {
-      items++;
+      entries++;
       continue;
     }
-    items--;
-    if (items < 0) {
+    entries--;
+    if (entries < 0) {
       return true;
     }
   }
-  return false;
+  return entries <= 0;
 }
 
 int wmain() {
@@ -106,6 +106,7 @@ int wmain() {
       "../",                 // bad
       "././jack",            // good
       "../zzz",              // bad
+      "./././zz/..",         // bad
       "zzz/../zz",           // good
       "zzz/../../zzz",       // bad
       "abc/file.zip"         // good
@@ -113,7 +114,7 @@ int wmain() {
       "../../"               // bad
   };
   for (const auto s : svs) {
-    bela::FPrintF(stderr, L"[%v] is harmful path: %v\n", s, IsHarmfulPath(s));
+    bela::FPrintF(stderr, L"[%v] is harmful path: %v\n", s, is_harmful_path(s));
   }
 
   constexpr std::wstring_view paths[] = {L"",
