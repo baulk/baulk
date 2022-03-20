@@ -63,9 +63,10 @@ public:
   }
 
 private:
+  ExtractorOptions opts;
   Reader reader;
   std::filesystem::path destination;
-  ExtractorOptions opts;
+
   bool extract_entry(const baulk::archive::zip::File &file, const Filter &filter, const OnProgress &progress,
                      bela::error_code &ec) {
     std::wstring encoded_path;
@@ -116,7 +117,16 @@ private:
 };
 } // namespace zip
 namespace tar {
-class Extractor {};
+class Extractor {
+public:
+  Extractor(const ExtractorOptions &opts_) noexcept : opts(opts_) {}
+  Extractor(const Extractor &) = delete;
+  Extractor &operator=(const Extractor &) = delete;
+
+private:
+  ExtractorOptions opts;
+  std::filesystem::path destination;
+};
 } // namespace tar
 } // namespace baulk::archive
 
