@@ -104,7 +104,7 @@ inline bool ZipExtractor::extractSymlink(const zip::File &file, std::wstring_vie
   if (!ret) {
     return false;
   }
-  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), ec, overwrite_file);
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), overwrite_file, ec);
 }
 
 inline bool ZipExtractor::extractDir(const zip::File &file, std::wstring_view dir, bela::error_code &ec) {
@@ -135,13 +135,9 @@ inline bool ZipExtractor::extractFile(const zip::File &file, bela::error_code &e
   if (file.IsDir()) {
     return extractDir(file, *out, ec);
   }
-  auto fd = baulk::archive::File::NewFile(*out, overwrite_file, ec);
+  auto fd = baulk::archive::File::NewFile(*out, file.time, overwrite_file, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *out, ec);
-    return false;
-  }
-  if (!fd->Chtimes(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *out, ec);
     return false;
   }
   bela::error_code writeEc;

@@ -78,11 +78,7 @@ bool Extractor::extractSymlink(const File &file, std::wstring_view filename, bel
   if (!ret) {
     return false;
   }
-  auto wn = bela::encode_into<char, wchar_t>(linkname);
-  if (!baulk::archive::NewSymlink(filename, wn, ec, owfile)) {
-    return false;
-  }
-  return true;
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), owfile, ec);
 }
 
 bool Extractor::extractDir(const File &file, std::wstring_view dir, bela::error_code &ec) {
@@ -112,13 +108,9 @@ bool Extractor::extractFile(const File &file, bela::error_code &ec) {
   if (file.IsDir()) {
     return extractDir(file, *dest, ec);
   }
-  auto fd = baulk::archive::File::NewFile(*dest, owfile, ec);
+  auto fd = baulk::archive::File::NewFile(*dest, file.time, owfile, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"unable NewFD %s error: %s\n", *dest, ec);
-    return false;
-  }
-  if (!fd->Chtimes(file.time, ec)) {
-    bela::FPrintF(stderr, L"unable SetTime %s error: %s\n", *dest, ec);
     return false;
   }
   bela::error_code writeEc;

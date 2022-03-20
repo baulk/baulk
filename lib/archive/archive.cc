@@ -20,21 +20,10 @@ inline bool chtimes(HANDLE fd, bela::Time t, bela::error_code &ec) {
   return true;
 }
 
-File::~File() { close_file(fd); }
-File::File(File &&o) noexcept {
-  close_file(fd);
-  fd = o.fd;
-  o.fd = INVALID_HANDLE_VALUE;
-}
-File &File::operator=(File &&o) noexcept {
-  close_file(fd);
-  fd = o.fd;
-  o.fd = INVALID_HANDLE_VALUE;
-  return *this;
-}
-bool File::Chtimes(bela::Time t, bela::error_code &ec) { return chtimes(fd, t, ec); }
-
-bool File::Discard() {
+inline bool discard_fd(HANDLE &fd) {
+  if (fd == INVALID_HANDLE_VALUE) {
+    return false;
+  }
   if (fd == INVALID_HANDLE_VALUE) {
     return false;
   }
@@ -65,6 +54,23 @@ bool File::Discard() {
   }
   return false;
 }
+
+File::~File() { close_file(fd); }
+File::File(File &&o) noexcept {
+  close_file(fd);
+  fd = o.fd;
+  o.fd = INVALID_HANDLE_VALUE;
+}
+File &File::operator=(File &&o) noexcept {
+  close_file(fd);
+  fd = o.fd;
+  o.fd = INVALID_HANDLE_VALUE;
+  return *this;
+}
+bool File::Chtimes(bela::Time t, bela::error_code &ec) { return chtimes(fd, t, ec); }
+bool File::Discard() { return discard_fd(fd); }
+
+/// WriteFull
 bool File::WriteFull(const void *data, size_t bytes, bela::error_code &ec) {
   auto len = static_cast<DWORD>(bytes);
   auto u8d = reinterpret_cast<const uint8_t *>(data);
@@ -79,64 +85,58 @@ bool File::WriteFull(const void *data, size_t bytes, bela::error_code &ec) {
   } while (writtenBytes < len);
   return true;
 }
-std::optional<File> File::NewFile(std::wstring_view path, bool overwrite, bela::error_code &ec) {
-  std::filesystem::path p(path);
-  std::error_code sec;
-  if (std::filesystem::exists(p, sec)) {
-    if (!overwrite) {
-      ec = bela::make_error_code(ErrGeneral, L"file '", p.filename().native(), L"' exists");
+
+std::optional<File> File::NewFile(const fs::path &path, bela::Time modified, bool overwrite_mode,
+                                  bela::error_code &ec) {
+  std::error_code e;
+  if (fs::exists(path, e)) {
+    if (!overwrite_mode) {
+      ec = bela::make_error_code(ErrGeneral, L"file '", path.native(), L"' exists");
       return std::nullopt;
     }
   } else {
-    if (std::filesystem::create_directories(p.parent_path(), sec); sec) {
-      ec = bela::from_std_error_code(sec, L"create_directories() ");
+    if (fs::create_directories(path.parent_path(), e); e) {
+      ec = bela::from_std_error_code(e, L"create_directories() ");
       return std::nullopt;
     }
   }
-  /*
-  * 
-  */
-  auto fd = CreateFileW(path.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
+  auto fd = CreateFileW(path.c_str(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
                         FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (fd == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code(L"CreateFileW ");
     return std::nullopt;
   }
-  File file;
-  file.fd = fd;
-  return std::make_optional<File>(std::move(file));
+  if (!chtimes(fd, modified, ec)) {
+    discard_fd(fd);
+    return std::nullopt;
+  }
+  return std::make_optional<File>(fd);
 }
 
-#ifndef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
-#define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE (0x2)
-#endif
-
-#define SYMBOLIC_LINK_DIR (SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE | SYMBOLIC_LINK_FLAG_DIRECTORY)
-
-bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite) {
-  std::filesystem::path p(path);
-  std::error_code sec;
-  if (std::filesystem::exists(p, sec)) {
-    if (!overwrite) {
-      ec = bela::make_error_code(ErrGeneral, L"file '", p.filename().native(), L"' exists");
+bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mode, bela::error_code &ec) {
+  std::error_code e;
+  if (fs::exists(path, e)) {
+    if (!overwrite_mode) {
+      ec = bela::make_error_code(ErrGeneral, L"file '", path.native(), L"' exists");
       return false;
     }
-    std::filesystem::remove_all(p, sec);
+    fs::remove_all(path, e);
   } else {
-    std::filesystem::create_directories(p.parent_path(), sec);
+    if (fs::create_directories(path.parent_path(), e); e) {
+      ec = bela::from_std_error_code(e, L"create_directories() ");
+      return false;
+    }
   }
-  DWORD flags = linkname.ends_with('/') ? SYMBOLIC_LINK_DIR : SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
-  if (CreateSymbolicLinkW(path.data(), linkname.data(), flags) != TRUE) {
-    auto prefix = bela::StringCat(L"create symlink '", path, L"' to linkname '", linkname, L"' error ");
-    ec = bela::make_system_error_code(prefix);
+  if (fs::create_symlink(source, path, e); e) {
+    ec = bela::from_std_error_code(e, L"create_symlink() ");
     return false;
   }
   return true;
 }
 
-bool Chtimes(std::wstring_view file, bela::Time t, bela::error_code &ec) {
+bool Chtimes(const fs::path &file, bela::Time t, bela::error_code &ec) {
   auto fd =
-      CreateFileW(file.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      CreateFileW(file.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                   nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
   if (fd == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code(L"CreateFileW() ");

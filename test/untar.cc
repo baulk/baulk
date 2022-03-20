@@ -49,12 +49,11 @@ bool untar(std::wstring_view file) {
     if (fh->Size == 0) {
       continue;
     }
-    auto fd = baulk::archive::File::NewFile(*out, true, ec);
+    auto fd = baulk::archive::File::NewFile(*out, fh->ModTime, true, ec);
     if (!fd) {
       bela::FPrintF(stderr, L"newFD %s error: %s\n", *out, ec);
       continue;
     }
-    fd->Chtimes(fh->ModTime, ec);
     // auto size = fh->Size;
     // char buffer[4096];
     // while (size > 0) {

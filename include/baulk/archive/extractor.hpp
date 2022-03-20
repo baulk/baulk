@@ -8,13 +8,18 @@
 #include <functional>
 
 namespace baulk::archive {
+// Options
+struct ExtractorOptions {
+  bool ignore_error{false};
+  bool overwrite_mode{true};
+};
+
 namespace zip {
 using Filter = std::function<bool(const baulk::archive::zip::File &file, std::wstring_view relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
 class Extractor {
 public:
-  Extractor(bool ignore_error_ = false, bool overwrite_file_ = true) noexcept
-      : ignore_error(ignore_error_), overwrite_file(overwrite_file_) {}
+  Extractor(const ExtractorOptions &opts_) noexcept : opts(opts_) {}
   Extractor(const Extractor &) = delete;
   Extractor &operator=(const Extractor &) = delete;
   auto UncompressedSize() const { return reader.UncompressedSize(); }
@@ -49,7 +54,7 @@ public:
     }
     for (const auto &file : reader.Files()) {
       if (!extract_entry(file, filter, progress, ec)) {
-        if (ec.code == bela::ErrCanceled || ignore_error == false) {
+        if (ec.code == bela::ErrCanceled || opts.ignore_error == false) {
           return false;
         }
       }
@@ -60,8 +65,7 @@ public:
 private:
   Reader reader;
   std::filesystem::path destination;
-  bool ignore_error{false};
-  bool overwrite_file{true};
+  ExtractorOptions opts;
   bool extract_entry(const baulk::archive::zip::File &file, const Filter &filter, const OnProgress &progress,
                      bela::error_code &ec) {
     std::wstring encoded_path;
@@ -76,11 +80,11 @@ private:
     }
     std::error_code e;
     if (file.IsDir()) {
-      if (std::filesystem::create_directories(destination, e); e) {
+      if (std::filesystem::create_directories(*out, e); e) {
         ec = bela::from_std_error_code(e, L"fs::create_directories() ");
         return false;
       }
-      baulk::archive::Chtimes(out->c_str(), file.time, ec);
+      baulk::archive::Chtimes(*out, file.time, ec);
       return true;
     }
     if (file.IsSymlink()) {
@@ -91,13 +95,10 @@ private:
         ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(file.name));
         return false;
       }
-      return baulk::archive::NewSymlink(out->c_str(), source_path->c_str(), ec, overwrite_file);
+      return baulk::archive::NewSymlink(*out, *source_path, opts.overwrite_mode, ec);
     }
-    auto fd = baulk::archive::File::NewFile(out->c_str(), overwrite_file, ec);
+    auto fd = baulk::archive::File::NewFile(*out, file.time, opts.overwrite_mode, ec);
     if (!fd) {
-      return false;
-    }
-    if (!fd->Chtimes(file.time, ec)) {
       return false;
     }
     bela::error_code writeEc;

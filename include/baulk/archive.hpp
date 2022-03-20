@@ -13,9 +13,10 @@ using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
 using bela::ErrUnimplemented;
-
+namespace fs = std::filesystem;
 class File {
 public:
+  File(HANDLE fd_) : fd(fd_) {}
   File(File &&o) noexcept;
   File &operator=(File &&o) noexcept;
   File(const File &) = delete;
@@ -24,15 +25,17 @@ public:
   bool WriteFull(const void *data, size_t bytes, bela::error_code &ec);
   bool Discard();
   bool Chtimes(bela::Time t, bela::error_code &ec);
-  static std::optional<File> NewFile(std::wstring_view path, bool overwrite, bela::error_code &ec);
+  static std::optional<File> NewFile(const fs::path &path, bela::Time modified, bool overwrite_mode,
+                                     bela::error_code &ec);
 
 private:
   File() = default;
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
 
-bool Chtimes(std::wstring_view file, bela::Time t, bela::error_code &ec);
-bool NewSymlink(std::wstring_view path, std::wstring_view linkname, bela::error_code &ec, bool overwrite = false);
+bool Chtimes(const fs::path &file, bela::Time t, bela::error_code &ec);
+bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mode, bela::error_code &ec);
+
 std::wstring_view PathRemoveExtension(std::wstring_view p);
 
 inline std::wstring FileDestination(std::wstring_view arfile) {
@@ -50,8 +53,8 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
 
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child_path,
                                              bool always_utf8 = true);
-std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,
-                                                        bool always_utf8, std::wstring &encoded_path);
+std::optional<fs::path> JoinSanitizeFsPath(const fs::path &root, std::string_view child_path, bool always_utf8,
+                                           std::wstring &encoded_path);
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
 // OpenArchiveFile open file and detect archive file format and offset
 inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,

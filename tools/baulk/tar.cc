@@ -41,7 +41,7 @@ void showProgress(const bela::terminal::terminal_size &termsz, std::string_view 
 }
 
 inline bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
-  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), ec, true);
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), true, ec);
 }
 
 bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
@@ -103,12 +103,11 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
     if (!fh->IsRegular()) {
       continue;
     }
-    auto fd = baulk::archive::File::NewFile(*out, true, ec);
+    auto fd = baulk::archive::File::NewFile(*out, fh->ModTime, true, ec);
     if (!fd) {
       bela::FPrintF(stderr, L"NewFD %s error: %s\n", *out, ec);
       continue;
     }
-    fd->Chtimes(fh->ModTime, ec);
     if (!tr->WriteTo(
             [&](const void *data, size_t len, bela::error_code &ec) -> bool {
               //
@@ -143,7 +142,7 @@ bool single_decompress(std::wstring_view src, baulk::archive::tar::FileReader &f
   DbgPrint(L"File %s not tar file", bela::BaseName(src));
   bela::FPrintF(stderr, L"\x1b[33mx %s\x1b[0m\n", baseName);
   auto out = bela::StringCat(dest, L"\\", baseName);
-  auto fd = baulk::archive::File::NewFile(out, true, ec);
+  auto fd = baulk::archive::File::NewFile(out, bela::Now(), true, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"NewFD %s error: %s\n", out, ec);
     return false;
