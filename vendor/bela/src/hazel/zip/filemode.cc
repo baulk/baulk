@@ -83,7 +83,7 @@ FileMode msdosModeToFileMode(uint32_t m) {
 
 FileMode resolveFileMode(const File &file, uint32_t externalAttrs) {
   auto mode = static_cast<FileMode>(0);
-  auto n = file.cversion >> 8;
+  auto n = file.creator_version >> 8;
   if (n == creatorUnix || n == creatorMacOSX) {
     mode = unixModeToFileMode(externalAttrs >> 16);
   } else if (n == creatorNTFS || n == creatorVFAT || n == creatorFAT) {

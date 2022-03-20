@@ -149,15 +149,15 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
   }
-  file.cversion = b.Read<uint16_t>();
-  file.rversion = b.Read<uint16_t>();
+  file.creator_version = b.Read<uint16_t>();
+  file.reader_version = b.Read<uint16_t>();
   file.flags = b.Read<uint16_t>();
   file.method = b.Read<uint16_t>();
   auto dosTime = b.Read<uint16_t>();
   auto dosDate = b.Read<uint16_t>();
-  file.crc32sum = b.Read<uint32_t>();
-  file.compressedSize = b.Read<uint32_t>();
-  file.uncompressedSize = b.Read<uint32_t>();
+  file.crc32_value = b.Read<uint32_t>();
+  file.compressed_size = b.Read<uint32_t>();
+  file.uncompressed_size = b.Read<uint32_t>();
   auto filenameLen = b.Read<uint16_t>();
   auto extraLen = b.Read<uint16_t>();
   auto commentLen = b.Read<uint16_t>();
@@ -174,8 +174,8 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
   if (commentLen != 0) {
     file.comment = buffer.as_bytes_view().make_cstring_view(filenameLen + extraLen, commentLen);
   }
-  auto needUSize = file.uncompressedSize == SizeMin;
-  auto needSize = file.compressedSize == SizeMin;
+  auto needUSize = file.uncompressed_size == SizeMin;
+  auto needSize = file.compressed_size == SizeMin;
   auto needOffset = file.position == OffsetMin;
   file.mode = resolveFileMode(file, externalAttrs);
   bela::Time modified;
@@ -195,7 +195,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
           ec = bela::make_error_code(L"zip: not a valid zip file");
           return false;
         }
-        file.uncompressedSize = fb.Read<uint64_t>();
+        file.uncompressed_size = fb.Read<uint64_t>();
       }
       if (needSize) {
         needSize = false;
@@ -203,7 +203,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
           ec = bela::make_error_code(L"zip: not a valid zip file");
           return false;
         }
-        file.compressedSize = fb.Read<uint64_t>();
+        file.compressed_size = fb.Read<uint64_t>();
       }
       if (needOffset) {
         needOffset = false;
@@ -302,9 +302,9 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       if (fb.Size() < 7) {
         continue;
       }
-      file.aesVersion = fb.Read<uint16_t>();
+      file.aes_version = fb.Read<uint16_t>();
       fb.Discard(2); // VendorID 'AE'
-      file.aesStrength = fb.Pick();
+      file.aes_strength = fb.Pick();
       file.method = fb.Read<uint16_t>();
       continue;
     }
@@ -348,8 +348,8 @@ bool Reader::Initialize(bela::error_code &ec) {
     if (!readDirectoryHeader(br, buffer, file, ec)) {
       return false;
     }
-    uncompressedSize += file.uncompressedSize;
-    compressedSize += file.compressedSize;
+    uncompressed_size += file.uncompressed_size;
+    compressed_size += file.compressed_size;
     files.emplace_back(std::move(file));
   }
   return true;
@@ -466,7 +466,7 @@ bool Reader::Contains(std::string_view p, std::size_t limit) const {
   return false;
 }
 
-mszipconatiner_t Reader::LooksLikeMsZipContainer() const {
+zip_conatiner_t Reader::LooksLikeMsZipContainer() const {
   // [Content_Types].xml
   std::string_view paths[] = {"[Content_Types].xml", "_rels/.rels"};
   if (!Contains(paths, 200)) {
@@ -527,9 +527,9 @@ bool Reader::LooksLikeODF(std::string *mime) const {
     return true;
   }
   for (const auto &file : files) {
-    if (file.name == "mimetype" && file.method == ZIP_STORE && file.compressedSize < 120) {
+    if (file.name == "mimetype" && file.method == ZIP_STORE && file.compressed_size < 120) {
       bela::error_code ec;
-      mime->reserve(static_cast<size_t>(file.compressedSize));
+      mime->reserve(static_cast<size_t>(file.compressed_size));
       return Decompress(
           file,
           [&](const void *data, size_t sz) -> bool {

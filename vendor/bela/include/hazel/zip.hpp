@@ -75,21 +75,21 @@ using bela::os::FileMode;
 struct File {
   std::string name;
   std::string comment;
-  uint64_t compressedSize{0};
-  uint64_t uncompressedSize{0};
+  uint64_t compressed_size{0};
+  uint64_t uncompressed_size{0};
   uint64_t position{0}; // file position
   bela::Time time;
-  uint32_t crc32sum{0}; // avoid chromium zlib define
+  uint32_t crc32_value{0}; // avoid chromium zlib define
   FileMode mode{0};
-  uint16_t cversion{0};
-  uint16_t rversion{0};
+  uint16_t creator_version{0};
+  uint16_t reader_version{0};
   uint16_t flags{0};
   uint16_t method{0};
-  uint16_t aesVersion{0};
-  uint8_t aesStrength{0};
-  bool commentUTF8{false};
+  uint16_t aes_version{0};
+  uint8_t aes_strength{0};
+  bool comment_utf8{false};
   bool IsFileNameUTF8() const { return (flags & 0x800) != 0; }
-  bool IsCommentUTF8() const { return ((flags & 0x800) != 0 || commentUTF8); }
+  bool IsCommentUTF8() const { return ((flags & 0x800) != 0 || comment_utf8); }
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
   bool IsDir() const { return (mode & FileMode::ModeDir) != 0; }
   bool IsSymlink() const { return (mode & FileMode::ModeSymlink) != 0; }
@@ -97,14 +97,14 @@ struct File {
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
-  std::string AesText() const { return bela::narrow::StringCat("AE-", aesVersion, "/", AESStrength(aesStrength)); }
+  std::string AesText() const { return bela::narrow::StringCat("AE-", aes_version, "/", AESStrength(aes_strength)); }
 };
 
 std::string String(bela::os::FileMode m);
 
 constexpr static auto size_max = (std::numeric_limits<std::size_t>::max)();
 using Writer = std::function<bool(const void *data, size_t len)>;
-enum mszipconatiner_t : int {
+enum zip_conatiner_t : int {
   OfficeNone, // None
   OfficeDocx,
   OfficePptx,
@@ -118,10 +118,10 @@ private:
     r.fd = std::move(fd);
     size = r.size;
     r.size = 0;
-    uncompressedSize = r.uncompressedSize;
-    r.uncompressedSize = 0;
-    compressedSize = r.compressedSize;
-    r.compressedSize = 0;
+    uncompressed_size = r.uncompressed_size;
+    r.uncompressed_size = 0;
+    compressed_size = r.compressed_size;
+    r.compressed_size = 0;
     comment = std::move(r.comment);
     files = std::move(r.files);
   }
@@ -139,12 +139,12 @@ public:
   bool OpenReader(HANDLE nfd, int64_t size_, int64_t offset_, bela::error_code &ec);
   std::string_view Comment() const { return comment; }
   const auto &Files() const { return files; }
-  int64_t CompressedSize() const { return compressedSize; }
-  int64_t UncompressedSize() const { return uncompressedSize; }
+  int64_t CompressedSize() const { return compressed_size; }
+  int64_t UncompressedSize() const { return uncompressed_size; }
   bool Contains(std::span<std::string_view> paths, std::size_t limit = size_max) const;
   bool Contains(std::string_view p, std::size_t limit = size_max) const;
   bool Decompress(const File &file, const Writer &w, bela::error_code &ec) const;
-  mszipconatiner_t LooksLikeMsZipContainer() const;
+  zip_conatiner_t LooksLikeMsZipContainer() const;
   bool LooksLikePptx() const { return LooksLikeMsZipContainer() == OfficePptx; }
   bool LooksLikeDocx() const { return LooksLikeMsZipContainer() == OfficeDocx; }
   bool LooksLikeXlsx() const { return LooksLikeMsZipContainer() == OfficeXlsx; }
@@ -160,8 +160,8 @@ private:
   std::string comment;
   std::vector<File> files;
   int64_t size{bela::SizeUnInitialized};
-  int64_t uncompressedSize{0};
-  int64_t compressedSize{0};
+  int64_t uncompressed_size{0};
+  int64_t compressed_size{0};
   bool Initialize(bela::error_code &ec);
   bool readDirectoryEnd(directoryEnd &d, bela::error_code &ec);
   bool readDirectory64End(int64_t offset, directoryEnd &d, bela::error_code &ec);

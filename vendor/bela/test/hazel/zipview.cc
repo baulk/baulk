@@ -34,12 +34,12 @@ int listArchive(std::wstring_view path, HANDLE fd, int64_t size, int64_t offset)
   for (const auto &file : zr.Files()) {
     if (file.IsEncrypted()) {
       bela::FPrintF(stdout, L"%s\t%s\t%d\t%s\t%s\t%b\t%s\n", hazel::zip::String(file.mode),
-                    hazel::zip::Method(file.method), file.uncompressedSize, bela::FormatTime(file.time), file.name,
+                    hazel::zip::Method(file.method), file.uncompressed_size, bela::FormatTime(file.time), file.name,
                     file.IsFileNameUTF8(), file.AesText());
       continue;
     }
     bela::FPrintF(stdout, L"%s\t%s\t%d\t%s\t%s\t%b\n", hazel::zip::String(file.mode), hazel::zip::Method(file.method),
-                  file.uncompressedSize, bela::FormatTime(file.time), file.name, file.IsFileNameUTF8());
+                  file.uncompressed_size, bela::FormatTime(file.time), file.name, file.IsFileNameUTF8());
   }
   switch (zr.LooksLikeMsZipContainer()) {
   case hazel::zip::OfficeDocx:

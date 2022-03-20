@@ -4,17 +4,17 @@
 #include <filesystem>
 
 namespace baulk::vfs::vfs_internal {
-
+using namespace std::string_view_literals;
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
-  etc = bela::StringCat(basePath, L"\\etc");
-  appData = bela::StringCat(basePath, L"\\appdata");
-  vfs = bela::StringCat(basePath, L"\\vfs");
-  packages = bela::StringCat(basePath, L"\\packages");
-  temp = bela::StringCat(basePath, L"\\temp");
-  locks = bela::StringCat(basePath, L"\\locks");
-  buckets = bela::StringCat(basePath, L"\\buckets");
-  appLinks = bela::StringCat(basePath, L"\\local\\bin");
+  etc = bela::StringCat(basePath, L"\\etc"sv);
+  appData = bela::StringCat(basePath, L"\\appdata"sv);
+  vfs = bela::StringCat(basePath, L"\\vfs"sv);
+  packages = bela::StringCat(basePath, L"\\packages"sv);
+  temp = bela::StringCat(basePath, L"\\temp"sv);
+  locks = bela::StringCat(basePath, L"\\locks"sv);
+  buckets = bela::StringCat(basePath, L"\\buckets"sv);
+  appLinks = bela::StringCat(basePath, L"\\local\\bin"sv);
   return true;
 }
 
@@ -27,14 +27,14 @@ bool FsRedirectionTable::InitializeFromPortable(bela::error_code &ec) {
 // Legacy Install (baulk <=3.0)
 bool FsRedirectionTable::InitializeFromLegacy(bela::error_code &ec) {
   basePath = appLocation;
-  etc = bela::StringCat(basePath, L"\\bin\\etc");
-  appData = bela::StringCat(basePath, L"\\bin\\appdata");
-  vfs = bela::StringCat(basePath, L"\\bin\\vfs");
-  packages = bela::StringCat(basePath, L"\\bin\\pkgs");
-  temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp");
-  locks = bela::StringCat(basePath, L"\\bin\\locks");
-  buckets = bela::StringCat(basePath, L"\\buckets");
-  appLinks = bela::StringCat(basePath, L"\\bin\\links");
+  etc = bela::StringCat(basePath, L"\\bin\\etc"sv);
+  appData = bela::StringCat(basePath, L"\\bin\\appdata"sv);
+  vfs = bela::StringCat(basePath, L"\\bin\\vfs"sv);
+  packages = bela::StringCat(basePath, L"\\bin\\pkgs"sv);
+  temp = bela::StringCat(basePath, L"\\bin\\pkgs\\.pkgtmp"sv);
+  locks = bela::StringCat(basePath, L"\\bin\\locks"sv);
+  buckets = bela::StringCat(basePath, L"\\buckets"sv);
+  appLinks = bela::StringCat(basePath, L"\\bin\\links"sv);
   return true;
 }
 
