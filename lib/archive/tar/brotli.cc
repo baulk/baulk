@@ -13,7 +13,7 @@ Reader::~Reader() {
 bool Reader::Initialize(bela::error_code &ec) {
   state = BrotliDecoderCreateInstance(baulk::mem::allocate_simple, baulk::mem::deallocate_simple, nullptr);
   if (state == nullptr) {
-    ec = bela::make_error_code(L"BrotliDecoderCreateInstance failed");
+    ec = bela::make_error_code(ErrExtractGeneral, L"BrotliDecoderCreateInstance failed");
     return false;
   }
   BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1u);
@@ -24,7 +24,7 @@ bool Reader::Initialize(bela::error_code &ec) {
 
 bool Reader::decompress(bela::error_code &ec) {
   if (result == BROTLI_DECODER_RESULT_ERROR) {
-    ec = bela::make_error_code(ErrGeneral, L"BrotliDecoderDecompressStream error");
+    ec = bela::make_error_code(ErrExtractGeneral, L"BrotliDecoderDecompressStream error");
     return false;
   }
   for (;;) {

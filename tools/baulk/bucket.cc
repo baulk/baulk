@@ -42,7 +42,7 @@ std::optional<std::wstring> BucketNewestWithGithub(std::wstring_view bucketurl, 
 std::optional<std::wstring> BucketRepoNewest(std::wstring_view giturl, bela::error_code &ec) {
   bela::process::Process process;
   if (process.Capture(L"git", L"ls-remote", giturl, L"HEAD") != 0) {
-    if (ec = process.ErrorCode(); !ec) {
+    if (process.ExitCode() != 0) {
       ec = bela::make_error_code(bela::ErrGeneral, L"git exit with: ", process.ExitCode());
     }
     return std::nullopt;
@@ -103,7 +103,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   // https://github.com/baulk/bucket/archive/master.zip
   auto master = bela::StringCat(bucket.url, L"/archive/", id, L".zip");
   const auto temp = baulk::vfs::AppTemp();
-  if (!baulk::fs::MakeDir(temp, ec)) {
+  if (!baulk::fs::MakeDirectories(temp, ec)) {
     return false;
   }
   std::optional<std::wstring> saveFile;
@@ -111,7 +111,8 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   for (int i = 0; i < 4; i++) {
     ec.clear();
     if (i != 0) {
-      bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m\n", bucket.name, i);
+      bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m\n", bucket.name,
+                    i);
     }
     if (saveFile = baulk::net::WinGet(master, temp, L"", true, ec); saveFile) {
       break;

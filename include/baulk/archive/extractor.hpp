@@ -5,9 +5,11 @@
 #include <bela/io.hpp>
 #include <baulk/archive.hpp>
 #include <baulk/archive/zip.hpp>
+#include <baulk/archive/tar.hpp>
 #include <functional>
 
 namespace baulk::archive {
+namespace fs = std::filesystem;
 // Options
 struct ExtractorOptions {
   bool ignore_error{false};
@@ -15,7 +17,7 @@ struct ExtractorOptions {
 };
 
 namespace zip {
-using Filter = std::function<bool(const baulk::archive::zip::File &file, std::wstring_view relative_name)>;
+using Filter = std::function<bool(const File &file, std::wstring_view relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
 class Extractor {
 public:
@@ -24,23 +26,22 @@ public:
   Extractor &operator=(const Extractor &) = delete;
   auto UncompressedSize() const { return reader.UncompressedSize(); }
   auto CompressedSize() const { return reader.CompressedSize(); }
-  bool OpenReader(const std::filesystem::path &file, const std::filesystem::path &dest, bela::error_code &ec) {
+  bool OpenReader(const fs::path &file, const fs::path &dest, bela::error_code &ec) {
     std::error_code e;
-    if (destination = std::filesystem::absolute(dest, e); e) {
+    if (destination = fs::absolute(dest, e); e) {
       ec = bela::from_std_error_code(e, L"fs::absolute() ");
       return false;
     }
-    auto zipfile = std::filesystem::canonical(file, e);
+    auto zipfile = fs::canonical(file, e);
     if (e) {
       ec = bela::from_std_error_code(e, L"fs::canonical() ");
       return false;
     }
     return reader.OpenReader(zipfile.c_str(), ec);
   }
-  bool OpenReader(bela::io::FD &fd, const std::filesystem::path &dest, int64_t size, int64_t offset,
-                  bela::error_code &ec) {
+  bool OpenReader(bela::io::FD &fd, const fs::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
     std::error_code e;
-    if (destination = std::filesystem::absolute(dest, e); e) {
+    if (destination = fs::absolute(dest, e); e) {
       ec = bela::from_std_error_code(e, L"fs::absolute() ");
       return false;
     }
@@ -48,7 +49,7 @@ public:
   }
   bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
-    if (std::filesystem::create_directories(destination, e); e) {
+    if (fs::create_directories(destination, e); e) {
       ec = bela::from_std_error_code(e, L"fs::create_directories() ");
       return false;
     }
@@ -65,10 +66,20 @@ public:
 private:
   ExtractorOptions opts;
   Reader reader;
-  std::filesystem::path destination;
+  fs::path destination;
+  bool create_symlink(const fs::path &_New_symlink, std::string_view linkname, bool always_utf8, bela::error_code &ec) {
+    if (baulk::archive::IsHarmfulPath(linkname)) {
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(linkname));
+      return false;
+    }
+    std::filesystem::path linkPath(baulk::archive::EncodeToNativePath(linkname, always_utf8));
+    if (linkPath.is_absolute()) {
+      return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    }
+    return baulk::archive::NewSymlink(_New_symlink, _New_symlink.parent_path() / linkPath, opts.overwrite_mode, ec);
+  }
 
-  bool extract_entry(const baulk::archive::zip::File &file, const Filter &filter, const OnProgress &progress,
-                     bela::error_code &ec) {
+  bool extract_entry(const File &file, const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::wstring encoded_path;
     auto out = baulk::archive::JoinSanitizeFsPath(destination, file.name, file.IsFileNameUTF8(), encoded_path);
     if (!out) {
@@ -81,22 +92,10 @@ private:
     }
     std::error_code e;
     if (file.IsDir()) {
-      if (std::filesystem::create_directories(*out, e); e) {
-        ec = bela::from_std_error_code(e, L"fs::create_directories() ");
-        return false;
-      }
-      baulk::archive::Chtimes(*out, file.time, ec);
-      return true;
+      return MakeDirectories(*out, file.time, ec);
     }
     if (file.IsSymlink()) {
-      std::wstring encoded_linkname;
-      auto source_path = baulk::archive::JoinSanitizeFsPath(out->parent_path(), reader.ResolveLinkName(file, ec),
-                                                            file.IsFileNameUTF8(), encoded_linkname);
-      if (!source_path) {
-        ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(file.name));
-        return false;
-      }
-      return baulk::archive::NewSymlink(*out, *source_path, opts.overwrite_mode, ec);
+      return create_symlink(*out, reader.ResolveLinkName(file, ec), file.IsFileNameUTF8(), ec);
     }
     auto fd = baulk::archive::File::NewFile(*out, file.time, opts.overwrite_mode, ec);
     if (!fd) {
@@ -117,15 +116,119 @@ private:
 };
 } // namespace zip
 namespace tar {
+using Filter = std::function<bool(const Header &hdr, std::wstring_view relative_name)>;
+using OnProgress = std::function<bool(size_t bytes)>;
+
+inline bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
+  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), true, ec);
+}
+
 class Extractor {
 public:
-  Extractor(const ExtractorOptions &opts_) noexcept : opts(opts_) {}
+  Extractor(ExtractReader *r, const ExtractorOptions &opts_) noexcept : reader(r), opts(opts_) {}
   Extractor(const Extractor &) = delete;
   Extractor &operator=(const Extractor &) = delete;
+  bool InitializeExtractor(const fs::path &dest, bela::error_code &ec) {
+    std::error_code e;
+    if (destination = fs::absolute(dest, e); e) {
+      ec = bela::from_std_error_code(e, L"fs::absolute() ");
+      return false;
+    }
+    if (reader == nullptr) {
+      ec = bela::make_error_code(L"extract reader is nil");
+      return false;
+    }
+    return true;
+  }
+  bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
+    std::error_code e;
+    if (fs::create_directories(destination, e); e) {
+      ec = bela::from_std_error_code(e, L"fs::create_directories() ");
+      return false;
+    }
+    auto tr = std::make_shared<baulk::archive::tar::Reader>(reader);
+    std::wstring encoded_path;
+    for (;;) {
+      auto fh = tr->Next(ec);
+      if (!fh) {
+        break;
+      }
+      if (extract_entry(*tr, *fh, filter, progress, ec)) {
+        continue;
+      }
+      if (ec.code == bela::ErrCanceled) {
+        return false;
+      }
+      if (ec.code == ErrNotTarFile || ec.code == ErrExtractGeneral || !opts.ignore_error) {
+        break;
+      }
+    }
+    if (tr->Index() == 0 && ec.code == ErrNotTarFile) {
+      ec = bela::make_error_code(ErrAnotherWay, L"extract another way");
+      return false;
+    }
+    if (ec && ec.code != bela::ErrEnded) {
+
+      return false;
+    }
+    return true;
+  }
 
 private:
+  ExtractReader *reader{nullptr};
   ExtractorOptions opts;
-  std::filesystem::path destination;
+  fs::path destination;
+  bool create_symlink(const fs::path &_New_symlink, std::string_view linkname, bela::error_code &ec) {
+    if (baulk::archive::IsHarmfulPath(linkname)) {
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(linkname));
+      return false;
+    }
+    std::filesystem::path linkPath(baulk::archive::EncodeToNativePath(linkname, true));
+    if (linkPath.is_absolute()) {
+      return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    }
+    return baulk::archive::NewSymlink(_New_symlink, _New_symlink.parent_path() / linkPath, opts.overwrite_mode, ec);
+  }
+  bool extract_entry(Reader &tr, const Header &fh, const Filter &filter, const OnProgress &progress,
+                     bela::error_code &ec) {
+    std::wstring encoded_path;
+    auto out = baulk::archive::JoinSanitizeFsPath(destination, fh.Name, true, encoded_path);
+    if (!out) {
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(fh.Name));
+      return false;
+    }
+    if (filter && !filter(fh, encoded_path)) {
+      ec = bela::make_error_code(bela::ErrCanceled, L"canceled");
+      return false;
+    }
+    if (fh.IsDir()) {
+      return MakeDirectories(*out, fh.ModTime, ec);
+    }
+    if (fh.IsSymlink()) {
+      return create_symlink(*out, fh.LinkName, ec);
+    }
+    // i
+    if (!fh.IsRegular()) {
+      return true;
+    }
+    auto fd = baulk::archive::File::NewFile(*out, fh.ModTime, true, ec);
+    if (!fd) {
+      return false;
+    }
+    if (!tr.WriteTo(
+            [&](const void *data, size_t len, bela::error_code &ec) -> bool {
+              if (progress && !progress(len)) {
+                // canceled
+                return false;
+              }
+              return fd->WriteFull(data, len, ec);
+            },
+            fh.Size, ec)) {
+      fd->Discard();
+      return false;
+    }
+    return true;
+  }
 };
 } // namespace tar
 } // namespace baulk::archive

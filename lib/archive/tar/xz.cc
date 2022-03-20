@@ -24,7 +24,7 @@ bool Reader::Initialize(bela::error_code &ec) {
   xzs->allocator = &allocator;
   auto ret = lzma_stream_decoder(xzs, UINT64_MAX, LZMA_CONCATENATED);
   if (ret != LZMA_OK) {
-    ec = bela::make_error_code(ret, L"lzma_stream_decoder error ", ret);
+    ec = bela::make_error_code(ErrExtractGeneral, L"lzma_stream_decoder error ", ret);
     return false;
   }
   out.grow(xzoutsize);
@@ -54,24 +54,24 @@ bela::ssize_t Reader::ReadAtLeast(void *buffer, size_t size, bela::error_code &e
 inline bela::error_code XzErrorCode(lzma_ret ret) {
   switch (ret) {
   case LZMA_MEM_ERROR:
-    return bela::make_error_code(L"memory error");
+    return bela::make_error_code(ErrExtractGeneral, L"memory error");
   case LZMA_FORMAT_ERROR:
-    return bela::make_error_code(L"File format not recognized");
+    return bela::make_error_code(ErrExtractGeneral, L"File format not recognized");
   case LZMA_OPTIONS_ERROR:
-    return bela::make_error_code(L"Unsupported compression options");
+    return bela::make_error_code(ErrExtractGeneral, L"Unsupported compression options");
   case LZMA_DATA_ERROR:
-    return bela::make_error_code(L"File is corrupt");
+    return bela::make_error_code(ErrExtractGeneral, L"File is corrupt");
   case LZMA_BUF_ERROR:
-    return bela::make_error_code(L"Unexpected end of input");
+    return bela::make_error_code(ErrExtractGeneral, L"Unexpected end of input");
   default:
     break;
   }
-  return bela::make_error_code(bela::ErrGeneral, L"Internal error (bug) ret=", ret);
+  return bela::make_error_code(ErrExtractGeneral, L"Internal error (bug) ret=", ret);
 }
 
 bool Reader::decompress(bela::error_code &ec) {
   if (ret == LZMA_STREAM_END) {
-    ec = bela::make_error_code(bela::ErrEnded, L"xz stream end");
+    ec = bela::make_error_code(ErrExtractGeneral, L"xz stream end");
     return false;
   }
   for (;;) {

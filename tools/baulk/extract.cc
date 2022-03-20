@@ -12,7 +12,7 @@ bool make_flattened(std::wstring_view path) {
 }
 
 bool extract_exe(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
-  if (!baulk::fs::MakeDir(dest, ec)) {
+  if (!baulk::fs::MakeDirectories(dest, ec)) {
     return false;
   }
   auto fn = baulk::fs::FileName(src);

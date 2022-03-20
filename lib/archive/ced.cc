@@ -77,6 +77,10 @@ inline std::wstring encode_into_native(std::string_view filename, bool always_ut
   return encode_from_codepage(filename, codePageSearch(e));
 }
 
+std::wstring EncodeToNativePath(std::string_view filename, bool always_utf8) {
+  return encode_into_native(filename, always_utf8);
+}
+
 constexpr bool IsDangerousPath(std::wstring_view p) {
   constexpr std::wstring_view dangerousPaths[] = {L":$i30:$bitmap", L"$mft"};
   for (const auto d : dangerousPaths) {
@@ -126,6 +130,7 @@ inline bool is_harmful_path(std::string_view child_path) {
   }
   return entries <= 0;
 }
+bool IsHarmfulPath(std::string_view child_path) { return is_harmful_path(child_path); }
 
 std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::path &root, std::string_view child_path,
                                                         bool always_utf8, std::wstring &encoded_path) {

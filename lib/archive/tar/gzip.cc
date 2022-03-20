@@ -15,7 +15,7 @@ bool Reader::Initialize(bela::error_code &ec) {
   zs->zalloc = baulk::mem::allocate_zlib;
   zs->zfree = baulk::mem::deallocate_simple;
   if (auto zerr = inflateInit2(zs, MAX_WBITS + 16); zerr != Z_OK) {
-    ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
+    ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
     return false;
   }
   out.grow(outsize);
@@ -44,7 +44,7 @@ bool Reader::decompress(bela::error_code &ec) {
     case Z_DATA_ERROR:
       [[fallthrough]];
     case Z_MEM_ERROR:
-      ec = bela::make_error_code(ret, bela::encode_into<char, wchar_t>(zError(ret)));
+      ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zError(ret)));
       return false;
     default:
       break;

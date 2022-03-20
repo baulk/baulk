@@ -86,7 +86,7 @@ inline std::optional<vs_instances> vs_instances_lookup(bela::error_code &ec) {
   if (process.Capture(*vswhere, L"-format", L"json", L"-utf8", L"-sort", L"-prerelease") == 0) {
     return decode_vs_instances(process.Out(), ec);
   }
-  if (ec = process.ErrorCode(); !ec) {
+  if (process.ExitCode() != 0) {
     ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ", process.ExitCode());
   }
   return std::nullopt;

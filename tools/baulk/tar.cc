@@ -57,8 +57,6 @@ bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
   return true;
 }
 
-constexpr auto ErrParseCompressedFile = baulk::archive::tar::ErrNoFilter + 10000;
-
 bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view dest, bela::error_code &ec) {
   bela::terminal::terminal_size termsz{0};
   if (!baulk::IsQuietMode) {
@@ -75,9 +73,6 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
   for (;;) {
     auto fh = tr->Next(ec);
     if (!fh) {
-      if (ec.code == bela::ErrEnded) {
-        break;
-      }
       break;
     }
     showProgress(termsz, fh->Name);
@@ -117,11 +112,11 @@ bool extract_tar(baulk::archive::tar::ExtractReader *reader, std::wstring_view d
       fd->Discard();
     }
   }
-  if (tr->Index() == 0) {
-    ec = bela::make_error_code(ErrParseCompressedFile, L"single decompress file");
+  if (tr->Index() == 0 || ec.code == baulk::archive::tar::ErrNotTarFile) {
+    ec = bela::make_error_code(baulk::archive::ErrAnotherWay, L"extract another way");
     return false;
   }
-  if (!ec) {
+  if (ec && ec.code != bela::ErrEnded) {
     bela::FPrintF(stderr, L"\nuntar error %s\n", ec);
     return false;
   }
@@ -139,7 +134,7 @@ bool single_decompress(std::wstring_view src, baulk::archive::tar::FileReader &f
     return false;
   }
   auto baseName = baulk::archive::PathRemoveExtension(bela::BaseName(src));
-  DbgPrint(L"File %s not tar file", bela::BaseName(src));
+  DbgPrint(L"File %s not tar file", baseName);
   bela::FPrintF(stderr, L"\x1b[33mx %s\x1b[0m\n", baseName);
   auto out = bela::StringCat(dest, L"\\", baseName);
   auto fd = baulk::archive::File::NewFile(out, bela::Now(), true, ec);
@@ -163,7 +158,7 @@ bool single_decompress(std::wstring_view src, baulk::archive::tar::FileReader &f
 bool extract_tar(const bela::io::FD &fd, int64_t offset, baulk::archive::file_format_t afmt, std::wstring_view src,
                  std::wstring_view dest, bela::error_code &ec) {
   DbgPrint(L"destination %s", dest);
-  if (!baulk::fs::MakeDir(dest, ec)) {
+  if (!baulk::fs::MakeDirectories(dest, ec)) {
     return false;
   }
   baulk::archive::tar::FileReader fr(fd.NativeFD());
@@ -171,7 +166,7 @@ bool extract_tar(const bela::io::FD &fd, int64_t offset, baulk::archive::file_fo
     if (extract_tar(wr.get(), dest, ec)) {
       return true;
     }
-    if (ec.code != ErrParseCompressedFile) {
+    if (ec.code != baulk::archive::ErrAnotherWay) {
       return false;
     }
     return single_decompress(src, fr, offset, afmt, dest, ec);

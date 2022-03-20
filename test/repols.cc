@@ -6,7 +6,7 @@
 std::optional<std::wstring> BucketRepoNewest(std::wstring_view giturl, bela::error_code &ec) {
   bela::process::Process process;
   if (process.Capture(L"git", L"ls-remote", giturl, L"HEAD") != 0) {
-    if (ec = process.ErrorCode(); !ec) {
+    if (process.ExitCode() != 0) {
       ec = bela::make_error_code(process.ExitCode(), L"git exit with: ", process.ExitCode());
     }
     return std::nullopt;

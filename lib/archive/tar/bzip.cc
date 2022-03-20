@@ -14,7 +14,7 @@ bool Reader::Initialize(bela::error_code &ec) {
   bzs->bzalloc = baulk::mem::allocate_bz;
   bzs->bzfree = baulk::mem::deallocate_simple;
   if (auto bzerr = BZ2_bzDecompressInit(bzs, 0, 0); bzerr != BZ_OK) {
-    ec = bela::make_error_code(bzerr, L"BZ2_bzDecompressInit error");
+    ec = bela::make_error_code(ErrExtractGeneral, L"BZ2_bzDecompressInit error");
     return false;
   }
   out.grow(outsize);
@@ -44,7 +44,7 @@ bool Reader::decompress(bela::error_code &ec) {
     case BZ_DATA_ERROR:
       [[fallthrough]];
     case BZ_MEM_ERROR:
-      ec = bela::make_error_code(ret, L"bzlib error ", ret);
+      ec = bela::make_error_code(ErrExtractGeneral, L"bzlib error ", ret);
       return false;
     default:
       break;

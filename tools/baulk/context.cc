@@ -77,7 +77,7 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", baulk_internal::DefaultBucket);
     bela::FPrintF(stderr, L"baulk: \x1b[31m%s\x1b[0m\nprofile path %s\n", ec, profile_);
     if (ec.code == ERROR_FILE_NOT_FOUND) {
-      baulk::fs::MakeParentDir(profile, ec);
+      baulk::fs::MakeParentDirectories(profile, ec);
       bela::io::WriteText(default_content, profile, ec);
     }
     return true;

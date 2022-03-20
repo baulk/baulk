@@ -66,7 +66,7 @@ inline bool handleRegularFile(Header &h, int64_t &padding, bela::error_code &ec)
     nb = 0;
   }
   if (nb < 0) {
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
     return false;
   }
   padding = blockPadding(nb);
@@ -75,7 +75,7 @@ inline bool handleRegularFile(Header &h, int64_t &padding, bela::error_code &ec)
 
 bela::ssize_t Reader::readInternal(void *buffer, size_t size, bela::error_code &ec) {
   if (r == nullptr) {
-    ec = bela::make_error_code(L"underlying reader is null");
+    ec = bela::make_error_code(ErrNotTarFile, L"underlying reader is null");
     return -1;
   }
   return r->Read(buffer, size, ec);
@@ -83,7 +83,7 @@ bela::ssize_t Reader::readInternal(void *buffer, size_t size, bela::error_code &
 
 bool Reader::discard(int64_t bytes, bela::error_code &ec) {
   if (r == nullptr) {
-    ec = bela::make_error_code(L"underlying reader is null");
+    ec = bela::make_error_code(ErrNotTarFile, L"underlying reader is null");
     return false;
   }
   return r->Discard(bytes, ec);
@@ -131,7 +131,7 @@ bool Reader::parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code 
     if (k == paxGNUSparseOffset || k == paxGNUSparseNumBytes) {
       if ((sparseMap.size() % 2 == 0 && k != paxGNUSparseOffset) ||
           (sparseMap.size() % 2 == 1 && k != paxGNUSparseNumBytes) || v.find('.') != std::string_view::npos) {
-        ec = bela::make_error_code(L"invalid tar header");
+        ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
         return false;
       }
       sparseMap.emplace_back(v);
@@ -158,7 +158,7 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
       ec = bela::make_error_code(bela::ErrEnded, L"tar stream end");
       return false;
     }
-    ec = bela::make_error_code(L"invalid tar header");
+    ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
     return false;
   }
   if (h.Format = getFormat(hdr); h.Format == FormatUnknown) {
@@ -203,25 +203,25 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
 }
 
 bool Reader::readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec) {
-  ec = bela::make_error_code(L"tar: GNU old sparse file extraction is not implemented");
+  ec = bela::make_error_code(ErrExtractGeneral, L"tar: GNU old sparse file extraction is not implemented");
   return false;
 }
 
 bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_code &ec) {
   auto it = paxrs.find(paxGNUSparseNumBlocks);
   if (it == paxrs.end()) {
-    ec = bela::make_error_code(L"tar: pax sparse missing num blocks");
+    ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse missing num blocks");
     return false;
   }
   int64_t numEntries{0};
   if (!bela::SimpleAtoi(it->second, &numEntries) || numEntries < 0 ||
       static_cast<int>(numEntries * 2) < static_cast<int>(numEntries)) {
-    ec = bela::make_error_code(L"tar: pax sparse invalid num blocks");
+    ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid num blocks");
     return false;
   }
   auto iter = paxrs.find(paxGNUSparseMap);
   if (iter == paxrs.end()) {
-    ec = bela::make_error_code(L"tar: pax sparse missing sparse map");
+    ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse missing sparse map");
     return false;
   }
   std::vector<std::string_view> sparseMap = bela::narrow::StrSplit(iter->second, bela::narrow::ByChar(','));
@@ -229,7 +229,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
     sparseMap.clear();
   }
   if (sparseMap.size() != static_cast<size_t>(2 * numEntries)) {
-    ec = bela::make_error_code(L"tar: pax sparse invalid sparse map size");
+    ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid sparse map size");
     return false;
   }
   spd.resize(numEntries);
@@ -237,7 +237,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
     // 0,0,1 1,2,3 2,4,5 3,6,7 4,8,9
     if (!bela::SimpleAtoi(sparseMap[2 * i], &spd[i].Offset) ||
         !bela::SimpleAtoi(sparseMap[2 * i + 1], &spd[i].Length)) {
-      ec = bela::make_error_code(L"tar: pax sparse invalid sparse offset or length");
+      ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid sparse offset or length");
       return false;
     }
   }
@@ -280,7 +280,7 @@ bool Reader::readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec) {
   int64_t numEntries{0};
   if (!bela::SimpleAtoi(nextTokenStr, &numEntries) || numEntries < 0 ||
       static_cast<int>(numEntries * 2) < static_cast<int>(numEntries)) {
-    ec = bela::make_error_code(L"tar: pax sparse invalid num blocks");
+    ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid num blocks");
     return false;
   }
   if (!feedTokens(2 * numEntries, ec)) {
@@ -289,7 +289,7 @@ bool Reader::readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec) {
   spd.resize(numEntries);
   for (int64_t i = 0; i < numEntries; i++) {
     if (!bela::SimpleAtoi(nextToken(), &spd[i].Offset) || !bela::SimpleAtoi(nextToken(), &spd[i].Length)) {
-      ec = bela::make_error_code(L"tar: pax sparse invalid sparse offset or length");
+      ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid sparse offset or length");
       return false;
     }
   }
@@ -349,7 +349,7 @@ bool Reader::handleSparseFile(Header &h, const gnutar_header *th, bela::error_co
   }
   if (ret && !spd.empty()) {
     if (isHeaderOnlyType(h.Typeflag) || !validateSparseEntries(spd, h.Size)) {
-      ec = bela::make_error_code(L"invalid tar header");
+      ec = bela::make_error_code(ErrNotTarFile, L"invalid tar header");
       return false;
     }
   }

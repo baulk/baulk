@@ -292,7 +292,7 @@ bool MakeLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::error_c
   (void)forceoverwrite;
   auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
-  if (!baulk::fs::MakeDir(appLinks, ec)) {
+  if (!baulk::fs::MakeDirectories(appLinks, ec)) {
     return false;
   }
   Builder builder;
@@ -352,7 +352,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
   }
   auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
-  if (!baulk::fs::MakeDir(appLinks, ec)) {
+  if (!baulk::fs::MakeDirectories(appLinks, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;
@@ -387,7 +387,7 @@ bool MakeProxyLaunchers(const baulk::Package &pkg, bool forceoverwrite, bela::er
 bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
   auto packageRoot = std::filesystem::path(vfs::AppPackageFolder(pkg.name));
   auto appLinks = vfs::AppLinks();
-  if (!baulk::fs::MakeDir(appLinks, ec)) {
+  if (!baulk::fs::MakeDirectories(appLinks, ec)) {
     return false;
   }
   std::vector<LinkMeta> linkmetas;

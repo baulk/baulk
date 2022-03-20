@@ -163,7 +163,7 @@ bool Executor::latest_download_url_fallback(const bela::version &ov) {
 
 std::optional<std::wstring> Executor::download_file() const {
   bela::error_code ec;
-  if (!baulk::fs::MakeDir(vfs::AppTemp(), ec)) {
+  if (!baulk::fs::MakeDirectories(vfs::AppTemp(), ec)) {
     bela::FPrintF(stderr, L"baulk unable mkdirall %s error: %s\n", vfs::AppTemp(), ec);
     return std::nullopt;
   }

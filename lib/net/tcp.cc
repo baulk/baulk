@@ -206,7 +206,7 @@ std::optional<Conn> DialTimeout(std::wstring_view address, int port, int timeout
   } while ((hi = hi->ai_next) != nullptr);
 
   if (sock == BAULK_INVALID_SOCKET) {
-    if (!ec) {
+    if (ec) {
       ec = bela::make_error_code(bela::ErrGeneral, L"connect to ", address, L" timeout");
     }
     FreeAddrInfoExW(reinterpret_cast<ADDRINFOEXW *>(rhints)); /// Release

@@ -121,7 +121,7 @@ std::optional<std::wstring> NewTempFolder(bela::error_code &ec) {
   for (wchar_t X = 'A'; X < 'Z'; X++) {
     bela::StrAppend(&tmpdir, L"\\BaulkTemp-", an, L"-", static_cast<uint32_t>(instanceId));
     instanceId++;
-    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) && baulk::fs::MakeDir(tmpdir, ec)) {
+    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) && baulk::fs::MakeDirectories(tmpdir, ec)) {
       return std::make_optional(std::move(tmpdir));
     }
     tmpdir.resize(len);

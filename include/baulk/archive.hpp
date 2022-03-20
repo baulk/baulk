@@ -13,6 +13,8 @@ using bela::ErrCanceled;
 using bela::ErrEnded;
 using bela::ErrGeneral;
 using bela::ErrUnimplemented;
+constexpr long ErrExtractGeneral = 800000;
+constexpr long ErrAnotherWay = 800001;
 namespace fs = std::filesystem;
 class File {
 public:
@@ -32,8 +34,16 @@ private:
   File() = default;
   HANDLE fd{INVALID_HANDLE_VALUE};
 };
-
 bool Chtimes(const fs::path &file, bela::Time t, bela::error_code &ec);
+inline bool MakeDirectories(const fs::path &path, bela::Time modified, bela::error_code &ec) {
+  std::error_code e;
+  if (fs::create_directories(path, e); e) {
+    ec = bela::from_std_error_code(e, L"fs::create_directories() ");
+    return false;
+  }
+  return baulk::archive::Chtimes(path, modified, ec);
+}
+
 bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mode, bela::error_code &ec);
 
 std::wstring_view PathRemoveExtension(std::wstring_view p);
@@ -53,8 +63,13 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
 
 std::optional<std::wstring> JoinSanitizePath(std::wstring_view root, std::string_view child_path,
                                              bool always_utf8 = true);
+//
+std::wstring EncodeToNativePath(std::string_view filename, bool always_utf8);
+bool IsHarmfulPath(std::string_view child_path);
 std::optional<fs::path> JoinSanitizeFsPath(const fs::path &root, std::string_view child_path, bool always_utf8,
                                            std::wstring &encoded_path);
+
+//
 bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
 // OpenArchiveFile open file and detect archive file format and offset
 inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,

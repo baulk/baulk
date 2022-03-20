@@ -47,7 +47,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
       j["venv"] = std::move(venv);
     }
     std::wstring file(vfs::AppLocks());
-    if (!baulk::fs::MakeDir(file, ec)) {
+    if (!baulk::fs::MakeDirectories(file, ec)) {
       return false;
     }
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
@@ -103,6 +103,7 @@ bool PackageMakeLinks(const baulk::Package &pkg) {
     sim.InitializeEnv();
     auto pkgFolder = baulk::vfs::AppPackageFolder(pkg.name);
     auto pkgVFS = baulk::vfs::AppPackageVFS(pkg.name);
+    sim.SetEnv(L"BAULK_APPDATA", baulk::vfs::AppData());
     sim.SetEnv(L"BAULK_ROOT", baulk::vfs::AppBasePath());
     sim.SetEnv(L"BAULK_VFS", pkgVFS);
     sim.SetEnv(L"BAULK_PACKAGE_VFS", pkgVFS);
@@ -279,7 +280,7 @@ bool PackageInstall(const baulk::Package &pkg) {
     }
   }
   auto downloads = vfs::AppTemp();
-  if (!baulk::fs::MakeDir(downloads, ec)) {
+  if (!baulk::fs::MakeDirectories(downloads, ec)) {
     bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec);
     return false;
   }

@@ -13,7 +13,7 @@ std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
 
 inline std::wstring FileName(std::wstring_view p) { return std::filesystem::path(p).filename().wstring(); }
 
-inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
+inline bool MakeDirectories(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
   if (std::filesystem::exists(path, e)) {
     return true;
@@ -25,7 +25,7 @@ inline bool MakeDir(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
-inline bool MakeParentDir(std::wstring_view path, bela::error_code &ec) {
+inline bool MakeParentDirectories(std::wstring_view path, bela::error_code &ec) {
   std::error_code e;
   std::filesystem::path p(path);
   auto parent = p.parent_path();

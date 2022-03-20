@@ -29,9 +29,9 @@ bool moveFolder(std::wstring_view source, std::wstring_view target, bela::error_
     return true;
   }
   if (!bela::PathExists(source, bela::FileAttribute::Dir)) {
-    return baulk::fs::MakeDir(target, ec);
+    return baulk::fs::MakeDirectories(target, ec);
   }
-  if (!baulk::fs::MakeParentDir(target, ec)) {
+  if (!baulk::fs::MakeParentDirectories(target, ec)) {
     return false;
   }
   std::filesystem::rename(source, target, e);
