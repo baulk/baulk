@@ -120,7 +120,7 @@ static void SzBigFree(ISzAllocPtr p, void *address) {
 const ISzAlloc g_BigAlloc = {SzBigAlloc, SzBigFree};
 
 bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code &ec) const {
-  SectionReader sr(fd.NativeFD(), file.compressedSize);
+  SectionReader sr(fd.NativeFD(), file.compressed_size);
   CByteInToLook s;
   s.vt.Read = ppmd_read;
   s.sr = &sr;
@@ -151,7 +151,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
   }
   Ppmd8_Init(&_ppmd, order, restor);
   Buffer out(BufferSize);
-  Summator sum(file.crc32sum);
+  Summator sum(file.crc32_value);
   for (;;) {
     auto ob = out.data();
     auto size = BufferSize;
@@ -177,7 +177,7 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
     }
   }
   if (!sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

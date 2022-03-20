@@ -165,15 +165,15 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
   }
-  file.cversion = b.Read<uint16_t>();
-  file.rversion = b.Read<uint16_t>();
+  file.creator_version = b.Read<uint16_t>();
+  file.reader_version = b.Read<uint16_t>();
   file.flags = b.Read<uint16_t>();
   file.method = b.Read<uint16_t>();
   auto dosTime = b.Read<uint16_t>();
   auto dosDate = b.Read<uint16_t>();
-  file.crc32sum = b.Read<uint32_t>();
-  file.compressedSize = b.Read<uint32_t>();
-  file.uncompressedSize = b.Read<uint32_t>();
+  file.crc32_value = b.Read<uint32_t>();
+  file.compressed_size = b.Read<uint32_t>();
+  file.uncompressed_size = b.Read<uint32_t>();
   auto filenameLen = b.Read<uint16_t>();
   auto extraLen = b.Read<uint16_t>();
   auto commentLen = b.Read<uint16_t>();
@@ -194,8 +194,8 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
     file.comment = bela::cstring_view({buffer.data() + filenameLen + extraLen, commentLen});
   }
   file.mode = resolveFileMode(file, externalAttrs);
-  auto needUSize = file.uncompressedSize == SizeMin;
-  auto needSize = file.compressedSize == SizeMin;
+  auto needUSize = file.uncompressed_size == SizeMin;
+  auto needSize = file.compressed_size == SizeMin;
   auto needOffset = file.position == OffsetMin;
   bela::Time modified;
   bela::endian::LittenEndian extra(buffer.data() + filenameLen, static_cast<size_t>(extraLen));
@@ -213,7 +213,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
           ec = bela::make_error_code(L"zip: not a valid zip file");
           return false;
         }
-        file.uncompressedSize = fb.Read<uint64_t>();
+        file.uncompressed_size = fb.Read<uint64_t>();
       }
       if (needSize) {
         needSize = false;
@@ -221,7 +221,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
           ec = bela::make_error_code(L"zip: not a valid zip file");
           return false;
         }
-        file.compressedSize = fb.Read<uint64_t>();
+        file.compressed_size = fb.Read<uint64_t>();
       }
       if (needOffset) {
         needOffset = false;
@@ -319,9 +319,9 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       if (fb.Size() < 7) {
         continue;
       }
-      file.aesVersion = fb.Read<uint16_t>();
+      file.aes_version = fb.Read<uint16_t>();
       fb.Discard(2); // VendorID 'AE'
-      file.aesStrength = fb.Pick();
+      file.aes_strength = fb.Pick();
       file.method = fb.Read<uint16_t>();
       continue;
     }
@@ -365,8 +365,8 @@ bool Reader::Initialize(bela::error_code &ec) {
     if (!readDirectoryHeader(br, buffer, file, ec)) {
       return false;
     }
-    uncompressedSize += file.uncompressedSize;
-    compressedSize += file.compressedSize;
+    uncompressed_size += file.uncompressed_size;
+    compressed_size += file.compressed_size;
     files.emplace_back(std::move(file));
   }
   return true;

@@ -18,8 +18,8 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
     return false;
   }
   auto closer = bela::finally([&] { ZSTD_freeDCtx(zds); });
-  auto csize = file.compressedSize;
-  Summator sum(file.crc32sum);
+  auto csize = file.compressed_size;
+  Summator sum(file.crc32_value);
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(binsize));
     if (!fd.ReadFull({inbuf.data(), static_cast<size_t>(minsize)}, ec)) {
@@ -43,7 +43,7 @@ bool Reader::decompressZstd(const File &file, const Writer &w, bela::error_code 
     csize -= minsize;
   }
   if (!sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

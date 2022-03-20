@@ -16,9 +16,9 @@ bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &
   Buffer out(outsize);
   Buffer in(insize);
   int64_t uncsize = 0;
-  auto csize = file.compressedSize;
+  auto csize = file.compressed_size;
   int ret = BZ_OK;
-  Summator sum(file.crc32sum);
+  Summator sum(file.crc32_value);
   while (csize != 0) {
     auto minsize = (std::min)(csize, static_cast<uint64_t>(insize));
     if (!fd.ReadFull({in.data(), static_cast<size_t>(minsize)}, ec)) {
@@ -52,7 +52,7 @@ bool Reader::decompressBz2(const File &file, const Writer &w, bela::error_code &
     }
   }
   if (!sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;

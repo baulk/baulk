@@ -77,11 +77,11 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
   inflate64Writer iw{
       //
       .w = w,
-      .sum = Summator(file.crc32sum), //
+      .sum = Summator(file.crc32_value), //
       .count = 0,
       .canceled = false //
   };
-  inflate64Reader r{fd.NativeFD(), chunk.data(), 0, 0, static_cast<int64_t>(file.compressedSize)};
+  inflate64Reader r{fd.NativeFD(), chunk.data(), 0, 0, static_cast<int64_t>(file.compressed_size)};
   ret = inflateBack9(&zs, get, &r, put, &iw);
   if (iw.canceled) {
     ec = bela::make_error_code(ErrCanceled, L"canceled");
@@ -92,7 +92,7 @@ bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_
     return false;
   }
   if (!iw.sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", iw.sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", iw.sum.Current(), L" not match");
     return false;
   }
   return true;

@@ -24,13 +24,13 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
   }
   Buffer out(xzoutsize);
   Buffer in(xzinsize);
-  auto csize = file.compressedSize;
+  auto csize = file.compressed_size;
   lzma_action action = LZMA_RUN; // no C26812
   zs.next_in = nullptr;
   zs.avail_in = 0;
   zs.next_out = out.data();
   zs.avail_out = xzoutsize;
-  Summator sum(file.crc32sum);
+  Summator sum(file.crc32_value);
   for (;;) {
     if (zs.avail_in == 0 && csize != 0) {
       auto minsize = (std::min)(csize, static_cast<uint64_t>(xzinsize));
@@ -82,7 +82,7 @@ bool Reader::decompressXz(const File &file, const Writer &w, bela::error_code &e
     }
   }
   if (!sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;
@@ -132,8 +132,8 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
     ec = bela::make_error_code(L"LZMA stream initialization error");
     return false;
   }
-  Summator sum(file.crc32sum);
-  auto csize = file.compressedSize - 9;
+  Summator sum(file.crc32_value);
+  auto csize = file.compressed_size - 9;
   lzma_action action = LZMA_RUN;
   for (;;) {
     if (zs.avail_in == 0 && csize > 0) {
@@ -186,7 +186,7 @@ bool Reader::decompressLZMA(const File &file, const Writer &w, bela::error_code 
     }
   }
   if (!sum.Valid()) {
-    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32sum, L" got ", sum.Current(), L" not match");
+    ec = bela::make_error_code(ErrGeneral, L"crc32 want ", file.crc32_value, L" got ", sum.Current(), L" not match");
     return false;
   }
   return true;
