@@ -9,7 +9,7 @@ bool untar(std::wstring_view file) {
   bela::error_code ec;
   int64_t offset = 0;
   baulk::archive::file_format_t afmt{baulk::archive::file_format_t::none};
-  auto fd = baulk::archive::OpenArchiveFile(file, offset, afmt, ec);
+  auto fd = baulk::archive::OpenFile(file, offset, afmt, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec);
     return false;

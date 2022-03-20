@@ -181,7 +181,7 @@ bool extract_tar(const bela::io::FD &fd, int64_t offset, baulk::archive::file_fo
 bool extract_tar(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {
   int64_t offset = 0;
   baulk::archive::file_format_t afmt{baulk::archive::file_format_t::none};
-  if (auto fd = baulk::archive::OpenArchiveFile(src, offset, afmt, ec); fd) {
+  if (auto fd = baulk::archive::OpenFile(src, offset, afmt, ec); fd) {
     if (afmt == baulk::archive::file_format_t::none) {
       if (bela::EndsWithIgnoreCase(src, L".tar.br") || bela::EndsWithIgnoreCase(src, L".tbr")) {
         afmt = baulk::archive::file_format_t::brotli;
