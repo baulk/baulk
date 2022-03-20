@@ -10,6 +10,7 @@
 namespace baulk::archive {
 namespace zip {
 using Filter = std::function<bool(const baulk::archive::zip::File &file, std::wstring_view relative_name)>;
+using OnProgress = std::function<bool()>;
 class Extractor {
 public:
   Extractor(bool ignore_error_ = false, bool overwrite_file_ = true) noexcept
@@ -82,18 +83,14 @@ private:
       return true;
     }
     if (file.IsSymlink()) {
-      std::string linkname;
-      auto ret = reader.Decompress(
-          file,
-          [&](const void *data, size_t len) {
-            linkname.append(reinterpret_cast<const char *>(data), len);
-            return true;
-          },
-          ec);
-      if (!ret) {
+      std::wstring encoded_linkname;
+      auto source_path = baulk::archive::JoinSanitizeFsPath(out->parent_path(), reader.ResolveLinkName(file, ec),
+                                                            file.IsFileNameUTF8(), encoded_linkname);
+      if (!source_path) {
+        ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(file.name));
         return false;
       }
-      return baulk::archive::NewSymlink(out->c_str(), bela::encode_into<char, wchar_t>(linkname), ec, overwrite_file);
+      return baulk::archive::NewSymlink(out->c_str(), source_path->c_str(), ec, overwrite_file);
     }
     auto fd = baulk::archive::File::NewFile(out->c_str(), overwrite_file, ec);
     if (!fd) {

@@ -73,20 +73,21 @@ inline const char *AESStrength(uint8_t i) {
 using bela::os::FileMode;
 
 struct File {
-  std::string name;
-  std::string comment;
-  uint64_t compressed_size{0};
-  uint64_t uncompressed_size{0};
-  uint64_t position{0}; // file position
-  bela::Time time;
-  uint32_t crc32_value{0}; // avoid chromium zlib define
-  FileMode mode{0};
-  uint16_t creator_version{0};
-  uint16_t reader_version{0};
-  uint16_t flags{0};
-  uint16_t method{0};
-  uint16_t aes_version{0};
-  uint8_t aes_strength{0};
+  std::string name;              /* filename */
+  std::string comment;           /* comment */
+  std::string linkname;          /* link name */
+  uint64_t compressed_size{0};   /* compressed size */
+  uint64_t uncompressed_size{0}; /* uncompressed size */
+  uint64_t position{0};          /* file position */
+  bela::Time time;               /* last modified date */
+  uint32_t crc32_value{0};       /* crc32 */
+  FileMode mode{0};              /* file mode */
+  uint16_t version_madeby{0};    /* version made by */
+  uint16_t version_needed{0};    /* version needed to extract */
+  uint16_t flags{0};             /* general purpose bit flag */
+  uint16_t method{0};            /* compression method */
+  uint16_t aes_version{0};       /* winzip aes extension if not 0 */
+  uint8_t aes_strength{0};       /* winzip aes encryption mode */
   bool comment_utf8{false};
   bool IsFileNameUTF8() const { return (flags & 0x800) != 0; }
   bool IsCommentUTF8() const { return ((flags & 0x800) != 0 || comment_utf8); }

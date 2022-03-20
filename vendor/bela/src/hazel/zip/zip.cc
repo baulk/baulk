@@ -149,8 +149,8 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
     ec = bela::make_error_code(L"zip: not a valid zip file");
     return false;
   }
-  file.creator_version = b.Read<uint16_t>();
-  file.reader_version = b.Read<uint16_t>();
+  file.version_madeby = b.Read<uint16_t>();
+  file.version_needed = b.Read<uint16_t>();
   file.flags = b.Read<uint16_t>();
   file.method = b.Read<uint16_t>();
   auto dosTime = b.Read<uint16_t>();
@@ -234,12 +234,47 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
       }
       continue;
     }
+    /*
+       4.5.7 -UNIX Extra Field (0x000d):
+
+        The following is the layout of the UNIX "extra" block.
+        Note: all fields are stored in Intel low-byte/high-byte
+        order.
+
+        Value       Size          Description
+        -----       ----          -----------
+(UNIX)  0x000d      2 bytes       Tag for this "extra" block type
+        TSize       2 bytes       Size for the following data block
+        Atime       4 bytes       File last access time
+        Mtime       4 bytes       File last modification time
+        Uid         2 bytes       File user ID
+        Gid         2 bytes       File group ID
+        (var)       variable      Variable length data field
+
+        The variable length data field will contain file type
+        specific data.  Currently the only values allowed are
+        the original "linked to" file names for hard or symbolic
+        links, and the major and minor device node numbers for
+        character and block device nodes.  Since device nodes
+        cannot be either symbolic or hard links, only one set of
+        variable length data is stored.  Link files will have the
+        name of the original file stored.  This name is NOT NULL
+        terminated.  Its size can be determined by checking TSize -
+        12.  Device entries will have eight bytes stored as two 4
+        byte entries (in little endian format).  The first entry
+        will be the major device number, and the second the minor
+        device number.
+    */
     if (fieldTag == unixExtraID || fieldTag == infoZipUnixExtraID) {
       if (fb.Size() < 8) {
         continue;
       }
       fb.Discard(4);
       file.time = bela::FromUnixSeconds(static_cast<int64_t>(fb.Read<uint32_t>()));
+      fb.Discard(4); // discard uid and gid
+      if (fb.Size() > 0 && fieldTag == unixExtraID) {
+        file.linkname = bela::cstring_view({fb.Data<char>() + 4, fb.Size()});
+      }
       continue;
     }
     if (fieldTag == extTimeExtraID) {

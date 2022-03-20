@@ -59,20 +59,21 @@ struct directoryEnd {
 std::string String(FileMode m);
 
 struct File {
-  std::string name;
-  std::string comment;
-  uint64_t compressed_size{0};
-  uint64_t uncompressed_size{0};
-  uint64_t position{0}; // file position
-  bela::Time time;
-  uint32_t crc32_value{0};
-  FileMode mode{0};
-  uint16_t creator_version{0};
-  uint16_t reader_version{0};
-  uint16_t flags{0};
-  uint16_t method{0};
-  uint16_t aes_version{0};
-  uint8_t aes_strength{0};
+  std::string name;              /* filename */
+  std::string comment;           /* comment */
+  std::string linkname;          /* linkname */
+  uint64_t compressed_size{0};   /* compressed size */
+  uint64_t uncompressed_size{0}; /* uncompressed size */
+  uint64_t position{0};          /* file position */
+  bela::Time time;               /* last modified date */
+  uint32_t crc32_value{0};       /* crc32 */
+  FileMode mode{0};              /* file mode */
+  uint16_t version_madeby{0};    /* version made by */
+  uint16_t version_needed{0};    /* version needed to extract */
+  uint16_t flags{0};             /* general purpose bit flag */
+  uint16_t method{0};            /* compression method */
+  uint16_t aes_version{0};       /* winzip aes extension if not 0 */
+  uint8_t aes_strength{0};       /* winzip aes encryption mode */
   bool IsFileNameUTF8() const { return (flags & 0x800) != 0; }
   bool IsEncrypted() const { return (flags & 0x1) != 0; }
   bool IsDir() const { return (mode & FileMode::ModeDir) != 0; }
@@ -115,6 +116,22 @@ public:
   int64_t CompressedSize() const { return compressed_size; }
   int64_t UncompressedSize() const { return uncompressed_size; }
   bool Decompress(const File &file, const Writer &w, bela::error_code &ec) const;
+  std::string ResolveLinkName(const File &file, bela::error_code &ec) const {
+    if (!file.linkname.empty()) {
+      return file.linkname;
+    }
+    std::string linkname;
+    if (!Decompress(
+            file,
+            [&](const void *data, size_t len) {
+              linkname.append(reinterpret_cast<const char *>(data), len);
+              return true;
+            },
+            ec)) {
+      linkname.clear();
+    }
+    return linkname;
+  }
 
 private:
   bela::io::FD fd;
