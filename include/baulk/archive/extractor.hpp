@@ -10,7 +10,7 @@
 namespace baulk::archive {
 namespace zip {
 using Filter = std::function<bool(const baulk::archive::zip::File &file, std::wstring_view relative_name)>;
-using OnProgress = std::function<bool()>;
+using OnProgress = std::function<bool(size_t bytes)>;
 class Extractor {
 public:
   Extractor(bool ignore_error_ = false, bool overwrite_file_ = true) noexcept
@@ -41,14 +41,14 @@ public:
     }
     return reader.OpenReader(fd.NativeFD(), size, offset, ec);
   }
-  bool Extract(const Filter &filter, bela::error_code &ec) {
+  bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
     if (std::filesystem::create_directories(destination, e); e) {
       ec = bela::from_std_error_code(e, L"fs::create_directories() ");
       return false;
     }
     for (const auto &file : reader.Files()) {
-      if (!extract_entry(filter, file, ec)) {
+      if (!extract_entry(file, filter, progress, ec)) {
         if (ec.code == bela::ErrCanceled || ignore_error == false) {
           return false;
         }
@@ -62,14 +62,15 @@ private:
   std::filesystem::path destination;
   bool ignore_error{false};
   bool overwrite_file{true};
-  bool extract_entry(const Filter &filter, const baulk::archive::zip::File &file, bela::error_code &ec) {
+  bool extract_entry(const baulk::archive::zip::File &file, const Filter &filter, const OnProgress &progress,
+                     bela::error_code &ec) {
     std::wstring encoded_path;
     auto out = baulk::archive::JoinSanitizeFsPath(destination, file.name, file.IsFileNameUTF8(), encoded_path);
     if (!out) {
       ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(file.name));
       return false;
     }
-    if (!filter(file, encoded_path)) {
+    if (filter && !filter(file, encoded_path)) {
       ec = bela::make_error_code(bela::ErrCanceled, L"canceled");
       return false;
     }
@@ -103,7 +104,10 @@ private:
     return reader.Decompress(
         file,
         [&](const void *data, size_t len) {
-          // DO progress
+          if (progress && !progress(len)) {
+            // canceled
+            return false;
+          }
           return fd->WriteFull(data, len, writeEc);
         },
         ec);
