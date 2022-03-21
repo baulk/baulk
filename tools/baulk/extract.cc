@@ -135,9 +135,7 @@ bool extract_auto_with_mode(std::wstring_view src, std::wstring_view dest, bool 
   if (!make_flattened(dest)) {
     bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
   }
-  return false;
-
-  return false;
+  return true;
 }
 
 bool extract_auto(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {

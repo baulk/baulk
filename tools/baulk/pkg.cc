@@ -170,7 +170,7 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   if (bela::PathExists(outdir)) {
     bela::fs::ForceDeleteFolders(outdir, ec);
   }
-  if (!h->decompress(pkgfile, outdir, ec)) {
+  if (!h->extract(pkgfile, outdir, ec)) {
     bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec);
     return false;
   }

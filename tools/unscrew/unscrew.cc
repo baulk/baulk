@@ -1,16 +1,9 @@
-#include "window.hpp"
+#include "unscrew.hpp"
 #include <CommCtrl.h>
 #include <Objbase.h>
 
 namespace baulk {
 
-class Extractor {
-public:
-  Extractor() = default;
-  bool ParseArgv(bela::error_code &ec);
-
-private:
-};
 
 } // namespace baulk
 

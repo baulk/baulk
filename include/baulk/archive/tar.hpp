@@ -272,10 +272,12 @@ public:
   ssize_t Read(void *buffer, size_t len, bela::error_code &ec);
   bool Discard(int64_t len, bela::error_code &ec);
   bool WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, bela::error_code &ec);
-  auto FD() const { return fd.NativeFD(); }
+  bool Seek(int64_t pos, bela::error_code &ec);
+  auto Position() const { return position; }
 
 private:
   bela::io::FD fd;
+  int64_t position{0};
 };
 std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_format_t afmt, bela::error_code &ec);
 
