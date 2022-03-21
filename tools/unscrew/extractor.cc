@@ -147,7 +147,6 @@ bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
 
 std::shared_ptr<Extractor> MakeExtractor(const fs::path &archive_file, const fs::path &dest,
                                          const ExtractorOptions &opts, bela::error_code &ec) {
-
   int64_t baseOffset = 0;
   file_format_t afmt{file_format_t::none};
   auto fd = baulk::archive::OpenFile(archive_file.native(), baseOffset, afmt, ec);
