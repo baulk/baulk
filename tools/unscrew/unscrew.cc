@@ -4,6 +4,31 @@
 
 namespace baulk {
 
+bool Executor::Execute(bela::error_code &ec) {
+  bela::comptr<IProgressDialog> bar;
+  if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
+      S_OK) {
+    auto ec = bela::make_system_error_code(L"CoCreateInstance ");
+    return false;
+  }
+  auto closer = bela::finally([&] { bar->StopProgressDialog(); });
+  for (const auto &archive_file : archive_files) {
+    auto e = MakeExtractor(archive_file, dest, opts, ec);
+    if (!e) {
+      return false;
+    }
+    if (!e->Extract(bar.get(), ec)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Executor::ParseArgv(bela::error_code &ec) {
+  //
+
+  return true;
+}
 
 } // namespace baulk
 

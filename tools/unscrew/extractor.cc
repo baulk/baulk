@@ -13,7 +13,7 @@ class ZipExtractor final : public Extractor {
 public:
   ZipExtractor(bela::io::FD &&fd_, const fs::path &archive_file_, const ExtractorOptions &opts)
       : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_) {}
-  bool Extract(bela::error_code &ec);
+  bool Extract(IProgressDialog *bar, bela::error_code &ec);
   bool Initialize(const fs::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
     return extractor.OpenReader(fd, dest, size, offset, ec);
   }
@@ -24,14 +24,7 @@ private:
   baulk::archive::zip::Extractor extractor;
 };
 
-bool ZipExtractor::Extract(bela::error_code &ec) {
-  bela::comptr<IProgressDialog> bar;
-  if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
-      S_OK) {
-    auto ec = bela::make_system_error_code(L"CoCreateInstance ");
-    return false;
-  }
-  auto release = bela::finally([&] { bar->StopProgressDialog(); });
+bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
   if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
@@ -59,13 +52,13 @@ public:
   UniversalExtractor(bela::io::FD &&fd_, const fs::path &archive_file_, const fs::path &dest_,
                      const ExtractorOptions &opts_, int64_t offset_, file_format_t afmt_)
       : fd(std::move(fd_)), archive_file(archive_file_), dest(dest_), opts(opts_), offset(offset_), afmt(afmt_) {}
-  bool Extract(bela::error_code &ec);
+  bool Extract(IProgressDialog *bar, bela::error_code &ec);
 
 private:
-  bool single_file_extract(bela::error_code &ec);
-  bool tar_extract(bela::error_code &ec);
-  bool tar_extract(baulk::archive::tar::FileReader &fr, baulk::archive::tar::ExtractReader *reader,
-                   bela::error_code &ec);
+  bool single_file_extract(IProgressDialog *bar, bela::error_code &ec);
+  bool tar_extract(IProgressDialog *bar, bela::error_code &ec);
+  bool tar_extract(IProgressDialog *bar, baulk::archive::tar::FileReader &fr,
+                   baulk::archive::tar::ExtractReader *reader, bela::error_code &ec);
   bela::io::FD fd;
   fs::path archive_file;
   fs::path dest;
@@ -74,8 +67,8 @@ private:
   file_format_t afmt{file_format_t::none};
 };
 
-bool UniversalExtractor::tar_extract(baulk::archive::tar::FileReader &fr, baulk::archive::tar::ExtractReader *reader,
-                                     bela::error_code &ec) {
+bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::FileReader &fr,
+                                     baulk::archive::tar::ExtractReader *reader, bela::error_code &ec) {
   auto size = fd.Size(ec);
   if (size == bela::SizeUnInitialized) {
     return false;
@@ -84,13 +77,6 @@ bool UniversalExtractor::tar_extract(baulk::archive::tar::FileReader &fr, baulk:
   if (!extractor.InitializeExtractor(dest, ec)) {
     return false;
   }
-  bela::comptr<IProgressDialog> bar;
-  if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
-      S_OK) {
-    auto ec = bela::make_system_error_code(L"CoCreateInstance ");
-    return false;
-  }
-  auto release = bela::finally([&] { bar->StopProgressDialog(); });
   bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
   if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
@@ -105,18 +91,18 @@ bool UniversalExtractor::tar_extract(baulk::archive::tar::FileReader &fr, baulk:
       nullptr, ec);
 }
 
-bool UniversalExtractor::tar_extract(bela::error_code &ec) {
+bool UniversalExtractor::tar_extract(IProgressDialog *bar, bela::error_code &ec) {
   baulk::archive::tar::FileReader fr(fd.NativeFD());
   if (auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec); wr) {
-    return tar_extract(fr, wr.get(), ec);
+    return tar_extract(bar, fr, wr.get(), ec);
   }
   if (ec.code != baulk::archive::tar::ErrNoFilter) {
     return false;
   }
-  return tar_extract(fr, &fr, ec);
+  return tar_extract(bar, fr, &fr, ec);
 }
 
-bool UniversalExtractor::single_file_extract(bela::error_code &ec) {
+bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_code &ec) {
   auto size = fd.Size(ec);
   if (size == bela::SizeUnInitialized) {
     return false;
@@ -133,13 +119,6 @@ bool UniversalExtractor::single_file_extract(bela::error_code &ec) {
   if (!fd) {
     return false;
   }
-  bela::comptr<IProgressDialog> bar;
-  if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
-      S_OK) {
-    auto ec = bela::make_system_error_code(L"CoCreateInstance ");
-    return false;
-  }
-  auto release = bela::finally([&] { bar->StopProgressDialog(); });
   bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
   bar->SetLine(2, filename.c_str(), FALSE, nullptr);
   uint8_t buffer[8192];
@@ -156,14 +135,14 @@ bool UniversalExtractor::single_file_extract(bela::error_code &ec) {
   return true;
 }
 
-bool UniversalExtractor::Extract(bela::error_code &ec) {
-  if (tar_extract(ec)) {
+bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
+  if (tar_extract(bar, ec)) {
     return true;
   }
   if (ec.code != baulk::archive::ErrAnotherWay) {
     return false;
   }
-  return single_file_extract(ec);
+  return single_file_extract(bar, ec);
 }
 
 std::shared_ptr<Extractor> MakeExtractor(const fs::path &archive_file, const fs::path &dest,
