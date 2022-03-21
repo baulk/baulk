@@ -35,13 +35,13 @@ bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   return extractor.Extract(
       [&](const baulk::archive::zip::File &file, const std::wstring &relative_name) -> bool {
         //
-        bar->SetLine(2, relative_name.data(), FALSE, nullptr);
-        return bar->HasUserCancelled() == TRUE;
+        bar->SetLine(2, relative_name.data(), TRUE, nullptr);
+        return bar->HasUserCancelled() != TRUE;
       },
       [&](size_t bytes) -> bool {
         completed_bytes += bytes;
         bar->SetProgress64(completed_bytes, uncompressed_size);
-        return bar->HasUserCancelled() == TRUE;
+        return bar->HasUserCancelled() != TRUE;
       },
       ec);
 }
@@ -84,9 +84,9 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::
   }
   return extractor.Extract(
       [&](const baulk::archive::tar::Header &hdr, const std::wstring &relative_name) -> bool {
-        bar->SetLine(2, relative_name.data(), FALSE, nullptr);
+        bar->SetLine(2, relative_name.data(), TRUE, nullptr);
         bar->SetProgress64(fr.Position(), size);
-        return bar->HasUserCancelled() == TRUE;
+        return bar->HasUserCancelled() != TRUE;
       },
       nullptr, ec);
 }
