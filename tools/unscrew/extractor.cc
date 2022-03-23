@@ -113,7 +113,7 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
     return false;
   }
   auto filename = archive_file.filename();
-  filename.replace_extension(L"");
+  filename.replace_extension();
   auto target = dest / filename;
   auto fd = baulk::archive::File::NewFile(target, bela::Now(), opts.overwrite_mode, ec);
   if (!fd) {
