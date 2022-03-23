@@ -1,10 +1,34 @@
 #include "unscrew.hpp"
+#include <bela/picker.hpp>
+#include <shellapi.h>
 #include <CommCtrl.h>
 #include <Objbase.h>
 
 namespace baulk {
 
 bool Executor::Execute(bela::error_code &ec) {
+  constexpr bela::filter_t filters[] = {
+      // archives
+      {L"Zip Archive (*.zip)", L"*.zip"}, // zip archives
+      {L"Self-extracting Archive (*.exe;*.com;*.dll)", L"*.exe;*.com;*.dll"},
+      {L"MSIX Package (*.appx;*.msix;*.msixbundle)", L"*.appx;*.msix;*.msixbundle"}, // msix archives
+      {L"OpenXML Archive (*.pptx;*.docx;*.xlsx)", L"*.pptx;*.docx;*.xlsx"},          // office archives
+      {L"NuGet Package (*.nupkg)", L"*.nupkg"},                                      // nuget
+      {L"Unix Archive (*.tar;*.gz;*.zstd;*.xz;*.bz2;*.br)", L"*.tar;*.gz;*.zstd;*.xz;*.bz2;*.br"},
+      {L"Java Archive (*.jar)", L"*.jar"},
+      {L"All Files (*.*)", L"*.*"}
+      //
+  };
+  if (archive_files.empty()) {
+    auto file = bela::FilePicker(nullptr, L"Extract archive", filters);
+    if (!file) {
+      return false;
+    }
+    archive_files.emplace_back(*file);
+  }
+  if (destination.empty()) {
+    destination = archive_files[0].parent_path() / archive::PathStripExtension(archive_files[0].filename().native());
+  }
   bela::comptr<IProgressDialog> bar;
   if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
       S_OK) {
@@ -13,7 +37,7 @@ bool Executor::Execute(bela::error_code &ec) {
   }
   auto closer = bela::finally([&] { bar->StopProgressDialog(); });
   for (const auto &archive_file : archive_files) {
-    auto e = MakeExtractor(archive_file, dest, opts, ec);
+    auto e = MakeExtractor(archive_file, destination, opts, ec);
     if (!e) {
       return false;
     }
@@ -22,10 +46,15 @@ bool Executor::Execute(bela::error_code &ec) {
     }
   }
   return true;
-}
+} // namespace baulk
 
 bool Executor::ParseArgv(bela::error_code &ec) {
-  //
+  int Argc = 0;
+  auto Argv = CommandLineToArgvW(GetCommandLineW(), &Argc);
+  if (Argv == nullptr) {
+    ec = bela::make_system_error_code();
+    return false;
+  }
 
   return true;
 }
@@ -54,6 +83,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
   INITCOMMONCONTROLSEX info = {sizeof(INITCOMMONCONTROLSEX),
                                ICC_TREEVIEW_CLASSES | ICC_COOL_CLASSES | ICC_LISTVIEW_CLASSES};
   InitCommonControlsEx(&info);
+  baulk::Executor executor;
+  bela::error_code ec;
+  if (!executor.Execute(ec)) {
 
+    return 1;
+  }
   return 0;
 }

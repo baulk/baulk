@@ -12,13 +12,12 @@ public:
   Executor() = default;
   Executor(const Executor &) = delete;
   Executor &operator=(const Executor &) = delete;
-  ~Executor();
   bool ParseArgv(bela::error_code &ec);
   bool Execute(bela::error_code &ec);
 
 private:
   std::vector<fs::path> archive_files;
-  fs::path dest;
+  fs::path destination;
   baulk::ExtractorOptions opts;
 };
 } // namespace baulk

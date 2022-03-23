@@ -133,7 +133,7 @@ bool single_decompress(std::wstring_view src, baulk::archive::tar::FileReader &f
     bela::FPrintF(stderr, L"unable decompress file: %s no filter\n", src);
     return false;
   }
-  auto baseName = baulk::archive::PathRemoveExtension(bela::BaseName(src));
+  auto baseName = baulk::archive::PathStripExtension(bela::BaseName(src));
   DbgPrint(L"File %s not tar file", baseName);
   bela::FPrintF(stderr, L"\x1b[33mx %s\x1b[0m\n", baseName);
   auto out = bela::StringCat(dest, L"\\", baseName);

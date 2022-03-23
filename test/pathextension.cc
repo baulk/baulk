@@ -6,7 +6,7 @@
 
 constexpr bool is_dot_or_separator(wchar_t ch) { return bela::IsPathSeparator(ch) || ch == L'.'; }
 
-std::wstring_view PathRemoveExtension(std::wstring_view p) {
+std::wstring_view PathStripExtension(std::wstring_view p) {
   if (p.empty()) {
     return L".";
   }
@@ -37,7 +37,7 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
     }
     return bela::IsPathSeparator(p.back());
   };
-  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
+  if (auto d = PathStripExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
     return std::wstring(d);
   }
   return bela::StringCat(arfile, L".out");
@@ -129,7 +129,7 @@ int wmain() {
                                          L"/home/path/abc.exe",
                                          L"./zzz.zip"};
   for (const auto sv : paths) {
-    bela::FPrintF(stderr, L"[%s]--> %s | %s\n", sv, PathRemoveExtension(sv), FileDestination(sv));
+    bela::FPrintF(stderr, L"[%s]--> %s | %s\n", sv, PathStripExtension(sv), FileDestination(sv));
   }
   pathfstest();
   return 0;

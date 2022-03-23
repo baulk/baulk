@@ -46,7 +46,7 @@ inline bool MakeDirectories(const fs::path &path, bela::Time modified, bela::err
 
 bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mode, bela::error_code &ec);
 
-std::wstring_view PathRemoveExtension(std::wstring_view p);
+std::wstring_view PathStripExtension(std::wstring_view p);
 
 inline std::wstring FileDestination(std::wstring_view arfile) {
   auto ends_with_path_separator = [](std::wstring_view p) -> bool {
@@ -55,7 +55,7 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
     }
     return bela::IsPathSeparator(p.back());
   };
-  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
+  if (auto d = PathStripExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
     return std::wstring(d);
   }
   return bela::StringCat(arfile, L".out");
