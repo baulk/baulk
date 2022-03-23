@@ -3,6 +3,7 @@
 #include <shellapi.h>
 #include <CommCtrl.h>
 #include <Objbase.h>
+#include <version.hpp>
 
 namespace baulk {
 
@@ -47,6 +48,22 @@ bool Executor::Execute(bela::error_code &ec) {
   }
   return true;
 } // namespace baulk
+
+void uncrew_usage() {
+  constexpr wchar_t usage[] = LR"(Unscrew - Baulk modern extractor
+Usage: unscrew [option] ...
+  -h|--help
+               Show usage text and quit
+  -v|--version
+               Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
+  -d|--destination
+               Set archive extracted destination
+
+)";
+  bela::BelaMessageBox(nullptr, L"Unscrew - Baulk modern extractor", usage, BAULK_APPLINK, bela::mbs_t::ABOUT);
+}
 
 bool Executor::ParseArgv(bela::error_code &ec) {
   int Argc = 0;
