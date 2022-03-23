@@ -61,7 +61,7 @@ inline std::optional<url> crack_url(std::wstring_view us, bela::error_code &ec) 
   std::wstring_view urlpath{uc.lpszUrlPath, uc.dwUrlPathLength};
   return std::make_optional(
       url{.host = {uc.lpszHostName, uc.dwHostNameLength},
-          .filename = url_path_name(urlpath),
+          .filename = decoded_url_path_name(urlpath),
           .uri = bela::StringCat(urlpath, std::wstring_view{uc.lpszExtraInfo, uc.dwExtraInfoLength}),
           .nPort = uc.nPort,
           .nScheme = uc.nScheme});
@@ -87,7 +87,7 @@ inline std::optional<std::wstring> extract_filename(const headers_t &hkv) {
     if (bela::ConsumePrefix(&s, fnsu)) {
       bela::ConsumePrefix(&s, L"\"");
       bela::ConsumeSuffix(&s, L"\"");
-      return std::make_optional<>(url_decode(url_path_name(s)));
+      return std::make_optional<>(decoded_url_path_name(s));
     }
   }
   return std::nullopt;

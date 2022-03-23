@@ -140,6 +140,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
           bela::FPrintF(stderr, L"baulk initialize context error: \x1b[31m%s\x1b[0m\n", ec);
           return std::nullopt;
         }
+        net::HttpClient::DefaultClient().InitializeProxyFromEnv();
       }
       return std::make_optional<command_t>(command_t{
           .argv = commands::argv_t(pa.Argv().begin() + 1, pa.Argv().end()),
