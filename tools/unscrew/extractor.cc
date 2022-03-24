@@ -11,21 +11,21 @@ using baulk::archive::file_format_t;
 
 class ZipExtractor final : public Extractor {
 public:
-  ZipExtractor(bela::io::FD &&fd_, const fs::path &archive_file_, const ExtractorOptions &opts)
+  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_, const ExtractorOptions &opts)
       : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_) {}
   bool Extract(IProgressDialog *bar, bela::error_code &ec);
-  bool Initialize(const fs::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
+  bool Initialize(const std::filesystem::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
     return extractor.OpenReader(fd, dest, size, offset, ec);
   }
 
 private:
   bela::io::FD fd;
-  fs::path archive_file;
+  std::filesystem::path archive_file;
   baulk::archive::zip::Extractor extractor;
 };
 
 bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
-  bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
+  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename().native()).data());
   if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     return false;
@@ -49,7 +49,7 @@ bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
 // tar or gz and other archive
 class UniversalExtractor final : public Extractor {
 public:
-  UniversalExtractor(bela::io::FD &&fd_, const fs::path &archive_file_, const fs::path &dest_,
+  UniversalExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_, const std::filesystem::path &dest_,
                      const ExtractorOptions &opts_, int64_t offset_, file_format_t afmt_)
       : fd(std::move(fd_)), archive_file(archive_file_), dest(dest_), opts(opts_), offset(offset_), afmt(afmt_) {}
   bool Extract(IProgressDialog *bar, bela::error_code &ec);
@@ -60,8 +60,8 @@ private:
   bool tar_extract(IProgressDialog *bar, baulk::archive::tar::FileReader &fr,
                    baulk::archive::tar::ExtractReader *reader, bela::error_code &ec);
   bela::io::FD fd;
-  fs::path archive_file;
-  fs::path dest;
+  std::filesystem::path archive_file;
+  std::filesystem::path dest;
   ExtractorOptions opts;
   int64_t offset{0};
   file_format_t afmt{file_format_t::none};
@@ -119,7 +119,7 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
   if (!fd) {
     return false;
   }
-  bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
+  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename().native()).data());
   bar->SetLine(2, filename.c_str(), FALSE, nullptr);
   uint8_t buffer[8192];
   for (;;) {
@@ -145,7 +145,7 @@ bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   return single_file_extract(bar, ec);
 }
 
-std::shared_ptr<Extractor> MakeExtractor(const fs::path &archive_file, const fs::path &dest,
+std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file, const std::filesystem::path &dest,
                                          const ExtractorOptions &opts, bela::error_code &ec) {
   int64_t baseOffset = 0;
   file_format_t afmt{file_format_t::none};

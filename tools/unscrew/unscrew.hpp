@@ -16,9 +16,12 @@ public:
   bool Execute(bela::error_code &ec);
 
 private:
-  std::vector<fs::path> archive_files;
-  fs::path destination;
+  bool make_flat(const std::filesystem::path &dest);
+  std::vector<std::filesystem::path> archive_files;
+  std::filesystem::path destination;
   baulk::ExtractorOptions opts;
+  bool debugMode{false};
+  bool flat{false};
 };
 } // namespace baulk
 

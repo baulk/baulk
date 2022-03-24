@@ -1,11 +1,44 @@
 #include "unscrew.hpp"
 #include <bela/picker.hpp>
+#include <bela/parseargv.hpp>
+#include <baulk/fs.hpp>
 #include <shellapi.h>
 #include <CommCtrl.h>
 #include <Objbase.h>
 #include <version.hpp>
 
 namespace baulk {
+constexpr auto AppTitle = L"Unscrew - Baulk modern extractor";
+
+inline std::wstring_view strip_extension(const std::filesystem::path &filename) {
+  return baulk::archive::PathStripExtension(filename.native());
+}
+
+std::optional<std::filesystem::path> make_unqiue_extracted_destination(const std::filesystem::path &archive_file) {
+  std::error_code e;
+  auto parent_path = archive_file.parent_path();
+  auto filename = archive_file.filename().wstring();
+  auto stripFilename = baulk::archive::PathStripExtension(filename);
+  auto d = parent_path / stripFilename;
+  if (!std::filesystem::exists(d, e)) {
+    return std::make_optional(std::move(d));
+  }
+  for (int i = 1; i < 100; i++) {
+    d = parent_path / bela::StringCat(stripFilename, L"-(", i, L")");
+    if (!std::filesystem::exists(d, e)) {
+      return std::make_optional(std::move(d));
+    }
+  }
+  return std::nullopt;
+}
+
+bool Executor::make_flat(const std::filesystem::path &dest) {
+  if (!flat) {
+    return true;
+  }
+  bela::error_code ec;
+  return baulk::fs::MakeFlattened(dest.native(), dest.native(), ec);
+}
 
 bool Executor::Execute(bela::error_code &ec) {
   constexpr bela::filter_t filters[] = {
@@ -27,24 +60,48 @@ bool Executor::Execute(bela::error_code &ec) {
     }
     archive_files.emplace_back(*file);
   }
-  if (destination.empty()) {
-    destination = archive_files[0].parent_path() / archive::PathStripExtension(archive_files[0].filename().native());
-  }
+
   bela::comptr<IProgressDialog> bar;
   if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
       S_OK) {
-    auto ec = bela::make_system_error_code(L"CoCreateInstance ");
+    ec = bela::make_system_error_code(L"CoCreateInstance ");
     return false;
   }
   auto closer = bela::finally([&] { bar->StopProgressDialog(); });
-  for (const auto &archive_file : archive_files) {
-    auto e = MakeExtractor(archive_file, destination, opts, ec);
+  if (archive_files.size() == 1) {
+    if (destination.empty()) {
+      const auto &archive_file = archive_files[0];
+      auto d = make_unqiue_extracted_destination(archive_file);
+      if (!d) {
+        ec = bela::make_error_code(bela::ErrGeneral, L"destination '", strip_extension(archive_file.native()),
+                                   L"'  already exists");
+        return false;
+      }
+      destination = std::move(*d);
+    }
+    auto e = MakeExtractor(archive_files[0], destination, opts, ec);
     if (!e) {
       return false;
     }
     if (!e->Extract(bar.get(), ec)) {
       return false;
     }
+    return make_flat(destination);
+  }
+  // Extracting multiple archives will ignore destination
+  for (const auto &archive_file : archive_files) {
+    auto destination_ = make_unqiue_extracted_destination(archive_file);
+    if (!destination_) {
+      continue;
+    }
+    auto e = MakeExtractor(archive_file, *destination_, opts, ec);
+    if (!e) {
+      return false;
+    }
+    if (!e->Extract(bar.get(), ec)) {
+      return false;
+    }
+    make_flat(*destination_);
   }
   return true;
 } // namespace baulk
@@ -59,10 +116,11 @@ Usage: unscrew [option] ...
   -V|--verbose
                Make the operation more talkative
   -d|--destination
-               Set archive extracted destination
-
+               Set archive extracted destination (extracting multiple archives will be ignored)
+  -z|--flat
+               Make destination folder to flat
 )";
-  bela::BelaMessageBox(nullptr, L"Unscrew - Baulk modern extractor", usage, BAULK_APPLINK, bela::mbs_t::ABOUT);
+  bela::BelaMessageBox(nullptr, AppTitle, usage, BAULK_APPLINK, bela::mbs_t::ABOUT);
 }
 
 bool Executor::ParseArgv(bela::error_code &ec) {
@@ -72,7 +130,44 @@ bool Executor::ParseArgv(bela::error_code &ec) {
     ec = bela::make_system_error_code();
     return false;
   }
-
+  auto closer = bela::finally([&] { LocalFree(Argv); });
+  std::error_code e;
+  bela::ParseArgv pa(Argc, Argv);
+  pa.Add(L"help", bela::no_argument, L'h')
+      .Add(L"version", bela::no_argument, L'v')
+      .Add(L"verbose", bela::no_argument, L'V')
+      .Add(L"destination", bela::required_argument, L'd')
+      .Add(L"flat", bela::no_argument, L'z');
+  auto ret = pa.Execute(
+      [&](int val, const wchar_t *oa, const wchar_t *) {
+        switch (val) {
+        case 'h':
+          uncrew_usage();
+          ExitProcess(0);
+        case 'v':
+          bela::BelaMessageBox(nullptr, AppTitle, BAULK_APPVERSION, BAULK_APPLINK, bela::mbs_t::ABOUT);
+          ExitProcess(0);
+        case 'V':
+          debugMode = true;
+          break;
+        case 'd':
+          destination = std::filesystem::absolute(oa, e);
+          break;
+        case 'z':
+          flat = true;
+          break;
+        default:
+          break;
+        }
+        return true;
+      },
+      ec);
+  if (!ret) {
+    return false;
+  }
+  for (const auto s : pa.UnresolvedArgs()) {
+    archive_files.emplace_back(std::filesystem::absolute(s, e));
+  }
   return true;
 }
 
@@ -102,8 +197,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
   InitCommonControlsEx(&info);
   baulk::Executor executor;
   bela::error_code ec;
+  if (!executor.ParseArgv(ec)) {
+    bela::BelaMessageBox(nullptr, baulk::AppTitle, ec.data(), BAULK_APPLINK, bela::mbs_t::FATAL);
+    return 0;
+  }
   if (!executor.Execute(ec)) {
-
     return 1;
   }
   return 0;

@@ -8,14 +8,13 @@
 #include <baulk/archive/extractor.hpp>
 
 namespace baulk {
-namespace fs = std::filesystem;
 using baulk::archive::ExtractorOptions;
 class Extractor {
 public:
   virtual bool Extract(IProgressDialog *bar, bela::error_code &ec) = 0;
 };
 
-std::shared_ptr<Extractor> MakeExtractor(const fs::path &archive_file, const fs::path &dest,
+std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file, const std::filesystem::path &dest,
                                          const ExtractorOptions &opts, bela::error_code &ec);
 
 } // namespace baulk
