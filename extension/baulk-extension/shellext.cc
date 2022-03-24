@@ -126,14 +126,13 @@ public:
         return S_FALSE;
       }
     }
-    auto AppPath = baulkTerminal.wstring();
     bela::EscapeArgv ea;
-    ea.Assign(AppPath).Append(L"--vs").Append(L"-W").Append(path);
+    ea.Assign(baulkTerminal.native()).Append(L"--vs").Append(L"-W").Append(path);
     PROCESS_INFORMATION pi;
     STARTUPINFOEXW siEx{0};
     siEx.StartupInfo.cb = sizeof(STARTUPINFOEX);
 
-    if (CreateProcessW(AppPath.data(), // lpApplicationName
+    if (CreateProcessW(baulkTerminal.c_str(), // lpApplicationName
                        ea.data(),
                        nullptr,                                                   // lpProcessAttributes
                        nullptr,                                                   // lpThreadAttributes
