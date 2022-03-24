@@ -10,7 +10,7 @@
 namespace baulk::archive::tar {
 
 std::shared_ptr<ExtractReader> MakeReader(FileReader &fd, int64_t offset, file_format_t afmt, bela::error_code &ec) {
-  if (!bela::io::Seek(fd.FD(), offset, ec)) {
+  if (!fd.Seek(offset, ec)) {
     return nullptr;
   }
   switch (afmt) {

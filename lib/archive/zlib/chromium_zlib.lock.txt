@@ -1,4 +1,4 @@
 https://github.com/chromium/chromium.git
-238737e5856be21dfd8aed53cc584ab9fee9aa93
+09c82cde14bc541c06a90c9fc6183bf54cec8109
 # subtree
-https://github.com/chromium/chromium/commit/3884c1f0647dccabe81e148e0184a595c2e030d9
+https://github.com/chromium/chromium/commit/527964a214baed4f325c0d7751bfc527ba10bf34

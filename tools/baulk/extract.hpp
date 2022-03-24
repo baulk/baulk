@@ -4,6 +4,7 @@
 #include <bela/base.hpp>
 #include <bela/io.hpp>
 #include <baulk/archive/format.hpp>
+#include <filesystem>
 
 namespace baulk {
 bool extract_exe(std::wstring_view src, std::wstring_view dest, bela::error_code &ec);
@@ -23,7 +24,7 @@ inline bool make_flattened_none(std::wstring_view path) { return true; }
 
 struct extract_handler_t {
   std::wstring_view extension;
-  decltype(&extract_exe) decompress;
+  decltype(&extract_exe) extract;
   decltype(&make_flattened) regularize;
 };
 

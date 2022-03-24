@@ -17,7 +17,7 @@ struct ExtractorOptions {
 };
 
 namespace zip {
-using Filter = std::function<bool(const File &file, std::wstring_view relative_name)>;
+using Filter = std::function<bool(const File &file, const std::wstring& relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
 class Extractor {
 public:
@@ -116,12 +116,8 @@ private:
 };
 } // namespace zip
 namespace tar {
-using Filter = std::function<bool(const Header &hdr, std::wstring_view relative_name)>;
+using Filter = std::function<bool(const Header &hdr, const std::wstring& relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
-
-inline bool extractSymlink(std::wstring_view filename, std::string_view linkname, bela::error_code &ec) {
-  return baulk::archive::NewSymlink(filename, bela::encode_into<char, wchar_t>(linkname), true, ec);
-}
 
 class Extractor {
 public:
@@ -168,7 +164,6 @@ public:
       return false;
     }
     if (ec && ec.code != bela::ErrEnded) {
-
       return false;
     }
     return true;

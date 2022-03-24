@@ -9,7 +9,7 @@ bool untar(std::wstring_view file) {
   bela::error_code ec;
   int64_t offset = 0;
   baulk::archive::file_format_t afmt{baulk::archive::file_format_t::none};
-  auto fd = baulk::archive::OpenArchiveFile(file, offset, afmt, ec);
+  auto fd = baulk::archive::OpenFile(file, offset, afmt, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"unable open file %s error %s\n", file, ec);
     return false;
@@ -41,7 +41,7 @@ bool untar(std::wstring_view file) {
       break;
     }
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", fh->Name);
-    auto dest = baulk::archive::PathRemoveExtension(file);
+    auto dest = baulk::archive::PathStripExtension(file);
     auto out = baulk::archive::JoinSanitizePath(dest, fh->Name);
     if (!out) {
       continue;

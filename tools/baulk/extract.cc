@@ -65,7 +65,7 @@ bool extract_auto_with_mode(std::wstring_view src, std::wstring_view dest, bool 
   using archive::file_format_t;
   file_format_t afmt{file_format_t::none};
   int64_t baseOffest = 0;
-  auto fd = archive::OpenArchiveFile(src, baseOffest, afmt, ec);
+  auto fd = archive::OpenFile(src, baseOffest, afmt, ec);
   if (!fd) {
     bela::FPrintF(stderr, L"baulk extract %s error: %s\n", src, ec);
     return false;
@@ -135,9 +135,7 @@ bool extract_auto_with_mode(std::wstring_view src, std::wstring_view dest, bool 
   if (!make_flattened(dest)) {
     bela::FPrintF(stderr, L"baulk tidy %s error: %s\n", dest, ec);
   }
-  return false;
-
-  return false;
+  return true;
 }
 
 bool extract_auto(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {

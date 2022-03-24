@@ -46,7 +46,7 @@ inline bool MakeDirectories(const fs::path &path, bela::Time modified, bela::err
 
 bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mode, bela::error_code &ec);
 
-std::wstring_view PathRemoveExtension(std::wstring_view p);
+std::wstring_view PathStripExtension(std::wstring_view p);
 
 inline std::wstring FileDestination(std::wstring_view arfile) {
   auto ends_with_path_separator = [](std::wstring_view p) -> bool {
@@ -55,7 +55,7 @@ inline std::wstring FileDestination(std::wstring_view arfile) {
     }
     return bela::IsPathSeparator(p.back());
   };
-  if (auto d = PathRemoveExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
+  if (auto d = PathStripExtension(arfile); d.size() != arfile.size() && !ends_with_path_separator(d)) {
     return std::wstring(d);
   }
   return bela::StringCat(arfile, L".out");
@@ -70,12 +70,12 @@ std::optional<fs::path> JoinSanitizeFsPath(const fs::path &root, std::string_vie
                                            std::wstring &encoded_path);
 
 //
-bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
-// OpenArchiveFile open file and detect archive file format and offset
-inline std::optional<bela::io::FD> OpenArchiveFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,
-                                                   bela::error_code &ec) {
+bool CheckFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec);
+// OpenFile open file and detect archive file format and offset
+inline std::optional<bela::io::FD> OpenFile(std::wstring_view file, int64_t &offset, file_format_t &afmt,
+                                            bela::error_code &ec) {
   if (auto fd = bela::io::NewFile(file, ec); fd) {
-    if (CheckArchiveFormat(*fd, afmt, offset, ec)) {
+    if (CheckFormat(*fd, afmt, offset, ec)) {
       return std::move(fd);
     }
   }

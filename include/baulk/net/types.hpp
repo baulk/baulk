@@ -126,7 +126,7 @@ struct minimal_response {
   [[nodiscard]] bool IsSuccessStatusCode() const { return status_code >= 200 && status_code <= 299; }
 };
 
-std::wstring url_decode(std::wstring_view str);
+std::string url_decode(std::wstring_view url);
 
 inline std::wstring url_path_name(std::wstring_view urlpath) {
   std::vector<std::wstring_view> pv = bela::SplitPath(urlpath);
@@ -134,6 +134,18 @@ inline std::wstring url_path_name(std::wstring_view urlpath) {
     return L"index.html";
   }
   return std::wstring(pv.back());
+}
+
+inline std::wstring decoded_url_path_name(std::wstring_view urlpath) {
+  std::vector<std::wstring_view> pv = bela::SplitPath(urlpath);
+  if (pv.empty()) {
+    return L"index.html";
+  }
+  auto name = pv.back();
+  if (name.find(L'%') == std::wstring_view::npos) {
+    return std::wstring(name);
+  }
+  return bela::encode_into<char, wchar_t>(url_decode(pv.back()));
 }
 
 } // namespace baulk::net

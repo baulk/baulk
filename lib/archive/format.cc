@@ -175,7 +175,7 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
 
 constexpr size_t magic_size = 1024;
 
-bool CheckArchiveFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec) {
+bool CheckFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::error_code &ec) {
   uint8_t magicBytes[magic_size] = {0};
   int64_t outlen = 0;
   if (!fd.ReadAt(magicBytes, 0, outlen, ec)) {

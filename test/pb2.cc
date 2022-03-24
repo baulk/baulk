@@ -30,8 +30,8 @@ int wmain() {
     return 1;
   }
   bar->SetTitle(L"Extract baulk.tar.gz");
-  bar->SetLine(-1, L"extracting", true, nullptr);
-  if (bar->StartProgressDialog(nullptr, nullptr, 0, nullptr) != S_OK) {
+  // bar->SetLine(-1, L"extracting", true, nullptr);
+  if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     bela::FPrintF(stderr, L"error %s\n", ec);
     return 1;

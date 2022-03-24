@@ -8,12 +8,21 @@
 
 namespace baulk::archive::tar {
 
+bool FileReader::Seek(int64_t pos, bela::error_code &ec) {
+  if (!fd.Seek(pos, ec)) {
+    return false;
+  }
+  position = pos;
+  return true;
+}
+
 ssize_t FileReader::Read(void *buffer, size_t len, bela::error_code &ec) {
   DWORD drSize = {0};
   if (::ReadFile(fd.NativeFD(), buffer, static_cast<DWORD>(len), &drSize, nullptr) != TRUE) {
     ec = bela::make_system_error_code(L"ReadFile: ");
     return -1;
   }
+  position += static_cast<int64_t>(drSize);
   return static_cast<ssize_t>(drSize);
 }
 
@@ -24,6 +33,7 @@ bool FileReader::Discard(int64_t len, bela::error_code &ec) {
     ec = bela::make_system_error_code(L"SetFilePointerEx: ");
     return false;
   }
+  position += len;
   return true;
 }
 
@@ -39,6 +49,7 @@ bool FileReader::WriteTo(const Writer &w, int64_t filesize, int64_t &extracted, 
     }
     filesize -= drSize;
     extracted += drSize;
+    position += static_cast<int64_t>(drSize);
     if (!w(buffer, drSize, ec)) {
       return false;
     }
