@@ -139,7 +139,8 @@ private:
 bool Builder::Initialize(bela::error_code &ec) {
   if (auto newTempPath = baulk::fs::NewTempFolder(ec); newTempPath) {
     buildPath = std::move(*newTempPath);
-    return false;
+    DbgPrint(L"build root: %v", buildPath.native());
+    return true;
   }
   return false;
 }
