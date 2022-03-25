@@ -57,7 +57,8 @@ int cmd_cleancache(const argv_t & /*unused*/) {
   ULARGE_INTEGER ul;
   ul.LowPart = fnow.dwLowDateTime;
   ul.HighPart = fnow.dwHighDateTime;
-  for (const auto &p : std::filesystem::directory_iterator(vfs::AppTemp())) {
+  std::error_code e;
+  for (const auto &p : std::filesystem::directory_iterator{vfs::AppTemp(), e}) {
     auto path_ = p.path();
     if (baulk::IsForceMode || p.is_directory()) {
       bela::fs::ForceDeleteFolders(path_.native(), ec);

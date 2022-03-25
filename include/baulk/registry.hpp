@@ -2,6 +2,8 @@
 #ifndef BAULK_REGISTRY_HPP
 #define BAULK_REGISTRY_HPP
 #include <bela/base.hpp>
+#include <bela/match.hpp>
+#include <bela/strip.hpp>
 
 namespace baulk::registry {
 struct WindowsSDK {
@@ -52,29 +54,26 @@ inline std::optional<WindowsSDK> LookupWindowsSDK(bela::error_code &ec) {
   }
   auto closer = bela::finally([&] { RegCloseKey(hkey); });
   WindowsSDK winsdk;
-  wchar_t buffer[4096];
-  DWORD regtype = 0;
+  constexpr size_t wlen = 4096;
+  wchar_t buffer[wlen] = {0};
+  DWORD type = 0;
   DWORD bufsize = sizeof(buffer);
-  if (RegQueryValueExW(hkey, L"InstallationFolder", nullptr, &regtype, reinterpret_cast<LPBYTE>(buffer), &bufsize) !=
-      ok) {
+  if (RegQueryValueExW(hkey, L"InstallationFolder", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ok) {
     ec = bela::make_system_error_code();
     return std::nullopt;
   }
-  if (regtype != REG_SZ) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"InstallationFolder not REG_SZ: ", regtype);
+  if (type != REG_SZ) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"InstallationFolder not REG_SZ: ", type);
     return std::nullopt;
   }
-  winsdk.InstallationFolder.assign(buffer);
-  if (!winsdk.InstallationFolder.empty() && winsdk.InstallationFolder.back() == L'\\') {
-    winsdk.InstallationFolder.pop_back();
-  }
+  winsdk.InstallationFolder = bela::StripSuffix(buffer, L"\\");
   bufsize = sizeof(buffer);
-  if (RegQueryValueExW(hkey, L"ProductVersion", nullptr, &regtype, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ok) {
+  if (RegQueryValueExW(hkey, L"ProductVersion", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ok) {
     ec = bela::make_system_error_code();
     return std::nullopt;
   }
-  if (regtype != REG_SZ) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"ProductVersion not REG_SIZE: ", regtype);
+  if (type != REG_SZ) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"ProductVersion not REG_SIZE: ", type);
     return std::nullopt;
   }
   winsdk.ProductVersion.assign(buffer);

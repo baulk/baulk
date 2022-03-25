@@ -58,7 +58,8 @@ inline bool AccumulatePwsh(std::wstring_view dir, std::vector<PwshMeta> &pwshs) 
   }
   constexpr const std::wstring_view pwsh_exe = L"pwsh.exe";
   constexpr const std::wstring_view previewsv = L"-preview";
-  for (const auto &it : std::filesystem::directory_iterator(pwshdir)) {
+  std::error_code e;
+  for (const auto &it : std::filesystem::directory_iterator(pwshdir,e)) {
     const auto versionPath = it.path();
     const auto exe = versionPath / pwsh_exe;
     if (std::filesystem::exists(exe)) {

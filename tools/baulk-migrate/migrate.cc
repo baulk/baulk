@@ -69,7 +69,7 @@ int Migrator::Execute() {
   const auto &legacyTable = baulk::vfs::vfs_internal::AppPathFsTable();
   constexpr std::wstring_view fsExt{L".json"};
   std::error_code e;
-  for (const auto &pkg : std::filesystem::directory_iterator(legacyTable.locks, e)) {
+  for (const auto &pkg : std::filesystem::directory_iterator{legacyTable.locks, e}) {
     auto filename = pkg.path().filename().wstring();
     if (bela::EndsWithIgnoreCase(filename, fsExt)) {
       auto pkgName = bela::StripSuffix(filename, L".json");

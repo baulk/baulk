@@ -19,7 +19,7 @@ inline bool has_executable_extension(const std::filesystem::path &p) {
 
 bool IsExecutablePath(const std::filesystem::path &p) {
   std::error_code e;
-  for (const auto &d : std::filesystem::directory_iterator(p, e)) {
+  for (const auto &d : std::filesystem::directory_iterator{p, e}) {
     if (d.is_directory(e)) {
       continue;
     }

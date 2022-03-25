@@ -57,7 +57,7 @@ bool Executor::extract_file(const std::wstring_view arfile) {
 }
 
 bool Executor::apply_baulk_files() {
-  const std::filesystem::path filter_paths[] = {
+  static const std::filesystem::path filter_paths[] = {
       L"bin/baulk-exec.exe",   // exec
       L"bin/baulk-update.exe", // update
       L"config/baulk.json",    // config file
@@ -94,7 +94,7 @@ bool Executor::apply_baulk_files() {
 
   std::filesystem::path root(extract_dest);
   std::error_code e;
-  for (const auto &p : std::filesystem::recursive_directory_iterator(root, e)) {
+  for (const auto &p : std::filesystem::recursive_directory_iterator{root, e}) {
     if (p.is_directory(e)) {
       continue;
     }

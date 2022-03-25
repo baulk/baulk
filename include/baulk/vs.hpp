@@ -78,7 +78,7 @@ std::optional<vs_instances> decode_vs_instances(const std::string_view text, bel
 inline std::optional<vs_instances> vs_instances_lookup(bela::error_code &ec) {
   auto vswhere = lookup_vswhere();
   if (!vswhere) {
-    ec = bela::make_error_code(-1, L"vswhere not installed");
+    ec = bela::make_error_code(L"vswhere not installed");
     return std::nullopt;
   }
   bela::process::Process process;
@@ -93,28 +93,30 @@ inline std::optional<vs_instances> vs_instances_lookup(bela::error_code &ec) {
 }
 
 inline bool sdk_search_version(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
-  auto dir = bela::StringCat(sdkroot, L"\\Include");
-  for (auto &p : std::filesystem::directory_iterator(dir)) {
-    auto filename = p.path().filename().wstring();
-    if (bela::StartsWith(filename, sdkver)) {
-      sdkversion = filename;
+  auto inc = bela::StringCat(sdkroot, L"\\Include");
+  std::error_code e;
+  for (const auto &entry : std::filesystem::directory_iterator{inc, e}) {
+    auto filename = entry.path().filename();
+    if (bela::StartsWith(filename.native(), sdkver)) {
+      sdkversion = filename.wstring();
       return true;
     }
   }
-  return true;
+  return false;
 }
 
 std::optional<std::wstring> dotnet_framwork_folder() {
 #ifdef _M_X64
-  auto dir = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
+  auto dotnet = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
 #else
-  auto dir = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
+  auto dotnet = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
 #endif
-  for (auto &p : std::filesystem::directory_iterator(dir)) {
-    if (p.is_directory()) {
-      auto ngen = bela::StringCat(p.path().native(), L"\\ngen.exe");
-      if (bela::PathExists(ngen)) {
-        return std::make_optional(p.path().wstring());
+  std::error_code e;
+  for (auto &entry : std::filesystem::directory_iterator{dotnet, e}) {
+    if (entry.is_directory()) {
+      auto ngen = entry.path() / L"ngen.exe";
+      if (std::filesystem::is_regular_file(ngen, e)) {
+        return std::make_optional(entry.path().wstring());
       }
     }
   }
