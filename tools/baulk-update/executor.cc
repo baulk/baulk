@@ -52,7 +52,7 @@ bool Executor::extract_file(const std::wstring_view arfile) {
     bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
     return false;
   }
-  baulk::fs::MakeFlattened(extract_dest, extract_dest, ec);
+  baulk::fs::MakeFlattened(extract_dest, ec);
   return true;
 }
 

@@ -1,130 +1,134 @@
 ///
 #include <bela/path.hpp>
 #include <bela/match.hpp>
+#include <bela/ascii.hpp>
 #include <baulk/fs.hpp>
 
 namespace baulk::fs {
-std::optional<std::wstring> resolve_alone_child_entry(std::wstring_view dir) {
-  bela::fs::Finder finder;
-  bela::error_code ec;
-  if (!finder.First(dir, L"*", ec)) {
-    return std::nullopt;
-  }
-  int count = 0;
-  std::wstring subdir;
-  do {
-    if (finder.Ignore()) {
-      continue;
-    }
-    if (!finder.IsDir()) {
-      return std::nullopt;
-    }
-    if (subdir.empty()) {
-      subdir = bela::StringCat(dir, L"\\", finder.Name());
-    }
-    count++;
-  } while (finder.Next());
 
-  if (count != 1) {
-    return std::nullopt;
-  }
-  if (bela::EndsWithIgnoreCase(subdir, L"\\bin")) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(subdir));
-}
-
-bool IsExecutableSuffix(std::wstring_view name) {
-  constexpr std::wstring_view suffixs[] = {L".exe", L".com", L".bat", L".cmd"};
-  for (const auto s : suffixs) {
-    if (bela::EndsWithIgnoreCase(name, s)) {
+inline bool has_executable_extension(const std::filesystem::path &p) {
+  constexpr std::wstring_view exe_extensions[] = {L".exe", L".com", L".bat", L".cmd"};
+  auto le = bela::AsciiStrToLower(p.extension().native());
+  for (const auto &e : exe_extensions) {
+    if (e == le) {
       return true;
     }
   }
   return false;
 }
 
-bool IsExecutablePath(std::wstring_view p) {
-  bela::error_code ec;
-  bela::fs::Finder finder;
-  if (!finder.First(p, L"*", ec)) {
-    return false;
-  }
-  do {
-    if (finder.Ignore()) {
+bool IsExecutablePath(const std::filesystem::path &p) {
+  std::error_code e;
+  for (const auto &d : std::filesystem::directory_iterator(p, e)) {
+    if (d.is_directory(e)) {
       continue;
     }
-    if (finder.IsDir()) {
-      continue;
-    }
-    if (IsExecutableSuffix(finder.Name())) {
+    if (has_executable_extension(d.path())) {
       return true;
     }
-  } while (finder.Next());
+  }
   return false;
 }
 
-std::optional<std::wstring> FindExecutablePath(std::wstring_view p) {
-  if (!bela::PathExists(p, bela::FileAttribute::Dir)) {
+std::optional<std::filesystem::path> FindExecutablePath(const std::filesystem::path &p) {
+  std::error_code e;
+  if (!std::filesystem::is_directory(p, e)) {
     return std::nullopt;
   }
   if (IsExecutablePath(p)) {
-    return std::make_optional<std::wstring>(p);
+    return std::make_optional<std::filesystem::path>(p);
   }
-  auto p2 = bela::StringCat(p, L"\\bin");
-  if (IsExecutablePath(p2)) {
-    return std::make_optional(std::move(p2));
+  auto bin = p / L"bin";
+  if (IsExecutablePath(bin)) {
+    return std::make_optional(std::move(bin));
   }
-  p2 = bela::StringCat(p, L"\\cmd");
-  if (IsExecutablePath(p2)) {
-    return std::make_optional(std::move(p2));
+  auto cmd = p / L"cmd";
+  if (IsExecutablePath(cmd)) {
+    return std::make_optional(std::move(cmd));
   }
   return std::nullopt;
 }
 
-bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec) {
-  auto subfirst = resolve_alone_child_entry(dir);
-  if (!subfirst) {
-    return true;
-  }
-  std::wstring currentdir = *subfirst;
-  for (int i = 0; i < 10; i++) {
-    auto subdir_ = resolve_alone_child_entry(currentdir);
-    if (!subdir_) {
-      break;
+inline std::optional<std::filesystem::path> flattened_recursive(std::filesystem::path &current, std::error_code &e) {
+  int entries = 0;
+  std::filesystem::path folder0;
+  for (const auto &entry : std::filesystem::directory_iterator{current, e}) {
+    if (!entry.is_directory(e)) {
+      return std::make_optional(current);
     }
-    currentdir.assign(std::move(*subdir_));
+    if (bela::EqualsIgnoreCase(entry.path().filename().native(), L"bin")) {
+      return std::make_optional(current);
+    }
+    entries++;
+    if (entries) {
+      folder0 = entry.path();
+    }
   }
-  std::error_code e;
-  std::filesystem::path destpath(dest);
-  for (const auto &p : std::filesystem::directory_iterator(currentdir)) {
-    auto newpath = destpath / p.path().filename();
-    std::filesystem::rename(p.path(), newpath, e);
+  if (entries != 1) {
+    return std::make_optional(current);
   }
-  return bela::fs::ForceDeleteFolders(*subfirst, ec);
+  current = folder0;
+  return std::nullopt;
 }
 
-std::optional<std::wstring> NewTempFolder(bela::error_code &ec) {
+std::optional<std::filesystem::path> flattened_internal(const std::filesystem::path &d, std::filesystem::path &depth1) {
   std::error_code e;
-  auto tmppath = std::filesystem::temp_directory_path(e);
+  if (!std::filesystem::is_directory(d, e)) {
+    return std::nullopt;
+  }
+  std::filesystem::path current{std::filesystem::absolute(d, e)};
+  for (int i = 0; i < 20; i++) {
+    if (auto flatd = flattened_recursive(current, e); flatd) {
+      return flatd;
+    }
+    if (depth1.empty()) {
+      depth1 = current;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<std::filesystem::path> Flattened(const std::filesystem::path &d) {
+  std::filesystem::path unused;
+  return flattened_internal(d, unused);
+}
+
+bool MakeFlattened(const std::filesystem::path &d, bela::error_code &ec) {
+  std::error_code e;
+  std::filesystem::path depth1;
+  auto flat = flattened_internal(d, depth1);
+  if (!flat) {
+    ec = bela::make_error_code(L"no conditions for a flattened path");
+    return false;
+  }
+  if (std::filesystem::equivalent(d, *flat, e)) {
+    return true;
+  }
+  for (const auto &entry : std::filesystem::directory_iterator{*flat, e}) {
+    auto newPath = d / entry.path().filename();
+    std::filesystem::rename(entry.path(), newPath, e);
+  }
+  if (!depth1.empty()) {
+    std::filesystem::remove_all(depth1, e);
+  }
+  return true;
+}
+
+std::optional<std::filesystem::path> NewTempFolder(bela::error_code &ec) {
+  std::error_code e;
+  auto temp = std::filesystem::temp_directory_path(e);
   if (e) {
     ec = bela::from_std_error_code(e);
     return std::nullopt;
   }
-  auto tmpdir = tmppath.wstring();
-  if (!tmpdir.empty() && bela::IsPathSeparator(tmpdir.back())) {
-    tmpdir.pop_back();
-  }
   static std::atomic_uint32_t instanceId{0};
-  auto len = tmpdir.size();
   bela::AlphaNum an(GetCurrentThreadId());
   for (wchar_t X = 'A'; X < 'Z'; X++) {
-    bela::StrAppend(&tmpdir, L"\\BaulkTemp-", an, L"-", static_cast<uint32_t>(instanceId));
+    auto newPath = temp / bela::StringCat(L"bauk-build-", an, L"-", static_cast<uint32_t>(instanceId));
     instanceId++;
-    if (!bela::PathExists(tmpdir, bela::FileAttribute::Dir) && baulk::fs::MakeDirectories(tmpdir, ec)) {
-      return std::make_optional(std::move(tmpdir));
+    if (!std::filesystem::exists(newPath, e) && baulk::fs::MakeDirectories(newPath, ec)) {
+      return std::make_optional(std::move(newPath));
     }
-    tmpdir.resize(len);
   }
   ec = bela::make_error_code(bela::ErrGeneral, L"cannot create tempdir");
   return std::nullopt;

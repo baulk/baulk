@@ -121,9 +121,9 @@ public:
   Builder(const Builder &) = delete;
   Builder &operator=(const Builder &) = delete;
   ~Builder() {
-    if (!buildTemp.empty() && !baulk::IsTraceMode) {
+    if (!buildPath.empty() && !baulk::IsTraceMode) {
       std::error_code ec;
-      std::filesystem::remove_all(buildTemp, ec);
+      std::filesystem::remove_all(buildPath, ec);
     }
   }
   bool Initialize(bela::error_code &ec);
@@ -132,17 +132,16 @@ public:
   [[nodiscard]] const std::vector<LinkMeta> &LinkMetas() const { return linkmetas; }
 
 private:
-  std::wstring buildTemp;
+  std::filesystem::path buildPath;
   std::vector<LinkMeta> linkmetas;
 };
 
 bool Builder::Initialize(bela::error_code &ec) {
-  auto bktemp = baulk::fs::NewTempFolder(ec);
-  if (!bktemp) {
+  if (auto newTempPath = baulk::fs::NewTempFolder(ec); newTempPath) {
+    buildPath = std::move(*newTempPath);
     return false;
   }
-  buildTemp.assign(std::move(*bktemp));
-  return true;
+  return false;
 }
 
 inline int SubsystemIndex(bela::pe::Subsystem subs) {
@@ -178,10 +177,10 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
   DbgPrint(L"executable %s is subsystem console: %v\n", *realexe, isConsole);
   auto name = StripExtension(linkMeta.alias);
   auto cxxSourceName = bela::StringCat(name, L".cc");
-  auto cxxSourcePath = bela::StringCat(buildTemp, L"\\", cxxSourceName);
+  auto cxxSourcePath = buildPath / cxxSourceName;
   auto rcSourceName = bela::StringCat(name, L".rc");
-  auto rcSourcePath = bela::StringCat(buildTemp, L"\\", rcSourceName);
-  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxSourcePath, ec)) {
+  auto rcSourcePath = buildPath / rcSourceName;
+  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxSourcePath.native(), ec)) {
     return false;
   }
   bool rcwrited = false;
@@ -196,7 +195,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     StringFilling(vi->ProductName, pkg.name);
     StringFilling(vi->OriginalFileName, linkMeta.alias);
     StringFilling(vi->InternalName, linkMeta.alias);
-    rcwrited = w.WriteVersion(*vi, rcSourcePath, ec);
+    rcwrited = w.WriteVersion(*vi, rcSourcePath.native(), ec);
   } else {
     bela::pe::Version nvi;
     nvi.CompanyName = bela::StringCat(pkg.name, L" contributors");
@@ -207,15 +206,15 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     nvi.OriginalFileName = linkMeta.alias;
     nvi.InternalName = linkMeta.alias;
     baulk::rc::Writer w;
-    rcwrited = w.WriteVersion(nvi, rcSourcePath, ec);
+    rcwrited = w.WriteVersion(nvi, rcSourcePath.native(), ec);
   }
   if (rcwrited) {
-    if (LinkExecutor().Execute(buildTemp, L"rc", L"-nologo", L"-c65001", rcSourceName) != 0) {
+    if (LinkExecutor().Execute(buildPath.native(), L"rc", L"-nologo", L"-c65001", rcSourceName) != 0) {
       rcwrited = false;
     }
   }
-  DbgPrint(L"compile %s [%s]", cxxSourceName, buildTemp);
-  if (LinkExecutor().Execute(buildTemp, L"cl", L"-c", L"-std:c++17", L"-nologo", L"-Os", cxxSourceName) != 0) {
+  DbgPrint(L"compile %s [%s]", cxxSourceName, buildPath.native());
+  if (LinkExecutor().Execute(buildPath.native(), L"cl", L"-c", L"-std:c++20", L"-nologo", L"-Os", cxxSourceName) != 0) {
     ec = LinkExecutor().LastErrorCode();
     return false;
   }
@@ -223,21 +222,22 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
   DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
   auto index = isConsole ? 0 : 1;
   if (rcwrited) {
-    exitcode = LinkExecutor().Execute(buildTemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
-                                      subsyetmName[index], entry[index], bela::StringCat(name, L".obj"),
-                                      bela::StringCat(name, L".res"), L"kernel32.lib", L"user32.lib",
-                                      bela::StringCat(L"-OUT:", linkMeta.alias));
+    exitcode = LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
+                                      L"-NODEFAULTLIB", subsyetmName[index], entry[index],
+                                      bela::StringCat(name, L".obj"), bela::StringCat(name, L".res"), L"kernel32.lib",
+                                      L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
   } else {
-    exitcode = LinkExecutor().Execute(buildTemp, L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
-                                      subsyetmName[index], entry[index], bela::StringCat(name, L".obj"),
-                                      L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
+    exitcode =
+        LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
+                               subsyetmName[index], entry[index], bela::StringCat(name, L".obj"), L"kernel32.lib",
+                               L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
   }
   if (exitcode != 0) {
     ec = LinkExecutor().LastErrorCode();
     return false;
   }
   auto target = bela::StringCat(appLinks, L"\\", linkMeta.alias);
-  auto genTarget = bela::StringCat(buildTemp, L"\\", linkMeta.alias);
+  auto genTarget = buildPath / linkMeta.alias;
   std::error_code e;
   if (std::filesystem::exists(target, e)) {
     std::filesystem::remove_all(target, e);

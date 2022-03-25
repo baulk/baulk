@@ -2,6 +2,7 @@
 #include <baulk/json_utils.hpp>
 #include <baulk/debug.hpp>
 #include <bela/semver.hpp>
+#include <filesystem>
 
 namespace baulk {
 class Executor {

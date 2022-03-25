@@ -13,7 +13,7 @@ add_executable(parsejson_test parsejson.cc)
 target_link_libraries(parsejson_test belawin)
 
 add_executable(udir_test udir.cc)
-target_link_libraries(udir_test belawin)
+target_link_libraries(udir_test baulk.misc belawin)
 
 add_executable(version_test xversion.cc)
 target_link_libraries(version_test belawin)

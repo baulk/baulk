@@ -246,35 +246,41 @@ bool extract_msi(std::wstring_view msi, std::wstring_view dest, bela::error_code
   return true;
 }
 
-inline void cleanup_msi_archive(std::wstring_view dir) {
-  constexpr std::wstring_view msiext = L".msi";
-  std::error_code ec;
-  for (const auto &p : std::filesystem::directory_iterator(dir)) {
-    auto extension = p.path().extension().wstring();
-    if (bela::EqualsIgnoreCase(extension, msiext)) {
-      baulk::DbgPrint(L"remove msi %s\n", p.path().native());
-      std::filesystem::remove_all(p.path(), ec);
+bool msi_flattened_cleanup(const std::filesystem::path &d) {
+  std::error_code e;
+  // Drop msi package
+  constexpr std::wstring_view extension = L".msi";
+  for (const auto &entry : std::filesystem::directory_iterator{d, e}) {
+    if (bela::EqualsIgnoreCase(entry.path().extension().native(), extension)) {
+      std::filesystem::remove_all(entry.path(), e);
     }
   }
+  // remove some child folder
+  constexpr std::wstring_view childs[] = {L"Program Files", L"ProgramFiles64", L"PFiles", L"Files"};
+  auto overflow = [&](const std::filesystem::path &p) {
+    for (const auto &entry : std::filesystem::directory_iterator{p, e}) {
+      auto newPath = d / entry.path().filename();
+      std::filesystem::rename(entry.path(), newPath, e);
+    }
+  };
+
+  for (const auto c : childs) {
+    auto entry = d / c;
+    if (!std::filesystem::exists(entry, e)) {
+      continue;
+    }
+    if (auto flat = baulk::fs::Flattened(d); flat) {
+      overflow(*flat);
+    }
+    std::filesystem::remove_all(entry, e);
+  }
+  bela::error_code ec;
+  return baulk::fs::MakeFlattened(d, ec);
 }
 
 bool make_flattened_msi(std::wstring_view path) {
-  cleanup_msi_archive(path);
-  bela::error_code ec;
-  bela::fs::ForceDeleteFolders(bela::StringCat(path, L"\\Windows"), ec); //
-  constexpr std::wstring_view destdirs[] = {L"\\Program Files", L"\\ProgramFiles64", L"\\PFiles", L"\\Files"};
-  for (auto d : destdirs) {
-    auto sd = bela::StringCat(path, d);
-    if (!bela::PathExists(sd)) {
-      continue;
-    }
-    if (baulk::fs::MakeFlattened(sd, path, ec)) {
-      bela::error_code ec2;
-      bela::fs::ForceDeleteFolders(sd, ec2);
-      return !ec;
-    }
-  }
-  return baulk::fs::MakeFlattened(path, path, ec);
+  //
+  return msi_flattened_cleanup(path);
 }
 
 } // namespace baulk

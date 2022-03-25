@@ -7,13 +7,16 @@
 #include <filesystem>
 
 namespace baulk::fs {
-
-bool IsExecutablePath(std::wstring_view p);
-std::optional<std::wstring> FindExecutablePath(std::wstring_view p);
+bool IsExecutablePath(const std::filesystem::path &p);
+std::optional<std::filesystem::path> FindExecutablePath(const std::filesystem::path &p);
+// Flattened: find flatten child directories
+std::optional<std::filesystem::path> Flattened(const std::filesystem::path &d);
+// MakeFlattened: Flatten directories
+bool MakeFlattened(const std::filesystem::path &d, bela::error_code &ec);
 
 inline std::wstring FileName(std::wstring_view p) { return std::filesystem::path(p).filename().wstring(); }
 
-inline bool MakeDirectories(std::wstring_view path, bela::error_code &ec) {
+inline bool MakeDirectories(const std::filesystem::path &path, bela::error_code &ec) {
   std::error_code e;
   if (std::filesystem::exists(path, e)) {
     return true;
@@ -25,10 +28,9 @@ inline bool MakeDirectories(std::wstring_view path, bela::error_code &ec) {
   return true;
 }
 
-inline bool MakeParentDirectories(std::wstring_view path, bela::error_code &ec) {
+inline bool MakeParentDirectories(const std::filesystem::path &path, bela::error_code &ec) {
   std::error_code e;
-  std::filesystem::path p(path);
-  auto parent = p.parent_path();
+  auto parent = path.parent_path();
   if (std::filesystem::exists(parent, e)) {
     return true;
   }
@@ -39,19 +41,16 @@ inline bool MakeParentDirectories(std::wstring_view path, bela::error_code &ec) 
   return true;
 }
 
-inline bool SymLink(std::wstring_view _To, std::wstring_view NewLink, bela::error_code &ec) {
+inline bool SymLink(const std::filesystem::path &_To, const std::filesystem::path &_New_symlink, bela::error_code &ec) {
   std::error_code e;
-  std::filesystem::create_symlink(_To, NewLink, e);
-  if (e) {
+  if (std::filesystem::create_symlink(_To, _New_symlink, e); e) {
     ec = bela::from_std_error_code(e);
     return false;
   }
   return true;
 }
-std::optional<std::wstring> UniqueSubdirectory(std::wstring_view dir);
-// MakeFlattened: Flatten directories
-bool MakeFlattened(std::wstring_view dir, std::wstring_view dest, bela::error_code &ec);
-std::optional<std::wstring> NewTempFolder(bela::error_code &ec);
+
+std::optional<std::filesystem::path> NewTempFolder(bela::error_code &ec);
 } // namespace baulk::fs
 
 #endif

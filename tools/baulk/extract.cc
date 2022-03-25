@@ -8,7 +8,7 @@ namespace baulk {
 bool make_flattened(std::wstring_view path) {
   bela::error_code ec;
   // TODO some zip code
-  return baulk::fs::MakeFlattened(path, path, ec);
+  return baulk::fs::MakeFlattened(path, ec);
 }
 
 bool extract_exe(std::wstring_view src, std::wstring_view dest, bela::error_code &ec) {

@@ -130,6 +130,10 @@ struct Package {
   PackageEnv venv;
   int weights{0}; // Weights derived from bucket
   BucketVariant variant{BucketVariant::Native};
+  bool IsExeExtension() const { return bela::EqualsIgnoreCase(L"exe", extension); }
+  bool IsZipExtension() const { return bela::EqualsIgnoreCase(L"zip", extension); }
+  bool IsTarExtension() const { return bela::EqualsIgnoreCase(L"tar", extension); }
+  bool Is7zExtension() const { return bela::EqualsIgnoreCase(L"7z", extension); }
 };
 
 inline std::wstring StringCategory(baulk::Package &pkg) {

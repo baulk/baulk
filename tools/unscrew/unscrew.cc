@@ -37,7 +37,7 @@ bool Executor::make_flat(const std::filesystem::path &dest) {
     return true;
   }
   bela::error_code ec;
-  return baulk::fs::MakeFlattened(dest.native(), dest.native(), ec);
+  return baulk::fs::MakeFlattened(dest, ec);
 }
 
 bool Executor::Execute(bela::error_code &ec) {
