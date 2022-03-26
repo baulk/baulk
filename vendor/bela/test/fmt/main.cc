@@ -64,11 +64,14 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"[%010d]\n", n2);
   double ddd = 000192.15777411;
   bela::FPrintF(stderr, L"[%08.7f]\n", ddd);
+  bela::FPrintF(stderr, L"[%.7f]\n", ddd);
+  bela::FPrintF(stderr, L"[%2.7f]\n", ddd);
   long xl = 18256444;
   bela::FPrintF(stderr, L"[%-16x]\n", xl);
   bela::FPrintF(stderr, L"[%016X]\n", xl);
   bela::FPrintF(stderr, L"[%16X]\n", xl);
-  bela::FPrintF(stderr, L"%%pointer: [%p]\n", (void *)argv);
+  bela::FPrintF(stderr, L"[0x%08X]\n", xl);
+  bela::FPrintF(stderr, L"pointer: [%p]\n", (void *)argv);
   bela::FPrintF(stderr, L"StringWidth %d\n",
                 bela::string_width<wchar_t>(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   bela::FPrintF(stderr, L"StringWidth %d\n",

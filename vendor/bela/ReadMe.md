@@ -10,7 +10,7 @@ A lot of the code supports wchar_t based on Abseil modifications, some of which 
 
 ## Feature
 
-+   `bela::error_code` and `bela::make_system_error_code` `bela::make_stdc_error_code` `bela::from_std_error_code`
++   `bela::error_code` and `bela::make_system_error_code` `bela::make_error_code_from_errno` `bela::make_error_code_from_std`
 +   `bela::finally`
 +   `bela::secure_wstring` `bela::secure_string`
 +   `bela::bytes_view` bytes view

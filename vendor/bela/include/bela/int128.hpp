@@ -1033,9 +1033,9 @@ constexpr int64_t BitCastToSigned(uint64_t v) {
 } // namespace int128_internal
 
 #if defined(BELA_HAVE_INTRINSIC_INT128)
-#include "internal/int128_have_intrinsic.inc" // IWYU pragma: export
+#include "__strings/int128_have_intrinsic.inc" // IWYU pragma: export
 #else                                         // BELA_HAVE_INTRINSIC_INT128
-#include "internal/int128_no_intrinsic.inc"   // IWYU pragma: export
+#include "__strings/int128_no_intrinsic.inc"   // IWYU pragma: export
 #endif                                        // BELA_HAVE_INTRINSIC_INT128
 
 } // namespace bela

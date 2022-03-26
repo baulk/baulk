@@ -38,7 +38,7 @@ bool Chtimes(const fs::path &file, bela::Time t, bela::error_code &ec);
 inline bool MakeDirectories(const fs::path &path, bela::Time modified, bela::error_code &ec) {
   std::error_code e;
   if (fs::create_directories(path, e); e) {
-    ec = bela::from_std_error_code(e, L"fs::create_directories() ");
+    ec = bela::make_error_code_from_std(e, L"fs::create_directories() ");
     return false;
   }
   return baulk::archive::Chtimes(path, modified, ec);

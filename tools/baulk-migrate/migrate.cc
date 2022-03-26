@@ -36,7 +36,7 @@ bool moveFolder(std::wstring_view source, std::wstring_view target, bela::error_
   }
   std::filesystem::rename(source, target, e);
   if (e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return false;
   }
   DbgPrint(L"move from %s to %s", source, target);

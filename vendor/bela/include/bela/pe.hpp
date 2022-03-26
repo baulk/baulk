@@ -13,7 +13,7 @@
 #include "os.hpp"
 #include "io.hpp"
 #include "buffer.hpp"
-#include "internal/image.hpp"
+#include "__windows/image.hpp"
 
 namespace bela::pe {
 // PE File resolve

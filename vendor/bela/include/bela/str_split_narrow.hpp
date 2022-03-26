@@ -41,7 +41,7 @@
 #include <utility>
 #include <vector>
 #include "ascii.hpp"
-#include "internal/str_split_narrow_internal.hpp"
+#include "__strings/str_split_narrow_internal.hpp"
 
 namespace bela::narrow {
 //------------------------------------------------------------------------------

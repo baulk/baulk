@@ -30,7 +30,7 @@ int wmain(int argc, wchar_t **argv) {
   h10.Initialize();
   FILE *fd = nullptr;
   if (auto e = _wfopen_s(&fd, argv[1], L"rb"); e != 0) {
-    auto ec = bela::make_stdc_error_code(e);
+    auto ec = bela::make_error_code_from_errno(e);
     bela::FPrintF(stderr, L"unable open file: %s\n", ec);
     return 1;
   }

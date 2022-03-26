@@ -118,7 +118,7 @@ public:
     return *this;
   }
 
-  Writer &Floating(double d, uint32_t width, uint32_t frac_width, wchar_t pc) {
+  Writer &Floating(double d, size_t width, size_t frac_width, wchar_t pc) {
     if (std::signbit(d)) {
       Add('-');
       d = -d;
@@ -138,7 +138,7 @@ public:
     uint32_t scale = 0;
     if (frac_width > 0) {
       scale = 1;
-      for (int n = frac_width; n != 0; n--) {
+      for (size_t n = frac_width; n != 0; n--) {
         scale *= 10;
       }
       frac = (uint64_t)(std::round((d - (double)ui64) * scale));

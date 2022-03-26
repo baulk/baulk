@@ -45,7 +45,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"space len %d hr.align_length() %d\n", space.size(), hr.align_length());
   std::wstring_view spaceview(space);
   if (auto p = bela::RealPathByHandle(fd->NativeFD(), ec); p) {
-    bela::FPrintF(stderr, L"file %v %v\n", *p, hr.type());
+    bela::FPrintF(stderr, L"file %v %v\n", *p, bela::integral_cast(hr.type()));
   }
 
   const std::wstring_view desc = L"Description";

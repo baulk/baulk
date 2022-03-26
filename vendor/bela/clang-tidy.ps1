@@ -35,7 +35,7 @@ if ($null -eq $clangtidy) {
 }
 
 $SOURCE_DIRS = $(
-    "$PSScriptRoot\src"
+    "$PSScriptRoot\src\bela"
 )
 
 $checks = $(

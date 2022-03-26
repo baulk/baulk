@@ -82,7 +82,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
       }
       auto file = bela::StringCat(appLinks, L"\\", bela::encode_into<char, wchar_t>(link.key()));
       if (!std::filesystem::remove(file, e)) {
-        auto le = bela::from_std_error_code(e);
+        auto le = bela::make_error_code_from_std(e);
         baulk::DbgPrint(L"baulk remove link %s error: %s\n", file, le.message);
       }
     }
@@ -245,7 +245,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
   }
   std::filesystem::rename(genTarget, target, e);
   if (e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return false;
   }
   linkmetas.emplace_back(linkMeta);

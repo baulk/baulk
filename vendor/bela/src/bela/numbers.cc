@@ -160,14 +160,14 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
     digits = i;
     if (i >= 10) {
       goto lt100;
-}
+    }
     strings_internal::memcopy(buffer, one_ASCII_final_digits[i], 2);
     return buffer + 1;
   }
   if (i < 10000) { //    10,000
     if (i >= 1000) {
       goto lt10_000;
-}
+    }
     digits = i / 100;
     i -= digits * 100;
     *buffer++ = static_cast<wchar_t>('0' + digits);
@@ -176,7 +176,7 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
   if (i < 1000000) { //    1,000,000
     if (i >= 100000) {
       goto lt1_000_000;
-}
+    }
     digits = i / 10000; //    10,000
     i -= digits * 10000;
     *buffer++ = static_cast<wchar_t>('0' + digits);
@@ -185,7 +185,7 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
   if (i < 100000000) { //    100,000,000
     if (i >= 10000000) {
       goto lt100_000_000;
-}
+    }
     digits = i / 1000000; //   1,000,000
     i -= digits * 1000000;
     *buffer++ = static_cast<wchar_t>('0' + digits);
@@ -214,7 +214,7 @@ wchar_t *FastIntToBuffer(uint64_t i, wchar_t *buffer) {
   auto u32 = static_cast<uint32_t>(i);
   if (u32 == i) {
     return FastIntToBuffer(u32, buffer);
-}
+  }
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
@@ -309,7 +309,7 @@ char *FastIntToBuffer(uint32_t i, char *buffer) {
   if (i < 10000) { //    10,000
     if (i >= 1000) {
       goto lt10_000;
-}
+    }
     digits = i / 100;
     i -= digits * 100;
     *buffer++ = static_cast<char>('0' + digits);
@@ -318,7 +318,7 @@ char *FastIntToBuffer(uint32_t i, char *buffer) {
   if (i < 1000000) { //    1,000,000
     if (i >= 100000) {
       goto lt1_000_000;
-}
+    }
     digits = i / 10000; //    10,000
     i -= digits * 10000;
     *buffer++ = static_cast<char>('0' + digits);
@@ -327,7 +327,7 @@ char *FastIntToBuffer(uint32_t i, char *buffer) {
   if (i < 100000000) { //    100,000,000
     if (i >= 10000000) {
       goto lt100_000_000;
-}
+    }
     digits = i / 1000000; //   1,000,000
     i -= digits * 1000000;
     *buffer++ = static_cast<char>('0' + digits);
@@ -356,7 +356,7 @@ char *FastIntToBuffer(uint64_t i, char *buffer) {
   auto u32 = static_cast<uint32_t>(i);
   if (u32 == i) {
     return FastIntToBuffer(u32, buffer);
-}
+  }
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
@@ -435,11 +435,12 @@ inline std::pair<uint64_t, uint64_t> Mul32(std::pair<uint64_t, uint64_t> num, ui
   // eventually:        [ bits128_up | ...bits64_127.... | ..bits0_63... ]
 
   uint64_t bits0_63 = bits0_31 + (bits32_63 << 32);
-  uint64_t bits64_127 = bits64_95 + (bits96_127 << 32) + (bits32_63 >> 32) + static_cast<unsigned long long>(bits0_63 < bits0_31);
+  uint64_t bits64_127 =
+      bits64_95 + (bits96_127 << 32) + (bits32_63 >> 32) + static_cast<unsigned long long>(bits0_63 < bits0_31);
   uint64_t bits128_up = (bits96_127 >> 32) + static_cast<unsigned long long>(bits64_127 < bits64_95);
   if (bits128_up == 0) {
     return {bits64_127, bits0_63};
-}
+  }
 
   int shift = 64 - std::countl_zero(bits128_up);
   uint64_t lo = (bits0_63 >> shift) + (bits64_127 << (64 - shift));
@@ -848,7 +849,7 @@ inline ExpDigitsA SplitToSixA(const double value) {
 
 // Helper function for fast formatting of floating-point.
 // The result is the same as "%g", a.k.a. "%.6g".
-inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
+size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   static_assert(std::numeric_limits<float>::is_iec559, "IEEE-754/IEC-559 support only");
 
   wchar_t *out = buffer; // we write data to out, incrementing as we go, but
@@ -862,7 +863,7 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   if (d == 0) { // +0 and -0 are handled here
     if (std::signbit(d)) {
       *out++ = '-';
-}
+    }
     *out++ = '0';
     *out = 0;
     return out - buffer;
@@ -901,7 +902,7 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
       *out++ = digits[4];
       if (digits[5] != '0') {
         *out++ = digits[5];
-}
+      }
     }
     *out = 0;
     return out - buffer;
@@ -912,10 +913,10 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     out += 3;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case 1:
@@ -925,10 +926,10 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     out += 4;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case 0:
@@ -938,10 +939,10 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     out += 5;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case -4:
@@ -962,7 +963,7 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     out += 6;
     while (out[-1] == '0') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   }
@@ -971,10 +972,10 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   strings_internal::memcopy(out, &digits[1], 5), out += 5;
   while (out[-1] == '0') {
     --out;
-}
+  }
   if (out[-1] == '.') {
     --out;
-}
+  }
   *out++ = 'e';
   if (exp > 0) {
     *out++ = '+';
@@ -995,7 +996,7 @@ inline size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
 
 // Helper function for fast formatting of floating-point.
 // The result is the same as "%g", a.k.a. "%.6g".
-inline size_t SixDigitsToBuffer(double d, char *const buffer) {
+size_t SixDigitsToBuffer(double d, char *const buffer) {
   static_assert(std::numeric_limits<float>::is_iec559, "IEEE-754/IEC-559 support only");
 
   char *out = buffer; // we write data to out, incrementing as we go, but
@@ -1009,7 +1010,7 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
   if (d == 0) { // +0 and -0 are handled here
     if (std::signbit(d)) {
       *out++ = '-';
-}
+    }
     *out++ = '0';
     *out = 0;
     return out - buffer;
@@ -1048,7 +1049,7 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
       *out++ = digits[4];
       if (digits[5] != '0') {
         *out++ = digits[5];
-}
+      }
     }
     *out = 0;
     return out - buffer;
@@ -1059,10 +1060,10 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     out += 3;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case 1:
@@ -1072,10 +1073,10 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     out += 4;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case 0:
@@ -1085,10 +1086,10 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     out += 5;
     while (out[-1] == '0') {
       --out;
-}
+    }
     if (out[-1] == '.') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   case -4:
@@ -1109,7 +1110,7 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
     out += 6;
     while (out[-1] == '0') {
       --out;
-}
+    }
     *out = 0;
     return out - buffer;
   }
@@ -1118,10 +1119,10 @@ inline size_t SixDigitsToBuffer(double d, char *const buffer) {
   memcpy(out, &digits[1], 5), out += 5;
   while (out[-1] == '0') {
     --out;
-}
+  }
   if (out[-1] == '.') {
     --out;
-}
+  }
   *out++ = 'e';
   if (exp > 0) {
     *out++ = '+';
@@ -1579,8 +1580,8 @@ template <typename IntType> inline bool safe_int_internal(std::wstring_view text
   }
   if (!negative) {
     return safe_parse_positive_int(text, base, value_p);
-  }     return safe_parse_negative_int(text, base, value_p);
- 
+  }
+  return safe_parse_negative_int(text, base, value_p);
 }
 
 template <typename IntType> inline bool safe_uint_internal(std::wstring_view text, IntType *value_p, int base) {
@@ -1696,8 +1697,8 @@ template <typename IntType> inline bool safe_int_internal(std::string_view text,
   }
   if (!negative) {
     return safe_parse_positive_int(text, base, value_p);
-  }     return safe_parse_negative_int(text, base, value_p);
- 
+  }
+  return safe_parse_negative_int(text, base, value_p);
 }
 
 template <typename IntType> inline bool safe_uint_internal(std::string_view text, IntType *value_p, int base) {

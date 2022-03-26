@@ -118,7 +118,7 @@ std::optional<std::filesystem::path> NewTempFolder(bela::error_code &ec) {
   std::error_code e;
   auto temp = std::filesystem::temp_directory_path(e);
   if (e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return std::nullopt;
   }
   static std::atomic_uint32_t instanceId{0};

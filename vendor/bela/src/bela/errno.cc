@@ -226,7 +226,7 @@ std::wstring resolve_module_error_message(const wchar_t *moduleName, DWORD ec, s
   return msg;
 }
 
-bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
+bela::error_code make_error_code_from_errno(errno_t eno, std::wstring_view prefix) {
   if (eno >= EADDRINUSE && eno <= EWOULDBLOCK) {
     return bela::error_code{bela::StringCat(prefix, errno_internal::_sys_posix_errlist[eno - EADDRINUSE]), eno};
   }
@@ -235,7 +235,7 @@ bela::error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix) {
   return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 
-bela::error_code from_std_error_code(const std::error_code &e, std::wstring_view prefix) {
+bela::error_code make_error_code_from_std(const std::error_code &e, std::wstring_view prefix) {
   error_code ec;
   ec.code = e.value();
   ec.message = bela::StringCat(prefix, fromascii(e.message()));

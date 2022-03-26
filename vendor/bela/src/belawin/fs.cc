@@ -36,7 +36,7 @@ bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec) {
   case ERROR_NOT_SUPPORTED:
     break;
   default:
-    ec = bela::from_system_error_code(e, L"SetFileInformationByHandle ");
+    ec = bela::make_error_code_from_system(e, L"SetFileInformationByHandle ");
     return false;
   }
   FILE_DISPOSITION_INFO Info{/* .Delete= */ TRUE};
@@ -51,7 +51,7 @@ bool ForceDeleteFile(HANDLE FileHandle, bela::error_code &ec) {
     }
     e = GetLastError();
   }
-  ec = bela::from_system_error_code(e, L"SetFileInformationByHandle(fallback) ");
+  ec = bela::make_error_code_from_system(e, L"SetFileInformationByHandle(fallback) ");
   return false;
 }
 
@@ -67,7 +67,7 @@ bool ForceDeleteFile(std::wstring_view path, bela::error_code &ec) {
       return true;
     }
     if (ec.code != ERROR_ACCESS_DENIED) {
-      ec = bela::from_system_error_code(e);
+      ec = bela::make_error_code_from_system(e);
       return false;
     }
     if (FileHandle = CreateFileW(path.data(), DELETE, shm, nullptr, OPEN_EXISTING, flags, nullptr);

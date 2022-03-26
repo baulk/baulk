@@ -22,7 +22,7 @@ inline bool MakeDirectories(const std::filesystem::path &path, bela::error_code 
     return true;
   }
   if (std::filesystem::create_directories(path, e); e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return false;
   }
   return true;
@@ -35,7 +35,7 @@ inline bool MakeParentDirectories(const std::filesystem::path &path, bela::error
     return true;
   }
   if (std::filesystem::create_directories(parent, e); e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return false;
   }
   return true;
@@ -44,7 +44,7 @@ inline bool MakeParentDirectories(const std::filesystem::path &path, bela::error
 inline bool SymLink(const std::filesystem::path &_To, const std::filesystem::path &_New_symlink, bela::error_code &ec) {
   std::error_code e;
   if (std::filesystem::create_symlink(_To, _New_symlink, e); e) {
-    ec = bela::from_std_error_code(e);
+    ec = bela::make_error_code_from_std(e);
     return false;
   }
   return true;

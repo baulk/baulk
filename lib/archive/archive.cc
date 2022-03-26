@@ -96,7 +96,7 @@ std::optional<File> File::NewFile(const fs::path &path, bela::Time modified, boo
     }
   } else {
     if (fs::create_directories(path.parent_path(), e); e) {
-      ec = bela::from_std_error_code(e, L"create_directories() ");
+      ec = bela::make_error_code_from_std(e, L"create_directories() ");
       return std::nullopt;
     }
   }
@@ -123,12 +123,12 @@ bool NewSymlink(const fs::path &path, const fs::path &source, bool overwrite_mod
     fs::remove_all(path, e);
   } else {
     if (fs::create_directories(path.parent_path(), e); e) {
-      ec = bela::from_std_error_code(e, L"create_directories() ");
+      ec = bela::make_error_code_from_std(e, L"create_directories() ");
       return false;
     }
   }
   if (fs::create_symlink(source, path, e); e) {
-    ec = bela::from_std_error_code(e, L"create_symlink() ");
+    ec = bela::make_error_code_from_std(e, L"create_symlink() ");
     return false;
   }
   return true;

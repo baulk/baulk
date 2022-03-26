@@ -29,12 +29,12 @@ public:
   bool OpenReader(const fs::path &file, const fs::path &dest, bela::error_code &ec) {
     std::error_code e;
     if (destination = fs::absolute(dest, e); e) {
-      ec = bela::from_std_error_code(e, L"fs::absolute() ");
+      ec = bela::make_error_code_from_std(e, L"fs::absolute() ");
       return false;
     }
     auto zipfile = fs::canonical(file, e);
     if (e) {
-      ec = bela::from_std_error_code(e, L"fs::canonical() ");
+      ec = bela::make_error_code_from_std(e, L"fs::canonical() ");
       return false;
     }
     return reader.OpenReader(zipfile.c_str(), ec);
@@ -42,7 +42,7 @@ public:
   bool OpenReader(bela::io::FD &fd, const fs::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
     std::error_code e;
     if (destination = fs::absolute(dest, e); e) {
-      ec = bela::from_std_error_code(e, L"fs::absolute() ");
+      ec = bela::make_error_code_from_std(e, L"fs::absolute() ");
       return false;
     }
     return reader.OpenReader(fd.NativeFD(), size, offset, ec);
@@ -50,7 +50,7 @@ public:
   bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
     if (fs::create_directories(destination, e); e) {
-      ec = bela::from_std_error_code(e, L"fs::create_directories() ");
+      ec = bela::make_error_code_from_std(e, L"fs::create_directories() ");
       return false;
     }
     for (const auto &file : reader.Files()) {
@@ -127,7 +127,7 @@ public:
   bool InitializeExtractor(const fs::path &dest, bela::error_code &ec) {
     std::error_code e;
     if (destination = fs::absolute(dest, e); e) {
-      ec = bela::from_std_error_code(e, L"fs::absolute() ");
+      ec = bela::make_error_code_from_std(e, L"fs::absolute() ");
       return false;
     }
     if (reader == nullptr) {
@@ -139,7 +139,7 @@ public:
   bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
     if (fs::create_directories(destination, e); e) {
-      ec = bela::from_std_error_code(e, L"fs::create_directories() ");
+      ec = bela::make_error_code_from_std(e, L"fs::create_directories() ");
       return false;
     }
     auto tr = std::make_shared<baulk::archive::tar::Reader>(reader);

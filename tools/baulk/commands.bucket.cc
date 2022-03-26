@@ -51,7 +51,7 @@ private:
 bool BucketModifier::Initialize() {
   FILE *fd = nullptr;
   if (auto eo = _wfopen_s(&fd, baulk::Profile().data(), L"rb"); eo != 0) {
-    ec = bela::make_stdc_error_code(eo);
+    ec = bela::make_error_code_from_errno(eo);
     return false;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -225,7 +225,7 @@ bool PruneBucket(const baulk::Bucket &bucket) {
       if (en == ENOENT) {
         return true;
       }
-      auto ec = bela::make_stdc_error_code(en);
+      auto ec = bela::make_error_code_from_errno(en);
       bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec);
       return false;
     }

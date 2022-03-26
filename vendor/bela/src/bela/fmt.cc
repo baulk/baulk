@@ -6,6 +6,7 @@
 #include <cmath>
 #include <bela/fmt.hpp>
 #include <bela/codecvt.hpp>
+#include <bela/numbers.hpp>
 #include "fmtwriter.hpp"
 
 namespace bela {
@@ -91,8 +92,8 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
   auto end = it + wcslen(fmt);
   size_t ca = 0;
   wchar_t pc;
-  uint32_t width;
-  uint32_t frac_width;
+  size_t width;
+  size_t frac_width;
   bool left = false;
   while (it < end) {
     ///  Fast search %,
@@ -151,12 +152,11 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
       }
       switch (args[ca].at) {
       case ArgType::CHARACTER:
-        w.AddUnicode(args[ca].character.c, width, args[ca].character.width);
+        w.AddUnicode(args[ca].character.c, width, pc);
         break;
       case ArgType::UINTEGER:
       case ArgType::INTEGER:
-        w.AddUnicode(static_cast<char32_t>(args[ca].integer.i), width,
-                     args[ca].integer.width > 2 ? 4 : args[ca].integer.width);
+        w.AddUnicode(static_cast<char32_t>(args[ca].integer.i), width, pc);
         break;
       default:
         break;
@@ -274,10 +274,11 @@ template <typename T> bool StrFormatInternal(Writer<T> &w, const wchar_t *fmt, c
         w.AddBoolean(args[ca].character.c != 0);
         break;
       case ArgType::CHARACTER:
-        w.AddUnicode(args[ca].character.c, width, args[ca].character.width);
+        w.AddUnicode(args[ca].character.c, width, pc);
         break;
       case ArgType::FLOAT:
-        w.Floating(args[ca].floating.d, width, frac_width, pc);
+        // w.Floating(args[ca].floating.d, width, frac_width, pc);
+        w.Append(digits, numbers_internal::SixDigitsToBuffer(args[ca].floating.d, digits));
         break;
       case ArgType::INTEGER:
       case ArgType::UINTEGER: {

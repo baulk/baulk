@@ -9,7 +9,6 @@
 #include <string>
 #include <string_view>
 #include "types.hpp"
-#include "base.hpp"
 
 // The unix compilers use a 32-bit wchar_t
 // The windows compilers, gcc and MSVC, both define a 16 bit wchar_t.
@@ -27,82 +26,52 @@ enum class ArgType {
   USTRING,
   POINTER
 };
+
+// has_native support
+//  bela::error_code
+//  std::filesystem::path
+template <typename T>
+concept has_native = requires(const T &a) {
+  { a.native() } -> std::convertible_to<const std::wstring &>;
+};
+
+template <typename T>
+concept has_string_view = requires(const T &a) {
+  { a.string_view() } -> std::convertible_to<std::wstring_view>;
+};
+
 struct FormatArg {
   // %b
   FormatArg(bool b) : at(ArgType::BOOLEAN) {
     character.c = b ? 1 : 0;
     character.width = sizeof(bool);
   }
-  FormatArg(char8_t c) : at(ArgType::CHARACTER) {
-    character.c = static_cast<char>(c);
-    character.width = sizeof(char);
-  }
-  // %c
-  FormatArg(char c) : at(ArgType::CHARACTER) {
-    character.c = c; /// if caset to uint64_t
-    character.width = sizeof(char);
-  }
-  FormatArg(unsigned char c) : at(ArgType::CHARACTER) {
+  // character
+  template <typename C>
+  requires bela::character<C> FormatArg(C c) : at(ArgType::CHARACTER) {
     character.c = c;
-    character.width = sizeof(char);
+    character.width = sizeof(C);
   }
-  FormatArg(wchar_t c) : at(ArgType::CHARACTER) {
-    character.c = c;
-    character.width = sizeof(wchar_t);
+  // signed integral
+  template <typename I>
+  requires bela::narrowly_signed_integral<I> FormatArg(I i) : at(ArgType::INTEGER) {
+    integer.i = i;
+    integer.width = sizeof(I);
   }
-  FormatArg(char16_t c) : at(ArgType::CHARACTER) {
-    character.c = c;
-    character.width = sizeof(char16_t);
+  // unsigned integral
+  template <typename U>
+  requires bela::narrowly_unsigned_integral<U> FormatArg(U u) : at(ArgType::UINTEGER) {
+    integer.i = static_cast<int64_t>(u);
+    integer.width = sizeof(U);
   }
-  FormatArg(char32_t c) : at(ArgType::CHARACTER) {
-    character.c = c;
-    character.width = sizeof(char32_t);
-  }
-  //%d
-  FormatArg(signed short j) : at(ArgType::INTEGER) {
-    integer.i = j;
-    integer.width = sizeof(short);
-  }
-  FormatArg(unsigned short j) : at(ArgType::UINTEGER) {
-    integer.i = j;
-    integer.width = sizeof(short);
-  }
-  FormatArg(signed int j) : at(ArgType::INTEGER) {
-    integer.i = j;
-    integer.width = sizeof(int);
-  }
-  FormatArg(unsigned int j) : at(ArgType::UINTEGER) {
-    integer.i = j;
-    integer.width = sizeof(int);
-  }
-  FormatArg(signed long j) : at(ArgType::INTEGER) {
-    integer.i = j;
-    integer.width = sizeof(long);
-  }
-  FormatArg(unsigned long j) : at(ArgType::UINTEGER) {
-    integer.i = j;
-    integer.width = sizeof(long);
-  }
-  FormatArg(signed long long j) : at(ArgType::INTEGER) {
-    integer.i = j;
-    integer.width = sizeof(long long);
-  }
-  FormatArg(unsigned long long j) : at(ArgType::UINTEGER) {
-    integer.i = j;
-    integer.width = sizeof(long long);
+  // float double
+  template <typename F>
+  requires std::floating_point<F> FormatArg(F f) : at(ArgType::FLOAT) {
+    floating.d = f;
+    floating.width = sizeof(F);
   }
 
-  // %f
-  FormatArg(float f) : at(ArgType::FLOAT) {
-    floating.d = f;
-    floating.width = sizeof(float);
-  }
-  FormatArg(double f) : at(ArgType::FLOAT) {
-    floating.d = f;
-    floating.width = sizeof(double);
-  }
-
-  // wchar_t
+  // UTF-16 support: wchar_t
   // A C-style text string. and wstring_view
   FormatArg(const wchar_t *str) : at(ArgType::STRING) {
     strings.data = (str == nullptr) ? L"(NULL)" : str;
@@ -124,7 +93,7 @@ struct FormatArg {
     strings.len = sv.size();
   }
 
-  // support char16_t under Windows.
+  // UTF-16 support: char16_t.
   FormatArg(const char16_t *str) : at(ArgType::STRING) {
     strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
     strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
@@ -187,9 +156,18 @@ struct FormatArg {
     ustring.data = reinterpret_cast<const char *>(sv.data());
     ustring.len = sv.size();
   }
-  FormatArg(const bela::error_code &ec) : at(ArgType::STRING) {
-    strings.data = ec.message.data();
-    strings.len = ec.message.size();
+  
+  // Extended type support
+
+  template <typename T>
+  requires has_native<T> FormatArg(const T &t) : at(ArgType::STRING) {
+    strings.data = t.native().data();
+    strings.len = t.native().size();
+  }
+  template <typename T>
+  requires has_string_view<T> FormatArg(const T &t) : at(ArgType::STRING) {
+    strings.data = t.string_view().data();
+    strings.len = t.string_view().size();
   }
 
   // Any pointer value that can be cast to a "void*".
@@ -242,15 +220,15 @@ struct FormatArg {
   union {
     struct {
       int64_t i;
-      unsigned char width;
+      size_t width;
     } integer;
     struct {
       char32_t c;
-      unsigned char width;
+      size_t width;
     } character;
     struct {
       double d;
-      unsigned char width;
+      size_t width;
     } floating;
     struct {
       const wchar_t *data;

@@ -3,17 +3,8 @@
 // Windows error_code impl
 #ifndef BELA_BASE_HPP
 #define BELA_BASE_HPP
-#pragma once
-#include <SDKDDKVer.h>
-#ifndef _WINDOWS_
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN //
-#endif
-#include <windows.h>
-#endif
+#include "__basal/basal.hpp"
 #include <optional>
-#include <string>
-#include <string_view>
 #include <vector>
 #include <system_error>
 #include <memory>
@@ -21,100 +12,32 @@
 #include "str_cat.hpp"
 
 namespace bela {
-constexpr long ErrNone = 0;
-constexpr long ErrEOF = ERROR_HANDLE_EOF;
-constexpr long ErrGeneral = 0x4001;
-constexpr long ErrSkipParse = 0x4002;
-constexpr long ErrParseBroken = 0x4003;
-constexpr long ErrFileTooSmall = 0x4004;
-constexpr long ErrFileAlreadyOpened = 0x4005;
-constexpr long ErrEnded = 654320;
-constexpr long ErrCanceled = 654321;
-constexpr long ErrUnimplemented = 654322; // feature not implemented
-// bela::error_code
-struct error_code {
-  std::wstring message;
-  long code{ErrNone};
-  const wchar_t *data() const { return message.data(); }
-  explicit operator bool() const noexcept { return code != ErrNone; }
-  error_code &assgin(error_code &&o) {
-    message.assign(std::move(o.message));
-    code = o.code;
-    o.code = ErrNone;
-    return *this;
-  }
-  void clear() {
-    code = ErrNone;
-    message.clear();
-  }
-};
-
-inline bela::error_code make_error_code(const AlphaNum &a) {
-  return bela::error_code{std::wstring(a.Piece()), ErrGeneral};
+// Constructs an bela::error_code object from a value of AlphaNum
+[[nodiscard]] inline error_code make_error_code(const AlphaNum &a) { return error_code{a.Piece(), ErrGeneral}; }
+// Constructs an bela::error_code object from a value of AlphaNum
+[[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a) { return error_code{a.Piece(), code}; }
+// Constructs an bela::error_code object from a value of AlphaNum
+[[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b) {
+  return error_code{StringCat(a, b), code};
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a) {
-  return bela::error_code{std::wstring(a.Piece()), code};
+// Constructs an bela::error_code object from a value of AlphaNum
+[[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
+  return error_code{StringCat(a, b, c), code};
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b) {
-  bela::error_code ec;
-  ec.code = code;
-  ec.message.reserve(a.Piece().size() + b.Piece().size());
-  ec.message.assign(a.Piece()).append(b.Piece());
-  return ec;
+// Constructs an bela::error_code object from a value of AlphaNum
+[[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                                const AlphaNum &d) {
+  return error_code{StringCat(a, b, c, d), code};
 }
-inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
-  bela::error_code ec;
-  ec.code = code;
-  ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size());
-  ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece());
-  return ec;
-}
-inline bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                                        const AlphaNum &d) {
-  bela::error_code ec;
-  ec.code = code;
-  ec.message.reserve(a.Piece().size() + b.Piece().size() + c.Piece().size() + d.Piece().size());
-  ec.message.assign(a.Piece()).append(b.Piece()).append(c.Piece()).append(d.Piece());
-  return ec;
-}
+// Constructs an bela::error_code object from a value of AlphaNum
 template <typename... AV>
-bela::error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
-                                 const AV &...av) {
-  bela::error_code ec;
-  ec.code = code;
-  ec.message = strings_internal::CatPieces(
-      {a.Piece(), b.Piece(), c.Piece(), d.Piece(), static_cast<const AlphaNum &>(av).Piece()...});
-  return ec;
+[[nodiscard]] error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
+                                         const AlphaNum &d, const AV &...av) {
+  return error_code{strings_internal::CatPieces(
+                        {a.Piece(), b.Piece(), c.Piece(), d.Piece(), static_cast<const AlphaNum &>(av).Piece()...}),
+                    code};
 }
 
-error_code make_stdc_error_code(errno_t eno, std::wstring_view prefix = L"");
-std::wstring resolve_system_error_message(DWORD ec, std::wstring_view prefix = L"");
-
-inline error_code from_system_error_code(DWORD e, std::wstring_view prefix = L"") {
-  error_code ec;
-  ec.code = e;
-  ec.message = resolve_system_error_message(ec.code, prefix);
-  return ec;
-}
-
-inline error_code make_system_error_code(std::wstring_view prefix = L"") {
-  error_code ec;
-  ec.code = GetLastError();
-  ec.message = resolve_system_error_message(ec.code, prefix);
-  return ec;
-}
-
-std::wstring resolve_module_error_message(const wchar_t *moduleName, DWORD ec, std::wstring_view prefix);
-// bela::fromascii
-inline std::wstring fromascii(std::string_view sv) {
-  auto sz = MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), nullptr, 0);
-  std::wstring output;
-  output.resize(sz);
-  // C++17 must output.data()
-  MultiByteToWideChar(CP_ACP, 0, sv.data(), (int)sv.size(), output.data(), sz);
-  return output;
-}
-error_code from_std_error_code(const std::error_code &e, std::wstring_view prefix = L"");
 // https://github.com/microsoft/wil/blob/master/include/wil/stl.h#L38
 template <typename T> struct secure_allocator : public std::allocator<T> {
   template <typename Other> struct rebind { typedef secure_allocator<Other> other; };

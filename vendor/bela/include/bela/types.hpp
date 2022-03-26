@@ -25,6 +25,16 @@ template <class T>
 constexpr bool is_narrow_character_v = is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, char8_t>;
 
 template <class T>
+constexpr bool is_narrowly_signed_integral_v = is_any_of_v<std::remove_cv_t<T>, short, int, long, long long>;
+template <class T>
+constexpr bool is_narrowly_unsigned_integral_v =
+    is_any_of_v<std::remove_cv_t<T>, unsigned short, unsigned int, unsigned long, unsigned long long>;
+template <class T>
+concept narrowly_signed_integral = is_narrowly_signed_integral_v<T>;
+template <class T>
+concept narrowly_unsigned_integral = is_narrowly_unsigned_integral_v<T>;
+
+template <class T>
 concept character = is_character_v<T>;
 
 template <class T>
@@ -42,9 +52,13 @@ concept trivial = std::is_trivial_v<T>;
 template <class T>
 concept integral_superset = std::integral<T> || std::is_enum_v<T>;
 
-// funs
+template <typename E>
+requires std::is_enum_v<E>
+constexpr auto integral_cast(E e) { return static_cast<std::underlying_type_t<E>>(e); }
 
-template <typename T, typename K> constexpr bool FlagIsTrue(T a, K b) { return (a & static_cast<T>(b)) != 0; }
+template <typename T, typename K>
+requires integral_superset<T> && integral_superset<K>
+constexpr bool FlagIsTrue(T a, K b) { return (a & static_cast<T>(b)) != 0; }
 
 constexpr int64_t SizeUnInitialized{-1};
 

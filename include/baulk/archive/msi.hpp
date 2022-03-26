@@ -15,11 +15,11 @@ public:
   bool Initialize(const std::filesystem::path &file, const std::filesystem::path &dest, bela::error_code &ec) {
     std::error_code e;
     if (archive_file = std::filesystem::canonical(file, e); e) {
-      ec = bela::from_std_error_code(e);
+      ec = bela::make_error_code_from_std(e);
       return false;
     }
     if (destination = std::filesystem::absolute(dest, e); e) {
-      ec = bela::from_std_error_code(e);
+      ec = bela::make_error_code_from_std(e);
       return false;
     }
     return true;

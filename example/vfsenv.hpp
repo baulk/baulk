@@ -10,7 +10,7 @@ namespace example {
 inline std::optional<nlohmann::json> parse_file(const std::wstring_view file, bela::error_code &ec) {
   FILE *fd = nullptr;
   if (auto eno = _wfopen_s(&fd, file.data(), L"rb"); eno != 0) {
-    ec = bela::make_stdc_error_code(eno, bela::StringCat(L"open json file '", bela::BaseName(file), L"' "));
+    ec = bela::make_error_code_from_errno(eno, bela::StringCat(L"open json file '", bela::BaseName(file), L"' "));
     return std::nullopt;
   }
   auto closer = bela::finally([&] { fclose(fd); });
@@ -105,7 +105,6 @@ private:
     return false;
   }
 };
-
 
 } // namespace example
 #endif

@@ -50,7 +50,7 @@ bool extractDir(std::wstring_view dir, bela::Time t, bela::error_code &ec) {
   }
   std::error_code e;
   if (std::filesystem::create_directories(dir, e); e) {
-    ec = bela::from_std_error_code(e, L"mkdir ");
+    ec = bela::make_error_code_from_std(e, L"mkdir ");
     return false;
   }
   baulk::archive::Chtimes(dir, t, ec);
