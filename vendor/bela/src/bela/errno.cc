@@ -236,10 +236,7 @@ bela::error_code make_error_code_from_errno(errno_t eno, std::wstring_view prefi
 }
 
 bela::error_code make_error_code_from_std(const std::error_code &e, std::wstring_view prefix) {
-  error_code ec;
-  ec.code = e.value();
-  ec.message = bela::StringCat(prefix, fromascii(e.message()));
-  return ec;
+  return {bela::StringCat(prefix, fromascii(e.message())), e.value()};
 }
 
 } // namespace bela

@@ -380,42 +380,6 @@ requires bela::character<CharT>
   return string_width<CharT>({str, N});
 }
 
-// Narrow std::wstring_view to UTF-8
-inline std::string ToNarrow(std::wstring_view uw) {
-  //
-  return encode_into<wchar_t, char>(uw);
-}
-// Narrow const wchar_t* to UTF-8
-inline std::string ToNarrow(const wchar_t *data, size_t len) {
-  //
-  return encode_into<wchar_t, char>({data, len});
-}
-// Narrow std::u16string_view to UTF-8
-inline std::string ToNarrow(std::u16string_view uw) {
-  //
-  return encode_into<char16_t, char>(uw);
-}
-// Narrow const char16_t* to UTF-8
-inline std::string ToNarrow(const char16_t *data, size_t len) {
-  //
-  return encode_into<char16_t, char>({data, len});
-}
-
-inline std::wstring ToWide(const char *str, size_t len) {
-  //
-  return encode_into<char, wchar_t>({str, len});
-}
-
-inline std::wstring ToWide(std::string_view sv) {
-  //
-  return encode_into<char, wchar_t>(sv);
-}
-
-inline std::wstring ToWide(std::u8string_view sv) {
-  //
-  return encode_into<char8_t, wchar_t>(sv);
-}
-
 } // namespace bela
 
 #endif

@@ -57,6 +57,10 @@ struct error_code {
   long code{ErrNone};
   // -----------
   error_code() noexcept = default;
+  error_code(std::wstring &&message_, long code_) noexcept {
+    message = std::move(message_);
+    code = code_;
+  }
   error_code(std::wstring_view message_, long code_) noexcept {
     message = message_;
     code = code_;
