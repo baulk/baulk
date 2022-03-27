@@ -17,7 +17,7 @@ struct ExtractorOptions {
 };
 
 namespace zip {
-using Filter = std::function<bool(const File &file, const std::wstring& relative_name)>;
+using Filter = std::function<bool(const File &file, const std::wstring &relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
 class Extractor {
 public:
@@ -116,7 +116,7 @@ private:
 };
 } // namespace zip
 namespace tar {
-using Filter = std::function<bool(const Header &hdr, const std::wstring& relative_name)>;
+using Filter = std::function<bool(const Header &hdr, const std::wstring &relative_name)>;
 using OnProgress = std::function<bool(size_t bytes)>;
 
 class Extractor {
@@ -152,18 +152,18 @@ public:
       if (extract_entry(*tr, *fh, filter, progress, ec)) {
         continue;
       }
-      if (ec.code == bela::ErrCanceled) {
+      if (ec == bela::ErrCanceled) {
         return false;
       }
-      if (ec.code == ErrNotTarFile || ec.code == ErrExtractGeneral || !opts.ignore_error) {
+      if (ec == ErrNotTarFile || ec == ErrExtractGeneral || !opts.ignore_error) {
         break;
       }
     }
-    if (tr->Index() == 0 && ec.code == ErrNotTarFile) {
+    if (tr->Index() == 0 && ec == ErrNotTarFile) {
       ec = bela::make_error_code(ErrAnotherWay, L"extract another way");
       return false;
     }
-    if (ec && ec.code != bela::ErrEnded) {
+    if (ec && ec != bela::ErrEnded) {
       return false;
     }
     return true;

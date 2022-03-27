@@ -25,7 +25,7 @@ private:
 };
 
 bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
-  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename().native()).data());
+  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename()).data());
   if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     return false;
@@ -77,7 +77,7 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::
   if (!extractor.InitializeExtractor(dest, ec)) {
     return false;
   }
-  bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename().native()).data());
+  bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename()).data());
   if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     return false;
@@ -96,7 +96,7 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, bela::error_code &ec)
   if (auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec); wr) {
     return tar_extract(bar, fr, wr.get(), ec);
   }
-  if (ec.code != baulk::archive::tar::ErrNoFilter) {
+  if (ec != baulk::archive::tar::ErrNoFilter) {
     return false;
   }
   return tar_extract(bar, fr, &fr, ec);
@@ -119,7 +119,7 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
   if (!fd) {
     return false;
   }
-  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename().native()).data());
+  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename()).data());
   bar->SetLine(2, filename.c_str(), FALSE, nullptr);
   uint8_t buffer[8192];
   for (;;) {
@@ -139,7 +139,7 @@ bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   if (tar_extract(bar, ec)) {
     return true;
   }
-  if (ec.code != baulk::archive::ErrAnotherWay) {
+  if (ec != baulk::archive::ErrAnotherWay) {
     return false;
   }
   return single_file_extract(bar, ec);
@@ -155,7 +155,7 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
   }
   switch (afmt) {
   case file_format_t::none:
-    ec = bela::make_error_code(bela::ErrGeneral, L"unable to detect format '", archive_file.filename().native(), L"'");
+    ec = bela::make_error_code(bela::ErrGeneral, L"unable to detect format '", archive_file.filename(), L"'");
     return nullptr;
   case file_format_t::zip: {
     auto e = std::make_shared<ZipExtractor>(std::move(*fd), archive_file, opts);

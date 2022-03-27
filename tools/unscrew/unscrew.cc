@@ -14,17 +14,17 @@ inline std::wstring_view strip_extension(const std::filesystem::path &filename) 
   return baulk::archive::PathStripExtension(filename.native());
 }
 
-std::optional<std::filesystem::path> make_unqiue_extracted_destination(const std::filesystem::path &archive_file) {
+std::optional<std::filesystem::path> make_unqiue_extracted_destination(const std::filesystem::path &archive_file,
+                                                                       std::filesystem::path &strict_folder) {
   std::error_code e;
   auto parent_path = archive_file.parent_path();
-  auto filename = archive_file.filename().wstring();
-  auto stripFilename = baulk::archive::PathStripExtension(filename);
-  auto d = parent_path / stripFilename;
+  strict_folder = baulk::archive::PathStripExtension(archive_file.filename().native());
+  auto d = parent_path / strict_folder;
   if (!std::filesystem::exists(d, e)) {
     return std::make_optional(std::move(d));
   }
   for (int i = 1; i < 100; i++) {
-    d = parent_path / bela::StringCat(stripFilename, L"-(", i, L")");
+    d = parent_path / bela::StringCat(strict_folder, L"-(", i, L")");
     if (!std::filesystem::exists(d, e)) {
       return std::make_optional(std::move(d));
     }
@@ -67,14 +67,14 @@ bool Executor::Execute(bela::error_code &ec) {
     ec = bela::make_system_error_code(L"CoCreateInstance ");
     return false;
   }
+  std::filesystem::path strict_folder;
   auto closer = bela::finally([&] { bar->StopProgressDialog(); });
   if (archive_files.size() == 1) {
     if (destination.empty()) {
       const auto &archive_file = archive_files[0];
-      auto d = make_unqiue_extracted_destination(archive_file);
+      auto d = make_unqiue_extracted_destination(archive_file, strict_folder);
       if (!d) {
-        ec = bela::make_error_code(bela::ErrGeneral, L"destination '", strip_extension(archive_file.native()),
-                                   L"'  already exists");
+        ec = bela::make_error_code(bela::ErrGeneral, L"destination '", strict_folder, L"' already exists");
         return false;
       }
       destination = std::move(*d);
@@ -90,7 +90,7 @@ bool Executor::Execute(bela::error_code &ec) {
   }
   // Extracting multiple archives will ignore destination
   for (const auto &archive_file : archive_files) {
-    auto destination_ = make_unqiue_extracted_destination(archive_file);
+    auto destination_ = make_unqiue_extracted_destination(archive_file, strict_folder);
     if (!destination_) {
       continue;
     }
