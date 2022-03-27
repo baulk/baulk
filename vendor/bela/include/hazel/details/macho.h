@@ -1,6 +1,6 @@
 // Thanks Apple.inc
-// https://github.com/apple/darwin-xnu/blob/master/osfmk/mach/machine.h
-// https://opensource.apple.com/source/xnu/xnu-4903.221.2/osfmk/mach/machine.h.auto.html
+// https://github.com/apple/darwin-xnu/blob/main/osfmk/mach/machine.h
+// https://opensource.apple.com/source/xnu/xnu-7195.81.3/osfmk/mach/machine.h.auto.html
 /*
  * Copyright (c) 2007-2016 Apple, Inc. All rights reserved.
  * Copyright (c) 2000 Apple Computer, Inc. All rights reserved.
@@ -65,9 +65,10 @@
 #define HAZEL_MACH_O_HPP
 
 #include <cstdint>
-typedef uint32_t cpu_type_t;
-typedef uint32_t cpu_subtype_t;
-typedef uint32_t cpu_threadtype_t;
+typedef int integer_t;
+typedef integer_t cpu_type_t;
+typedef integer_t cpu_subtype_t;
+typedef integer_t cpu_threadtype_t;
 
 #define CPU_STATE_MAX 4
 
@@ -79,8 +80,9 @@ typedef uint32_t cpu_threadtype_t;
 /*
  * Capability bits used in the definition of cpu_type.
  */
-#define CPU_ARCH_MASK 0xff000000  /* mask for architecture bits */
-#define CPU_ARCH_ABI64 0x01000000 /* 64 bit ABI */
+#define CPU_ARCH_MASK 0xff000000     /* mask for architecture bits */
+#define CPU_ARCH_ABI64 0x01000000    /* 64 bit ABI */
+#define CPU_ARCH_ABI64_32 0x02000000 /* ABI for 64-bit hardware with 32-bit types; LP32 */
 
 /*
  *	Machine types known by all.
@@ -121,9 +123,16 @@ typedef uint32_t cpu_threadtype_t;
 /*
  * Capability bits used in the definition of cpu_subtype.
  */
-#define CPU_SUBTYPE_MASK 0xff000000  /* mask for feature flags */
-#define CPU_SUBTYPE_LIB64 0x80000000 /* 64 bit libraries */
+#define CPU_SUBTYPE_MASK 0xff000000        /* mask for feature flags */
+#define CPU_SUBTYPE_LIB64 0x80000000       /* 64 bit libraries */
+#define CPU_SUBTYPE_PTRAUTH_ABI 0x80000000 /* pointer authentication with versioned ABI */
 
+/*
+ *      When selecting a slice, ANY will pick the slice with the best
+ *      grading for the selected cpu_type_t, unlike the "ALL" subtypes,
+ *      which are the slices that can run on any hardware for that cpu type.
+ */
+#define CPU_SUBTYPE_ANY ((cpu_subtype_t)-1)
 /*
  *	Object files that are hand-crafted to run on any
  *	implementation of an architecture are tagged with
@@ -227,6 +236,7 @@ typedef uint32_t cpu_threadtype_t;
 #define CPU_SUBTYPE_X86_ALL ((cpu_subtype_t)3)
 #define CPU_SUBTYPE_X86_64_ALL ((cpu_subtype_t)3)
 #define CPU_SUBTYPE_X86_ARCH1 ((cpu_subtype_t)4)
+#define CPU_SUBTYPE_X86_64_H ((cpu_subtype_t)8) /* Haswell feature subset */
 
 #define CPU_THREADTYPE_INTEL_HTT ((cpu_threadtype_t)1)
 
@@ -301,14 +311,33 @@ typedef uint32_t cpu_threadtype_t;
 #define CPU_SUBTYPE_ARM_V6 ((cpu_subtype_t)6)
 #define CPU_SUBTYPE_ARM_V5TEJ ((cpu_subtype_t)7)
 #define CPU_SUBTYPE_ARM_XSCALE ((cpu_subtype_t)8)
-#define CPU_SUBTYPE_ARM_V7 ((cpu_subtype_t)9)
+#define CPU_SUBTYPE_ARM_V7 ((cpu_subtype_t)9)   /* ARMv7-A and ARMv7-R */
+#define CPU_SUBTYPE_ARM_V7F ((cpu_subtype_t)10) /* Cortex A9 */
+#define CPU_SUBTYPE_ARM_V7S ((cpu_subtype_t)11) /* Swift */
+#define CPU_SUBTYPE_ARM_V7K ((cpu_subtype_t)12)
+#define CPU_SUBTYPE_ARM_V8 ((cpu_subtype_t)13)
+#define CPU_SUBTYPE_ARM_V6M ((cpu_subtype_t)14)  /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7M ((cpu_subtype_t)15)  /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7EM ((cpu_subtype_t)16) /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V8M ((cpu_subtype_t)17)  /* Not meant to be run under xnu */
 
 /*
- * ARM64 subtypes
+ *  ARM64 subtypes
  */
+#define CPU_SUBTYPE_ARM64_ALL ((cpu_subtype_t)0)
 #define CPU_SUBTYPE_ARM64_V8 ((cpu_subtype_t)1)
-// https://reviews.llvm.org/rGf77c948d56b
 #define CPU_SUBTYPE_ARM64E ((cpu_subtype_t)2)
+
+/* CPU subtype feature flags for ptrauth on arm64e platforms */
+#define CPU_SUBTYPE_ARM64_PTR_AUTH_MASK 0x0f000000
+#define CPU_SUBTYPE_ARM64_PTR_AUTH_VERSION(x) (((x)&CPU_SUBTYPE_ARM64_PTR_AUTH_MASK) >> 24)
+#define CPU_SUBTYPE_ARM64_PTR_AUTH_CURRENT_VERSION 0
+
+/*
+ *  ARM64_32 subtypes
+ */
+#define CPU_SUBTYPE_ARM64_32_ALL ((cpu_subtype_t)0)
+#define CPU_SUBTYPE_ARM64_32_V8 ((cpu_subtype_t)1)
 
 /*
  *	CPU families (sysctl hw.cpufamily)
@@ -326,31 +355,47 @@ typedef uint32_t cpu_threadtype_t;
 #define CPUFAMILY_POWERPC_G4 0x77c184ae
 #define CPUFAMILY_POWERPC_G5 0xed76d8aa
 #define CPUFAMILY_INTEL_6_13 0xaa33392b
-#define CPUFAMILY_INTEL_6_14                                                                                           \
-  0x73d67300                            /* "Intel Core Solo" and "Intel Core Duo" (32-bit Pentium-M with               \
-                                           \ \ \ \ \ \ \ \ \ \ SSE3) */
-#define CPUFAMILY_INTEL_6_15 0x426f69ef /* "Intel Core 2 Duo" */
-#define CPUFAMILY_INTEL_6_23 0x78ea4fbc /* Penryn */
-#define CPUFAMILY_INTEL_6_26 0x6b5a4cd2 /* Nehalem */
-#define CPUFAMILY_ARM_9 0xe73283ae
-#define CPUFAMILY_ARM_11 0x8ff620d8
-#define CPUFAMILY_ARM_XSCALE 0x53b005f5
-#define CPUFAMILY_ARM_13 0x0cc90e64
-#define CPUFAMILY_ARM_14 0x96077ef1
-#define CPUFAMILY_ARM_SWIFT 0x1e2d6381
-#define CPUFAMILY_ARM_CYCLONE 0x37a09642
-
-#define CPUFAMILY_INTEL_YONAH CPUFAMILY_INTEL_6_14
-#define CPUFAMILY_INTEL_MEROM CPUFAMILY_INTEL_6_15
-#define CPUFAMILY_INTEL_PENRYN CPUFAMILY_INTEL_6_23
-#define CPUFAMILY_INTEL_NEHALEM CPUFAMILY_INTEL_6_26
+#define CPUFAMILY_INTEL_PENRYN 0x78ea4fbc
+#define CPUFAMILY_INTEL_NEHALEM 0x6b5a4cd2
 #define CPUFAMILY_INTEL_WESTMERE 0x573b5eec
 #define CPUFAMILY_INTEL_SANDYBRIDGE 0x5490b78c
 #define CPUFAMILY_INTEL_IVYBRIDGE 0x1f65e835
 #define CPUFAMILY_INTEL_HASWELL 0x10b282dc
+#define CPUFAMILY_INTEL_BROADWELL 0x582ed09c
+#define CPUFAMILY_INTEL_SKYLAKE 0x37fc219f
+#define CPUFAMILY_INTEL_KABYLAKE 0x0f817246
+#define CPUFAMILY_INTEL_ICELAKE 0x38435547
+#define CPUFAMILY_ARM_9 0xe73283ae
+#define CPUFAMILY_ARM_11 0x8ff620d8
+#define CPUFAMILY_ARM_XSCALE 0x53b005f5
+#define CPUFAMILY_ARM_12 0xbd1b0ae9
+#define CPUFAMILY_ARM_13 0x0cc90e64
+#define CPUFAMILY_ARM_14 0x96077ef1
+#define CPUFAMILY_ARM_15 0xa8511bca
+#define CPUFAMILY_ARM_SWIFT 0x1e2d6381
+#define CPUFAMILY_ARM_CYCLONE 0x37a09642
+#define CPUFAMILY_ARM_TYPHOON 0x2c91a47e
+#define CPUFAMILY_ARM_TWISTER 0x92fb37c8
+#define CPUFAMILY_ARM_HURRICANE 0x67ceee93
+#define CPUFAMILY_ARM_MONSOON_MISTRAL 0xe81e7ef6
+#define CPUFAMILY_ARM_VORTEX_TEMPEST 0x07d34b9f
+#define CPUFAMILY_ARM_LIGHTNING_THUNDER 0x462504d2
+#ifndef RC_HIDE_XNU_FIRESTORM
+#define CPUFAMILY_ARM_FIRESTORM_ICESTORM 0x1b588bb3
+#endif /* !RC_HIDE_XNU_FIRESTORM */
 
-#define CPUFAMILY_INTEL_CORE CPUFAMILY_INTEL_6_14
-#define CPUFAMILY_INTEL_CORE2 CPUFAMILY_INTEL_6_15
+#define CPUSUBFAMILY_UNKNOWN 0
+#define CPUSUBFAMILY_ARM_HP 1
+#define CPUSUBFAMILY_ARM_HG 2
+#define CPUSUBFAMILY_ARM_M 3
+#ifndef RC_HIDE_XNU_FIRESTORM
+#define CPUSUBFAMILY_ARM_HS 4
+#define CPUSUBFAMILY_ARM_HC_HD 5
+#endif /* !RC_HIDE_XNU_FIRESTORM */
+
+/* The following synonyms are deprecated: */
+#define CPUFAMILY_INTEL_6_23 CPUFAMILY_INTEL_PENRYN
+#define CPUFAMILY_INTEL_6_26 CPUFAMILY_INTEL_NEHALEM
 
 //// VMPORT
 /*
@@ -415,7 +460,7 @@ typedef int vm_prot_t;
 
 #define VM_PROT_WANTS_COPY ((vm_prot_t)0x10)
 
-//// FAT
+// https://opensource.apple.com/source/xnu/xnu-7195.81.3/EXTERNAL_HEADERS/mach-o/fat.h.auto.html
 
 #define FAT_MAGIC 0xcafebabe
 #define FAT_CIGAM 0xbebafeca /* NXSwapLong(FAT_MAGIC) */
@@ -440,6 +485,8 @@ struct fat_arch {
 // Note: Removed for maloader.
 // #include <mach/machine/thread_status.h>
 // #include <architecture/byte_order.h>
+
+// https://opensource.apple.com/source/xnu/xnu-7195.81.3/EXTERNAL_HEADERS/mach-o/loader.h.auto.html
 
 /*
  * The 32-bit mach header appears at the very beginning of the object file for
@@ -514,95 +561,141 @@ struct mach_header_64 {
 #define MH_DSYM 0xa        /* companion file with only debug */
                            /*  sections */
 #define MH_KEXT_BUNDLE 0xb /* x86_64 kexts */
+#define MH_FILESET 0xc     /* set of mach-o's */
 
 /* Constants for the flags field of the mach_header */
-#define MH_NOUNDEFS 0x1 /* the object file has no undefined \ references */
+#define MH_NOUNDEFS                                                                                                    \
+  0x1 /* the object file has no undefined                                                                              \
+         references */
 #define MH_INCRLINK                                                                                                    \
-  0x2 /* the object file is the output of an \ \ \ \ \ \                                                               \
-         incremental link against a base file \ \ and can't be link edited \ \                                         \
-         \ \ again */
+  0x2 /* the object file is the output of an                                                                           \
+         incremental link against a base file                                                                          \
+         and can't be link edited again */
 #define MH_DYLDLINK                                                                                                    \
-  0x4 /* the object file is input for the \ \ dynamic linker and can't be \ \                                          \
-         \ \ staticly \ link edited again */
+  0x4 /* the object file is input for the                                                                              \
+         dynamic linker and can't be staticly                                                                          \
+         link edited again */
 #define MH_BINDATLOAD                                                                                                  \
-  0x8                      /* the object file's undefined \ \ \ \ references are bound by the \ \                      \
-                              dynamic \ linker when loaded. */
-#define MH_PREBOUND 0x10   /* the file has its dynamic undefined \ references prebound. */
-#define MH_SPLIT_SEGS 0x20 /* the file has its read-only and \ read-write segments split */
+  0x8 /* the object file's undefined                                                                                   \
+         references are bound by the dynamic                                                                           \
+         linker when loaded. */
+#define MH_PREBOUND                                                                                                    \
+  0x10 /* the file has its dynamic undefined                                                                           \
+          references prebound. */
+#define MH_SPLIT_SEGS                                                                                                  \
+  0x20 /* the file has its read-only and                                                                               \
+          read-write segments split */
 #define MH_LAZY_INIT                                                                                                   \
-  0x40                   /* the shared library init routine is \ \ \ \ \ \                                             \
-                            to be run lazily via catching memory \ \ faults to its writeable \ \                       \
-                            \ \ segments \ (obsolete) */
-#define MH_TWOLEVEL 0x80 /* the image is using two-level name \ space bindings */
+  0x40 /* the shared library init routine is                                                                           \
+          to be run lazily via catching memory                                                                         \
+          faults to its writeable segments                                                                             \
+          (obsolete) */
+#define MH_TWOLEVEL                                                                                                    \
+  0x80 /* the image is using two-level name                                                                            \
+          space bindings */
 #define MH_FORCE_FLAT                                                                                                  \
-  0x100 /* the executable is forcing all images \ to use flat name space \ \ \                                         \
-           \ \ bindings */
+  0x100 /* the executable is forcing all images                                                                        \
+           to use flat name space bindings */
 #define MH_NOMULTIDEFS                                                                                                 \
-  0x200 /* this umbrella guarantees no multiple \ \ \ \ \ \                                                            \
-           defintions of symbols in its \ \ \ \ \ \                                                                    \
-           sub-images so the two-level namespace \ hints can always be used. \                                         \
-           \                                                                                                           \
-           \ \                                                                                                         \
-           \ \ \                                                                                                       \
-           \ \ \ \                                                                                                     \
-         */
+  0x200 /* this umbrella guarantees no multiple                                                                        \
+           defintions of symbols in its                                                                                \
+           sub-images so the two-level namespace                                                                       \
+           hints can always be used. */
 #define MH_NOFIXPREBINDING                                                                                             \
-  0x400 /* do not have dyld notify the \ \ prebinding agent about this \ \ \ \                                         \
-           \ executable */
+  0x400 /* do not have dyld notify the                                                                                 \
+           prebinding agent about this                                                                                 \
+           executable */
 #define MH_PREBINDABLE                                                                                                 \
-  0x800 /* the binary is not prebound but can \ \ \ \ \ \                                                              \
-           have its prebinding redone. only used \ when MH_PREBOUND is not \ \                                         \
-           \ \ \ set. */
+  0x800 /* the binary is not prebound but can                                                                          \
+           have its prebinding redone. only used                                                                       \
+           when MH_PREBOUND is not set. */
 #define MH_ALLMODSBOUND                                                                                                \
-  0x1000 /* indicates that this binary binds to \ \ \ \ \ \                                                            \
-            all two-level namespace modules of \ \ \ \ \ \                                                             \
-            its dependent libraries. only used \ \ when MH_PREBINDABLE and \ \                                         \
-            \ \ MH_TWOLEVEL \ are both set. */
+  0x1000 /* indicates that this binary binds to                                                                        \
+            all two-level namespace modules of                                                                         \
+            its dependent libraries. only used                                                                         \
+            when MH_PREBINDABLE and MH_TWOLEVEL                                                                        \
+            are both set. */
 #define MH_SUBSECTIONS_VIA_SYMBOLS                                                                                     \
-  0x2000                         /* safe to divide up the sections into \ \ sub-sections via symbols \                 \
-                                    \ \ \ for dead \ code stripping */
-#define MH_CANONICAL 0x4000      /* the binary has been canonicalized \ via the unprebind operation */
-#define MH_WEAK_DEFINES 0x8000   /* the final linked image contains \ external weak symbols */
-#define MH_BINDS_TO_WEAK 0x10000 /* the final linked image uses \ weak symbols */
+  0x2000 /* safe to divide up the sections into                                                                        \
+            sub-sections via symbols for dead                                                                          \
+            code stripping */
+#define MH_CANONICAL                                                                                                   \
+  0x4000 /* the binary has been canonicalized                                                                          \
+            via the unprebind operation */
+#define MH_WEAK_DEFINES                                                                                                \
+  0x8000 /* the final linked image contains                                                                            \
+            external weak symbols */
+#define MH_BINDS_TO_WEAK                                                                                               \
+  0x10000 /* the final linked image uses                                                                               \
+             weak symbols */
 
 #define MH_ALLOW_STACK_EXECUTION                                                                                       \
-  0x20000 /* When this bit is set, all stacks \ \ \ \ \ \                                                              \
-             in the task will be given stack \ \ execution privilege.  Only \                                          \
-             \ \ \ used in \ MH_EXECUTE filetypes. */
+  0x20000 /* When this bit is set, all stacks                                                                          \
+             in the task will be given stack                                                                           \
+             execution privilege.  Only used in                                                                        \
+             MH_EXECUTE filetypes. */
 #define MH_ROOT_SAFE                                                                                                   \
-  0x40000 /* When this bit is set, the binary \ \ \ declares it is safe for \                                          \
-             \ \ use in \ processes with uid zero */
+  0x40000 /* When this bit is set, the binary                                                                          \
+             declares it is safe for use in                                                                            \
+             processes with uid zero */
 
 #define MH_SETUID_SAFE                                                                                                 \
-  0x80000 /* When this bit is set, the binary \ \ \ \ \ \                                                              \
-             declares it is safe for use in \ processes when issetugid() is \                                          \
-             \ \ \ \ true */
+  0x80000 /* When this bit is set, the binary                                                                          \
+             declares it is safe for use in                                                                            \
+             processes when issetugid() is true */
 
 #define MH_NO_REEXPORTED_DYLIBS                                                                                        \
-  0x100000 /* When this bit is set on a dylib, \ \ \ \ \ \                                                             \
-            the static linker does not need to \ \ \ \ examine dependent \ \                                           \
-            dylibs to see \ if any are re-exported */
+  0x100000 /* When this bit is set on a dylib,                                                                         \
+            the static linker does not need to                                                                         \
+            examine dependent dylibs to see                                                                            \
+            if any are re-exported */
 #define MH_PIE                                                                                                         \
-  0x200000 /* When this bit is set, the OS will \ \ \ \ \ \                                                            \
-              load the main executable at a \ \ \ random address.  Only used \                                         \
-              \ \ in \ MH_EXECUTE filetypes. */
+  0x200000 /* When this bit is set, the OS will                                                                        \
+              load the main executable at a                                                                            \
+              random address.  Only used in                                                                            \
+              MH_EXECUTE filetypes. */
 #define MH_DEAD_STRIPPABLE_DYLIB                                                                                       \
-  0x400000 /* Only for use on dylibs.  When \ \ \ \ \ \                                                                \
-              linking against a dylib that \ \ \ \ \ \                                                                 \
-              has this bit set, the static linker \ \ \ \ \ \                                                          \
-              will automatically not create a \ \ \ \ \ \                                                              \
-              LC_LOAD_DYLIB load command to the \ \ dylib if no symbols are \                                          \
-              \ \ \ being \ referenced from the dylib. */
+  0x400000 /* Only for use on dylibs.  When                                                                            \
+              linking against a dylib that                                                                             \
+              has this bit set, the static linker                                                                      \
+              will automatically not create a                                                                          \
+              LC_LOAD_DYLIB load command to the                                                                        \
+              dylib if no symbols are being                                                                            \
+              referenced from the dylib. */
 #define MH_HAS_TLV_DESCRIPTORS                                                                                         \
-  0x800000 /* Contains a section of type \ S_THREAD_LOCAL_VARIABLES                                                    \
-            */
+  0x800000 /* Contains a section of type                                                                               \
+               S_THREAD_LOCAL_VARIABLES */
 
 #define MH_NO_HEAP_EXECUTION                                                                                           \
-  0x1000000 /* When this bit is set, the OS will \ \ \ \ \ \                                                           \
-               run the main executable with \ \ \ \ \ \                                                                \
-               a non-executable heap even on \ \ \ \ \ \                                                               \
-               platforms (e.g. i386) that don't \ \ require it. Only used in \                                         \
-               \ \ \ MH_EXECUTE \ filetypes. */
+  0x1000000 /* When this bit is set, the OS will                                                                       \
+               run the main executable with                                                                            \
+               a non-executable heap even on                                                                           \
+               platforms (e.g. i386) that don't                                                                        \
+               require it. Only used in MH_EXECUTE                                                                     \
+               filetypes. */
+
+#define MH_APP_EXTENSION_SAFE                                                                                          \
+  0x02000000 /* The code was linked for use in an                                                                      \
+                application extension. */
+
+#define MH_NLIST_OUTOFSYNC_WITH_DYLDINFO                                                                               \
+  0x04000000 /* The external symbols                                                                                   \
+    listed in the nlist symbol table do                                                                                \
+    not include all the symbols listed in                                                                              \
+    the dyld info. */
+
+#define MH_SIM_SUPPORT                                                                                                 \
+  0x08000000 /* Allow LC_MIN_VERSION_MACOS and                                                                         \
+                LC_BUILD_VERSION load commands with                                                                    \
+                the platforms macOS, iOSMac,                                                                           \
+                iOSSimulator, tvOSSimulator and                                                                        \
+                watchOSSimulator. */
+
+#define MH_DYLIB_IN_CACHE                                                                                              \
+  0x80000000 /* Only for use on dylibs. When this bit                                                                  \
+                is set, the dylib is part of the dyld                                                                  \
+                shared cache, rather than loose in                                                                     \
+                the filesystem. */
 
 /*
  * The load commands directly follow the mach_header.  The total size of all
@@ -669,7 +762,8 @@ struct load_command {
  */
 #define LC_LOAD_WEAK_DYLIB (0x18 | LC_REQ_DYLD)
 
-#define LC_SEGMENT_64 0x19                        /* 64-bit segment of this file to be     \         \ \ mapped */
+/* 64-bit segment of this file to be mapped */
+#define LC_SEGMENT_64 0x19
 #define LC_ROUTINES_64 0x1a                       /* 64-bit image routines */
 #define LC_UUID 0x1b                              /* the uuid */
 #define LC_RPATH (0x1c | LC_REQ_DYLD)             /* runpath additions */
@@ -684,13 +778,22 @@ struct load_command {
 #define LC_VERSION_MIN_MACOSX 0x24                /* build for MacOSX min OS version */
 #define LC_VERSION_MIN_IPHONEOS 0x25              /* build for iPhoneOS min OS version */
 #define LC_FUNCTION_STARTS 0x26                   /* compressed table of function start addresses */
-#define LC_DYLD_ENVIRONMENT                                                                                            \
-  0x27                               /* string for dyld to treat               \ \ \ like environment \ \ \            \
-                                        variable */
-#define LC_MAIN (0x28 | LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
-#define LC_DATA_IN_CODE 0x29         /* table of non-instructions in __text */
-#define LC_SOURCE_VERSION 0x2A       /* source version used to build binary */
-#define LC_DYLIB_CODE_SIGN_DRS 0x2B  /* Code signing DRs copied from linked dylibs */
+                                                  /* string for dyld to treat  like environment variable */
+#define LC_DYLD_ENVIRONMENT 0x27
+#define LC_MAIN (0x28 | LC_REQ_DYLD)                /* replacement for LC_UNIXTHREAD */
+#define LC_DATA_IN_CODE 0x29                        /* table of non-instructions in __text */
+#define LC_SOURCE_VERSION 0x2A                      /* source version used to build binary */
+#define LC_DYLIB_CODE_SIGN_DRS 0x2B                 /* Code signing DRs copied from linked dylibs */
+#define LC_ENCRYPTION_INFO_64 0x2C                  /* 64-bit encrypted segment information */
+#define LC_LINKER_OPTION 0x2D                       /* linker options in MH_OBJECT files */
+#define LC_LINKER_OPTIMIZATION_HINT 0x2E            /* optimization hints in MH_OBJECT files */
+#define LC_VERSION_MIN_TVOS 0x2F                    /* build for AppleTV min OS version */
+#define LC_VERSION_MIN_WATCHOS 0x30                 /* build for Watch min OS version */
+#define LC_NOTE 0x31                                /* arbitrary data included within a Mach-O file */
+#define LC_BUILD_VERSION 0x32                       /* build for platform min OS version */
+#define LC_DYLD_EXPORTS_TRIE (0x33 | LC_REQ_DYLD)   /* used with linkedit_data_command, payload is trie */
+#define LC_DYLD_CHAINED_FIXUPS (0x34 | LC_REQ_DYLD) /* used with linkedit_data_command */
+#define LC_FILESET_ENTRY (0x35 | LC_REQ_DYLD)       /* used with fileset_entry_command */
 
 /*
  * A variable length string in a load command is represented by an lc_str
@@ -766,10 +869,11 @@ struct segment_command_64 { /* for 64-bit architectures */
          in it and nothing relocated to it, that is \ \ it maybe safely \ \ \                                          \
          \ replaced without relocation*/
 #define SG_PROTECTED_VERSION_1                                                                                         \
-  0x8 /* This segment is protected.  If the \ \ \ \ \ \                                                                \
-         segment starts at file offset 0, the \ \ \ \ \ \                                                              \
-         first page of the segment is not \ \ protected.  All other pages of \                                         \
-         \ \ \ the \ segment are protected. */
+  0x8                     /* This segment is protected.  If the \ \ \ \ \ \                                            \
+                             segment starts at file offset 0, the \ \ \ \ \ \                                          \
+                             first page of the segment is not \ \ protected.  All other pages of \                     \
+                             \ \ \ the \ segment are protected. */
+#define SG_READ_ONLY 0x10 /* This segment is made read-only after fixups */
 
 /*
  * A segment is made up of zero or more sections.  Non-MH_OBJECT files have
@@ -888,7 +992,8 @@ struct section_64 {   /* for 64-bit architectures */
 #define S_THREAD_LOCAL_VARIABLES 0x13              /* TLV descriptors */
 #define S_THREAD_LOCAL_VARIABLE_POINTERS 0x14      /* pointers to TLV \ descriptors */
 #define S_THREAD_LOCAL_INIT_FUNCTION_POINTERS 0x15 /* functions to call \ \ to initialize TLV \ values */
-
+/* 32-bit offsets to initializers */
+#define S_INIT_FUNC_OFFSETS 0x16
 /*
  * Constants for the section attributes part of the flags field of a section
  * structure.
@@ -1572,6 +1677,43 @@ struct version_min_command {
 };
 
 /*
+ * The build_version_command contains the min OS version on which this
+ * binary was built to run for its platform.  The list of known platforms and
+ * tool values following it.
+ */
+struct build_version_command {
+  uint32_t cmd;      /* LC_BUILD_VERSION */
+  uint32_t cmdsize;  /* sizeof(struct build_version_command) plus */
+                     /* ntools * sizeof(struct build_tool_version) */
+  uint32_t platform; /* platform */
+  uint32_t minos;    /* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+  uint32_t sdk;      /* X.Y.Z is encoded in nibbles xxxx.yy.zz */
+  uint32_t ntools;   /* number of tool entries following this */
+};
+
+struct build_tool_version {
+  uint32_t tool;    /* enum for the tool */
+  uint32_t version; /* version number of the tool */
+};
+
+/* Known values for the platform field above. */
+#define PLATFORM_MACOS 1
+#define PLATFORM_IOS 2
+#define PLATFORM_TVOS 3
+#define PLATFORM_WATCHOS 4
+#define PLATFORM_BRIDGEOS 5
+#define PLATFORM_MACCATALYST 6
+#define PLATFORM_IOSSIMULATOR 7
+#define PLATFORM_TVOSSIMULATOR 8
+#define PLATFORM_WATCHOSSIMULATOR 9
+#define PLATFORM_DRIVERKIT 10
+
+/* Known values for the tool field above. */
+#define TOOL_CLANG 1
+#define TOOL_SWIFT 2
+#define TOOL_LD 3
+
+/*
  * The dyld_info_command contains the file offsets and sizes of
  * the new compressed form of the information dyld needs to
  * load the image.  This information is used by dyld on Mac OS X
@@ -1711,6 +1853,7 @@ struct dyld_info_command {
 #define BIND_SPECIAL_DYLIB_SELF 0
 #define BIND_SPECIAL_DYLIB_MAIN_EXECUTABLE -1
 #define BIND_SPECIAL_DYLIB_FLAT_LOOKUP -2
+#define BIND_SPECIAL_DYLIB_WEAK_LOOKUP -3
 
 #define BIND_SYMBOL_FLAGS_WEAK_IMPORT 0x1
 #define BIND_SYMBOL_FLAGS_NON_WEAK_DEFINITION 0x8
@@ -1730,6 +1873,9 @@ struct dyld_info_command {
 #define BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB 0xA0
 #define BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED 0xB0
 #define BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB 0xC0
+#define BIND_OPCODE_THREADED 0xD0
+#define BIND_SUBOPCODE_THREADED_SET_BIND_ORDINAL_TABLE_SIZE_ULEB 0x00
+#define BIND_SUBOPCODE_THREADED_APPLY 0x01
 
 /*
  * The following are used on the flags byte of a terminal node
@@ -1741,6 +1887,17 @@ struct dyld_info_command {
 #define EXPORT_SYMBOL_FLAGS_WEAK_DEFINITION 0x04
 #define EXPORT_SYMBOL_FLAGS_REEXPORT 0x08
 #define EXPORT_SYMBOL_FLAGS_STUB_AND_RESOLVER 0x10
+
+/*
+ * The linker_option_command contains linker options embedded in object files.
+ */
+struct linker_option_command {
+  uint32_t cmd; /* LC_LINKER_OPTION only used in MH_OBJECT filetypes */
+  uint32_t cmdsize;
+  uint32_t count; /* number of strings */
+                  /* concatenation of zero terminated UTF8 strings.
+                     Zero filled at end to align */
+};
 
 /*
  * The symseg_command contains the offset and size of the GNU style
@@ -1830,6 +1987,18 @@ struct tlv_descriptor {
   void *(*thunk)(struct tlv_descriptor *);
   unsigned long key;
   unsigned long offset;
+};
+
+/*
+ * LC_NOTE commands describe a region of arbitrary data included in a Mach-O
+ * file.  Its initial use is to record extra data in MH_CORE files.
+ */
+struct note_command {
+  uint32_t cmd;        /* LC_NOTE */
+  uint32_t cmdsize;    /* sizeof(struct note_command) */
+  char data_owner[16]; /* owner name for this LC_NOTE */
+  uint64_t offset;     /* file offset of this data */
+  uint64_t size;       /* length of data region */
 };
 
 #endif

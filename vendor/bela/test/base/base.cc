@@ -185,7 +185,7 @@ int wmain(int argc, wchar_t **argv) {
   constexpr char32_t sh = 0x1F496; //  💖
   auto xx = 199.9654321f;
   bela::FPrintF(stderr, L"usage: %v [%4c] %.2f --------------- %j %k --------%W\n", p, sh, xx);
-
+  bela::FPrintF(stderr, L"%v\n", bela::StringCat(L"ls ", p, L" status"));
   if (argc >= 2) {
     FILE *fd = nullptr;
 

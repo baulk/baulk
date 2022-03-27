@@ -160,6 +160,14 @@ struct Dec {
         fill(spec >= bela::kSpacePad2 ? L' ' : L'0'), neg(v < 0) {}
 };
 
+// has_native support
+//  bela::error_code
+//  std::filesystem::path
+template <typename T>
+concept has_native = requires(const T &a) {
+  { a.native() } -> std::convertible_to<const std::wstring &>;
+};
+
 // -----------------------------------------------------------------------------
 // AlphaNum
 // -----------------------------------------------------------------------------
@@ -211,6 +219,11 @@ public:
   AlphaNum(char32_t ch) : piece_(digits_, bela::encode_into_unchecked(ch, digits_)) {
     static_assert(sizeof(digits_) / sizeof(wchar_t) > bela::kMaxEncodedUTF16Size, "difits_ buffer is too small");
   }
+
+  // Extended type support
+  // eg: std::filesystem::path
+  template <typename T>
+  requires has_native<T> AlphaNum(const T &t) : piece_(t.native()) {}
 
   AlphaNum(const AlphaNum &) = delete;
   AlphaNum &operator=(const AlphaNum &) = delete;

@@ -143,13 +143,11 @@ struct FormatArg {
   // Extended type support
   template <typename T>
   requires has_native<T> FormatArg(const T &t) : type(__types::__u16strings) {
-    u16_strings.data = t.native().data();
-    u16_strings.len = t.native().size();
+    u16_strings.store(t.native()); // store native (const std::wstring &)
   }
   template <typename T>
   requires has_string_view<T> FormatArg(const T &t) : type(__types::__u16strings) {
-    u16_strings.data = t.string_view().data();
-    u16_strings.len = t.string_view().size();
+    u16_strings.store(t.string_view()); // store native (const std::wstring &)
   }
 
   // Any pointer value that can be cast to a "void*".
@@ -226,6 +224,10 @@ struct FormatArg {
     struct {
       const wchar_t *data;
       size_t len;
+      void store(std::wstring_view sv) {
+        data = sv.data();
+        len = sv.size();
+      }
     } u16_strings;
     struct {
       const char32_t *data;
