@@ -30,7 +30,7 @@ public:
   }
   // fetch string array value
   template <typename T, typename Allocator = std::allocator<T>>
-  requires bela::wide_character<T>
+  requires bela::u16_character<T>
   bool fetch_strings_checked(std::string_view name,
                              std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
     if (auto it = obj.find(name); it != obj.end()) {
@@ -49,7 +49,7 @@ public:
   }
 
   template <typename T, typename Allocator = std::allocator<T>>
-  requires bela::narrow_character<T>
+  requires bela::u8_character<T>
   bool fetch_strings_checked(std::string_view name,
                              std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
     if (auto it = obj.find(name); it != obj.end()) {

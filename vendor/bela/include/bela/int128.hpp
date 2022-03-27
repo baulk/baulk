@@ -884,7 +884,7 @@ inline uint128 operator*(uint128 lhs, uint128 rhs) {
   // can be used for uint128 storage.
   return static_cast<unsigned __int128>(lhs) * static_cast<unsigned __int128>(rhs);
 #elif defined(_MSC_VER) && defined(_M_X64)
-  uint64_t carry;
+  uint64_t carry = 0;
   uint64_t low = _umul128(Uint128Low64(lhs), Uint128Low64(rhs), &carry);
   return MakeUint128(Uint128Low64(lhs) * Uint128High64(rhs) + Uint128High64(lhs) * Uint128Low64(rhs) + carry, low);
 #else  // BELA_HAVE_INTRINSIC128
@@ -1034,9 +1034,9 @@ constexpr int64_t BitCastToSigned(uint64_t v) {
 
 #if defined(BELA_HAVE_INTRINSIC_INT128)
 #include "__strings/int128_have_intrinsic.inc" // IWYU pragma: export
-#else                                         // BELA_HAVE_INTRINSIC_INT128
+#else                                          // BELA_HAVE_INTRINSIC_INT128
 #include "__strings/int128_no_intrinsic.inc"   // IWYU pragma: export
-#endif                                        // BELA_HAVE_INTRINSIC_INT128
+#endif                                         // BELA_HAVE_INTRINSIC_INT128
 
 } // namespace bela
 

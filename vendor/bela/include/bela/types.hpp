@@ -19,29 +19,37 @@ template <class T>
 constexpr bool is_character_v =
     is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, wchar_t, char8_t, char16_t, char32_t>;
 
-template <class T> constexpr bool is_wide_character_v = is_any_of_v<std::remove_cv_t<T>, wchar_t, char16_t>;
+template <class T> constexpr bool is_u16_character_v = is_any_of_v<std::remove_cv_t<T>, wchar_t, char16_t>;
+
+template <class T> constexpr bool is_u32_character_v = is_any_of_v<std::remove_cv_t<T>, char32_t>;
 
 template <class T>
-constexpr bool is_narrow_character_v = is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, char8_t>;
+constexpr bool is_u8_character_v = is_any_of_v<std::remove_cv_t<T>, char, signed char, unsigned char, char8_t>;
 
 template <class T>
-constexpr bool is_narrowly_signed_integral_v = is_any_of_v<std::remove_cv_t<T>, short, int, long, long long>;
+constexpr bool is_strict_signed_integral_v = is_any_of_v<std::remove_cv_t<T>, short, int, long, long long>;
 template <class T>
-constexpr bool is_narrowly_unsigned_integral_v =
+constexpr bool is_strict_unsigned_integral_v =
     is_any_of_v<std::remove_cv_t<T>, unsigned short, unsigned int, unsigned long, unsigned long long>;
 template <class T>
-concept narrowly_signed_integral = is_narrowly_signed_integral_v<T>;
+concept strict_signed_integral = is_strict_signed_integral_v<T>;
 template <class T>
-concept narrowly_unsigned_integral = is_narrowly_unsigned_integral_v<T>;
+concept strict_unsigned_integral = is_strict_unsigned_integral_v<T>;
 
 template <class T>
 concept character = is_character_v<T>;
 
 template <class T>
-concept wide_character = is_wide_character_v<T>;
+concept not_character = !is_character_v<T>;
 
 template <class T>
-concept narrow_character = is_narrow_character_v<T>;
+concept u32_character = is_u32_character_v<T>;
+
+template <class T>
+concept u16_character = is_u16_character_v<T>;
+
+template <class T>
+concept u8_character = is_u8_character_v<T>;
 
 template <class T>
 concept standard_layout = std::is_standard_layout_v<T>;

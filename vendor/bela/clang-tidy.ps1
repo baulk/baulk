@@ -50,6 +50,7 @@ $checks = $(
     "readability-*",
     "-readability-magic-numbers",
     "-readability-qualified-auto",
+    "-readability-function-cognitive-complexity",
     "modernize-*",
     "-modernize-use-trailing-return-type",
     "-modernize-avoid-c-arrays",

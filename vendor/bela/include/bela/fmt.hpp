@@ -16,15 +16,16 @@
 
 namespace bela {
 namespace format_internal {
-enum class ArgType {
-  BOOLEAN,
-  CHARACTER,
-  INTEGER, // short,int,
-  UINTEGER,
-  FLOAT,
-  STRING,
-  USTRING,
-  POINTER
+enum class __types {
+  __boolean,
+  __character,
+  __integral, // short,int,
+  __unsigned_integral,
+  __float,
+  __u8strings,
+  __u16strings,
+  __u32strings,
+  __pointer,
 };
 
 // has_native support
@@ -42,143 +43,129 @@ concept has_string_view = requires(const T &a) {
 
 struct FormatArg {
   // %b
-  FormatArg(bool b) : at(ArgType::BOOLEAN) {
+  FormatArg(bool b) : type(__types::__boolean) {
     character.c = b ? 1 : 0;
     character.width = sizeof(bool);
   }
   // character
   template <typename C>
-  requires bela::character<C> FormatArg(C c) : at(ArgType::CHARACTER) {
+  requires bela::character<C> FormatArg(C c) : type(__types::__character) {
     character.c = c;
     character.width = sizeof(C);
   }
   // signed integral
   template <typename I>
-  requires bela::narrowly_signed_integral<I> FormatArg(I i) : at(ArgType::INTEGER) {
+  requires bela::strict_signed_integral<I> FormatArg(I i) : type(__types::__integral) {
     integer.i = i;
     integer.width = sizeof(I);
   }
   // unsigned integral
   template <typename U>
-  requires bela::narrowly_unsigned_integral<U> FormatArg(U u) : at(ArgType::UINTEGER) {
+  requires bela::strict_unsigned_integral<U> FormatArg(U u) : type(__types::__unsigned_integral) {
     integer.i = static_cast<int64_t>(u);
     integer.width = sizeof(U);
   }
   // float double
   template <typename F>
-  requires std::floating_point<F> FormatArg(F f) : at(ArgType::FLOAT) {
+  requires std::floating_point<F> FormatArg(F f) : type(__types::__float) {
     floating.d = f;
     floating.width = sizeof(F);
   }
 
-  // UTF-16 support: wchar_t
-  // A C-style text string. and wstring_view
-  FormatArg(const wchar_t *str) : at(ArgType::STRING) {
-    strings.data = (str == nullptr) ? L"(NULL)" : str;
-    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(str);
+  // UTF-8
+  template <typename C>
+  requires bela::u8_character<C> FormatArg(const C *str) : type(__types::__u8strings) {
+    u8_strings.data = (str == nullptr) ? u8"(NULL)" : reinterpret_cast<const char8_t *>(str);
+    u8_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<C>::length(str);
   }
-  FormatArg(wchar_t *str) : at(ArgType::STRING) {
-    strings.data = (str == nullptr) ? L"(NULL)" : str;
-    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(str);
+  template <typename C>
+  requires bela::u8_character<C> FormatArg(C *str) : type(__types::__u8strings) {
+    u8_strings.data = (str == nullptr) ? u8"(NULL)" : reinterpret_cast<const char8_t *>(str);
+    u8_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<C>::length(str);
   }
-  template <typename Allocator>
-  FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<wchar_t, std::char_traits<wchar_t>, Allocator> &str)
-      : at(ArgType::STRING) {
-    strings.data = str.data();
-    strings.len = str.size();
+  // NOLINT(runtime/explicit)
+  template <typename C, typename Allocator>
+  requires bela::u8_character<C> FormatArg(const std::basic_string<C, std::char_traits<C>, Allocator> &str)
+      : type(__types::__u8strings) {
+    u8_strings.data = reinterpret_cast<const char8_t *>(str.data());
+    u8_strings.len = str.size();
   }
-  FormatArg(std::wstring_view sv) : at(ArgType::STRING) {
-    strings.data = sv.data();
-    strings.len = sv.size();
-  }
-
-  // UTF-16 support: char16_t.
-  FormatArg(const char16_t *str) : at(ArgType::STRING) {
-    strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
-    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
-  }
-  FormatArg(char16_t *str) : at(ArgType::STRING) {
-    strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
-    strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : wcslen(strings.data);
-  }
-  template <typename Allocator>
-  FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<char16_t, std::char_traits<char16_t>, Allocator> &str)
-      : at(ArgType::STRING) {
-    strings.data = reinterpret_cast<const wchar_t *>(str.data());
-    strings.len = str.size();
-  }
-  FormatArg(std::u16string_view sv) : at(ArgType::STRING) {
-    strings.data = reinterpret_cast<const wchar_t *>(sv.data());
-    strings.len = sv.size();
+  template <typename C>
+  requires bela::u8_character<C> FormatArg(std::basic_string_view<C> sv) : type(__types::__u8strings) {
+    u8_strings.data = reinterpret_cast<const char8_t *>(sv.data());
+    u8_strings.len = sv.size();
   }
 
-  // UTF-8 support
-  // A C-style text string. and string_view
-  FormatArg(const char *str) : at(ArgType::USTRING) {
-    ustring.data = (str == nullptr) ? "(NULL)" : str;
-    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(str);
+  // UTF-16
+  template <typename C>
+  requires bela::u16_character<C> FormatArg(const C *str) : type(__types::__u16strings) {
+    u16_strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
+    u16_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<C>::length(str);
   }
-  FormatArg(char *str) : at(ArgType::USTRING) {
-    ustring.data = (str == nullptr) ? "(NULL)" : str;
-    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(str);
+  template <typename C>
+  requires bela::u16_character<C> FormatArg(C *str) : type(__types::__u16strings) {
+    u16_strings.data = (str == nullptr) ? L"(NULL)" : reinterpret_cast<const wchar_t *>(str);
+    u16_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<C>::length(str);
   }
-  template <typename Allocator>
-  FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<char, std::char_traits<char>, Allocator> &str)
-      : at(ArgType::USTRING) {
-    ustring.data = str.data();
-    ustring.len = str.size();
+  // NOLINT(runtime/explicit)
+  template <typename C, typename Allocator>
+  requires bela::u16_character<C> FormatArg(const std::basic_string<C, std::char_traits<C>, Allocator> &str)
+      : type(__types::__u16strings) {
+    u16_strings.data = reinterpret_cast<const wchar_t *>(str.data());
+    u16_strings.len = str.size();
   }
-  FormatArg(std::string_view sv) : at(ArgType::USTRING) {
-    ustring.data = sv.data();
-    ustring.len = sv.size();
+  template <typename C>
+  requires bela::u16_character<C> FormatArg(std::basic_string_view<C> sv) : type(__types::__u16strings) {
+    u16_strings.data = reinterpret_cast<const wchar_t *>(sv.data());
+    u16_strings.len = sv.size();
   }
 
-  // char8_t support
-  FormatArg(const char8_t *str) : at(ArgType::USTRING) {
-    ustring.data = (str == nullptr) ? "(NULL)" : reinterpret_cast<const char *>(str);
-    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(reinterpret_cast<const char *>(str));
+  // UTF-32
+  FormatArg(const char32_t *str) : type(__types::__u32strings) {
+    u32_strings.data = (str == nullptr) ? U"(NULL)" : str;
+    u32_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<char32_t>::length(str);
   }
-  FormatArg(char8_t *str) : at(ArgType::USTRING) {
-    ustring.data = (str == nullptr) ? "(NULL)" : reinterpret_cast<char *>(str);
-    ustring.len = (str == nullptr) ? sizeof("(NULL)") - 1 : strlen(reinterpret_cast<const char *>(str));
+  FormatArg(char32_t *str) : type(__types::__u32strings) {
+    u32_strings.data = (str == nullptr) ? U"(NULL)" : str;
+    u32_strings.len = (str == nullptr) ? sizeof("(NULL)") - 1 : std::char_traits<char32_t>::length(str);
   }
   template <typename Allocator>
-  FormatArg( // NOLINT(runtime/explicit)
-      const std::basic_string<char8_t, std::char_traits<char8_t>, Allocator> &str)
-      : at(ArgType::USTRING) {
-    ustring.data = reinterpret_cast<const char *>(str.data());
-    ustring.len = str.size();
+  FormatArg(const std::basic_string<char32_t, std::char_traits<char32_t>, Allocator> &str)
+      : type(__types::__u32strings) {
+    u32_strings.data = str.data();
+    u32_strings.len = str.size();
   }
-  FormatArg(std::u8string_view sv) : at(ArgType::USTRING) {
-    ustring.data = reinterpret_cast<const char *>(sv.data());
-    ustring.len = sv.size();
+  FormatArg(std::u32string_view sv) : type(__types::__u32strings) {
+    u32_strings.data = sv.data();
+    u32_strings.len = sv.size();
   }
-  
+
   // Extended type support
-
   template <typename T>
-  requires has_native<T> FormatArg(const T &t) : at(ArgType::STRING) {
-    strings.data = t.native().data();
-    strings.len = t.native().size();
+  requires has_native<T> FormatArg(const T &t) : type(__types::__u16strings) {
+    u16_strings.data = t.native().data();
+    u16_strings.len = t.native().size();
   }
   template <typename T>
-  requires has_string_view<T> FormatArg(const T &t) : at(ArgType::STRING) {
-    strings.data = t.string_view().data();
-    strings.len = t.string_view().size();
+  requires has_string_view<T> FormatArg(const T &t) : type(__types::__u16strings) {
+    u16_strings.data = t.string_view().data();
+    u16_strings.len = t.string_view().size();
   }
 
   // Any pointer value that can be cast to a "void*".
-  template <class T> FormatArg(T *p) : ptr((void *)p), at(ArgType::POINTER) {}
+  template <class T>
+  requires bela::not_character<T> FormatArg(T *p) : value(reinterpret_cast<intptr_t>(p)), type(__types::__pointer) {}
 
+  // -------------------------------
+  std::u8string_view u8string_view_cast() const { return {u8_strings.data, u8_strings.len}; }
+  std::wstring_view u16string_view_cast() const { return {u16_strings.data, u16_strings.len}; }
+  std::u32string_view u32string_view_cast() const { return {u32_strings.data, u32_strings.len}; }
   /// Convert To integer
-  uint64_t ToInteger(bool *sign = nullptr) const noexcept {
-    switch (at) {
-    case ArgType::POINTER:
-      return reinterpret_cast<uintptr_t>(ptr);
-    case ArgType::FLOAT: {
+  uint64_t uint64_cast(bool *sign = nullptr) const noexcept {
+    switch (type) {
+    case __types::__pointer:
+      return value;
+    case __types::__float: {
       union {
         double d;
         uint64_t i;
@@ -186,7 +173,7 @@ struct FormatArg {
       x.d = floating.d;
       return x.i;
     }
-    case ArgType::CHARACTER: {
+    case __types::__character: {
       return static_cast<uint32_t>(character.c);
     }
     default:
@@ -194,7 +181,7 @@ struct FormatArg {
     }
     int64_t i = integer.i;
     if (sign != nullptr) {
-      if (at == ArgType::UINTEGER || !(*sign = i < 0)) {
+      if (type == __types::__unsigned_integral || !(*sign = i < 0)) {
         return static_cast<uint64_t>(i);
       }
       if (integer.width == 1) {
@@ -216,7 +203,9 @@ struct FormatArg {
     }
     return static_cast<uint64_t>(i);
   }
-
+  bool is_integral_superset() const {
+    return type != __types::__u8strings && type != __types::__u16strings && type != __types::__u32strings;
+  }
   union {
     struct {
       int64_t i;
@@ -231,16 +220,20 @@ struct FormatArg {
       size_t width;
     } floating;
     struct {
+      const char8_t *data;
+      size_t len;
+    } u8_strings;
+    struct {
       const wchar_t *data;
       size_t len;
-    } strings;
+    } u16_strings;
     struct {
-      const char *data;
+      const char32_t *data;
       size_t len;
-    } ustring;
-    const void *ptr;
+    } u32_strings;
+    const uintptr_t value;
   };
-  const ArgType at;
+  const __types type;
 };
 
 // Format function

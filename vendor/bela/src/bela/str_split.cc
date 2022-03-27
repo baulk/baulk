@@ -53,14 +53,14 @@ std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimite
     // Special case for empty std::string delimiters: always return a
     // zero-length std::wstring_view referring to the item at position 1 past
     // pos.
-    return std::wstring_view(text.data() + pos + 1, 0);
+    return std::wstring_view{text.data() + pos + 1, 0};
   }
   size_t found_pos = std::wstring_view::npos;
   std::wstring_view found(text.data() + text.size(),
                           0); // By default, not found
   found_pos = find_policy.Find(text, delimiter, pos);
   if (found_pos != std::wstring_view::npos) {
-    found = std::wstring_view(text.data() + found_pos, find_policy.Length(delimiter));
+    found = std::wstring_view{text.data() + found_pos, find_policy.Length(delimiter)};
   }
   return found;
 }
@@ -68,7 +68,9 @@ std::wstring_view GenericFind(std::wstring_view text, std::wstring_view delimite
 // Finds using std::wstring_view::find(), therefore the length of the found
 // delimiter is delimiter.length().
 struct LiteralPolicy {
-  static size_t Find(std::wstring_view text, std::wstring_view delimiter, size_t pos) { return text.find(delimiter, pos); }
+  static size_t Find(std::wstring_view text, std::wstring_view delimiter, size_t pos) {
+    return text.find(delimiter, pos);
+  }
   static size_t Length(std::wstring_view delimiter) { return delimiter.length(); }
 };
 
@@ -88,8 +90,8 @@ std::wstring_view ByString::Find(std::wstring_view text, size_t pos) const {
     // std::wstring_view.
     size_t found_pos = text.find(delimiter_[0], pos);
     if (found_pos == std::wstring_view::npos) {
-      return std::wstring_view(text.data() + text.size(), 0);
-}
+      return std::wstring_view{text.data() + text.size(), 0};
+    }
     return text.substr(found_pos, 1);
   }
   return GenericFind(text, delimiter_, pos, LiteralPolicy());
@@ -102,8 +104,8 @@ std::wstring_view ByString::Find(std::wstring_view text, size_t pos) const {
 std::wstring_view ByChar::Find(std::wstring_view text, size_t pos) const {
   size_t found_pos = text.find(c_, pos);
   if (found_pos == std::wstring_view::npos) {
-    return std::wstring_view(text.data() + text.size(), 0);
-}
+    return std::wstring_view{text.data() + text.size(), 0};
+  }
   return text.substr(found_pos, 1);
 }
 
@@ -130,10 +132,10 @@ std::wstring_view ByLength::Find(std::wstring_view text, size_t pos) const {
   // If the std::string is shorter than the chunk size we say we
   // "can't find the delimiter" so this will be the last chunk.
   if (substr.length() <= static_cast<size_t>(length_)) {
-    return std::wstring_view(text.data() + text.size(), 0);
-}
+    return std::wstring_view{text.data() + text.size(), 0};
+  }
 
-  return std::wstring_view(substr.data() + length_, 0);
+  return std::wstring_view{substr.data() + length_, 0};
 }
 
 } // namespace bela
