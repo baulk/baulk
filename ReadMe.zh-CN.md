@@ -31,7 +31,7 @@ baulk brand:
 
 unscrew:
 
-![](./docs/images/unsrew.png)
+![](./docs/images/unscrew.png)
 
 ## 开始使用 
 
