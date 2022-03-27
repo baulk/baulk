@@ -24,11 +24,17 @@ We plan to release baulk 4.0 version on April 1, 2022. This version adds a vfs m
 - baulk breakpoint download support
 - Integrate a better memory allocator, such as mimalloc
 - baulk brand command (such as neofetch)
+- `uncrew` Simple, the interface is based on the tar/zip one-click extraction tool of `IProgressDialog`
+- Windows 11 context menu support (Not published to the Microsoft Store, the experience needs to be self-signed)
 
+baulk brand:
 
-The following functions were not completed because I didn't have enough time:
+![](./docs/images/brand.png)
 
-- Windows 11 context menu support
+unscrew:
+
+![](./docs/images/unsrew.png)
+
 
 ## Get Started
 

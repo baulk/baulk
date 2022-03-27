@@ -11,6 +11,28 @@
 
 Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环境变量，易于使用，能够和 Windows Terminal 集成，能够添加到右键菜单... 无论是 zip/7z/msi 都能管理。
 
+## Baulk 4.0
+
+We plan to release baulk 4.0 version on April 1, 2022. This version adds a vfs mechanism to avoid mixing program data and installed packages when installing packages. It also adds the following features: 
+
+- Better **VFS** design
+- More C++20/23 experience
+- Better file extraction experience, add `baulk extract` command.
+- Limited compatibility with scoop manifest (Compatibility mode operation, with certain limitations) 
+- baulk breakpoint download support
+- Integrate a better memory allocator, such as mimalloc
+- baulk brand command (such as neofetch)
+- `uncrew` Simple, the interface is based on the tar/zip one-click extraction tool of `IProgressDialog`
+- Windows 11 context menu support (Not published to the Microsoft Store, the experience needs to be self-signed)
+
+baulk brand:
+
+![](./docs/images/brand.png)
+
+unscrew:
+
+![](./docs/images/unsrew.png)
+
 ## 开始使用 
 
 下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 你可以选择下载对应 Windows 平台的安装程序，Baulk 提供的安装程序无需管理员权限即可运行，你可以将其安装到任意非管理员权限目录，你可以勾选创建桌面快捷方式：

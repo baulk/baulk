@@ -14,8 +14,9 @@ public:
   virtual bool Extract(IProgressDialog *bar, bela::error_code &ec) = 0;
 };
 
-std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file, const std::filesystem::path &dest,
-                                         const ExtractorOptions &opts, bela::error_code &ec);
+std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file,
+                                         const std::filesystem::path &destination, const ExtractorOptions &opts,
+                                         bela::error_code &ec);
 
 } // namespace baulk
 

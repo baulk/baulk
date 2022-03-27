@@ -11,16 +11,18 @@ using baulk::archive::file_format_t;
 
 class ZipExtractor final : public Extractor {
 public:
-  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_, const ExtractorOptions &opts)
-      : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_) {}
+  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
+               const std::filesystem::path &destination_, const ExtractorOptions &opts)
+      : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_), destination(destination_) {}
   bool Extract(IProgressDialog *bar, bela::error_code &ec);
-  bool Initialize(const std::filesystem::path &dest, int64_t size, int64_t offset, bela::error_code &ec) {
-    return extractor.OpenReader(fd, dest, size, offset, ec);
+  bool Initialize(int64_t size, int64_t offset, bela::error_code &ec) {
+    return extractor.OpenReader(fd, destination, size, offset, ec);
   }
 
 private:
   bela::io::FD fd;
   std::filesystem::path archive_file;
+  std::filesystem::path destination;
   baulk::archive::zip::Extractor extractor;
 };
 
@@ -30,6 +32,7 @@ bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     return false;
   }
+  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
   auto uncompressed_size = extractor.UncompressedSize();
   int64_t completed_bytes = 0;
   return extractor.Extract(
@@ -49,9 +52,11 @@ bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
 // tar or gz and other archive
 class UniversalExtractor final : public Extractor {
 public:
-  UniversalExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_, const std::filesystem::path &dest_,
-                     const ExtractorOptions &opts_, int64_t offset_, file_format_t afmt_)
-      : fd(std::move(fd_)), archive_file(archive_file_), dest(dest_), opts(opts_), offset(offset_), afmt(afmt_) {}
+  UniversalExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
+                     const std::filesystem::path &destination_, const ExtractorOptions &opts_, int64_t offset_,
+                     file_format_t afmt_)
+      : fd(std::move(fd_)), archive_file(archive_file_), destination(destination_), opts(opts_), offset(offset_),
+        afmt(afmt_) {}
   bool Extract(IProgressDialog *bar, bela::error_code &ec);
 
 private:
@@ -61,7 +66,7 @@ private:
                    baulk::archive::tar::ExtractReader *reader, bela::error_code &ec);
   bela::io::FD fd;
   std::filesystem::path archive_file;
-  std::filesystem::path dest;
+  std::filesystem::path destination;
   ExtractorOptions opts;
   int64_t offset{0};
   file_format_t afmt{file_format_t::none};
@@ -74,7 +79,7 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::
     return false;
   }
   baulk::archive::tar::Extractor extractor(reader, opts);
-  if (!extractor.InitializeExtractor(dest, ec)) {
+  if (!extractor.InitializeExtractor(destination, ec)) {
     return false;
   }
   bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename()).data());
@@ -82,6 +87,7 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::
     auto ec = bela::make_system_error_code(L"StartProgressDialog ");
     return false;
   }
+  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
   return extractor.Extract(
       [&](const baulk::archive::tar::Header &hdr, const std::wstring &relative_name) -> bool {
         bar->SetLine(2, relative_name.data(), TRUE, nullptr);
@@ -114,13 +120,14 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
   }
   auto filename = archive_file.filename();
   filename.replace_extension();
-  auto target = dest / filename;
+  auto target = destination / filename;
   auto fd = baulk::archive::File::NewFile(target, bela::Now(), opts.overwrite_mode, ec);
   if (!fd) {
     return false;
   }
   bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename()).data());
-  bar->SetLine(2, filename.c_str(), FALSE, nullptr);
+  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
+  bar->SetLine(2, filename.c_str(), TRUE, nullptr);
   uint8_t buffer[8192];
   for (;;) {
     auto nBytes = wr->Read(buffer, sizeof(buffer), ec);
@@ -145,8 +152,9 @@ bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   return single_file_extract(bar, ec);
 }
 
-std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file, const std::filesystem::path &dest,
-                                         const ExtractorOptions &opts, bela::error_code &ec) {
+std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file,
+                                         const std::filesystem::path &destination, const ExtractorOptions &opts,
+                                         bela::error_code &ec) {
   int64_t baseOffset = 0;
   file_format_t afmt{file_format_t::none};
   auto fd = baulk::archive::OpenFile(archive_file.native(), baseOffset, afmt, ec);
@@ -158,8 +166,8 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
     ec = bela::make_error_code(bela::ErrGeneral, L"unable to detect format '", archive_file.filename(), L"'");
     return nullptr;
   case file_format_t::zip: {
-    auto e = std::make_shared<ZipExtractor>(std::move(*fd), archive_file, opts);
-    if (!e->Initialize(dest, bela::SizeUnInitialized, baseOffset, ec)) {
+    auto e = std::make_shared<ZipExtractor>(std::move(*fd), archive_file, destination, opts);
+    if (!e->Initialize(bela::SizeUnInitialized, baseOffset, ec)) {
       return nullptr;
     }
     return e;
@@ -173,7 +181,7 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
   case file_format_t::bz2:
     [[fallthrough]];
   case file_format_t::tar:
-    return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, dest, opts, baseOffset, afmt);
+    return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
   default:
     break;
   }
