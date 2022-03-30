@@ -95,6 +95,10 @@ Source: "..\script\Fragments.bat"; DestDir: "{app}\script"; DestName: "Fragments
 Source: "..\script\FragmentsARM64.ps1"; DestDir: "{app}\script"; DestName: "FragmentsARM64.ps1"
 Source: "..\script\FragmentsARM64.bat"; DestDir: "{app}\script"; DestName: "FragmentsARM64.bat"
 Source: "..\script\FragmentsDel.bat"; DestDir: "{app}\script"; DestName: "FragmentsDel.bat"
+Source: "..\script\RegisterUnscrew.ps1"; DestDir: "{app}\script"; DestName: "RegisterUnscrew.ps1"
+Source: "..\script\RegisterUnscrew.bat"; DestDir: "{app}\script"; DestName: "RegisterUnscrew.bat"
+Source: "..\script\UnRegisterUnscrew.ps1"; DestDir: "{app}\script"; DestName: "UnRegisterUnscrew.ps1"
+Source: "..\script\UnRegisterUnscrew.bat"; DestDir: "{app}\script"; DestName: "UnRegisterUnscrew.bat"
 #if "user" == InstallTarget
 Source: "..\manifest\user-install.env"; DestDir: "{app}"; DestName: "baulk.env"
 #else
