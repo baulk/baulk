@@ -3,12 +3,58 @@
 #include <bela/parseargv.hpp>
 #include <baulk/fs.hpp>
 #include <shellapi.h>
+#include <ShlObj_core.h>
 #include <CommCtrl.h>
 #include <Objbase.h>
 #include <version.hpp>
 
 namespace baulk {
 constexpr auto AppTitle = L"Unscrew - Baulk modern extractor";
+
+class UnscrewProgressBar : public ProgressBar {
+public:
+  UnscrewProgressBar() = default;
+  UnscrewProgressBar(const UnscrewProgressBar &) = delete;
+  UnscrewProgressBar &operator=(const UnscrewProgressBar &) = delete;
+  ~UnscrewProgressBar() {
+    if (bar && initialized) {
+      bar->StopProgressDialog();
+    }
+  }
+  bool NewProgresBar(bela::error_code &ec) {
+    if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
+        S_OK) {
+      ec = bela::make_system_error_code(L"CoCreateInstance ");
+      return false;
+    }
+    return true;
+  }
+  bool Title(const std::wstring &title) {
+    if (bar->SetTitle(title.data()) != S_OK) {
+      return false;
+    }
+    if (!initialized) {
+      if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
+        return false;
+      }
+      initialized = true;
+    }
+    return true;
+  }
+  bool Update(ULONGLONG ullCompleted, ULONGLONG ullTotal) {
+    // update
+    return bar->SetProgress64(ullCompleted, ullTotal) == S_OK;
+  }
+  bool UpdateLine(DWORD dwLineNum, const std::wstring &text, BOOL fCompactPath) {
+    //
+    return bar->SetLine(dwLineNum, text.data(), fCompactPath, nullptr) == S_OK;
+  }
+  bool Cancelled() { return false; }
+
+private:
+  bela::comptr<IProgressDialog> bar;
+  bool initialized{false};
+};
 
 inline std::wstring_view strip_extension(const std::filesystem::path &filename) {
   return baulk::archive::PathStripExtension(filename.native());
@@ -45,6 +91,7 @@ bool Executor::Execute(bela::error_code &ec) {
       // archives
       {L"Zip Archive (*.zip)", L"*.zip"}, // zip archives
       {L"Self-extracting Archive (*.exe;*.com;*.dll)", L"*.exe;*.com;*.dll"},
+      {L"7-Zip Archive (*.7z)", L"*.7z"},
       {L"MSIX Package (*.appx;*.msix;*.msixbundle)", L"*.appx;*.msix;*.msixbundle"}, // msix archives
       {L"OpenXML Archive (*.pptx;*.docx;*.xlsx)", L"*.pptx;*.docx;*.xlsx"},          // office archives
       {L"NuGet Package (*.nupkg)", L"*.nupkg"},                                      // nuget
@@ -60,15 +107,11 @@ bool Executor::Execute(bela::error_code &ec) {
     }
     archive_files.emplace_back(*file);
   }
-
-  bela::comptr<IProgressDialog> bar;
-  if (CoCreateInstance(CLSID_ProgressDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void **)&bar) !=
-      S_OK) {
-    ec = bela::make_system_error_code(L"CoCreateInstance ");
+  UnscrewProgressBar bar;
+  if (!bar.NewProgresBar(ec)) {
     return false;
   }
   std::filesystem::path strict_folder;
-  auto closer = bela::finally([&] { bar->StopProgressDialog(); });
   if (archive_files.size() == 1) {
     if (destination.empty()) {
       const auto &archive_file = archive_files[0];
@@ -83,7 +126,7 @@ bool Executor::Execute(bela::error_code &ec) {
     if (!e) {
       return false;
     }
-    if (!e->Extract(bar.get(), ec)) {
+    if (!e->Extract(&bar, ec)) {
       return false;
     }
     return make_flat(destination);
@@ -98,7 +141,7 @@ bool Executor::Execute(bela::error_code &ec) {
     if (!e) {
       return false;
     }
-    if (!e->Extract(bar.get(), ec)) {
+    if (!e->Extract(&bar, ec)) {
       return false;
     }
     make_flat(*destination_);

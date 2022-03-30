@@ -1,8 +1,12 @@
 ///
 #include "extractor.hpp"
 #include <bela/comutils.hpp>
+#include <bela/strip.hpp>
+#include <bela/process.hpp>
+#include <bela/simulator.hpp>
 #include <ShObjIdl.h>
 #include <ShlObj_core.h>
+#include <baulk/vfs.hpp>
 #include <baulk/archive.hpp>
 #include <baulk/archive/extractor.hpp>
 
@@ -14,7 +18,7 @@ public:
   ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
                const std::filesystem::path &destination_, const ExtractorOptions &opts)
       : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_), destination(destination_) {}
-  bool Extract(IProgressDialog *bar, bela::error_code &ec);
+  bool Extract(ProgressBar *bar, bela::error_code &ec);
   bool Initialize(int64_t size, int64_t offset, bela::error_code &ec) {
     return extractor.OpenReader(fd, destination, size, offset, ec);
   }
@@ -26,25 +30,21 @@ private:
   baulk::archive::zip::Extractor extractor;
 };
 
-bool ZipExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
-  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename()).data());
-  if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
-    auto ec = bela::make_system_error_code(L"StartProgressDialog ");
-    return false;
-  }
-  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
+bool ZipExtractor::Extract(ProgressBar *bar, bela::error_code &ec) {
+  bar->Title(bela::StringCat(L"Extracting ", archive_file.filename()));
+  bar->UpdateLine(1, destination.native(), TRUE);
   auto uncompressed_size = extractor.UncompressedSize();
   int64_t completed_bytes = 0;
   return extractor.Extract(
       [&](const baulk::archive::zip::File &file, const std::wstring &relative_name) -> bool {
         //
-        bar->SetLine(2, relative_name.data(), TRUE, nullptr);
-        return bar->HasUserCancelled() != TRUE;
+        bar->UpdateLine(2, relative_name, TRUE);
+        return !bar->Cancelled();
       },
       [&](size_t bytes) -> bool {
         completed_bytes += bytes;
-        bar->SetProgress64(completed_bytes, uncompressed_size);
-        return bar->HasUserCancelled() != TRUE;
+        bar->Update(completed_bytes, uncompressed_size);
+        return !bar->Cancelled();
       },
       ec);
 }
@@ -57,13 +57,13 @@ public:
                      file_format_t afmt_)
       : fd(std::move(fd_)), archive_file(archive_file_), destination(destination_), opts(opts_), offset(offset_),
         afmt(afmt_) {}
-  bool Extract(IProgressDialog *bar, bela::error_code &ec);
+  bool Extract(ProgressBar *bar, bela::error_code &ec);
 
 private:
-  bool single_file_extract(IProgressDialog *bar, bela::error_code &ec);
-  bool tar_extract(IProgressDialog *bar, bela::error_code &ec);
-  bool tar_extract(IProgressDialog *bar, baulk::archive::tar::FileReader &fr,
-                   baulk::archive::tar::ExtractReader *reader, bela::error_code &ec);
+  bool single_file_extract(ProgressBar *bar, bela::error_code &ec);
+  bool tar_extract(ProgressBar *bar, bela::error_code &ec);
+  bool tar_extract(ProgressBar *bar, baulk::archive::tar::FileReader &fr, baulk::archive::tar::ExtractReader *reader,
+                   bela::error_code &ec);
   bela::io::FD fd;
   std::filesystem::path archive_file;
   std::filesystem::path destination;
@@ -72,7 +72,7 @@ private:
   file_format_t afmt{file_format_t::none};
 };
 
-bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::FileReader &fr,
+bool UniversalExtractor::tar_extract(ProgressBar *bar, baulk::archive::tar::FileReader &fr,
                                      baulk::archive::tar::ExtractReader *reader, bela::error_code &ec) {
   auto size = fd.Size(ec);
   if (size == bela::SizeUnInitialized) {
@@ -82,22 +82,18 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, baulk::archive::tar::
   if (!extractor.InitializeExtractor(destination, ec)) {
     return false;
   }
-  bar->SetTitle(bela::StringCat(L"Extract ", archive_file.filename()).data());
-  if (bar->StartProgressDialog(nullptr, nullptr, PROGDLG_AUTOTIME, nullptr) != S_OK) {
-    auto ec = bela::make_system_error_code(L"StartProgressDialog ");
-    return false;
-  }
-  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
+  bar->Title(bela::StringCat(L"Extract ", archive_file.filename()));
+  bar->UpdateLine(1, destination.native(), TRUE);
   return extractor.Extract(
       [&](const baulk::archive::tar::Header &hdr, const std::wstring &relative_name) -> bool {
-        bar->SetLine(2, relative_name.data(), TRUE, nullptr);
-        bar->SetProgress64(fr.Position(), size);
-        return bar->HasUserCancelled() != TRUE;
+        bar->UpdateLine(2, relative_name, TRUE);
+        bar->Update(fr.Position(), size);
+        return !bar->Cancelled();
       },
       nullptr, ec);
 }
 
-bool UniversalExtractor::tar_extract(IProgressDialog *bar, bela::error_code &ec) {
+bool UniversalExtractor::tar_extract(ProgressBar *bar, bela::error_code &ec) {
   baulk::archive::tar::FileReader fr(fd.NativeFD());
   if (auto wr = baulk::archive::tar::MakeReader(fr, offset, afmt, ec); wr) {
     return tar_extract(bar, fr, wr.get(), ec);
@@ -108,7 +104,7 @@ bool UniversalExtractor::tar_extract(IProgressDialog *bar, bela::error_code &ec)
   return tar_extract(bar, fr, &fr, ec);
 }
 
-bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_code &ec) {
+bool UniversalExtractor::single_file_extract(ProgressBar *bar, bela::error_code &ec) {
   auto size = fd.Size(ec);
   if (size == bela::SizeUnInitialized) {
     return false;
@@ -125,16 +121,16 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
   if (!fd) {
     return false;
   }
-  bar->SetTitle(bela::StringCat(L"Extracting ", archive_file.filename()).data());
-  bar->SetLine(1, destination.c_str(), TRUE, nullptr);
-  bar->SetLine(2, filename.c_str(), TRUE, nullptr);
+  bar->Title(bela::StringCat(L"Extracting ", archive_file.filename()));
+  bar->UpdateLine(1, destination.native(), TRUE);
+  bar->UpdateLine(2, filename.native(), TRUE);
   uint8_t buffer[8192];
   for (;;) {
     auto nBytes = wr->Read(buffer, sizeof(buffer), ec);
     if (nBytes <= 0) {
       break;
     }
-    bar->SetProgress64(fr.Position(), size);
+    bar->Update(fr.Position(), size);
     if (!fd->WriteFull(buffer, static_cast<size_t>(nBytes), ec)) {
       return false;
     }
@@ -142,7 +138,7 @@ bool UniversalExtractor::single_file_extract(IProgressDialog *bar, bela::error_c
   return true;
 }
 
-bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
+bool UniversalExtractor::Extract(ProgressBar *bar, bela::error_code &ec) {
   if (tar_extract(bar, ec)) {
     return true;
   }
@@ -151,6 +147,82 @@ bool UniversalExtractor::Extract(IProgressDialog *bar, bela::error_code &ec) {
   }
   return single_file_extract(bar, ec);
 }
+
+inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
+  HKEY hkey = nullptr;
+  if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\7-Zip-Zstandard)", &hkey) != ERROR_SUCCESS) {
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\7-Zip)", &hkey) != ERROR_SUCCESS) {
+      ec = bela::make_system_error_code();
+      return std::nullopt;
+    }
+  }
+  auto closer = bela::finally([&] { RegCloseKey(hkey); });
+  wchar_t buffer[4096];
+  DWORD type = 0;
+  DWORD bufsize = sizeof(buffer);
+  if (RegQueryValueExW(hkey, L"Path64", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ERROR_SUCCESS &&
+      type == REG_SZ) {
+    if (auto s7z = bela::StringCat(bela::StripSuffix(buffer, L"\\"), L"\\7zG.exe"); bela::PathExists(s7z)) {
+      return std::make_optional(std::move(s7z));
+    }
+  }
+  if (RegQueryValueExW(hkey, L"Path", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ERROR_SUCCESS) {
+    ec = bela::make_system_error_code();
+    return std::nullopt;
+  }
+  if (type != REG_SZ) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"reg key Path not REG_SZ: ", type);
+    return std::nullopt;
+  }
+  if (auto s7z = bela::StringCat(bela::StripSuffix(buffer, L"\\"), L"\\7zG.exe"); bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
+  ec = bela::make_error_code(ERROR_NOT_FOUND, L"7zG.exe not found");
+  return std::nullopt;
+}
+
+inline std::optional<std::wstring> lookup_sevenzip() {
+  bela::error_code ec;
+  baulk::vfs::InitializeFastPathFs(ec);
+  if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\baulk7zG.exe"); bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
+  if (auto ps7z = find7zInstallPath(ec); ps7z) {
+    return std::make_optional(std::move(*ps7z));
+  }
+  if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\7zG.exe"); !bela::PathExists(s7z)) {
+    return std::make_optional(std::move(s7z));
+  }
+  std::wstring s7z;
+  if (bela::env::LookPath(L"7z.exe", s7z, true)) {
+    return std::make_optional(std::move(s7z));
+  }
+  return std::nullopt;
+}
+
+class _7zExtractor final : public Extractor {
+public:
+  _7zExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_)
+      : archive_file(archive_file_), destination(destination_) {}
+  bool Extract(ProgressBar *bar, bela::error_code &ec) {
+    auto _7z = lookup_sevenzip();
+    if (!_7z) {
+      ec = bela::make_error_code(ERROR_NOT_FOUND, L"7zG.exe not found");
+      return false;
+    }
+    bela::process::Process process;
+    if (process.Execute(*_7z, L"e", L"-spf", L"-y", archive_file.native(),
+                        bela::StringCat(L"-o", destination.native())) != 0) {
+      ec = process.ErrorCode();
+      return false;
+    }
+    return true;
+  }
+
+private:
+  std::filesystem::path archive_file;
+  std::filesystem::path destination;
+};
 
 std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file,
                                          const std::filesystem::path &destination, const ExtractorOptions &opts,
@@ -182,6 +254,8 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
     [[fallthrough]];
   case file_format_t::tar:
     return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
+  case file_format_t::_7z:
+    return std::make_shared<_7zExtractor>(archive_file, destination);
   default:
     break;
   }
