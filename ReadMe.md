@@ -23,8 +23,10 @@ Baulk 4.0 adds a vfs mechanism to avoid mixing program data and installed packag
 - baulk breakpoint download support
 - Integrate a better memory allocator, such as mimalloc
 - baulk brand command (such as neofetch)
-- `uncrew` Simple, the interface is based on the tar/zip one-click extraction tool of `IProgressDialog`
-- Windows 11 context menu support (Not published to the Microsoft Store, the experience needs to be self-signed)
+- Add a simple GUI extract command `uncrew`, ProgressBar base of `IProgressDialog`, support Windows 11 menu.
+- Windows 11 context menu support
+
+Note: since there is no developer account, the user needs to generate a signature and install the integrated windows 11 context menu.
 
 baulk brand:
 
