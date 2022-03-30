@@ -12,9 +12,9 @@
 
 A minimalist Windows package manager, installation-free, without modifying system environment variables, easy to use, can be integrated with Windows Terminal, can be added to the right-click menu...
 
-## Baulk 4.0 Event
+## Baulk 4.0 News
 
-We plan to release baulk 4.0 version on April 1, 2022. This version adds a vfs mechanism to avoid mixing program data and installed packages when installing packages. It also adds the following features: 
+Baulk 4.0 adds a vfs mechanism to avoid mixing program data and installed packages when installing packages. It also adds the following features: 
 
 - Better **VFS** design
 - More C++20/23 experience
