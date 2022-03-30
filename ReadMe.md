@@ -34,6 +34,7 @@ unscrew:
 
 ![](./docs/images/unscrew.png)
 
+![](./docs/images/unscrew-2.png)
 
 ## Get Started
 

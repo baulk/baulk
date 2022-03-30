@@ -32,6 +32,8 @@ unscrew:
 
 ![](./docs/images/unscrew.png)
 
+![](./docs/images/unscrew-2.png)
+
 ## 开始使用 
 
 下载 Baulk 最新版本：[https://github.com/baulk/baulk/releases/latest](https://github.com/baulk/baulk/releases/latest), 你可以选择下载对应 Windows 平台的安装程序，Baulk 提供的安装程序无需管理员权限即可运行，你可以将其安装到任意非管理员权限目录，你可以勾选创建桌面快捷方式：
