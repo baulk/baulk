@@ -2,7 +2,6 @@
 
 [![license badge](https://img.shields.io/github/license/fcharlie/bela.svg)](LICENSE)
 [![Master Branch Status](https://github.com/fcharlie/bela/workflows/BelaCI/badge.svg)](https://github.com/fcharlie/bela/actions)
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/fcharlie/bela)
 
 Modern C++20 library collection, better development experience on Windows (10,11)
 

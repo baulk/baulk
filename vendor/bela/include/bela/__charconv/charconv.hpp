@@ -433,7 +433,6 @@ struct _Big_integer_flt {
   return _Xval;
 }
 
-
 [[nodiscard]] inline uint32_t _Bit_scan_reverse(const uint32_t _Value) noexcept {
   unsigned long _Index; // Intentionally uninitialized for better codegen
 
@@ -961,11 +960,11 @@ get<1>(indices[i]), get<2>(indices[i]));
     _Numerator._Mydata[1] = static_cast<uint32_t>(_Uu >> 32);
     _Numerator._Mydata[0] = static_cast<uint32_t>(_Uu);
     if (_Numerator._Mydata[1] > 0) {
-        _Numerator._Myused = 2u;
+      _Numerator._Myused = 2u;
     } else if (_Numerator._Mydata[0] > 0) {
-        _Numerator._Myused = 1u;
+      _Numerator._Myused = 1u;
     } else {
-        _Numerator._Myused = 0u;
+      _Numerator._Myused = 0u;
     }
 
     return _Quotient;

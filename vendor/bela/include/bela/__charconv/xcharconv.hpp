@@ -10,22 +10,10 @@
 #include <cstring>
 #include <cstdint>
 #include <bela/macros.hpp>
+#include <charconv>
 
 namespace bela {
-enum class chars_format {
-  scientific = 0b001,
-  fixed = 0b010,
-  hex = 0b100,
-  general = fixed | scientific,
-};
-[[nodiscard]] constexpr chars_format operator&(chars_format L, chars_format R) noexcept {
-  using I = std::underlying_type_t<chars_format>;
-  return static_cast<chars_format>(static_cast<I>(L) & static_cast<I>(R));
-}
-[[nodiscard]] constexpr chars_format operator|(chars_format L, chars_format R) noexcept {
-  using I = std::underlying_type_t<chars_format>;
-  return static_cast<chars_format>(static_cast<I>(L) | static_cast<I>(R));
-}
+using chars_format = std::chars_format;
 struct to_chars_result {
   wchar_t *ptr;
   std::errc ec;

@@ -4,6 +4,7 @@
 #include <Msi.h>
 #include <functional>
 #include <filesystem>
+#include <baulk/fs.hpp>
 
 namespace baulk::archive::msi {
 using OnProgress = std::function<bool(int64_t extracted, int64_t total)>;
@@ -15,11 +16,11 @@ public:
   bool Initialize(const std::filesystem::path &file, const std::filesystem::path &dest, bela::error_code &ec) {
     std::error_code e;
     if (archive_file = std::filesystem::canonical(file, e); e) {
-      ec = bela::make_error_code_from_std(e);
+      ec = e;
       return false;
     }
     if (destination = std::filesystem::absolute(dest, e); e) {
-      ec = bela::make_error_code_from_std(e);
+      ec = e;
       return false;
     }
     return true;
