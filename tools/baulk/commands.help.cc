@@ -22,7 +22,6 @@ Usage: baulk [option] <command> [<args>]
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
   --force-delete   When uninstalling the package, forcefully delete the related directories
 
-
 Command:
   version          Show version number and quit
   list             List installed packages based on package names
