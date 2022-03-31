@@ -43,7 +43,7 @@ std::optional<std::wstring> LookupModuleBasePath(HMODULE hModule, bela::error_co
   return std::make_optional(std::move(buffer));
 }
 
-class __declspec(uuid("803A733E-9F73-4F38-BB43-1005CEC3B19D")) ExtractWithUnscrew
+class __declspec(uuid("803A733E-9F73-4F38-BB43-1005CEC3B19D")) OpenBaulkTerminalHere
     : public Microsoft::WRL::RuntimeClass<
           Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom | Microsoft::WRL::InhibitFtmBase>,
           IExplorerCommand> {
@@ -167,7 +167,7 @@ private:
   std::wstring _GetPathFromExplorer() const;
 };
 
-std::wstring ExtractWithUnscrew::_GetPathFromExplorer() const {
+std::wstring OpenBaulkTerminalHere::_GetPathFromExplorer() const {
   using namespace winrt;
 
   std::wstring path;
@@ -251,7 +251,7 @@ std::wstring ExtractWithUnscrew::_GetPathFromExplorer() const {
   return path;
 }
 
-CoCreatableClass(ExtractWithUnscrew) CoCreatableClassWrlCreatorMapInclude(ExtractWithUnscrew); //
+CoCreatableClass(OpenBaulkTerminalHere) CoCreatableClassWrlCreatorMapInclude(OpenBaulkTerminalHere); //
 
 STDAPI DllGetActivationFactory(_In_ HSTRING activatableClassId, _COM_Outptr_ IActivationFactory **factory) {
   return Microsoft::WRL::Module<Microsoft::WRL::ModuleType::InProc>::GetModule().GetActivationFactory(

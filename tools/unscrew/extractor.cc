@@ -194,7 +194,7 @@ inline std::optional<std::wstring> lookup_sevenzip() {
     return std::make_optional(std::move(s7z));
   }
   std::wstring s7z;
-  if (bela::env::LookPath(L"7z.exe", s7z, true)) {
+  if (bela::env::LookPath(L"7zG.exe", s7z, true)) {
     return std::make_optional(std::move(s7z));
   }
   return std::nullopt;
