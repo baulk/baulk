@@ -21,7 +21,7 @@ Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环�
 - baulk 有限断点下载支持。
 - 集成内存管理器 mimalloc，改进解压缩时的内存分配。
 - 添加 baulk brand 命令 (类似 neofetch)
-- 添加图形化文件解压命令 `uncrew`，进度条基于 `IProgressDialog`，支持添加到 Windows 11 菜单。
+- 添加图形化文件解压命令 `unscrew`，进度条基于 `IProgressDialog`，支持添加到 Windows 11 菜单。
 - baulk-terminal Windows 11 上下文菜单支持。
 
 注意：由于没有开发者账号，集成 Windows 11 上下文菜单需要用户自己去生成签名并安装。
