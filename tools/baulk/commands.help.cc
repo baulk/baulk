@@ -50,6 +50,7 @@ Alias:
   l  list
   s  search
   u  update and upgrade
+  e  extract
 
 See 'baulk help <command>' to read usage a specific subcommand.
 
