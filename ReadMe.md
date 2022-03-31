@@ -395,7 +395,7 @@ Baulk Dock **Dark Mode**:
 
 ## Unscrew extract command (GUI)
 
-A simple GUI extract command `uncrew`, ProgressBar base of `IProgressDialog`, support Windows 11 menu.
+A simple GUI extract command `unscrew`, ProgressBar base of `IProgressDialog`, support Windows 11 menu.
 
 ```txt
 Unscrew - Baulk modern extractor
