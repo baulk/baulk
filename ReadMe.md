@@ -82,8 +82,7 @@ Usage: baulk [option] <command> [<args>]
   -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
   --force-delete   When uninstalling the package, forcefully delete the related directories
-
-
+ 
 Command:
   version          Show version number and quit
   list             List installed packages based on package names
@@ -101,11 +100,17 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
-
+  extact           Extract files according to the detected archive format
+  brand            Display os device details
+ 
 Alias:
+  h  help
   i  install
   r  uninstall
+  l  list
+  s  search
   u  update and upgrade
+  e  extract
 
 See 'baulk help <command>' to read usage a specific subcommand.
 
@@ -387,6 +392,25 @@ Baulk Dock **Light Mode**:
 Baulk Dock **Dark Mode**:
 
 ![](./docs/images/baulk-dock-dark.png)
+
+## Unscrew extract command (GUI)
+
+A simple GUI extract command `uncrew`, ProgressBar base of `IProgressDialog`, support Windows 11 menu.
+
+```txt
+Unscrew - Baulk modern extractor
+Usage: unscrew [option] ...
+  -h|--help
+               Show usage text and quit
+  -v|--version
+               Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
+  -d|--destination
+               Set archive extracted destination (extracting multiple archives will be ignored)
+  -z|--flat
+               Make destination folder to flat
+```
 
 ## Baulk upgrade
 
