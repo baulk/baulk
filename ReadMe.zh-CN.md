@@ -18,7 +18,7 @@ Baulk 是一个极简的 Windows 包管理器，免安装，不修改系统环�
 - 代码更多的使用 C++20/23 风格编写
 - 更好的文件解压体验, 新增 `baulk extract` 命令.
 - 对 scoop manifest 的有限兼容 (兼容模式，无法使用 baulk 高级特性)。
-- 
+- baulk 有限断点下载支持。
 - 集成内存管理器 mimalloc，改进解压缩时的内存分配。
 - 添加 baulk brand 命令 (类似 neofetch)
 - 添加图形化文件解压命令 `uncrew`，进度条基于 `IProgressDialog`，支持添加到 Windows 11 菜单。
@@ -81,8 +81,7 @@ Usage: baulk [option] <command> [<args>]
   -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
   --force-delete   When uninstalling the package, forcefully delete the related directories
-
-
+ 
 Command:
   version          Show version number and quit
   list             List installed packages based on package names
@@ -100,11 +99,17 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
-
+  extact           Extract files according to the detected archive format
+  brand            Display os device details
+ 
 Alias:
+  h  help
   i  install
   r  uninstall
+  l  list
+  s  search
   u  update and upgrade
+  e  extract
 
 See 'baulk help <command>' to read usage a specific subcommand.
 ```
@@ -386,6 +391,25 @@ Baulk Dock **Light Mode**:
 Baulk Dock **Dark Mode**:
 
 ![](./docs/images/baulk-dock-dark.png)
+
+# Unscrew 提取命令
+
+Unscrew 是一个简单的智能的提取命令，其 ProgressBar 基于 IProgressDialog, 支持 Windows 11 菜单.
+
+```txt
+Unscrew - Baulk modern extractor
+Usage: unscrew [option] ...
+  -h|--help
+               Show usage text and quit
+  -v|--version
+               Show version number and quit
+  -V|--verbose
+               Make the operation more talkative
+  -d|--destination
+               Set archive extracted destination (extracting multiple archives will be ignored)
+  -z|--flat
+               Make destination folder to flat
+```
 
 ## Baulk 的升级
 
