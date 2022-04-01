@@ -51,7 +51,7 @@ Or you can download the compressed package and unzip it to any directory, click 
 ```powershell
 baulk update
 # install some package which your need
-baulk install baulktar baulk7z neovim curl wget ripgrep
+baulk install baulk7z neovim curl wget ripgrep
 # now you can run curl under Windows Terminal
 curl -V
 # update bucket metadata
