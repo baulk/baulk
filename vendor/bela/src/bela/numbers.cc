@@ -872,7 +872,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out++ = '-';
     d = -d;
   }
-  if (std::isinf(d)) {
+  if (d > (std::numeric_limits<double>::max)()) {
     strings_internal::memcopy(out, L"inf\0", 4); // NOLINT(runtime/printf)
     return out + 3 - buffer;
   }
@@ -1019,7 +1019,7 @@ size_t SixDigitsToBuffer(double d, char *const buffer) {
     *out++ = '-';
     d = -d;
   }
-  if (std::isinf(d)) {
+  if (d > (std::numeric_limits<double>::max)()) {
     memcpy(out, "inf\0", 4); // NOLINT(runtime/printf)
     return out + 3 - buffer;
   }

@@ -2861,7 +2861,7 @@ _NODISCARD inline to_chars_result _Floating_to_chars_general_precision(
     const char* const _Significand_first = _Buffer; // e.g. "1.234"
     const char* _Significand_last        = nullptr;
     const char* _Exponent_first          = nullptr; // e.g. "e-05"
-    const char* _Exponent_last           = nullptr;
+    const char* Exponent_last           = nullptr;
     int _Effective_precision; // number of digits printed after the decimal point, before trimming
 
     // Write into the local buffer.
@@ -2879,7 +2879,7 @@ _NODISCARD inline to_chars_result _Floating_to_chars_general_precision(
         _STL_INTERNAL_CHECK(_Buf_result.ec == errc{});
         _Significand_last = _STD find(_Buffer, _Buf_result.ptr, 'e');
         _Exponent_first   = _Significand_last;
-        _Exponent_last    = _Buf_result.ptr;
+        Exponent_last    = _Buf_result.ptr;
     }
 
     // If we printed a decimal point followed by digits, perform zero-trimming.
@@ -2903,7 +2903,7 @@ _NODISCARD inline to_chars_result _Floating_to_chars_general_precision(
 
     // Copy the exponent to the output range.
     if (!_Use_fixed_notation) {
-        const ptrdiff_t _Exponent_distance = _Exponent_last - _Exponent_first;
+        const ptrdiff_t _Exponent_distance = Exponent_last - _Exponent_first;
         if (_Last - _First < _Exponent_distance) {
             return {_Last, errc::value_too_large};
         }

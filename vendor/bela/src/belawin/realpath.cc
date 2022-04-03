@@ -14,8 +14,8 @@ template <class Ty> [[nodiscard]] Ty Unaligned_load(const void *Ptr) { // load a
 }
 
 [[nodiscard]] inline bool Is_drive_prefix(const wchar_t *const First) {
-  // test if _First points to a prefix of the form X:
-  // pre: _First points to at least 2 wchar_t instances
+  // test if first points to a prefix of the form X:
+  // pre: first points to at least 2 wchar_t instances
   // pre: Little endian
   auto Value = Unaligned_load<unsigned int>(First);
   Value &= 0xFFFF'FFDFU; // transform lowercase drive letters into uppercase ones

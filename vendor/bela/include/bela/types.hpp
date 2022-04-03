@@ -32,9 +32,15 @@ template <class T>
 constexpr bool is_strict_unsigned_integral_v =
     is_any_of_v<std::remove_cv_t<T>, unsigned short, unsigned int, unsigned long, unsigned long long>;
 template <class T>
+constexpr bool is_strict_integral_v = is_any_of_v<std::remove_cv_t<T>, short, int, long, long long, unsigned short,
+                                                  unsigned int, unsigned long, unsigned long long>;
+
+template <class T>
 concept strict_signed_integral = is_strict_signed_integral_v<T>;
 template <class T>
 concept strict_unsigned_integral = is_strict_unsigned_integral_v<T>;
+template <class T>
+concept strict_integral = is_strict_integral_v<T>;
 
 template <class T>
 concept character = is_character_v<T>;
@@ -63,6 +69,10 @@ concept integral_superset = std::integral<T> || std::is_enum_v<T>;
 template <typename E>
 requires std::is_enum_v<E>
 constexpr auto integral_cast(E e) { return static_cast<std::underlying_type_t<E>>(e); }
+
+template <class T> constexpr typename std::make_unsigned<T>::type unsigned_cast(T __x) noexcept {
+  return static_cast<typename std::make_unsigned<T>::type>(__x);
+}
 
 template <typename T, typename K>
 requires integral_superset<T> && integral_superset<K>

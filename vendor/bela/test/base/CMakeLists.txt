@@ -73,3 +73,11 @@ add_executable(static_string_test
 target_link_libraries(static_string_test
   bela
 )
+
+add_executable(iota_test
+  iota.cc
+)
+
+target_link_libraries(iota_test
+  bela
+)

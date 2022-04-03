@@ -157,4 +157,24 @@
 #error "bela endian detection needs to be set up for your compiler"
 #endif
 
+#ifndef _Bela_Analysis_assume_
+#define _Bela_Analysis_assume_(expr)
+#endif
+
+#if defined(_DEBUG) && defined(_MSC_VER)
+#define _BELA_WIDE_(s) L##s
+#define _BELA_WIDE(s) _BELA_WIDE_(s)
+#define _BELA_VERIFY(cond, mesg)                                                                                       \
+  do {                                                                                                                 \
+    if (cond) { /* contextually convertible to bool paranoia */                                                        \
+    } else {                                                                                                           \
+      _wassert(_BELA_WIDE(mesg), _BELA_WIDE(__FILE__), __LINE__);                                                      \
+    }                                                                                                                  \
+                                                                                                                       \
+    _Bela_Analysis_assume_(cond);                                                                                      \
+  } while (false)
+#define _BELA_ASSERT(cond, mesg) _BELA_VERIFY(cond, mesg)
+#else // ^^^ _DEBUG ^^^ // vvv !_DEBUG vvv
+#define _BELA_ASSERT(cond, mesg) _Bela_Analysis_assume_(cond)
+#endif // _DEBUG
 #endif

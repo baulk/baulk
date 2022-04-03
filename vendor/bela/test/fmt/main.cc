@@ -4,6 +4,33 @@
 #include <bela/codecvt.hpp>
 #include "ucwidth-wt.hpp"
 
+void print2() {
+  bela::FPrintF(stderr, L"[%20d]\n", -9999);
+  bela::FPrintF(stderr, L"[%-20d]\n", -9999);
+  bela::FPrintF(stderr, L"[%020d]\n", -9999);
+  bela::FPrintF(stderr, L"[%-020d]\n", -9999);
+  bela::FPrintF(stderr, L"[%20X]\n", -99991111);
+  bela::FPrintF(stderr, L"[%-20x]\n", -99998888);
+  bela::FPrintF(stderr, L"[%020X]\n", -999900000);
+  bela::FPrintF(stderr, L"[%2X]\n", -999900000);
+  bela::FPrintF(stderr, L"[%20s]\n", "abcdefgf");
+  bela::FPrintF(stderr, L"[%-20s]\n", "abcdefgf");
+  bela::FPrintF(stderr, L"[%020s]\n", "abcdefgf");
+  bela::FPrintF(stderr, L"[%-020s]\n", "abcdefgf");
+  bela::FPrintF(stderr, L"[%0-20s]\n", "abcdefgf");
+  bela::FPrintF(stderr, L"[%0-20v]0-20v\n", "abcdefgf");
+  printf("printf 0-20v[%0-20s]\n", "abcdefg");
+  bela::FPrintF(stderr, L"[%20d]\n", -999900000);
+  bela::FPrintF(stderr, L"[%2X]\n", -999900000);
+  bela::FPrintF(stderr, L"[%020v]\n", true);
+  bela::FPrintF(stderr, L"[%20v]\n", true);
+  bela::FPrintF(stderr, L"[%-020v]\n", true);
+  bela::FPrintF(stderr, L"[%020.4f]\n", 1992.85);
+  bela::FPrintF(stderr, L"[%20.8f %s]\n", 1993.85, 1993.85);
+  bela::FPrintF(stderr, L"[%020.8f]\n", -3.141592654);
+  bela::FPrintF(stderr, L"[%v]\n", -3.141592654);
+}
+
 int wmain(int argc, wchar_t **argv) {
   constexpr std::string_view ux = "\xf0\x9f\x98\x81 UTF-8 text \xE3\x8D\xA4 --> \xF0\xA0\x83\xA3 \x41 "
                                   "\xE7\xA0\xB4 \xE6\x99\x93"; // force encode UTF-8
@@ -64,7 +91,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"[%10d]\n", n2);
   bela::FPrintF(stderr, L"[%010d]\n", n2);
   double ddd = 000192.15777411;
-  bela::FPrintF(stderr, L"[%08.7f]\n", ddd);
+  bela::FPrintF(stderr, L"[%020.7f]\n", ddd);
   bela::FPrintF(stderr, L"[%.7f]\n", ddd);
   bela::FPrintF(stderr, L"[%2.7f]\n", ddd);
   long xl = 18256444;
@@ -77,5 +104,6 @@ int wmain(int argc, wchar_t **argv) {
                 bela::string_width<wchar_t>(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   bela::FPrintF(stderr, L"StringWidth %d\n",
                 bela::string_width<char>(R"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
+  print2();
   return 0;
 }
