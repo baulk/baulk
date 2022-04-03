@@ -4,6 +4,7 @@
 #include <bela/ascii.hpp>
 #include <bela/escapeargv.hpp>
 #include <bela/process.hpp>
+#include <bela/charconv.hpp>
 #include <baulk/indicators.hpp>
 // #include <format> Waiting C++20 <format> final
 
@@ -13,44 +14,36 @@ namespace baulk {
 [[maybe_unused]] constexpr uint64_t GB = MB * 1024;
 [[maybe_unused]] constexpr uint64_t TB = GB * 1024;
 
-// template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
-//   if (x >= TB) {
-//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / TB);
-//     return;
-//   }
-//   if (x >= GB) {
-//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / GB);
-//     return;
-//   }
-//   if (x >= MB) {
-//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / MB);
-//     return;
-//   }
-//   if (x > 10 * KB) {
-//     std::format_to(std::back_inserter(buf), L"{:.2f}", (double)x / KB);
-//     return;
-//   }
-//   std::format_to(std::back_inserter(buf), L"{}B", x);
-// }
+template <size_t N> inline std::wstring_view to_chars(wchar_t (&buf)[N], double v, wchar_t la) {
+  if (auto result = bela::to_chars(buf, buf + N, v, std::chars_format::fixed, 2); result.ec == std::errc{}) {
+    if (result.ptr < buf + N) {
+      *result.ptr++ = la;
+    }
+    return std::wstring_view{buf, static_cast<size_t>(result.ptr - buf)};
+  }
+  return L"";
+}
 
-template <size_t N> void EncodeRate(wchar_t (&buf)[N], uint64_t x) {
+template <size_t N> inline std::wstring_view encode_rate(wchar_t (&buf)[N], uint64_t x) {
   if (x >= TB) {
-    _snwprintf_s(buf, N, L"%.2fT", (double)x / TB);
-    return;
+    return to_chars(buf, (double)x / TB, 'T');
   }
   if (x >= GB) {
-    _snwprintf_s(buf, N, L"%.2fG", (double)x / GB);
-    return;
+    return to_chars(buf, (double)x / GB, 'G');
   }
   if (x >= MB) {
-    _snwprintf_s(buf, N, L"%.2fM", (double)x / MB);
-    return;
+    return to_chars(buf, (double)x / MB, 'M');
   }
-  if (x > 2 * KB) {
-    _snwprintf_s(buf, N, L"%.2fK", (double)x / KB);
-    return;
+  if (x > 10 * KB) {
+    return to_chars(buf, (double)x / KB, 'K');
   }
-  _snwprintf_s(buf, N, L"%lldB", x);
+  if (auto result = bela::to_chars(buf, x); result.ec == std::errc{}) {
+    if (result.ptr < buf + N) {
+      *result.ptr++ = 'B';
+    }
+    return std::wstring_view{buf, static_cast<size_t>(result.ptr - buf)};
+  }
+  return L"";
 }
 
 // CygwinTerminalSize resolve cygwin terminal size use stty,
@@ -105,12 +98,13 @@ void ProgressBar::Draw() {
   wchar_t strtotal[64];
   auto total_ = static_cast<uint64_t>(total);
   //' 1024.00K 1024.00K/s' 20
-
-  EncodeRate(strtotal, total_);
+  auto rs = encode_rate(strtotal, total_);
   if (tick % 10 == 0) {
     auto delta = (total_ - previous); // cycle 50/1000 s
     previous = total_;
-    EncodeRate(speed, delta);
+    if (auto sv = encode_rate(speed, delta); sv.size() < std::size(speed)) {
+      speed[sv.size()] = 0;
+    }
   }
   tick++;
   auto maximum_ = static_cast<std::uint64_t>(maximum);
@@ -128,7 +122,7 @@ void ProgressBar::Draw() {
     auto s0 = MakeSpace(pos);
     auto s1 = MakeSpace(barwidth - pos - 3);
     bela::FPrintF(stderr, L"\x1b[2K\r\x1b[%dm%s [%s%s%s] %s %s/s\x1b[0m", (uint32_t)state, MakeFileName(), s0, bounce,
-                  s1, strtotal, speed);
+                  s1, rs, speed);
     return;
   }
   auto scale = total_ * 100 / maximum_;
@@ -136,7 +130,7 @@ void ProgressBar::Draw() {
   auto ps = MakeRate(static_cast<size_t>(progress));
   auto sps = MakeSpace(static_cast<size_t>(barwidth - progress));
   bela::FPrintF(stderr, L"\x1b[2K\r\x1b[%dm%s %d%% [%s%s] %s %s/s\x1b[0m", (uint32_t)state, MakeFileName(), scale, ps,
-                sps, strtotal, speed);
+                sps, rs, speed);
 }
 
 bool ProgressBar::Execute() {

@@ -100,6 +100,7 @@ int wmain(int argc, wchar_t **argv) {
   bela::FPrintF(stderr, L"[%16X]\n", xl);
   bela::FPrintF(stderr, L"[0x%08X]\n", xl);
   bela::FPrintF(stderr, L"pointer: [%p]\n", (void *)argv);
+  bela::FPrintF(stderr, L"100%%\n");
   bela::FPrintF(stderr, L"StringWidth %d\n",
                 bela::string_width<wchar_t>(LR"(cmake-3.20.5-windows-x86_64\share\vim\vimfiles\syntax\cmake.vim)"));
   bela::FPrintF(stderr, L"StringWidth %d\n",

@@ -145,6 +145,9 @@ bool StrFormatInternal(Writer<T> &w, const std::wstring_view fmt, const FormatAr
       w.append_pointer(args[ca], width, pc, align_left);
       ca++;
       break;
+    case '%':
+      w.append(L'%');
+      break;
     default:
       // % and other
       w.append(L'%');
