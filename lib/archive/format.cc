@@ -92,6 +92,8 @@ constexpr const uint8_t xzMagic[] = {0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00};
 constexpr const uint8_t gzMagic[] = {0x1F, 0x8B, 0x8};
 constexpr const uint8_t bz2Magic[] = {0x42, 0x5A, 0x68};
 constexpr const uint8_t lzMagic[] = {0x4C, 0x5A, 0x49, 0x50};
+constexpr const uint8_t nsisSignature[] = {0xEF, 0xBE, 0xAD, 0xDE, 'N', 'u', 'l', 'l',
+                                           's',  'o',  'f',  't',  'I', 'n', 's', 't'};
 
 constexpr bool is_zip_magic(const uint8_t *buf, size_t size) {
   return (size > 3 && buf[0] == 0x50 && buf[1] == 0x4B && (buf[2] == 0x3 || buf[2] == 0x5 || buf[2] == 0x7) &&
@@ -161,6 +163,9 @@ file_format_t analyze_format_internal(bela::bytes_view bv) {
   }
   if (bv.starts_bytes_with(debMagic)) {
     return file_format_t::deb;
+  }
+  if (bv.match_with(4, nsisSignature, std::size(nsisSignature))) {
+    return file_format_t::nsis;
   }
   if (bv.size() >= 512) {
     if (auto uh = bv.unchecked_cast<tar::ustar_header>(); getFormat(*uh) != tar::FormatUnknown) {

@@ -15,7 +15,7 @@
     <Identity
     Name="Basalt.Unscrew"
     Publisher="CN=528CB894-BEFF-472F-9E38-40C6DF6362E2"
-    Version="4.0.0.0" ProcessorArchitecture="x64" />
+    Version="4.0.1.0" ProcessorArchitecture="x64" />
     <Properties>
         <DisplayName>Unscrew</DisplayName>
         <PublisherDisplayName>Force Charlie</PublisherDisplayName>

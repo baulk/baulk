@@ -202,8 +202,9 @@ inline std::optional<std::wstring> lookup_sevenzip() {
 
 class _7zExtractor final : public Extractor {
 public:
-  _7zExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_)
-      : archive_file(archive_file_), destination(destination_) {}
+  _7zExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_,
+               file_format_t afmt_)
+      : archive_file(archive_file_), destination(destination_), afmt(afmt_) {}
   bool Extract(ProgressBar *bar, bela::error_code &ec) {
     auto _7z = lookup_sevenzip();
     if (!_7z) {
@@ -216,12 +217,18 @@ public:
       ec = process.ErrorCode();
       return false;
     }
+    if (afmt == file_format_t::nsis) {
+      std::error_code e;
+      std::filesystem::remove_all(destination / L"$PLUGINSDIR", e);
+      std::filesystem::remove_all(destination / L"Uninstall.exe", e);
+    }
     return true;
   }
 
 private:
   std::filesystem::path archive_file;
   std::filesystem::path destination;
+  file_format_t afmt;
 };
 
 std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_file,
@@ -254,8 +261,10 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
     [[fallthrough]];
   case file_format_t::tar:
     return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
+  case file_format_t::nsis:
+    [[fallthrough]];
   case file_format_t::_7z:
-    return std::make_shared<_7zExtractor>(archive_file, destination);
+    return std::make_shared<_7zExtractor>(archive_file, destination, afmt);
   default:
     break;
   }

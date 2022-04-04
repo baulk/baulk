@@ -26,6 +26,7 @@ enum class file_format_t : uint32_t {
   dmg,
   xar,
   wim,
+  nsis,
   z,
   brotli,
   exe, // Currently only supports PE self-extracting files (ELF/Mach-O) not currently supported
