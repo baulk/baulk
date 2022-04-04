@@ -93,17 +93,12 @@ MakeAppx.exe pack /d "appx\\" /p "$BaulkAppxName" /nv
 # MakeCert.exe /n "CN=528CB894-BEFF-472F-9E38-40C6DF6362E2" /r /h 0 /eku "1.3.6.1.5.5.7.3.3,1.3.6.1.4.1.311.10.3.13" /e "12/31/2099" /sv "Key.pvk" "Key.cer"
 # Pvk2Pfx.exe /pvk "Key.pvk" /spc "Key.cer" /pfx "Key.pfx"
 
-if (!(Test-Path $BaulkAppxPfx)) {
-    $BAULK_SECRETS_APPX_PFX = $env:BAULK_SECRETS_APPX_PFX
-    if ([string]::IsNullOrEmpty($BAULK_SECRETS_APPX_PFX)) {
-        return
-    }
-    $ByteArray = [System.Convert]::FromBase64String($BAULK_SECRETS_APPX_PFX);
-    [System.IO.File]::WriteAllBytes($BaulkAppxPfx, $ByteArray);
-    Write-Host "Gen $BaulkAppxPfx success."
+if (Test-Path $BaulkAppxPfx) {
+    Write-Host -ForegroundColor Green "Use $BaulkAppxPfx sign $BaulkAppxName"
+    SignTool.exe sign /fd SHA256 /a /f "Key.pfx" "$BaulkAppxName"
 }
 
-SignTool.exe sign /fd SHA256 /a /f "Key.pfx" "$BaulkAppxName"
+
 
 $Destination = Join-Path -Path $SourceRoot -ChildPath "build/destination"
 Copy-Item -Force $BaulkAppxName -Destination $Destination

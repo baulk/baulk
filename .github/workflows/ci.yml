@@ -46,8 +46,8 @@ jobs:
           $currentDirectory = Get-Location
           $certificatePath = Join-Path -Path $currentDirectory -ChildPath "build\Key.pfx"
           [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-          # output the file path as a variable
-          echo "::set-output name=cert_path::$certificatePath"
+          Write-Host "Write $certificatePath success"
+          Get-Item $certificatePath
       - name: Make Appx
         if: startsWith(github.ref, 'refs/tags/')
         run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeAppx.ps1" -Target "${{ matrix.short_target }}"
