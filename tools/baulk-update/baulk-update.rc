@@ -21,7 +21,7 @@ BEGIN
 BLOCK "000904b0"
 BEGIN
 VALUE "CompanyName", L"Baulk contributors"
-VALUE "FileDescription", L"baulk-update - Baulk Portable Installer"
+VALUE "FileDescription", L"baulk-update - Baulk's own upgrade tool"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", L"baulk-update.exe"
 VALUE "LegalCopyright", BAULK_COPYRIGHT

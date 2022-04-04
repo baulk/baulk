@@ -70,7 +70,20 @@ Search package:
 
 ![](./docs/images/baulksearch.png)
 
+Integration into Windows Terminal (shell replacement)：
+
+![](./docs/images/onterminal.png)
+
+## Changelog
+
+[Changelog](./docs/changelog.md)
+
+## Baulk tools usage
+
+Usually you can run `baulk -h` to see help for commands (other commands are also `-h`), you can also see：[Detailed Help](./docs/help.md)
+
 ## Advanced Experience with Baulk
+
 
 
 ## Article

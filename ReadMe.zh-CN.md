@@ -68,6 +68,19 @@ baulk uninstall wget
 
 ![](./docs/images/baulksearch.png)
 
+集成到 Windows Terminal（shell 替换法）：
+
+![](./docs/images/onterminal.png)
+
+
+## 更新日志
+
+[更新日志](./docs/changelog.md)
+
+## 使用帮助
+
+通常你可以运行 `baulk -h` 查看命令（其他命令也是 `-h`）的帮助信息，你也可以查看：[详细帮助](./docs/help.md)
+
 ## 进阶体验 Baulk
 
 
