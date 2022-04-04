@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 param(
-    [ValidateSet("win64",  "arm64")]
+    [ValidateSet("win64", "arm64")]
     [string]$Target = "win64",
     [string]$RefName = ""
 )

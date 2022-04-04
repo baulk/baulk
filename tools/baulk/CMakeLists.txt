@@ -1,10 +1,6 @@
 #
 file(GLOB BAULK_SOURCES *.cc)
-add_executable(
-  baulk
-  ${BAULK_SOURCES}
-  baulk.rc
-  baulk.manifest)
+add_executable(baulk ${BAULK_SOURCES} baulk.rc baulk.manifest)
 
 target_link_libraries(
   baulk
