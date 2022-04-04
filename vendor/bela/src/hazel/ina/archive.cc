@@ -509,6 +509,13 @@ status_t lookup_archivesinternal(bela::bytes_view bv, hazel_result &hr) {
     hr.assign(types::epub, L"EPUB document");
     return Found;
   }
+  constexpr uint8_t nsisSignature[] = {0xEF, 0xBE, 0xAD, 0xDE, 'N', 'u', 'l', 'l',
+                                       's',  'o',  'f',  't',  'I', 'n', 's', 't'};
+  if (bv.match_with(4, nsisSignature, std::size(nsisSignature))) {
+    hr.assign(types::nsis, L"NSIS archives");
+    return Found;
+  }
+
   return None;
 }
 

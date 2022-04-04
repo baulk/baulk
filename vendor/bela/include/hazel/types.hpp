@@ -75,6 +75,7 @@ typedef enum hazel_types_e : uint32_t {
   xar,
   wim,
   z,
+  nsis,
   // image
   jpg,
   jp2,

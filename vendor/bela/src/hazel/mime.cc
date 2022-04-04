@@ -72,6 +72,7 @@ const wchar_t *LookupMIME(types::hazel_types_t t) {
       {types::xar, L"application/x-xar"},
       {types::wim, L"application/x-ms-wim"},
       {types::z, L"application/x-compress"},
+      {types::nsis, L"application/x-nsis"},
       // image
       {types::jpg, L"image/jpeg"},
       {types::jp2, L"image/jp2"},

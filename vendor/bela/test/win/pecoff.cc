@@ -411,6 +411,15 @@ int wmain(int argc, wchar_t **argv) {
                   file.OverlayOffset());
     return 0;
   }
+  uint8_t buffer[64];
+  auto ret = file.ReadOverlay(buffer, ec);
+  if (ret < 0) {
+    bela::FPrintF(stderr, L"Error: %s\n", ec);
+    return 1;
+  }
+  bela::FPrintF(stderr, L"Read %d bytes \n", ret);
+  process_color(stderr, std::string_view{reinterpret_cast<char *>(buffer), static_cast<size_t>(ret)},
+                file.OverlayOffset());
   hazel::hazel_result result;
   if (!hazel::LookupFile(file.FD(), result, ec, file.OverlayOffset())) {
     bela::FPrintF(stderr, L"unable lookup overlay data details: %s\n", ec);
