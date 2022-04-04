@@ -106,11 +106,11 @@ constexpr bool hash_decode(std::wstring_view hash_text, uint8_t *buffer, size_t 
   return hash_decode(hash_text.data(), hash_text.size(), buffer, size);
 }
 
-template <size_t N> bool hash_decode(std::wstring_view hash_text, uint8_t (&buffer)[N]) {
+template <size_t N> constexpr bool hash_decode(std::wstring_view hash_text, uint8_t (&buffer)[N]) {
   return hash_decode(hash_text.data(), hash_text.size(), buffer, N);
 }
 
-template <typename T, typename U, size_t N> bool bytes_equal(const T (&a)[N], const U (&b)[N]) {
+template <typename T, typename U, size_t N> constexpr bool bytes_equal(const T (&a)[N], const U (&b)[N]) {
   return std::equal(a, a + N, b);
 }
 

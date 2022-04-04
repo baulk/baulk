@@ -90,10 +90,10 @@ public:
 
 private:
   headers_t hkv;
-  std::vector<std::wstring> cookies;
   std::wstring userAgent{L"Wget/7.0 (Baulk)"};
-  std::vector<std::wstring> noProxy;
   std::wstring proxyURL;
+  std::vector<std::wstring> cookies;
+  std::vector<std::wstring> noProxy;
   size_t direct_max_body_size{128 * 1024 * 1024};
   bool insecureMode{false};
   bool debugMode{false};
