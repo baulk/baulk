@@ -41,8 +41,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         id: savepfx
         shell: pwsh
+        env:
+          BAULK_SECRETS_APPX_PFX: ${{ secrets.BAULK_SECRETS_APPX_PFX }}
         run: |
-          $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BAULK_SECRETS_APPX_PFX }}")
+          $pfx_cert_byte = [System.Convert]::FromBase64String("$env:BAULK_SECRETS_APPX_PFX")
           $currentDirectory = Get-Location
           $certificatePath = Join-Path -Path $currentDirectory -ChildPath "build\Key.pfx"
           [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
