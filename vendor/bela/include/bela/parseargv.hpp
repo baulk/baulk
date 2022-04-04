@@ -26,8 +26,8 @@ using invoke_t = std::function<bool(int, const wchar_t *, const wchar_t *)>;
 class ParseArgv {
 public:
   using StringArray = std::vector<std::wstring_view>;
-  ParseArgv(int argc, wchar_t *const *argv, bool subcmdmode = false)
-      : argc_(argc), argv_(argv), subcmdmode_(subcmdmode) {}
+  ParseArgv(int argc, wchar_t *const *argv, bool subcmd_mode_ = false)
+      : argc_(argc), argv_(argv), subcmd_mode(subcmd_mode_) {}
   ParseArgv(const ParseArgv &) = delete;
   ParseArgv &operator=(const ParseArgv &) = delete;
   ParseArgv &Add(std::wstring_view name, HasArgs a, int val) {
@@ -41,7 +41,7 @@ private:
   const int argc_;
   const wchar_t *const *argv_;
   int index{0};
-  bool subcmdmode_{false};
+  bool subcmd_mode{false};
   StringArray uargs;
   std::vector<option> options_;
   bool parse_internal(std::wstring_view a, const invoke_t &v, bela::error_code &ec);
@@ -55,12 +55,19 @@ inline bool ParseArgv::Execute(const invoke_t &v, bela::error_code &ec) {
     ec = bela::make_error_code(ErrParseBroken, L"argv is empty.");
     return false;
   }
+  constexpr std::wstring_view subcmd_parse_end_mark = L"--";
   index = 1;
   for (; index < argc_; index++) {
     std::wstring_view a = argv_[index];
+    if (subcmd_mode && subcmd_parse_end_mark == a) {
+      for (int i = index + 1; i < argc_; i++) {
+        uargs.emplace_back(argv_[i]);
+      }
+      return true;
+    }
     if (a.empty() || a.front() != '-') {
       // if subcmd mode. save all args
-      if (subcmdmode_) {
+      if (subcmd_mode) {
         for (int i = index; i < argc_; i++) {
           uargs.emplace_back(argv_[i]);
         }
