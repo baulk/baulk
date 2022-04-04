@@ -44,37 +44,22 @@ jobs:
         run: |
           $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BAULK_SECRETS_APPX_PFX }}")
           $currentDirectory = Get-Location
-          $certificatePath = Join-Path -Path $currentDirectory -ChildPath "\build\Key.pfx"
+          $certificatePath = Join-Path -Path $currentDirectory -ChildPath "build\Key.pfx"
           [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
           # output the file path as a variable
           echo "::set-output name=cert_path::$certificatePath"
       - name: Make Appx
         if: startsWith(github.ref, 'refs/tags/')
         run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeAppx.ps1" -Target "${{ matrix.short_target }}"
-      - name: Upload Release
+      - name: Make Unscrew Extractor Appx
+        if: startsWith(github.ref, 'refs/tags/')
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeUnscrewAppx.ps1" -Target "${{ matrix.short_target }}"
+      - name: Publish Artifacts
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           file_glob: true
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/Baulk-*.zip
-          tag: ${{ github.ref }}
-          overwrite: true
-      - name: Upload Setup
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          file_glob: true
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/Baulk*.exe
-          tag: ${{ github.ref }}
-          overwrite: true
-      - name: Upload Appx
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          file_glob: true
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/Baulk*.appx
+          file: build/destination/*
           tag: ${{ github.ref }}
           overwrite: true

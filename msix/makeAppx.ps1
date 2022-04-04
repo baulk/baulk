@@ -104,3 +104,6 @@ if (!(Test-Path $BaulkAppxPfx)) {
 }
 
 SignTool.exe sign /fd SHA256 /a /f "Key.pfx" "$BaulkAppxName"
+
+$Destination = Join-Path -Path $SourceRoot -ChildPath "build/destination"
+Copy-Item -Force $BaulkAppxName -Destination $Destination

@@ -21,6 +21,8 @@ $ArchitecturesInstallIn64BitMode = $ArchitecturesInstallIn64BitModes[$Target]
 $BaulkRoot = Split-Path $PSScriptRoot
 $BaulkIss = Join-Path $PSScriptRoot "baulk.iss"
 Set-Location "$BaulkRoot/build"
+$Destination = Join-Path -Path $BaulkRoot -ChildPath "build/destination"
+New-Item -ItemType Directory -Force -Path $Destination -ErrorAction Stop
 # cleanup zip files
 Remove-Item -Force *.zip
 cpack -G ZIP
@@ -30,6 +32,7 @@ $baseName = Split-Path -Leaf $item.FullName
 $hashtext = $obj.Algorithm + ":" + $obj.Hash.ToLower()
 $hashtext | Out-File -Encoding utf8 -FilePath "$baseName.sum"
 Write-Host "$baseName`n$hashtext"
+Copy-Item -Force $item.FullName -Destination $Destination
 
 Write-Host "build $BaulkSetup.exe arch: $ArchitecturesAllowed install mode: $ArchitecturesInstallIn64BitMode"
 $InnoCli = Get-Command -ErrorAction SilentlyContinue -CommandType Application "iscc.exe"
@@ -59,6 +62,7 @@ $setupobj = Get-FileHash -Algorithm SHA256 $BaulkSetupExe
 $hashtext2 = $setupobj.Algorithm + ":" + $setupobj.Hash.ToLower()
 $hashtext2 | Out-File -Encoding utf8 -FilePath "$BaulkSetupExe.sum"
 Write-Host "$BaulkSetupExe `n$hashtext2"
+Copy-Item -Force $BaulkSetupExe -Destination $Destination
 
 Write-Host "Build InstallTarget: user"
 &$InnoSetup "$BaulkIss" "/dArchitecturesAllowed=$ArchitecturesAllowed" "/dArchitecturesInstallIn64BitMode=$ArchitecturesInstallIn64BitMode" "/dInstallTarget=user"
@@ -71,3 +75,4 @@ $setupobj = Get-FileHash -Algorithm SHA256 $BaulkUserSetupExe
 $hashtext2 = $setupobj.Algorithm + ":" + $setupobj.Hash.ToLower()
 $hashtext2 | Out-File -Encoding utf8 -FilePath "$BaulkUserSetupExe.sum"
 Write-Host "$BaulkUserSetupExe `n$hashtext2"
+Copy-Item -Force $BaulkUserSetupExe -Destination $Destination
