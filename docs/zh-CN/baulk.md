@@ -91,7 +91,7 @@ baulk 提供了 baulk-exec 在命令行中执行 baulk-exec 可以初始化 baul
 |`zip`|内置|支持 deflate/bzip2/zstd，不支持加密和 deflate64（deflate64 可以使用 `7z`）|
 |`msi`|内置，基于 MSI API|此方式仅作解压，和在资源管理器点击安装不同|
 |`7z`|优先级：</br>baulk7z - Baulk 发行版</br>7z - 使用 baulk install 安装的</br>7z - 环境变量中的|`tar.*` 之类格式解压不能一次完成，因此建议使用 `tar` 解压 `tar.*` 压缩包|
-|`tar`|优先级：</br>baulktar - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 deflate64|
+|`tar`|优先级：</br>uncia - BaulkTar bsdtar 的现代重构</br>bsdtar - Baulk 构建版</br>MSYS2 tar - Git for Windows 携带的</br>Windows tar |Windows 内置的 tar 不支持 xz（基于 libarchive bsdtar），但 baulk 构建的 bsdtar 支持，解压 zip 时均不不支持 deflate64|
 
 baulk 的哲学是不要修改系统和用户环境变量，环境变量的生效应该是和终端关联或者启动器关联，因此，在 baulk 中，我编写了 baulk-terminal 和 baulk-exec 以及 baulk-dock 程序，baulk-terminal 主要用于用户通过创建桌面快捷方式或者将 baulk-terminal 添加到桌面、文件夹右键菜单，通过用户点击快速打开初始化 Baulk 环境的 Windows Terminal（如果没有安装 Windows Terminal 则打开 Windows 控制台），而 baulk-exec 则是一个启动器，在运行 baulk-exec 时，根据输入的命令行参数 baulk-exec 初始化环境变量，然后启动相关的子命令，比如 Windows 操作系统中没有安装 cmake，而 baulk 安装了 cmake，以下命令就能够正常运行：
 
