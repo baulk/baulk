@@ -42,9 +42,9 @@ jobs:
         id: savepfx
         shell: pwsh
         env:
-          BAULK_APPX_SIGNATURE_PKF: ${{ secrets.BAULK_APPX_SIGNATURE_PKF }}
+          BAULK_APPX_SIGNATURE_PFX: ${{ secrets.BAULK_APPX_SIGNATURE_PFX }}
         run: |
-          $pfx_cert_byte = [System.Convert]::FromBase64String("$env:BAULK_APPX_SIGNATURE_PKF")
+          $pfx_cert_byte = [System.Convert]::FromBase64String("$env:BAULK_APPX_SIGNATURE_PFX")
           $currentDirectory = Get-Location
           $certificatePath = Join-Path -Path $currentDirectory -ChildPath "build\Key.pfx"
           [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
