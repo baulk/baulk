@@ -50,7 +50,7 @@ class __declspec(uuid("951C66D1-98D1-4007-8AE4-412E985D70DB")) ExtractWithUnscre
 public:
   // IExplorerCommand
   IFACEMETHODIMP GetTitle(_In_opt_ IShellItemArray *items, _Outptr_result_nullonfailure_ PWSTR *ppszTitle) {
-    return SHStrDup(L"Extract with Unscrew", ppszTitle);
+    return SHStrDup(L"Extract Here", ppszTitle);
   }
   IFACEMETHODIMP GetIcon(_In_opt_ IShellItemArray *, _Outptr_result_nullonfailure_ PWSTR *ppszIcon) {
     constexpr std::wstring_view UnscrewExe{L"unscrew.exe"};

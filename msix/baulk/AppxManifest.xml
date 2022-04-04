@@ -15,7 +15,7 @@
     <Identity
     Name="Basalt.Baulk"
     Publisher="CN=528CB894-BEFF-472F-9E38-40C6DF6362E2"
-    Version="4.0.0.0" ProcessorArchitecture="x64" />
+    Version="@@VERSION@@" ProcessorArchitecture="@@ARCHITECTURE@@" />
     <Properties>
         <DisplayName>Baulk</DisplayName>
         <PublisherDisplayName>Force Charlie</PublisherDisplayName>
@@ -34,8 +34,8 @@
         DisplayName="Baulk"
         Description="Baulk - Minimal Package Manager for Windows"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png" />
+        Square150x150Logo="Assets\Square150x150Logo.scale-400.png"
+        Square44x44Logo="Assets\Square44x44Logo.scale-400.png"/>
             <Extensions>
                 <uap3:Extension 
           Category="windows.appExecutionAlias" 
@@ -56,8 +56,8 @@
         DisplayName="Baulk"
         Description="baulk-exec - Baulk extended executor"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png" />
+        Square150x150Logo="Assets\Square150x150Logo.scale-400.png"
+        Square44x44Logo="Assets\Square44x44Logo.scale-400.png" />
             <Extensions>
                 <uap3:Extension 
           Category="windows.appExecutionAlias" 
@@ -77,18 +77,11 @@
         DisplayName="Baulk"
         Description="Baulk - Minimal Package Manager for Windows"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png">
+        Square150x150Logo="Assets\Square150x150Logo.scale-400.png"
+        Square44x44Logo="Assets\Square44x44Logo.scale-400.png">
                 <uap:DefaultTile 
           ShortName="BaulkTermianl" 
-          Wide310x150Logo="Assets\Wide310x150Logo.png" 
-          Square310x310Logo="Assets\LargeTile.png" 
-          Square71x71Logo="Assets\SmallTile.png">
-                    <uap:ShowNameOnTiles>
-                        <uap:ShowOn Tile="wide310x150Logo"/>
-                        <uap:ShowOn Tile="square150x150Logo"/>
-                        <uap:ShowOn Tile="square310x310Logo"/>
-                    </uap:ShowNameOnTiles>
+          Wide310x150Logo="Assets\Wide310x150Logo.scale-400.png">
                 </uap:DefaultTile>
             </uap:VisualElements>
             <Extensions>

@@ -40,6 +40,16 @@ $BaulkAppxName = "Baulk-$ArchitecturesAllowed.appx"
 Write-Host "build $BaulkAppxName "
 
 $SourceRoot = Split-Path -Parent $PSScriptRoot
+
+$BUILD_NUM_VERSION = "520"
+if ($null -ne $env:GITHUB_RUN_NUMBER) {
+    $BUILD_NUM_VERSION = "$env:GITHUB_RUN_NUMBER"
+}
+[string]$MainVersion = Get-Content -Encoding utf8 -Path "$SourceRoot/VERSION" -ErrorAction SilentlyContinue
+$MainVersion = $MainVersion.Trim()
+$FullVersion = "$MainVersion.$BUILD_NUM_VERSION"
+Write-Host -ForegroundColor Yellow "make baulk appx: $FullVersion"
+
 $WD = Join-Path -Path $SourceRoot -ChildPath "build"
 Set-Location $WD
 
@@ -74,9 +84,9 @@ Copy-Item -Recurse "$SourceRoot\script\FragmentsARM64.ps1" -Destination "$AppxBu
 Copy-Item -Recurse "$SourceRoot\script\FragmentsARM64.bat" -Destination "$AppxBuildRoot\script"
 Copy-Item -Recurse "$SourceRoot\script\FragmentsDel.bat" -Destination "$AppxBuildRoot\script"
 
-Copy-Item -Recurse "$PSScriptRoot\Assets" -Destination "$AppxBuildRoot"
+Copy-Item -Recurse "$PSScriptRoot\baulk\Assets" -Destination "$AppxBuildRoot"
 
-Copy-Item "$PSScriptRoot\AppxManifest-$Target.xml" -Destination "$AppxBuildRoot\AppxManifest.xml"
+(Get-Content -Path "$PSScriptRoot\unscrew\AppxManifest.xml") -replace '@@VERSION@@', "$FullVersion" -replace '@@ARCHITECTURE@@', "$ArchitecturesAllowed" | Set-Content -Encoding utf8NoBOM "$AppxBuildRoot\AppxManifest.xml"
 
 MakeAppx.exe pack /d "appx\\" /p "$BaulkAppxName" /nv
 

@@ -40,6 +40,15 @@ $UnsrewAppxName = "Unscrew-$ArchitecturesAllowed.appx"
 Write-Host "build $UnsrewAppxName "
 
 $SourceRoot = Split-Path -Parent $PSScriptRoot
+$BUILD_NUM_VERSION = "520"
+if ($null -ne $env:GITHUB_RUN_NUMBER) {
+    $BUILD_NUM_VERSION = "$env:GITHUB_RUN_NUMBER"
+}
+[string]$MainVersion = Get-Content -Encoding utf8 -Path "$SourceRoot/VERSION" -ErrorAction SilentlyContinue
+$MainVersion = $MainVersion.Trim()
+$FullVersion = "$MainVersion.$BUILD_NUM_VERSION"
+Write-Host -ForegroundColor Yellow "make unscrew appx: $FullVersion"
+
 $WD = Join-Path -Path $SourceRoot -ChildPath "build"
 Set-Location $WD
 
@@ -55,9 +64,10 @@ Copy-Item -Recurse "$WD\lib\unscrew-extension.dll" -Destination "$AppxBuildRoot"
 Copy-Item -Recurse "$WD\bin\unscrew.exe" -Destination "$AppxBuildRoot"
 Copy-Item -Recurse "$SourceRoot\LICENSE" -Destination "$AppxBuildRoot"
 
-Copy-Item -Recurse "$PSScriptRoot\Assets" -Destination "$AppxBuildRoot"
+Copy-Item -Recurse "$PSScriptRoot\unscrew\Assets" -Destination "$AppxBuildRoot"
 
-Copy-Item "$PSScriptRoot\unscrew\AppxManifest-$Target.xml" -Destination "$AppxBuildRoot\AppxManifest.xml"
+#Copy-Item "$PSScriptRoot\unscrew\AppxManifest.xml" -Destination "$AppxBuildRoot\AppxManifest.xml"
+(Get-Content -Path "$PSScriptRoot\unscrew\AppxManifest.xml") -replace '@@VERSION@@', "$FullVersion" -replace '@@ARCHITECTURE@@', "$ArchitecturesAllowed" | Set-Content -Encoding utf8NoBOM "$AppxBuildRoot\AppxManifest.xml"
 
 MakeAppx.exe pack /d "unscrew-appx\\" /p "$UnsrewAppxName" /nv
 
