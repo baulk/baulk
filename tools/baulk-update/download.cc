@@ -167,7 +167,14 @@ std::optional<std::wstring> Executor::download_file() const {
     bela::FPrintF(stderr, L"baulk unable mkdirall %s error: %s\n", vfs::AppTemp(), ec);
     return std::nullopt;
   }
-  if (auto arfile = baulk::net::WinGet(download_url, vfs::AppTemp(), L"", true, ec); arfile) {
+  if (auto arfile = baulk::net::WinGet(download_url,
+                                       {
+                                           .hash_value = L"",
+                                           .cwd = baulk::vfs::AppTemp(),
+                                           .force_overwrite = true,
+                                       },
+                                       ec);
+      arfile) {
     return arfile;
   }
   bela::FPrintF(stderr, L"baulk download %s error: \x1b[31m%s\x1b[0m\n", download_url, ec);

@@ -145,4 +145,32 @@ bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error
   return true;
 }
 
+std::optional<file_hash_sums> HashSums(std::wstring_view file, bela::error_code &ec) {
+  HANDLE FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (FileHandle == INVALID_HANDLE_VALUE) {
+    ec = bela::make_system_error_code();
+    return std::nullopt;
+  }
+  bela::hash::sha256::Hasher s;
+  bela::hash::blake3::Hasher b;
+  s.Initialize();
+  b.Initialize();
+  auto closer = bela::finally([&] { CloseHandle(FileHandle); });
+  uint8_t bytes[32678];
+  for (;;) {
+    DWORD dwread = 0;
+    if (ReadFile(FileHandle, bytes, sizeof(bytes), &dwread, nullptr) != TRUE) {
+      ec = bela::make_system_error_code();
+      return std::nullopt;
+    }
+    s.Update(bytes, static_cast<size_t>(dwread));
+    b.Update(bytes, static_cast<size_t>(dwread));
+    if (dwread < sizeof(bytes)) {
+      break;
+    }
+  }
+  return std::make_optional(file_hash_sums{.sha256sum = s.Finalize(), .blake3sum = b.Finalize()});
+}
+
 } // namespace baulk::hash

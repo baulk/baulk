@@ -4,6 +4,8 @@
 #include <bela/time.hpp>
 #include <bela/ascii.hpp>
 #include <bela/io.hpp>
+#include <filesystem>
+#include <baulk/allocate.hpp>
 #include <baulk/net/types.hpp>
 
 namespace baulk::net::net_internal {
@@ -87,13 +89,13 @@ struct _File_disposition_info_ex {
   DWORD _Flags;
 };
 
-inline bool disposition_file_handle(HANDLE fh) {
+inline bool disposition_file_handle(HANDLE fd) {
   _File_disposition_info_ex _Info_ex{0x3};
 
   // FileDispositionInfoEx isn't documented in MSDN at the time of this writing, but is present
   // in minwinbase.h as of at least 10.0.16299.0
   constexpr auto _FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
-  if (SetFileInformationByHandle(reinterpret_cast<HANDLE>(fh), _FileDispositionInfoExClass, &_Info_ex,
+  if (SetFileInformationByHandle(reinterpret_cast<HANDLE>(fd), _FileDispositionInfoExClass, &_Info_ex,
                                  sizeof(_Info_ex))) {
     return true;
   }
@@ -114,22 +116,22 @@ inline bool disposition_file_handle(HANDLE fh) {
   }
 
   FILE_DISPOSITION_INFO _Info{/* .Delete= */ TRUE};
-  if (SetFileInformationByHandle(reinterpret_cast<HANDLE>(fh), FileDispositionInfo, &_Info, sizeof(_Info))) {
+  if (SetFileInformationByHandle(reinterpret_cast<HANDLE>(fd), FileDispositionInfo, &_Info, sizeof(_Info))) {
     return true;
   }
   return false;
 }
 
-inline void cleanup_close_file(HANDLE fh) {
-  disposition_file_handle(fh);
-  CloseHandle(fh);
+inline void cleanup_close_file(HANDLE fd) {
+  disposition_file_handle(fd);
+  CloseHandle(fd);
 }
 
-inline bool truncated_file(HANDLE fh, int64_t pos, bela::error_code &ec) {
-  if (!bela::io::Seek(fh, pos, ec)) {
+inline bool truncated_file(HANDLE fd, int64_t pos, bela::error_code &ec) {
+  if (!bela::io::Seek(fd, pos, ec)) {
     return false;
   }
-  if (SetEndOfFile(fh) != TRUE) {
+  if (SetEndOfFile(fd) != TRUE) {
     ec = bela::make_system_error_code(L"SetEndOfFile() ");
     return false;
   }
@@ -138,19 +140,18 @@ inline bool truncated_file(HANDLE fh, int64_t pos, bela::error_code &ec) {
 
 class FilePart {
 public:
-  FilePart(HANDLE fh, std::wstring &&p, int64_t total_bytes_, int64_t current_bytes_, int64_t recent_)
-      : fileHandle(fh), path(std::move(p)), total_bytes(total_bytes_), current_bytes(current_bytes_),
-        laste_time(recent_) {}
+  FilePart(HANDLE fd_, const std::filesystem::path &fsPath_, int64_t total_bytes_, int64_t current_bytes_,
+           int64_t recent_)
+      : fd(fd_), fsPath(fsPath_), total_bytes(total_bytes_), current_bytes(current_bytes_), laste_time(recent_) {}
   FilePart(const FilePart &) = delete;
   FilePart &operator=(const FilePart &) = delete;
   ~FilePart() noexcept { file_discard(); }
-  void RenameTo(std::wstring_view filename) { path = filename; }
-  int64_t FileSize() const { return total_bytes; }
-  int64_t CurrentBytes() const { return current_bytes; }
-  bela::Time LasteTime() const { return bela::FromUnixSeconds(laste_time); }
-  std::wstring_view FileName() const { return path; }
+  void RenameTo(const std::filesystem::path &newPath) { fsPath = newPath; }
+  auto FileSize() const { return total_bytes; }
+  auto CurrentBytes() const { return current_bytes; }
+  auto LasteTime() const { return bela::FromUnixSeconds(laste_time); }
   bool Truncated(bela::error_code &ec) {
-    if (!truncated_file(fileHandle, 0, ec)) {
+    if (!truncated_file(fd, 0, ec)) {
       return false;
     }
     current_bytes = 0;
@@ -179,11 +180,11 @@ public:
     if (!hash_construct(hash_value, overlay_data, ec)) {
       return false;
     }
-    if (auto fileSize = bela::io::Size(fileHandle, ec); fileSize != current_bytes) {
+    if (auto fileSize = bela::io::Size(fd, ec); fileSize != current_bytes) {
       ec = bela::make_error_code(L"FilePart size not equal current_bytes size");
       return false;
     }
-    if (!bela::io::Seek(fileHandle, current_bytes, ec)) {
+    if (!bela::io::Seek(fd, current_bytes, ec)) {
       return false;
     }
     if (!WriteFull(overlay_data, ec)) {
@@ -200,7 +201,7 @@ public:
     DWORD writtenBytes = 0;
     do {
       DWORD dwSize = 0;
-      if (WriteFile(fileHandle, u8d + writtenBytes, len - writtenBytes, &dwSize, nullptr) != TRUE) {
+      if (WriteFile(fd, u8d + writtenBytes, len - writtenBytes, &dwSize, nullptr) != TRUE) {
         ec = bela::make_system_error_code(L"WriteFile() ");
         return false;
       }
@@ -208,62 +209,62 @@ public:
     } while (writtenBytes < len);
     return true;
   }
-
-  bool UtilizeFile(bela::error_code &ec) {
-    if (fileHandle == INVALID_HANDLE_VALUE) {
+  // solidified
+  bool Solidified(bela::error_code &ec) {
+    if (fd == INVALID_HANDLE_VALUE) {
       ec = bela::make_error_code(L"FilePart is invalid");
       return false;
     }
-    auto fiSize = sizeof(FILE_RENAME_INFO) + (path.size() + 1) * sizeof(wchar_t);
-    std::vector<uint8_t> buffer;
-    try {
-      buffer.resize(fiSize);
-    } catch (const std::exception &e) {
-      ec = bela::make_error_code(bela::encode_into<char, wchar_t>(e.what()));
+    const auto &nativePath = fsPath.native();
+    auto roSize = sizeof(FILE_RENAME_INFO) + (nativePath.size() + 1) * sizeof(wchar_t);
+    auto renameOptions = baulk::mem::make_unique_variable<FILE_RENAME_INFO>(roSize);
+    if (!renameOptions) {
+      ec = bela::make_error_code(L"allocate failed");
       return false;
     }
-    auto fi = reinterpret_cast<FILE_RENAME_INFO *>(buffer.data());
-    fi->ReplaceIfExists = TRUE;
-    fi->RootDirectory = nullptr;
-    fi->FileNameLength = static_cast<DWORD>((path.size() + 1) * sizeof(wchar_t));
-    wmemcpy(fi->FileName, path.data(), path.size());
-    fi->FileName[path.size()] = 0;
-    if (SetFileInformationByHandle(fileHandle, FileRenameInfo, fi, static_cast<DWORD>(fiSize)) != TRUE) {
+    renameOptions->ReplaceIfExists = TRUE;
+    renameOptions->RootDirectory = nullptr;
+    renameOptions->FileNameLength = static_cast<DWORD>((nativePath.size() + 1) * sizeof(wchar_t));
+    memcpy(renameOptions->FileName, nativePath.data(), nativePath.size() * sizeof(wchar_t));
+    renameOptions->FileName[nativePath.size()] = 0;
+    if (SetFileInformationByHandle(fd, FileRenameInfo, renameOptions.get(), static_cast<DWORD>(roSize)) != TRUE) {
       ec = bela::make_system_error_code(L"SetFileInformationByHandle");
       return false;
     }
-    CloseHandle(fileHandle);
-    fileHandle = INVALID_HANDLE_VALUE;
+    CloseHandle(fd);
+    fd = INVALID_HANDLE_VALUE;
     return true;
   }
 
-  static std::optional<FilePart> MakeFilePart(std::wstring_view p, std::wstring_view hash_value, bela::error_code &ec) {
-    auto pp = bela::PathAbsolute(p);
-    auto part = bela::StringCat(pp, part_suffix);
+  static std::optional<FilePart> MakeFilePart(const std::filesystem::path &p, std::wstring_view hash_value,
+                                              bela::error_code &ec) {
+    std::error_code e;
+    auto fsPath = std::filesystem::absolute(p, e);
+    auto part = bela::StringCat(fsPath.native(), part_suffix);
     // https://devblogs.microsoft.com/oldnewthing/20170310-00/?p=95705
-    auto fh = ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
+    auto fd = ::CreateFileW(part.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE | GENERIC_READ | GENERIC_WRITE | DELETE,
                             FILE_SHARE_READ, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
                             nullptr);
-    if (fh == INVALID_HANDLE_VALUE) {
+    if (fd == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
       return std::nullopt;
     }
-    auto fileSize = bela::io::Size(fh, ec);
+    auto fileSize = bela::io::Size(fd, ec);
     if (fileSize == -1) {
-      cleanup_close_file(fh);
+      cleanup_close_file(fd);
       return std::nullopt;
     }
     auto local_truncated = [&]() -> bool {
       if (fileSize == 0) {
         return true;
       }
-      return truncated_file(fh, 0, ec);
+      return truncated_file(fd, 0, ec);
     };
     if (fileSize <= static_cast<int64_t>(sizeof(part_overlay_data)) || hash_value.empty()) {
       if (!local_truncated()) {
         return std::nullopt;
       }
-      return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
+      return std::make_optional<FilePart>(fd, fsPath, 0, 0, 0);
     }
     part_overlay_data overlayInput{
         .magic = {0},
@@ -278,7 +279,7 @@ public:
       if (!local_truncated()) {
         return std::nullopt;
       }
-      return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
+      return std::make_optional<FilePart>(fd, fsPath, 0, 0, 0);
     }
     auto seekTo = fileSize - static_cast<int64_t>(sizeof(part_overlay_data));
     part_overlay_data overlayDisk{
@@ -291,40 +292,40 @@ public:
         .laste_time = 0,
     };
     size_t outSize = 0;
-    if (!bela::io::ReadAt(fh, &overlayDisk, sizeof(overlayDisk), seekTo, outSize, ec)) {
+    if (!bela::io::ReadAt(fd, &overlayDisk, sizeof(overlayDisk), seekTo, outSize, ec)) {
       if (!local_truncated()) {
         return std::nullopt;
       }
-      return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
+      return std::make_optional<FilePart>(fd, fsPath, 0, 0, 0);
     }
     if (!bytes_equal(overlayDisk.magic, part_magic) || !bytes_equal(overlayInput.hash, overlayDisk.hash) ||
         overlayDisk.method != overlayInput.method || overlayDisk.hashsz != overlayInput.hashsz) {
       if (!local_truncated()) {
         return std::nullopt;
       }
-      return std::make_optional<FilePart>(fh, std::move(pp), 0, 0, 0);
+      return std::make_optional<FilePart>(fd, fsPath, 0, 0, 0);
     }
-    if (!truncated_file(fh, seekTo, ec)) {
+    if (!truncated_file(fd, seekTo, ec)) {
       return std::nullopt;
     }
     // current_bytes part found
-    return std::make_optional<FilePart>(fh, std::move(pp), overlayDisk.total_bytes, overlayDisk.current_bytes,
+    return std::make_optional<FilePart>(fd, fsPath, overlayDisk.total_bytes, overlayDisk.current_bytes,
                                         overlayDisk.laste_time);
   }
 
 private:
-  HANDLE fileHandle{INVALID_HANDLE_VALUE};
-  std::wstring path;
+  HANDLE fd{INVALID_HANDLE_VALUE};
+  std::filesystem::path fsPath;
   int64_t total_bytes{0};
   int64_t current_bytes{0};
   int64_t laste_time{0};
   bool discard_file_handle{true};
   void file_discard() noexcept {
-    if (fileHandle != INVALID_HANDLE_VALUE) {
+    if (fd != INVALID_HANDLE_VALUE) {
       if (discard_file_handle) {
-        disposition_file_handle(fileHandle);
+        disposition_file_handle(fd);
       }
-      CloseHandle(fileHandle);
+      CloseHandle(fd);
     }
   }
 };

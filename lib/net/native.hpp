@@ -149,6 +149,7 @@ public:
                     SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
     WinHttpSetOption(h, WINHTTP_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
   }
+  
   // fill header
   bool write_headers(const headers_t &hkv, const std::vector<std::wstring> &cookies, int64_t position, int64_t length,
                      bela::error_code &ec) {

@@ -1,6 +1,7 @@
 #ifndef BAULK_NET_CLIENT_HPP
 #define BAULK_NET_CLIENT_HPP
 #include "types.hpp"
+#include <filesystem>
 #include <bela/terminal.hpp>
 
 namespace baulk::net {
@@ -18,11 +19,20 @@ public:
   auto StatusCode() const { return status_code; }
   std::wstring_view StatusLine() const { return status_text; }
   auto Version() const { return version; }
+  // raw content bytes (usually UTF-8)
   std::string_view Content() const { return {body_.data(), size_}; }
 
 private:
   std::vector<char> body_;
   size_t size_{0};
+};
+
+struct download_options {
+  std::wstring hash_value;
+  std::filesystem::path cwd;
+  std::filesystem::path destination;
+  bool force_overwrite{false};
+  bool OverwriteExists() const { return force_overwrite || !destination.empty(); }
 };
 
 class HttpClient {
@@ -43,21 +53,23 @@ public:
   std::optional<Response> Get(std::wstring_view url, bela::error_code &ec) {
     return WinRest(L"GET", url, L"", L"", ec);
   }
-  std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view cwd, std::wstring_view hash_value,
-                                     bool force_overwrite, bela::error_code &ec);
-  //
-  std::wstring &UserAgent() { return userAgent; }
+  std::optional<std::filesystem::path> WinGet(std::wstring_view url, const download_options &opts,
+                                              bela::error_code &ec);
+
   std::wstring_view UserAgent() const { return userAgent; }
-  bool IsInsecureMode() const { return insecureMode; }
-  bool &InsecureMode() { return insecureMode; }
-  bool IsDebugMode() { return debugMode; }
-  bool &DebugMode() { return debugMode; }
-  size_t DirectMaxBodySize() const { return direct_max_body_size; }
-  size_t &DirectMaxBodySize() { return direct_max_body_size; }
-  bool InitializeProxyFromEnv();
-  std::wstring &ProxyURL() { return proxyURL; }
   std::wstring_view ProxyURL() const { return proxyURL; }
+  bool IsInsecureMode() const { return insecureMode; }
+  bool IsDebugMode() const { return debugMode; }
+  bool IsNoCache() const { return noCache; }
   bool IsNoProxy(std::wstring_view host) const;
+  void SetUserAgent(std::wstring_view ua) { userAgent = ua; }
+  void SetMaxBodySize(int64_t size) { max_body_size = size; }
+  void SetInsecureMode(bool m) { insecureMode = m; }
+  void SetDebugMode(bool m) { debugMode = m; }
+  void SetNoCache(bool n) { noCache = n; }
+  void SetProxyURL(std::wstring_view url) { proxyURL = url; }
+  bool InitializeProxyFromEnv();
+  
   static HttpClient &DefaultClient() {
     static HttpClient client;
     return client;
@@ -94,9 +106,10 @@ private:
   std::wstring proxyURL;
   std::vector<std::wstring> cookies;
   std::vector<std::wstring> noProxy;
-  size_t direct_max_body_size{128 * 1024 * 1024};
+  size_t max_body_size{128 * 1024 * 1024};
   bool insecureMode{false};
   bool debugMode{false};
+  bool noCache{false};
 };
 
 // HTTP rest api
@@ -105,9 +118,9 @@ inline std::optional<Response> RestGet(std::wstring_view url, bela::error_code &
 }
 
 // WinGet download file
-inline std::optional<std::wstring> WinGet(std::wstring_view url, std::wstring_view cwd, std::wstring_view hash_value,
-                                          bool force_overwrite, bela::error_code &ec) {
-  return HttpClient::DefaultClient().WinGet(url, cwd, hash_value, force_overwrite, ec);
+inline std::optional<std::filesystem::path> WinGet(std::wstring_view url, const download_options &opts,
+                                                   bela::error_code &ec) {
+  return HttpClient::DefaultClient().WinGet(url, opts, ec);
 }
 
 } // namespace baulk::net

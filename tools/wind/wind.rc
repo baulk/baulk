@@ -1,0 +1,48 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "revision.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+PRODUCTVERSION BAULK_VERSION_MAJOR, BAULK_VERSION_MINOR, BAULK_VERSION_PATCH, BAULK_VERSION_BUILD
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "080404b0"
+BEGIN
+VALUE "CompanyName", "Baulk contributors"
+VALUE "FileDescription", "wind - Simple file download tool"
+VALUE "FileVersion", BAULK_VERSION
+VALUE "InternalName", "wind.exe"
+VALUE "LegalCopyright", BAULK_COPYRIGHT
+VALUE "OriginalFilename", "wind.exe"
+VALUE "ProductName", "wind - Simple file download tool"
+VALUE "ProductVersion", BAULK_VERSION
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x804, 1200
+END
+END
+

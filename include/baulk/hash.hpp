@@ -18,6 +18,11 @@ enum class hash_t {
 };
 bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error_code &ec);
 std::optional<std::wstring> FileHash(std::wstring_view file, hash_t method, bela::error_code &ec);
+struct file_hash_sums {
+  std::wstring sha256sum;
+  std::wstring blake3sum;
+};
+std::optional<file_hash_sums> HashSums(std::wstring_view file, bela::error_code &ec);
 } // namespace baulk::hash
 
 #endif

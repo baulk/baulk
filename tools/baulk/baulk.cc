@@ -48,6 +48,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
   bela::error_code ec;
   auto result = pa.Execute(
       [&](int val, const wchar_t *oa, const wchar_t *) {
+        using baulk::net::HttpClient;
         switch (val) {
         case 'h':
           baulk::InitializeContext(profile, ec);
@@ -62,6 +63,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
           break;
         case 'V':
           IsDebugMode = true;
+          net::HttpClient::DefaultClient().SetDebugMode(true);
           break;
         case 'Q':
           IsQuietMode = true;
@@ -73,13 +75,13 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
           IsTraceMode = true;
           break;
         case 'k':
-          net::HttpClient::DefaultClient().InsecureMode() = true;
+          HttpClient::DefaultClient().SetInsecureMode(true);
           break;
         case 'A':
-          net::HttpClient::DefaultClient().UserAgent() = oa;
+          HttpClient::DefaultClient().SetUserAgent(oa);
           break;
         case 1001:
-          net::HttpClient::DefaultClient().ProxyURL() = oa;
+          HttpClient::DefaultClient().SetProxyURL(oa);
           break;
         case 1002:
           IsForceDelete = true;

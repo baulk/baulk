@@ -70,17 +70,17 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
           exit(0);
         case 'V':
           IsDebugMode = true;
-          HttpClient::DefaultClient().DebugMode() = true;
+          HttpClient::DefaultClient().SetDebugMode(true);
           break;
         case 'F':
           forceMode = true;
           break;
         case 'k':
-          HttpClient::DefaultClient().InsecureMode() = true;
+          HttpClient::DefaultClient().SetInsecureMode(true);
           break;
         case 'A':
           if (wcslen(oa) != 0) {
-            HttpClient::DefaultClient().UserAgent() = oa;
+            HttpClient::DefaultClient().SetUserAgent(oa);
           }
           break;
         case 'S':
@@ -90,7 +90,7 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
           }
           break;
         case 1002:
-          SetEnvironmentVariableW(L"HTTPS_PROXY", oa);
+          HttpClient::DefaultClient().SetProxyURL(oa);
           break;
         default:
           return false;

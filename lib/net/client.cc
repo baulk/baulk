@@ -112,7 +112,12 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   if (!conn) {
     return std::nullopt;
   }
-  auto req = conn->open_request(method, u->uri, u->TlsFlag(), ec);
+  auto flags = u->TlsFlag();
+  if (noCache) {
+    DbgPrint(L"Indicates that the request should be forwarded to the originating server");
+    flags |= WINHTTP_FLAG_REFRESH;
+  }
+  auto req = conn->open_request(method, u->uri, flags, ec);
   if (!req) {
     return std::nullopt;
   }
@@ -142,16 +147,44 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   std::vector<char> buffer;
   int64_t recv_size = -1;
   auto content_length = native::content_length(mr->headers);
-  if (recv_size = req->recv_completely(content_length, buffer, direct_max_body_size, ec); recv_size < 0) {
+  if (recv_size = req->recv_completely(content_length, buffer, max_body_size, ec); recv_size < 0) {
     return std::nullopt;
   }
   return std::make_optional<Response>(std::move(*mr), std::move(buffer), static_cast<size_t>(recv_size));
 }
 
-// WinGet download file
-std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstring_view cwd,
-                                               std::wstring_view hash_value, bool force_overwrite,
-                                               bela::error_code &ec) {
+inline std::filesystem::path make_destination(const download_options &opts, const baulk::net::native::url &u) {
+  if (!opts.destination.empty()) {
+    return opts.destination;
+  }
+  return opts.cwd / u.filename;
+}
+
+inline bool make_destination_decorous(std::filesystem::path &destination, bool force_overwrite, bela::error_code &ec) {
+  if (!std::filesystem::exists(destination)) {
+    return true;
+  }
+  std::error_code e;
+  if (force_overwrite) {
+    // Solidified delete it
+    return true;
+  }
+  auto filename = destination.filename().replace_extension();
+  auto parent = destination.parent_path();
+  auto ext = destination.extension();
+  for (int i = 1; i < 100; i++) {
+    if (auto newPath = parent / bela::StringCat(filename.native(), L"-(", i, L")", ext.native());
+        !std::filesystem::exists(newPath, e)) {
+      destination = std::move(newPath);
+      return true;
+    }
+  }
+  ec = bela::make_error_code(ERROR_FILE_EXISTS, L"'", destination, L"' already exists");
+  return false;
+}
+
+std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, const download_options &opts,
+                                                        bela::error_code &ec) {
   auto u = native::crack_url(url, ec);
   if (!u) {
     return std::nullopt;
@@ -168,16 +201,20 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
   if (!conn) {
     return std::nullopt;
   }
-  auto req = conn->open_request(L"GET", u->uri, u->TlsFlag(), ec);
+  auto flags = u->TlsFlag();
+  if (noCache) {
+    DbgPrint(L"Indicates that the request should be forwarded to the originating server");
+    flags |= WINHTTP_FLAG_REFRESH;
+  }
+  auto req = conn->open_request(L"GET", u->uri, flags, ec);
   if (!req) {
     return std::nullopt;
   }
   if (insecureMode) {
     req->set_insecure_mode();
   }
-  auto destination = bela::PathCat(cwd, u->filename);
-
-  auto filePart = net_internal::FilePart::MakeFilePart(destination, hash_value, ec);
+  auto destination = make_destination(opts, *u);
+  auto filePart = net_internal::FilePart::MakeFilePart(destination, opts.hash_value, ec);
   if (!filePart) {
     return std::nullopt;
   }
@@ -202,23 +239,20 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
   if (debugMode) {
     response_trace(*mr);
   }
-  if (auto newName = native::extract_filename(mr->headers); newName) {
-    destination = bela::PathCat(cwd, *newName);
-    filePart->RenameTo(destination);
-  }
-  if (bela::PathExists(destination)) {
-    if (!force_overwrite) {
-      ec = bela::make_error_code(ERROR_FILE_EXISTS, L"'", destination, L"' already exists");
-      return std::nullopt;
-    }
-    if (DeleteFileW(destination.data()) != TRUE) {
-      ec = make_net_error_code();
-      return std::nullopt;
+  // destination not set
+  if (opts.destination.empty()) {
+    if (auto dispositionName = native::extract_filename(mr->headers); dispositionName) {
+      DbgPrint(L"filename from 'Content-Disposition': %v", *dispositionName);
+      destination = opts.cwd / *dispositionName;
     }
   }
+  if (!make_destination_decorous(destination, opts.OverwriteExists(), ec)) {
+    return std::nullopt;
+  }
+  filePart->RenameTo(destination);
 
   int64_t total_size = native::content_length(mr->headers);
-  bool part_support = !hash_value.empty() && native::enable_part_download(mr->headers) && total_size > 0;
+  bool part_support = !opts.hash_value.empty() && native::enable_part_download(mr->headers) && total_size > 0;
   DbgPrint(L"%s support part download: %v", u->filename, part_support);
   if (!mr->IsSuccessStatusCode()) {
     ec = bela::make_error_code(bela::ErrGeneral, L"response: ", mr->status_code, L" status: ", mr->status_text);
@@ -237,7 +271,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
   if (total_size > 0) {
     bar.Maximum(static_cast<uint64_t>(total_size));
   }
-  bar.FileName(bela::BaseName(destination));
+  bar.FileName(destination.filename().native());
   bar.Execute();
   auto finish = bela::finally([&] {
     // finish progressbar
@@ -250,7 +284,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
       return;
     }
     bela::error_code discard_ec;
-    filePart->SaveOverlayData(hash_value, total_size, current_bytes, discard_ec);
+    filePart->SaveOverlayData(opts.hash_value, total_size, current_bytes, discard_ec);
     DbgPrint(L"%s download broken for bytes: %d-%d", u->filename, current_bytes, total_size);
   };
   // recv data
@@ -286,7 +320,7 @@ std::optional<std::wstring> HttpClient::WinGet(std::wstring_view url, std::wstri
     save_part_overlay();
     return std::nullopt;
   }
-  filePart->UtilizeFile(ec);
+  filePart->Solidified(ec);
   bar.MarkCompleted();
   return std::make_optional(std::move(destination));
 }

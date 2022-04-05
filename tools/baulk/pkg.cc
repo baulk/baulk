@@ -290,7 +290,15 @@ bool PackageInstall(const baulk::Package &pkg) {
     if (i != 0) {
       bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", urlFileName, i);
     }
-    if (pkgFile = baulk::net::WinGet(url, downloads, pkg.hashValue, true, ec); !pkgFile) {
+    //  downloads, pkg.hashValue, true
+    if (pkgFile = baulk::net::WinGet(url,
+                                     {
+                                         .hash_value = pkg.hashValue,
+                                         .cwd = downloads,
+                                         .force_overwrite = true,
+                                     },
+                                     ec);
+        !pkgFile) {
       bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", urlFileName, ec);
       continue;
     }

@@ -102,8 +102,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   }
   // https://github.com/baulk/bucket/archive/master.zip
   auto master = bela::StringCat(bucket.url, L"/archive/", id, L".zip");
-  const auto temp = baulk::vfs::AppTemp();
-  if (!baulk::fs::MakeDirectories(temp, ec)) {
+  if (!baulk::fs::MakeDirectories(baulk::vfs::AppTemp(), ec)) {
     return false;
   }
   std::optional<std::wstring> saveFile;
@@ -114,7 +113,14 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
       bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m\n", bucket.name,
                     i);
     }
-    if (saveFile = baulk::net::WinGet(master, temp, L"", true, ec); saveFile) {
+    if (saveFile = baulk::net::WinGet(master,
+                                      {
+                                          .hash_value = L"",
+                                          .cwd = baulk::vfs::AppTemp(),
+                                          .force_overwrite = true,
+                                      },
+                                      ec);
+        saveFile) {
       break;
     }
   }
@@ -127,7 +133,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
     bela::fs::ForceDeleteFile(*saveFile, ec_);
   });
 
-  auto extractDir = bela::StringCat(temp, L"\\", bucket.name);
+  auto extractDir = bela::StringCat(baulk::vfs::AppTemp(), L"\\", bucket.name);
   if (!baulk::extract_zip(*saveFile, extractDir, ec)) {
     return false;
   }

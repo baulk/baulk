@@ -41,6 +41,17 @@ inline void *allocate_xz(void *opaque, size_t nmemb, size_t size) noexcept {
   (void)opaque;
   return mi_malloc(static_cast<size_t>(nmemb) * size);
 }
+
+template <typename T> using allocate_unique_pointer = std::unique_ptr<T, decltype(mi_free) *>;
+
+template <typename T> inline allocate_unique_pointer<T> make_unique_variable(size_t bytes) {
+  return allocate_unique_pointer<T>(reinterpret_cast<T *>(mi_malloc(bytes)), mi_free);
+}
+
+template <typename T> inline allocate_unique_pointer<T> make_unique(size_t N) {
+  return allocate_unique_pointer<T>(reinterpret_cast<T *>(mi_malloc(sizeof(T) * N)), mi_free);
+}
+
 // Buffer use mimalloc
 class Buffer {
 private:

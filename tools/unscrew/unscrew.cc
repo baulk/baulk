@@ -245,6 +245,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
     return 0;
   }
   if (!executor.Execute(ec)) {
+    if (ec != bela::ErrEOF) {
+      bela::BelaMessageBox(nullptr, baulk::AppTitle, ec.data(), BAULK_APPLINK, bela::mbs_t::FATAL);
+    }
     return 1;
   }
   return 0;
