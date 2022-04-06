@@ -1,5 +1,18 @@
 # CHANGELOG
 
+### 4.0.2
+
++  Add wind -Streamlined file download tool
++  Improve unscrew 7z support
++  baulk/unscrew Appx is now Test Signed: [baulk-debug.cer](https://github.com/baulk/baulk/blob/master/msix/baulk-debug.cer)
++  chromium zlib sync zlib 1.2.12
++  baulk-exec supports the `--` parameter as a flag to start parsing subcommands
+
+```powershell
+# baulk run command -jack, Previously this command was not supported unless the path form was used.
+baulk-exec -V -- -jack -v
+```
+
 ## 4.0.0
 
 Baulk 4.0 adds a vfs mechanism to avoid mixing program data and installed packages when installing packages. It also adds the following features: 
