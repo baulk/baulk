@@ -74,6 +74,7 @@ Copy-Item -Recurse "$WD\bin\baulk-exec.exe" -Destination "$AppxBuildRoot\bin"
 Copy-Item -Recurse "$WD\bin\baulk-lnk.exe" -Destination "$AppxBuildRoot\bin"
 Copy-Item -Recurse "$WD\bin\baulk-winlnk.exe" -Destination "$AppxBuildRoot\bin"
 Copy-Item -Recurse "$WD\bin\baulk-terminal.exe" -Destination "$AppxBuildRoot"
+Copy-Item -Recurse "$WD\bin\wind.exe" -Destination "$AppxBuildRoot\bin"
 
 Copy-Item -Recurse "$SourceRoot\LICENSE" -Destination "$AppxBuildRoot\share"
 Copy-Item -Recurse "$SourceRoot\res\screw-driver.ico" -Destination "$AppxBuildRoot\share\baulk"

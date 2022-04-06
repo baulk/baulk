@@ -261,6 +261,18 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
     [[fallthrough]];
   case file_format_t::tar:
     return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
+  case file_format_t::cab:
+    [[fallthrough]];
+  case file_format_t::deb:
+    [[fallthrough]];
+  case file_format_t::dmg:
+    [[fallthrough]];
+  case file_format_t::rpm:
+    [[fallthrough]];
+  case file_format_t::wim:
+    [[fallthrough]];
+  case file_format_t::rar:
+    [[fallthrough]];
   case file_format_t::nsis:
     [[fallthrough]];
   case file_format_t::_7z:

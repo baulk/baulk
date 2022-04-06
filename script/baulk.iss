@@ -87,6 +87,8 @@ Source: "..\build\bin\baulk-lnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-lnk
 Source: "..\build\bin\baulk-winlnk.exe"; DestDir: "{app}\bin"; DestName: "baulk-winlnk.exe"
 Source: "..\build\bin\baulk-update.exe"; DestDir: "{app}\bin"; DestName: "baulk-update.exe"
 Source: "..\build\bin\baulk-terminal.exe"; DestDir: "{app}"; DestName: "baulk-terminal.exe"
+Source: "..\build\bin\wind.exe"; DestDir: "{app}\bin"; DestName: "wind.exe"
+Source: "..\build\bin\unscrew.exe"; DestDir: "{app}\bin"; DestName: "unscrew.exe"
 Source: "..\config\baulk.json"; DestDir: "{app}\config"; DestName: "baulk.json"
 Source: "..\LICENSE"; DestDir: "{app}\share"; DestName: "LICENSE"
 Source: "..\res\screw-driver.ico"; DestDir: "{app}\share\baulk"; DestName: "baulk.ico"
