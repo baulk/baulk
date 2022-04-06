@@ -10,7 +10,7 @@ namespace baulk {
 bool IsDebugMode = false;
 
 void Usage() {
-  constexpr std::wstring_view usage = LR"(wind - Simple file download tool
+  constexpr std::wstring_view usage = LR"(wind - Streamlined file download tool
 Usage: wind [option]... [url]...
   -h|--help        Show usage text and quit
   -v|--version     Show version number and quit

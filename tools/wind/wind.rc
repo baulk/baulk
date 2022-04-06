@@ -31,12 +31,12 @@ BEGIN
 BLOCK "080404b0"
 BEGIN
 VALUE "CompanyName", "Baulk contributors"
-VALUE "FileDescription", "wind - Simple file download tool"
+VALUE "FileDescription", "wind - Streamlined file download tool"
 VALUE "FileVersion", BAULK_VERSION
 VALUE "InternalName", "wind.exe"
 VALUE "LegalCopyright", BAULK_COPYRIGHT
 VALUE "OriginalFilename", "wind.exe"
-VALUE "ProductName", "wind - Simple file download tool"
+VALUE "ProductName", "wind - Streamlined file download tool"
 VALUE "ProductVersion", BAULK_VERSION
 END
 END

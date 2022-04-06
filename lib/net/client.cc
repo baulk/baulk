@@ -183,34 +183,13 @@ inline bool make_destination_decorous(std::filesystem::path &destination, bool f
   return false;
 }
 
-struct status_context {
-  std::wstring location;
-};
-
-void WINAPI status_callback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
-                            LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) {
-  if (dwContext == 0) {
-    return;
-  }
-  auto ctx = reinterpret_cast<status_context *>(dwContext);
-  switch (dwInternetStatus) {
-  case WINHTTP_CALLBACK_STATUS_REDIRECT:
-    if (lpvStatusInformation != nullptr) {
-      auto location = reinterpret_cast<LPWSTR>(lpvStatusInformation);
-      ctx->location = std::wstring_view{location, dwStatusInformationLength};
-    }
-    break;
-  default:
-    break;
+void WINAPI status_context_callback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus,
+                                    LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) {
+  if (dwContext != 0) {
+    reinterpret_cast<native::status_context *>(dwContext)->status_context_callback(
+        hInternet, dwInternetStatus, lpvStatusInformation, dwStatusInformationLength);
   }
 }
-
-// WINHTTPAPI WINHTTP_STATUS_CALLBACK WinHttpSetStatusCallback(
-//   [in] HINTERNET               hInternet,
-//   [in] WINHTTP_STATUS_CALLBACK lpfnInternetCallback,
-//   [in] DWORD                   dwNotificationFlags,
-//   [in] DWORD_PTR               dwReserved
-// );
 
 std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, const download_options &opts,
                                                         bela::error_code &ec) {
@@ -225,9 +204,6 @@ std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, c
   if (!IsNoProxy(u->host)) {
     session->set_proxy_url(proxyURL);
   }
-  // status_context sc;
-  // WinHttpSetOption(session->addressof(), WINHTTP_OPTION_CONTEXT_VALUE, &sc, sizeof(sc));
-  // WinHttpSetStatusCallback(session->addressof(), status_callback, WINHTTP_CALLBACK_STATUS_REDIRECT, NULL);
   session->protocol_enable();
   auto conn = session->connect(u->host, u->nPort, ec);
   if (!conn) {
@@ -254,7 +230,8 @@ std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, c
   if (!req->write_headers(hkv, cookies, filePart->CurrentBytes(), filePart->FileSize(), ec)) {
     return std::nullopt;
   }
-  if (!req->write_body(L"", L"", ec)) {
+  native::status_context sc(debugMode);
+  if (!req->write_body(L"", L"", status_context_callback, sc.addressof(), ec)) {
     return std::nullopt;
   }
   if (debugMode) {
@@ -271,12 +248,10 @@ std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, c
   if (debugMode) {
     response_trace(*mr);
   }
-  // if (!sc.location.empty()) {
-  //   DbgPrint(L"location: %v", sc.location);
-  // }
-  // destination not set
+  if (auto nu = sc.crack_location_url(); nu) {
+    destination = opts.cwd / nu->filename;
+  }
   if (opts.destination.empty()) {
-
     if (auto dispositionName = native::extract_filename(mr->headers); dispositionName) {
       DbgPrint(L"filename from 'Content-Disposition': %v", *dispositionName);
       destination = opts.cwd / *dispositionName;

@@ -67,6 +67,82 @@ inline std::optional<url> crack_url(std::wstring_view us, bela::error_code &ec) 
           .nScheme = uc.nScheme});
 }
 
+class status_context {
+public:
+  status_context(bool debugMode_ = false) : debugMode{debugMode_} {}
+  status_context(const status_context &) = delete;
+  status_context &operator=(const status_context &) = delete;
+  auto addressof() const { return reinterpret_cast<DWORD_PTR>(this); }
+  // status_context_callback: please do not call this function directly
+  void status_context_callback(HINTERNET hInternet, DWORD dwInternetStatus, LPVOID lpvStatusInformation,
+                               DWORD dwStatusInformationLength) {
+    switch (dwInternetStatus) {
+    case WINHTTP_CALLBACK_STATUS_RESOLVING_NAME:
+      if (lpvStatusInformation != nullptr) {
+        resolving_name.assign(reinterpret_cast<LPWSTR>(lpvStatusInformation), dwStatusInformationLength);
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_NAME_RESOLVED:
+      if (lpvStatusInformation != nullptr) {
+        resolved_name.assign(reinterpret_cast<LPWSTR>(lpvStatusInformation), dwStatusInformationLength);
+        DbgPrint(L"Resolve %v (%v)... %v", resolving_name, resolving_name, resolved_name);
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER:
+      if (lpvStatusInformation != nullptr) {
+        auto address = std::wstring_view{reinterpret_cast<LPWSTR>(lpvStatusInformation), dwStatusInformationLength};
+        DbgPrint(L"Connecting to %v (%v)|%v| connected.", resolving_name, resolving_name, address);
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_REDIRECT:
+      if (lpvStatusInformation != nullptr) {
+        location.assign(reinterpret_cast<LPWSTR>(lpvStatusInformation), dwStatusInformationLength);
+        DbgPrint(L"Location: %v [following]", location);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  std::optional<url> crack_location_url() {
+    if (location.empty()) {
+      return std::nullopt;
+    }
+    bela::error_code ec;
+    return crack_url(location, ec);
+  }
+
+private:
+  std::wstring location;
+  std::wstring resolving_name;
+  std::wstring resolved_name;
+  bool debugMode;
+  template <typename... Args> bela::ssize_t DbgPrint(const wchar_t *fmt, const Args &...args) {
+    if (!debugMode) {
+      return 0;
+    }
+    const bela::format_internal::FormatArg arg_array[] = {args...};
+    std::wstring str;
+    str.append(L"\x1b[33m* ");
+    bela::format_internal::StrAppendFormatInternal(&str, fmt, arg_array, sizeof...(args));
+    if (str.back() == '\n') {
+      str.pop_back();
+    }
+    str.append(L"\x1b[0m\n");
+    return bela::terminal::WriteAuto(stderr, str);
+  }
+  bela::ssize_t DbgPrint(const wchar_t *fmt) {
+    if (!debugMode) {
+      return 0;
+    }
+    std::wstring_view msg(fmt);
+    if (!msg.empty() && msg.back() == '\n') {
+      msg.remove_suffix(1);
+    }
+    return bela::terminal::WriteAuto(stderr, bela::StringCat(L"\x1b[33m* ", msg, L"\x1b[0m\n"));
+  }
+};
+
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
 // https://www.rfc-editor.org/rfc/rfc6266#section-5
 inline std::optional<std::wstring> extract_filename(const headers_t &hkv) {
@@ -149,7 +225,7 @@ public:
                     SECURITY_FLAG_IGNORE_CERT_CN_INVALID | SECURITY_FLAG_IGNORE_CERT_DATE_INVALID;
     WinHttpSetOption(h, WINHTTP_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
   }
-  
+
   // fill header
   bool write_headers(const headers_t &hkv, const std::vector<std::wstring> &cookies, int64_t position, int64_t length,
                      bela::error_code &ec) {
@@ -175,9 +251,16 @@ public:
     }
     return true;
   }
-  bool write_body(std::wstring_view body, std::wstring_view content_type, bela::error_code &ec) {
+  bool write_body(std::wstring_view body, std::wstring_view content_type, WINHTTP_STATUS_CALLBACK callback,
+                  DWORD_PTR dwContext, bela::error_code &ec) {
+    if (callback != nullptr) {
+      WinHttpSetStatusCallback(h, callback,
+                               WINHTTP_CALLBACK_FLAG_RESOLVE_NAME | WINHTTP_CALLBACK_STATUS_REDIRECT |
+                                   WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER,
+                               NULL);
+    }
     if (body.empty()) {
-      if (WinHttpSendRequest(h, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) != TRUE) {
+      if (WinHttpSendRequest(h, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, dwContext) != TRUE) {
         ec = make_net_error_code();
         return false;
       }
@@ -192,11 +275,14 @@ public:
     }
     if (WinHttpSendRequest(h, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                            const_cast<LPVOID>(reinterpret_cast<LPCVOID>(body.data())), static_cast<DWORD>(body.size()),
-                           static_cast<DWORD>(body.size()), 0) != TRUE) {
+                           static_cast<DWORD>(body.size()), dwContext) != TRUE) {
       ec = make_net_error_code();
       return false;
     }
     return true;
+  }
+  bool write_body(std::wstring_view body, std::wstring_view content_type, bela::error_code &ec) {
+    return write_body(body, content_type, nullptr, 0, ec);
   }
   // recv_minimal_response: read minimal response --> status code and headers
   std::optional<minimal_response> recv_minimal_response(bela::error_code &ec) {
