@@ -56,13 +56,19 @@
 #include <system_error>
 #endif
 
-// Allow to disable exceptions.
-#if (defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)) && !defined(SEMVER_NOEXCEPTION)
+#if defined(SEMVER_CONFIG_FILE)
+#include SEMVER_CONFIG_FILE
+#endif
+
+#if defined(SEMVER_THROW)
+// define SEMVER_THROW(msg) to override semver throw behavior.
+#elif defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
 #  include <stdexcept>
-#  define NEARGYE_THROW(exception) throw exception
+#  define SEMVER_THROW(msg) (throw std::invalid_argument{msg})
 #else
+#  include <cassert>
 #  include <cstdlib>
-#  define NEARGYE_THROW(exception) std::abort()
+#  define SEMVER_THROW(msg) (assert(!msg), std::abort())
 #endif
 
 #if defined(__clang__)
@@ -247,6 +253,20 @@ constexpr bool check_delimiter(const char* first, const char* last, char d) noex
   return first != last && first != nullptr && *first == d;
 }
 
+template <typename T, typename = void>
+struct resize_uninitialized {
+  static auto resize(T& str, std::size_t size) -> std::void_t<decltype(str.resize(size))> {
+    str.resize(size);
+  }
+};
+
+template <typename T>
+struct resize_uninitialized<T, std::void_t<decltype(std::declval<T>().__resize_default_init(42))>> {
+  static void resize(T& str, std::size_t size) {
+    str.__resize_default_init(size);
+  }
+};
+
 } // namespace semver::detail
 
 struct version {
@@ -338,16 +358,17 @@ struct version {
 
   constexpr version& from_string(std::string_view str) {
     if (!from_string_noexcept(str)) {
-      NEARGYE_THROW(std::invalid_argument{"semver::version::from_string invalid version."});
+      SEMVER_THROW("semver::version::from_string invalid version.");
     }
 
     return *this;
   }
 
   [[nodiscard]] std::string to_string() const {
-    auto str = std::string(string_length(), '\0');
+    auto str = std::string{};
+    detail::resize_uninitialized<std::string>::resize(str, string_length());
     if (!to_chars(str.data(), str.data() + str.length())) {
-      NEARGYE_THROW(std::invalid_argument{"semver::version::to_string invalid version."});
+      SEMVER_THROW("semver::version::to_string invalid version.");
     }
 
     return str;
@@ -506,28 +527,20 @@ using namespace semver::detail;
 
 class range {
  public:
-  constexpr explicit range(std::string_view str) noexcept : str_{str} {}
+  constexpr explicit range(std::string_view str) noexcept : parser{str} {}
 
-  constexpr bool satisfies(const version& ver, bool include_prerelease) const {
-    range_parser parser{str_};
-
-    auto is_logical_or = [&parser]() constexpr noexcept -> bool { return parser.current_token.type == range_token_type::logical_or; };
-
-    auto is_operator = [&parser]() constexpr noexcept -> bool { return parser.current_token.type == range_token_type::range_operator; };
-
-    auto is_number = [&parser]() constexpr noexcept -> bool { return parser.current_token.type == range_token_type::number; };
-
+  constexpr bool satisfies(const version& ver, bool include_prerelease) {
     const bool has_prerelease = ver.prerelease_type != prerelease::none;
 
     do {
-      if (is_logical_or()) {
+      if (is_logical_or_token()) {
         parser.advance_token(range_token_type::logical_or);
       }
 
       bool contains = true;
       bool allow_compare = include_prerelease;
 
-      while (is_operator() || is_number()) {
+      while (is_operator_token() || is_number_token()) {
         const auto range = parser.parse_range();
         const bool equal_without_tags = equal_to(range.ver, ver, comparators_option::exclude_prerelease);
 
@@ -549,7 +562,7 @@ class range {
         return true;
       }
 
-    } while (is_logical_or());
+    } while (is_logical_or_token());
     
     return false;
   }
@@ -580,7 +593,7 @@ private:
         case range_operator::less_or_equal:
           return version <= ver;
         default:
-          NEARGYE_THROW(std::invalid_argument{"semver::range unexpected operator."});
+          SEMVER_THROW("semver::range unexpected operator.");
       }
     }
   };
@@ -720,7 +733,7 @@ private:
 
     constexpr void advance_token(range_token_type token_type) {
       if (current_token.type != token_type) {
-        NEARGYE_THROW(std::invalid_argument{"semver::range unexpected token."});
+        SEMVER_THROW("semver::range unexpected token.");
       }
       current_token = lexer.get_next_token();
     }
@@ -776,7 +789,18 @@ private:
     }
   };
 
-  std::string_view str_;
+  [[nodiscard]] constexpr bool is_logical_or_token() const noexcept {
+    return parser.current_token.type == range_token_type::logical_or;
+  }
+  [[nodiscard]] constexpr bool is_operator_token() const noexcept {
+    return parser.current_token.type == range_token_type::range_operator;
+  }
+
+  [[nodiscard]] constexpr bool is_number_token() const noexcept {
+    return parser.current_token.type == range_token_type::number;
+  }
+
+  range_parser parser;
 };
 
 } // namespace semver::range::detail
@@ -793,7 +817,7 @@ constexpr bool satisfies(const version& ver, std::string_view str, satisfies_opt
   case satisfies_option::include_prerelease:
     return detail::range{str}.satisfies(ver, true);
   default:
-    NEARGYE_THROW(std::invalid_argument{"semver::range unexpected satisfies_option."});
+    SEMVER_THROW("semver::range unexpected satisfies_option.");
   }
 }
 
@@ -803,8 +827,6 @@ constexpr bool satisfies(const version& ver, std::string_view str, satisfies_opt
 inline constexpr auto semver_version = version{SEMVER_VERSION_MAJOR, SEMVER_VERSION_MINOR, SEMVER_VERSION_PATCH};
 
 } // namespace semver
-
-#undef NEARGYE_THROW
 
 #if defined(__clang__)
 #  pragma clang diagnostic pop
