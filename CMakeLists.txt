@@ -1,5 +1,5 @@
 # Copyright (C) 2022. Baulk contributors. All Rights Reserved.
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.22)
 project(Baulk)
 enable_language(ASM_MASM)
 
