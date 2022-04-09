@@ -99,7 +99,7 @@ Baulk depends many license-friendly open source projects, I would like to expres
 +   [Brotli - Extract `tar.br` and `ZIP-Brotli`](https://github.com/google/brotli)
 +   [bzip2 - Extract `tar.bz` and `ZIP-bzip2`](https://sourceware.org/bzip2/)
 +   [Compact Encoding Detection - zip non-UTF-8 file name encoding detection](https://github.com/google/compact_enc_det)
-+   [zlib (Chromium variants)  - Extract `tar.gz` and `ZIP-deflate`](https://github.com/chromium/chromium/tree/master/third_party/zlib)
++   [zlib (Chromium variants)  - Extract `tar.gz` and `ZIP-deflate`](https://github.com/chromium/chromium/tree/main/third_party/zlib)
 +   [zlib (deflate64) - Extract `ZIP-deflate64`](https://github.com/madler/zlib/tree/master/contrib/infback9)
 +   [liblzma - Extract `tar.xz` and `ZIP-xz`](https://tukaani.org/xz/)
 +   [zstd - Extract `tar.zst` and `ZIP-zstd`](https://github.com/facebook/zstd)
