@@ -100,7 +100,7 @@ Baulk 依赖了许多许可证友好的开源项目，在这里我表示由衷�
 +   [Brotli - 解压缩 `tar.br` 文件和以 `brotli` 压缩的 ZIP 文件](https://github.com/google/brotli)
 +   [bzip2 - 解压缩 `tar.bz` 文件和以 `bzip2` 压缩的 ZIP 文件](https://sourceware.org/bzip2/)
 +   [Compact Encoding Detection - zip 非 UTF-8 文件名编码检测](https://github.com/google/compact_enc_det)
-+   [zlib (Chromium 变体)  - 解压缩 `tar.xz` 文件和以 `defalte` 压缩的 ZIP 文件](https://github.com/chromium/chromium/tree/master/third_party/zlib)
++   [zlib (Chromium 变体)  - 解压缩 `tar.xz` 文件和以 `defalte` 压缩的 ZIP 文件](https://github.com/chromium/chromium/tree/main/third_party/zlib)
 +   [zlib (deflate64) - 解压缩以 `deflate64` 压缩的 ZIP 文件](https://github.com/madler/zlib/tree/master/contrib/infback9)
 +   [liblzma - 解压缩 `tar.xz` 文件和以 `xz` 压缩的 ZIP 文件](https://tukaani.org/xz/)
 +   [zstd - 解压缩 `tar.zst` 文件和以 `zstd` 压缩的 ZIP 文件](https://github.com/facebook/zstd)
