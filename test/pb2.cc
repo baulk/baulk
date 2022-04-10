@@ -1,6 +1,7 @@
 #include <bela/picker.hpp>
 #include <bela/comutils.hpp>
 #include <bela/terminal.hpp>
+#include <bela/str_cat.hpp>
 #include <ShObjIdl.h>
 #include <ShlObj_core.h>
 #include <thread>

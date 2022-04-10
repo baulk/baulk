@@ -250,10 +250,10 @@ int wmain() {
   for (const auto s : nums) {
     int X = 0;
     if (bela::SimpleAtoi(s, &X)) {
-      bela::FPrintF(stderr, L"Good integer %s --> %d\n", n, X);
+      bela::FPrintF(stderr, L"Good integer %v --> %d\n", s, X);
       continue;
     }
-    bela::FPrintF(stderr, L"Bad integer %s\n", n);
+    bela::FPrintF(stderr, L"Bad integer %v\n", s);
   }
 
   bela::FPrintF(stderr, L"%0.2f\n", n);

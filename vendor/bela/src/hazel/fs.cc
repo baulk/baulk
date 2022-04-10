@@ -1,6 +1,7 @@
 //
 #include <hazel/fs.hpp>
 #include <bela/repasepoint.hpp>
+#include <bela/str_cat.hpp>
 
 namespace hazel::fs {
 

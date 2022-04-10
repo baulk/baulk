@@ -170,8 +170,8 @@ void SHA256H::ProcessMsgBlock(const unsigned char *msg) {
 //  CW0 = w[t+3] : w[t+2] : w[t+1] : w[t]
 #define CYCLE_W(CW0, CW1, CW2, CW3)                                                                                    \
   CW0 = _mm_sha256msg1_epu32(CW0, CW1);                                                                                \
-  CW0 = _mm_add_epi32(CW0, _mm_alignr_epi8(CW3, CW2, 4)); /* add w[t-4]:w[t-5]:w[t-6]:w[t-7]*/                         \
-  CW0 = _mm_sha256msg2_epu32(CW0, CW3);
+  (CW0) = _mm_add_epi32(CW0, _mm_alignr_epi8(CW3, CW2, 4)); /* add w[t-4]:w[t-5]:w[t-6]:w[t-7]*/                       \
+  (CW0) = _mm_sha256msg2_epu32(CW0, CW3);
 
   __m128i state1 = h0145; // a:b:e:f
   __m128i state2 = h2367; // c:d:g:h

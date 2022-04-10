@@ -46,12 +46,12 @@ constexpr const uint32_t k256[64] = {
 
 /* Recalculate element n-th of circular buffer W using formula
  *   W[n] = sigma1(W[n - 2]) + W[n - 7] + sigma0(W[n - 15]) + W[n - 16]; */
-#define RECALCULATE_W(W, n) (W[n] += (sigma1(W[(n - 2) & 15]) + W[(n - 7) & 15] + sigma0(W[(n - 15) & 15])))
+#define RECALCULATE_W(W, n) ((W)[n] += (sigma1((W)[((n)-2) & 15]) + (W)[((n)-7) & 15] + sigma0((W)[((n)-15) & 15])))
 
 #define ROUND(a, b, c, d, e, f, g, h, k, data)                                                                         \
   {                                                                                                                    \
-    unsigned T1 = h + Sigma1(e) + Ch(e, f, g) + k + (data);                                                            \
-    d += T1, h = T1 + Sigma0(a) + Maj(a, b, c);                                                                        \
+    unsigned T1 = (h) + Sigma1(e) + Ch(e, f, g) + (k) + (data);                                                        \
+    (d) += T1, (h) = T1 + Sigma0(a) + Maj(a, b, c);                                                                    \
   }
 #define ROUND_1_16(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k256[n], W[n] = bela::frombe(block[n]))
 #define ROUND_17_64(a, b, c, d, e, f, g, h, n) ROUND(a, b, c, d, e, f, g, h, k[n], RECALCULATE_W(W, n))

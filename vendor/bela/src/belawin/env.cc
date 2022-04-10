@@ -4,19 +4,9 @@
 #include <bela/env.hpp>
 #include <bela/str_cat.hpp>
 #include <bela/path.hpp>
+#include <bela/strings.hpp>
 
 namespace bela {
-namespace env_internal {
-constexpr const size_t npos = static_cast<size_t>(-1);
-size_t memsearch(const wchar_t *begin, const wchar_t *end, int ch) {
-  for (auto it = begin; it != end; it++) {
-    if (*it == ch) {
-      return it - begin;
-    }
-  }
-  return npos;
-}
-} // namespace env_internal
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/processenv/nf-processenv-expandenvironmentstringsw
 std::wstring WindowsExpandEnv(std::wstring_view sv) {
@@ -59,8 +49,8 @@ std::wstring PathUnExpand(std::wstring_view sv) {
   auto it = sv.data();
   auto end = it + sv.size();
   while (it < end) {
-    auto pos = env_internal::memsearch(it, end, '%');
-    if (pos == env_internal::npos) {
+    auto pos = CharFind(it, end, '%');
+    if (pos == bela::MaximumPos) {
       buf.append(it, end - it);
       break;
     }

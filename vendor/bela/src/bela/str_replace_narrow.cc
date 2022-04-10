@@ -31,7 +31,7 @@
 // limitations under the License.
 // ---------------------------------------------------------------------------
 #include <bela/str_replace_narrow.hpp>
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela::narrow {
 namespace strings_internal {

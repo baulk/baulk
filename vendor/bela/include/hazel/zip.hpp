@@ -4,7 +4,7 @@
 #include <span>
 #include <bela/base.hpp>
 #include <bela/buffer.hpp>
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/time.hpp>
 #include <bela/phmap.hpp>
 #include <bela/os.hpp>
@@ -98,7 +98,7 @@ struct File {
   bool EndsWith(std::string_view suffix) const { return name.ends_with(suffix); }
   bool Contains(char ch) const { return name.find(ch) != std::string::npos; }
   bool Contains(std::string_view sv) { return name.find(sv) != std::string::npos; }
-  std::string AesText() const { return bela::narrow::StringCat("AE-", aes_version, "/", AESStrength(aes_strength)); }
+  std::string AesText() const { return bela::StringNarrowCat("AE-", aes_version, "/", AESStrength(aes_strength)); }
 };
 
 std::string String(bela::os::FileMode m);

@@ -2,6 +2,7 @@
 #ifndef BAULK_DEBUG_HPP
 #define BAULK_DEBUG_HPP
 #include <bela/terminal.hpp>
+#include <bela/str_cat.hpp>
 
 namespace baulk {
 extern bool IsDebugMode;

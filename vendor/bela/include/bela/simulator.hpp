@@ -33,7 +33,7 @@ struct StringCaseInsensitiveEq {
   bool operator()(std::wstring_view wlhs, std::wstring_view wrhs) const { return bela::EqualsIgnoreCase(wlhs, wrhs); }
 };
 
-std::wstring ExpandEnv(std::wstring_view sv);
+std::wstring ExpandEnv(std::wstring_view raw);
 std::wstring PathExpand(std::wstring_view raw);
 
 using envmap_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;

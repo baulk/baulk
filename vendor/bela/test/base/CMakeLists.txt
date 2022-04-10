@@ -81,3 +81,11 @@ add_executable(iota_test
 target_link_libraries(iota_test
   bela
 )
+
+add_executable(strings_cat_test
+strings_cat.cc
+)
+
+target_link_libraries(strings_cat_test
+  bela
+)

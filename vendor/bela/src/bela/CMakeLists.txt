@@ -10,16 +10,13 @@ add_library(
   fnmatch.cc
   int128.cc
   match.cc
-  memutil.cc
   numbers.cc
   str_split.cc
   str_split_narrow.cc
   str_replace.cc
   str_replace_narrow.cc
   str_cat.cc
-  str_cat_narrow.cc
   subsitute.cc
-  subsitute_narrow.cc
   terminal.cc
   __charconv/charconv.cc
   __charconv/charconv_float.cc

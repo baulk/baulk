@@ -78,7 +78,7 @@ private:
   template <typename... Args>
   bool JoinEnv(vector_t &vec, std::wstring_view a, std::wstring_view b, std::wstring_view c, std::wstring_view d,
                Args... args) {
-    return JoinEnvInternal(vec, bela::strings_internal::CatPieces({a, b, c, d, args...}));
+    return JoinEnvInternal(vec, bela::strings_internal::string_cat_pieces<wchar_t>({a, b, c, d, args...}));
   }
   void simulatorSetEnv(bela::env::Simulator &sm, std::wstring_view key, std::wstring_view value) {
     auto oldValue = sm.GetEnv(key);

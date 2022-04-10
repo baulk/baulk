@@ -99,8 +99,8 @@ static void sm3_process_block(Hasher *ctx, const uint8_t data[64]) {
 #define GG0(x, y, z) ((x) ^ (y) ^ (z))
 #define GG1(x, y, z) (((x) & (y)) | ((~(x)) & (z)))
 
-#define SHL(x, n) (((x)&0xFFFFFFFF) << n)
-#define ROTL(x, n) (SHL((x), n) | ((x) >> (32 - n)))
+#define SHL(x, n) (((x)&0xFFFFFFFF) << (n))
+#define ROTL(x, n) (SHL((x), n) | ((x) >> (32 - (n))))
 
 #define P0(x) ((x) ^ ROTL((x), 9) ^ ROTL((x), 17))
 #define P1(x) ((x) ^ ROTL((x), 15) ^ ROTL((x), 23))

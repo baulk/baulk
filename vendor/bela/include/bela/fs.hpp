@@ -2,6 +2,7 @@
 #ifndef BELA_FS_HPP
 #define BELA_FS_HPP
 #include "base.hpp"
+#include "str_cat.hpp"
 #include <stdio.h>
 
 namespace bela::fs {

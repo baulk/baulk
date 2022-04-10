@@ -35,7 +35,12 @@ if ($null -eq $clangtidy) {
 }
 
 $SOURCE_DIRS = $(
-    "$PSScriptRoot\src\bela"
+    "$PSScriptRoot\src\bela",
+    "$PSScriptRoot\src\belahash",
+    "$PSScriptRoot\src\belashl",
+    "$PSScriptRoot\src\belatime",
+    "$PSScriptRoot\src\belawin",
+    "$PSScriptRoot\src\hazel"
 )
 
 $checks = $(
@@ -43,10 +48,13 @@ $checks = $(
     "clang-analyzer-*",
     "-clang-analyzer-cplusplus*",
     "performance-*",
+    ## performance-no-int-to-ptr This rule is not reasonable. Calls like _get_osfhandle are warned, which is incredible. There is no operation for intptr to pointer, only conversion.
+    ## disable it
+    "-performance-no-int-to-ptr",
     "cert-*",
     "portability-*",
-    #"bugprone-*",
-    #"-bugprone-easily-swappable-parameters",
+    "bugprone-*",
+    "-bugprone-easily-swappable-parameters",
     "readability-*",
     "-readability-magic-numbers",
     "-readability-qualified-auto",

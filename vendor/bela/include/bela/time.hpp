@@ -83,8 +83,8 @@ public:
   Duration &operator=(const Duration &d) = default;
 
   // Compound assignment operators.
-  Duration &operator+=(Duration d);
-  Duration &operator-=(Duration d);
+  Duration &operator+=(Duration rhs);
+  Duration &operator-=(Duration rhs);
   Duration &operator*=(int64_t r);
   Duration &operator*=(double r);
   Duration &operator/=(int64_t r);

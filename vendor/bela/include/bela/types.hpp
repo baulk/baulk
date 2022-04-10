@@ -45,6 +45,9 @@ concept strict_integral = is_strict_integral_v<T>;
 template <class T>
 concept character = is_character_v<T>;
 
+template <class From, class To>
+concept compatible_character = bela::is_character_v<From> && sizeof(From) == sizeof(To);
+
 template <class T>
 concept not_character = !is_character_v<T>;
 
@@ -65,6 +68,9 @@ concept trivial = std::is_trivial_v<T>;
 
 template <class T>
 concept integral_superset = std::integral<T> || std::is_enum_v<T>;
+
+template <class T>
+concept strict_enum = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
 
 template <typename E>
 requires std::is_enum_v<E>

@@ -1,6 +1,6 @@
 //
 #include "tarinternal.hpp"
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/str_join_narrow.hpp>
 #include <bela/str_split_narrow.hpp>
 #include <baulk/allocate.hpp>
@@ -207,7 +207,7 @@ bool Reader::readHeader(Header &h, bela::error_code &ec) {
       }
     }
     if (!prefix.empty()) {
-      h.Name = bela::narrow::StringCat(prefix, "/", h.Name);
+      h.Name = bela::StringNarrowCat(prefix, "/", h.Name);
     }
   }
   return true;

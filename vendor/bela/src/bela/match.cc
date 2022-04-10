@@ -31,10 +31,30 @@
 // limitations under the License.
 // ---------------------------------------------------------------------------
 #include <bela/match.hpp>
-#include <bela/memutil.hpp>
-
+#include <bela/ascii.hpp>
 
 namespace bela {
+namespace strings_internal {
+constexpr int memcasecmp(const wchar_t *s1, const wchar_t *s2, size_t len) noexcept {
+  for (size_t i = 0; i < len; i++) {
+    const auto diff = bela::ascii_tolower(s1[i]) - bela::ascii_tolower(s2[i]);
+    if (diff != 0) {
+      return static_cast<int>(diff);
+    }
+  }
+  return 0;
+}
+
+constexpr int memcasecmp(const char *s1, const char *s2, size_t len) noexcept {
+  for (size_t i = 0; i < len; i++) {
+    const auto diff = bela::ascii_tolower(s1[i]) - bela::ascii_tolower(s2[i]);
+    if (diff != 0) {
+      return static_cast<int>(diff);
+    }
+  }
+  return 0;
+}
+} // namespace strings_internal
 
 bool EqualsIgnoreCase(std::wstring_view piece1, std::wstring_view piece2) noexcept {
   return (piece1.size() == piece2.size() &&

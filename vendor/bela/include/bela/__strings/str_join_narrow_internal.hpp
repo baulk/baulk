@@ -38,16 +38,16 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 
 namespace bela::narrow::strings_internal {
 // The default formatter. Converts alpha-numeric types to strings.
 struct AlphaNumFormatterImpl {
   // This template is needed in order to support passing in a dereferenced
   // vector<bool>::iterator
-  template <typename T> void operator()(std::string *out, const T &t) const { StrAppend(out, AlphaNum(t)); }
+  template <typename T> void operator()(std::string *out, const T &t) const { StrAppend(out, t); }
 
-  void operator()(std::string *out, const AlphaNum &t) const { StrAppend(out, t); }
+  void operator()(std::string *out, const basic_alphanum<char> &t) const { StrAppend(out, t); }
 };
 
 // A type that's used to overload the JoinAlgorithm() function (defined below)

@@ -38,7 +38,7 @@ Chinese docs: [zh-CN](./docs/zh-CN/)
 
 ## License
 
-bela base [Abseil](https://github.com/abseil/abseil-cpp): strcat. numbers subsitute memutil match ascii str_replace str_join
+bela base [Abseil](https://github.com/abseil/abseil-cpp): strcat. numbers subsitute match ascii str_replace str_join
 bela base Visual C++: charconv (support wchar_t only)  
 bela Use parallel-hashmap [https://github.com/greg7mdp/parallel-hashmap](https://github.com/greg7mdp/parallel-hashmap)  
 bela Use semver [https://github.com/Neargye/semver](https://github.com/Neargye/semver)  

@@ -1,6 +1,6 @@
 //
 #include <bela/terminal.hpp>
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/path.hpp>
 #include <bela/datetime.hpp>
 #include "baulk-terminal.hpp"
@@ -23,7 +23,7 @@ public:
     if (fd == INVALID_HANDLE_VALUE) {
       return -1;
     }
-    auto um = bela::narrow::StringCat("[DEBUG] ", bela::FormatTime<char>(bela::Now()), " [", GetCurrentProcessId(),
+    auto um = bela::StringNarrowCat("[DEBUG] ", bela::FormatTime<char>(bela::Now()), " [", GetCurrentProcessId(),
                                       "] ", bela::encode_into<wchar_t, char>(msg), "\n");
     DWORD written = 0;
     if (WriteFile(fd, um.data(), static_cast<DWORD>(um.size()), &written, nullptr) != TRUE) {

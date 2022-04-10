@@ -3,7 +3,7 @@
 #define BAULK_FSMUTEX_HPP
 #include <bela/base.hpp>
 #include <bela/io.hpp>
-#include <bela/str_cat_narrow.hpp>
+#include <bela/str_cat.hpp>
 #include <bela/terminal.hpp>
 #include <filesystem>
 
@@ -65,7 +65,7 @@ inline std::optional<FsMutex> MakeFsMutex(std::wstring_view pidfile, bela::error
     ec = bela::make_system_error_code(L"CreateFsMutex: ");
     return std::nullopt;
   }
-  bela::narrow::AlphaNum an(GetCurrentProcessId());
+  bela::basic_alphanum<char8_t> an(GetCurrentProcessId());
   DWORD written = 0;
   if (WriteFile(FileHandle, an.data(), static_cast<DWORD>(an.size()), &written, nullptr) != TRUE) {
     ec = bela::make_system_error_code();

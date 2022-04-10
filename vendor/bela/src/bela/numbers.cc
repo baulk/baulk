@@ -43,7 +43,7 @@
 #include <bit> //C++20
 #include <bela/ascii.hpp>
 #include <bela/numbers.hpp>
-#include <bela/memutil.hpp>
+#include <bela/strings.hpp>
 #include <bela/match.hpp>
 
 namespace bela {
@@ -62,7 +62,7 @@ inline void PutTwoDigits(size_t i, wchar_t *buf) {
       {'8', '1'}, {'8', '2'}, {'8', '3'}, {'8', '4'}, {'8', '5'}, {'8', '6'}, {'8', '7'}, {'8', '8'}, {'8', '9'},
       {'9', '0'}, {'9', '1'}, {'9', '2'}, {'9', '3'}, {'9', '4'}, {'9', '5'}, {'9', '6'}, {'9', '7'}, {'9', '8'},
       {'9', '9'}};
-  strings_internal::memcopy(buf, two_ASCII_digits[i], 2);
+  MemCopy(buf, two_ASCII_digits[i], 2);
 }
 
 inline void PutTwoDigits(size_t i, char *buf) {
@@ -161,7 +161,7 @@ wchar_t *FastIntToBuffer(uint32_t i, wchar_t *buffer) {
     if (i >= 10) {
       goto lt100;
     }
-    strings_internal::memcopy(buffer, one_ASCII_final_digits[i], 2);
+    MemCopy(buffer, one_ASCII_final_digits[i], 2);
     return buffer + 1;
   }
   if (i < 10000) { //    10,000
@@ -249,7 +249,7 @@ wchar_t *FastIntToBuffer(uint64_t i, wchar_t *buffer) {
   u32 -= digits * 10;
   PutTwoDigits(digits, buffer);
   buffer += 2;
-  strings_internal::memcopy(buffer, one_ASCII_final_digits[u32], 2);
+  MemCopy(buffer, one_ASCII_final_digits[u32], 2);
   return buffer + 1;
 }
 
@@ -857,7 +857,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
                          // buffer passed in.
 
   if (std::isnan(d)) {
-    strings_internal::memcopy(out, L"nan\0", 4); // NOLINT(runtime/printf)
+    MemCopy(out, L"nan\0", 4); // NOLINT(runtime/printf)
     return 3;
   }
   if (d == 0) { // +0 and -0 are handled here
@@ -873,7 +873,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     d = -d;
   }
   if (d > (std::numeric_limits<double>::max)()) {
-    strings_internal::memcopy(out, L"inf\0", 4); // NOLINT(runtime/printf)
+    MemCopy(out, L"inf\0", 4); // NOLINT(runtime/printf)
     return out + 3 - buffer;
   }
 
@@ -884,11 +884,11 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   out[1] = L'.';
   switch (exp) {
   case 5:
-    strings_internal::memcopy(out, &digits[0], 6), out += 6;
+    MemCopy(out, &digits[0], 6), out += 6;
     *out = 0;
     return out - buffer;
   case 4:
-    strings_internal::memcopy(out, &digits[0], 5), out += 5;
+    MemCopy(out, &digits[0], 5), out += 5;
     if (digits[5] != '0') {
       *out++ = '.';
       *out++ = digits[5];
@@ -896,7 +896,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out = 0;
     return out - buffer;
   case 3:
-    strings_internal::memcopy(out, &digits[0], 4), out += 4;
+    MemCopy(out, &digits[0], 4), out += 4;
     if ((digits[5] | digits[4]) != '0') {
       *out++ = '.';
       *out++ = digits[4];
@@ -907,9 +907,9 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out = 0;
     return out - buffer;
   case 2:
-    strings_internal::memcopy(out, &digits[0], 3), out += 3;
+    MemCopy(out, &digits[0], 3), out += 3;
     *out++ = '.';
-    strings_internal::memcopy(out, &digits[3], 3);
+    MemCopy(out, &digits[3], 3);
     out += 3;
     while (out[-1] == '0') {
       --out;
@@ -920,9 +920,9 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out = 0;
     return out - buffer;
   case 1:
-    strings_internal::memcopy(out, &digits[0], 2), out += 2;
+    MemCopy(out, &digits[0], 2), out += 2;
     *out++ = '.';
-    strings_internal::memcopy(out, &digits[2], 4);
+    MemCopy(out, &digits[2], 4);
     out += 4;
     while (out[-1] == '0') {
       --out;
@@ -933,9 +933,9 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     *out = 0;
     return out - buffer;
   case 0:
-    strings_internal::memcopy(out, &digits[0], 1), out += 1;
+    MemCopy(out, &digits[0], 1), out += 1;
     *out++ = '.';
-    strings_internal::memcopy(out, &digits[1], 5);
+    MemCopy(out, &digits[1], 5);
     out += 5;
     while (out[-1] == '0') {
       --out;
@@ -959,7 +959,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
     [[fallthrough]];
   case -1:
     out += 2;
-    strings_internal::memcopy(out, &digits[0], 6);
+    MemCopy(out, &digits[0], 6);
     out += 6;
     while (out[-1] == '0') {
       --out;
@@ -969,7 +969,7 @@ size_t SixDigitsToBuffer(double d, wchar_t *const buffer) {
   }
   out[0] = digits[0];
   out += 2;
-  strings_internal::memcopy(out, &digits[1], 5), out += 5;
+  MemCopy(out, &digits[1], 5), out += 5;
   while (out[-1] == '0') {
     --out;
   }
@@ -1329,9 +1329,9 @@ template <typename IntType> struct LookupTables {
 // base has been validated to be in [2, 36] by safe_parse_sign_and_base().
 #define X_OVER_BASE_INITIALIZER(X)                                                                                     \
   {                                                                                                                    \
-    0, 0, X / 2, X / 3, X / 4, X / 5, X / 6, X / 7, X / 8, X / 9, X / 10, X / 11, X / 12, X / 13, X / 14, X / 15,      \
-        X / 16, X / 17, X / 18, X / 19, X / 20, X / 21, X / 22, X / 23, X / 24, X / 25, X / 26, X / 27, X / 28,        \
-        X / 29, X / 30, X / 31, X / 32, X / 33, X / 34, X / 35, X / 36,                                                \
+    0, 0, (X) / 2, (X) / 3, (X) / 4, (X) / 5, (X) / 6, (X) / 7, (X) / 8, (X) / 9, (X) / 10, (X) / 11, (X) / 12, (X) / 13, (X) / 14, (X) / 15,      \
+        (X) / 16, (X) / 17, (X) / 18, (X) / 19, (X) / 20, (X) / 21, (X) / 22, (X) / 23, (X) / 24, (X) / 25, (X) / 26, (X) / 27, (X) / 28,        \
+        (X) / 29, (X) / 30, (X) / 31, (X) / 32, (X) / 33, (X) / 34, (X) / 35, (X) / 36,                                                \
   }
 
 // This kVmaxOverBase is generated with

@@ -68,10 +68,10 @@ inline std::string cleanupName(const void *data, size_t N) {
   auto p = reinterpret_cast<const char *>(data);
   auto pos = memchr(p, 0, N);
   if (pos == nullptr) {
-    return std::string(p, N);
+    return {p, N};
   }
   N = reinterpret_cast<const char *>(pos) - p;
-  return std::string(p, N);
+  return {p, N};
 }
 
 // github.com\klauspost\compress@v1.11.3\zip\reader.go

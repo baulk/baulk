@@ -25,10 +25,7 @@ bool TerminalEnabled(HANDLE fd) {
   return SetConsoleMode(fd, dwMode) == TRUE;
 }
 
-bool IsTerminal(FILE *fd) {
-  auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
-  return IsTerminal(FileHandle);
-}
+bool IsTerminal(FILE *fd) { return IsTerminal(reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)))); }
 
 // Is cygwin terminal
 bool IsCygwinTerminal(HANDLE fd) {
@@ -69,10 +66,7 @@ bool IsCygwinTerminal(HANDLE fd) {
   }
   return true;
 }
-bool IsCygwinTerminal(FILE *fd) {
-  auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
-  return IsCygwinTerminal(FileHandle);
-}
+bool IsCygwinTerminal(FILE *fd) { return IsCygwinTerminal(reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)))); }
 // Is same terminal maybe console or Cygwin pty
 bool IsSameTerminal(HANDLE fd) { return IsTerminal(fd) || IsCygwinTerminal(fd); }
 bool IsSameTerminal(FILE *fd) {
@@ -90,8 +84,7 @@ bool TerminalSize(HANDLE fd, terminal_size &sz) {
   return true;
 }
 bool TerminalSize(FILE *fd, terminal_size &sz) {
-  auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
-  return TerminalSize(FileHandle, sz);
+  return TerminalSize(reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd))), sz);
 }
 
 // Write data to windows terminal (windows console)

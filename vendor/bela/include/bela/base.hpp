@@ -3,13 +3,13 @@
 // Windows error_code impl
 #ifndef BELA_BASE_HPP
 #define BELA_BASE_HPP
-#include "__basal/basal.hpp"
 #include <optional>
 #include <vector>
 #include <system_error>
 #include <memory>
 #include "types.hpp"
-#include "str_cat.hpp"
+#include "__basal/basal.hpp"
+#include "__strings/string_cat_internal.hpp"
 
 namespace bela {
 // Constructs an bela::error_code object from a value of AlphaNum
@@ -18,22 +18,23 @@ namespace bela {
 [[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a) { return error_code{a.Piece(), code}; }
 // Constructs an bela::error_code object from a value of AlphaNum
 [[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b) {
-  return error_code{StringCat(a, b), code};
+  return error_code{string_cat<wchar_t>(a, b), code};
 }
 // Constructs an bela::error_code object from a value of AlphaNum
 [[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
-  return error_code{StringCat(a, b, c), code};
+  return error_code{string_cat<wchar_t>(a, b, c), code};
 }
 // Constructs an bela::error_code object from a value of AlphaNum
 [[nodiscard]] inline error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
                                                 const AlphaNum &d) {
-  return error_code{StringCat(a, b, c, d), code};
+  return error_code{string_cat<wchar_t>(a, b, c, d), code};
 }
 // Constructs an bela::error_code object from a value of AlphaNum
 template <typename... AV>
 [[nodiscard]] error_code make_error_code(long code, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
                                          const AlphaNum &d, const AV &...av) {
-  return error_code{strings_internal::CatPieces(
+
+  return error_code{strings_internal::string_cat_pieces<wchar_t>(
                         {a.Piece(), b.Piece(), c.Piece(), d.Piece(), static_cast<const AlphaNum &>(av).Piece()...}),
                     code};
 }

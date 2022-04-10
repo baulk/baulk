@@ -147,6 +147,38 @@
 #define BELA_FORCE_INLINE inline BELA_ATTRIBUTE_ALWAYS_INLINE
 #endif
 
+// BELA_INTERNAL_HAVE_SSE2 is used for compile-time detection of SSE2 support.
+// See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for an overview of
+// which architectures support the various x86 instruction sets.
+#ifdef BELA_INTERNAL_HAVE_SSE2
+#error BELA_INTERNAL_HAVE_SSE2 cannot be directly set
+#elif defined(__SSE2__)
+#define BELA_INTERNAL_HAVE_SSE2 1
+#elif defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+// MSVC only defines _M_IX86_FP for x86 32-bit code, and _M_IX86_FP >= 2
+// indicates that at least SSE2 was targeted with the /arch:SSE2 option.
+// All x86-64 processors support SSE2, so support can be assumed.
+// https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
+#define BELA_INTERNAL_HAVE_SSE2 1
+#endif
+
+// BELA_INTERNAL_HAVE_SSSE3 is used for compile-time detection of SSSE3 support.
+// See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for an overview of
+// which architectures support the various x86 instruction sets.
+//
+// MSVC does not have a mode that targets SSSE3 at compile-time. To use SSSE3
+// with MSVC requires either assuming that the code will only every run on CPUs
+// that support SSSE3, otherwise __cpuid() can be used to detect support at
+// runtime and fallback to a non-SSSE3 implementation when SSSE3 is unsupported
+// by the CPU.
+#ifdef BELA_INTERNAL_HAVE_SSSE3
+#error BELA_INTERNAL_HAVE_SSSE3 cannot be directly set
+#elif defined(__SSSE3__)
+#define BELA_INTERNAL_HAVE_SSSE3 1
+#elif defined(_M_X64) // Force enable SSE3 on windows
+#define BELA_INTERNAL_HAVE_SSSE3 1
+#endif
+
 #if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define BELA_IS_LITTLE_ENDIAN 1
 #elif defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__

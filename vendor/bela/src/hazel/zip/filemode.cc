@@ -7,8 +7,8 @@ using bela::os::FileMode;
 std::string String(FileMode m) {
   constexpr const char str[] = "dalTLDpSugct?";
   char buf[32] = {0}; //
-  int w = 0;
-  for (int i = 0; i < 13; i++) {
+  size_t w = 0;
+  for (size_t i = 0; i < 13; i++) {
     if ((m & (1 << (32 - 1 - i))) != 0) {
       buf[w] = str[i];
       w++;
@@ -19,7 +19,7 @@ std::string String(FileMode m) {
     w++;
   }
   constexpr const char rwx[] = "rwxrwxrwx";
-  for (int i = 0; i < 11; i++) {
+  for (size_t i = 0; i < 11; i++) {
     if ((m & (1 << (9 - 1 - i))) != 0) {
       buf[w] = rwx[i];
     } else {
@@ -27,7 +27,7 @@ std::string String(FileMode m) {
     }
     w++;
   }
-  return std::string(buf, w);
+  return std::string{buf, w};
 }
 
 FileMode unixModeToFileMode(uint32_t m) {

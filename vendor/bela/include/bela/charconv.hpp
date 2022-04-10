@@ -77,10 +77,10 @@ namespace std {
 
 */
 #include <charconv>
+#include <string_view>
 #include "macros.hpp"
 #include "utility.hpp"
 #include "types.hpp"
-#include "numbers.hpp"
 
 namespace bela {
 constexpr auto successful = std::errc{};
@@ -534,7 +534,7 @@ inline auto to_chars(wchar_t (&a)[N], I val, int base = 10) { return to_chars(a,
 template <std::size_t N, typename I>
 requires bela::charconv_affirmed<I>
 inline auto to_chars(char16_t (&a)[N], I val, int base = 10) {
-  return to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a) + N, val, base);
+  return to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a + N), val, base);
 }
 
 template <std::size_t N, typename I>
@@ -544,7 +544,7 @@ inline auto to_chars(char (&a)[N], I val, int base = 10) { return std::to_chars(
 template <std::size_t N, typename I>
 requires bela::charconv_affirmed<I>
 inline auto to_chars(char8_t (&a)[N], I val, int base = 10) {
-  return std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a) + N, val, base);
+  return std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a + N), val, base);
 }
 
 template <std::size_t N, typename I>
@@ -559,7 +559,7 @@ inline auto to_chars_view(wchar_t (&a)[N], I val, int base = 10) {
 template <std::size_t N, typename I>
 requires bela::charconv_affirmed<I>
 inline auto to_chars_view(char16_t (&a)[N], I val, int base = 10) {
-  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a) + N, val, base); res) {
+  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a + N), val, base); res) {
     return std::u16string_view{a, static_cast<size_t>(reinterpret_cast<const char16_t *>(res.ptr) - a)};
   }
   return std::u16string_view{};
@@ -577,7 +577,7 @@ inline auto to_chars_view(wchar_t (&a)[N], F val) {
 template <std::size_t N, typename F>
 requires std::floating_point<F>
 inline auto to_chars_view(char16_t (&a)[N], F val) {
-  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a) + N); res) {
+  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a + N), val); res) {
     return std::u16string_view{a, static_cast<size_t>(reinterpret_cast<const char16_t *>(res.ptr) - a)};
   }
   return std::u16string_view{};
@@ -595,7 +595,7 @@ inline auto to_chars_view(wchar_t (&a)[N], F val, chars_format fmt) {
 template <std::size_t N, typename F>
 requires std::floating_point<F>
 inline auto to_chars_view(char16_t (&a)[N], F val, chars_format fmt) {
-  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a) + N, fmt); res) {
+  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a + N), val, fmt); res) {
     return std::u16string_view{a, static_cast<size_t>(reinterpret_cast<const char16_t *>(res.ptr) - a)};
   }
   return std::u16string_view{};
@@ -613,7 +613,8 @@ inline auto to_chars_view(wchar_t (&a)[N], F val, chars_format fmt, int precisio
 template <std::size_t N, typename F>
 requires std::floating_point<F>
 inline auto to_chars_view(char16_t (&a)[N], F val, chars_format fmt, int precision) {
-  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a) + N, fmt, precision); res) {
+  if (auto res = to_chars(reinterpret_cast<wchar_t *>(a), reinterpret_cast<wchar_t *>(a + N), val, fmt, precision);
+      res) {
     return std::u16string_view{a, static_cast<size_t>(reinterpret_cast<const char16_t *>(res.ptr) - a)};
   }
   return std::u16string_view{};
@@ -629,7 +630,7 @@ template <typename I>
 requires bela::charconv_affirmed<I>
 inline auto from_string_view(std::u16string_view sv, I &value) {
   return __from_chars_atoi(reinterpret_cast<const wchar_t *>(sv.data()),
-                           reinterpret_cast<const wchar_t *>(sv.data()) + sv.size(), value);
+                           reinterpret_cast<const wchar_t *>(sv.data() + sv.size()), value);
 }
 
 template <typename I>
@@ -644,7 +645,7 @@ requires bela::charconv_affirmed<I>
 inline auto from_string_view(std::u16string_view sv, I &value, int base) {
   _BELA_ASSERT(2 <= base && base <= 36, "base not in [2, 36]");
   return __from_chars_integral(reinterpret_cast<const wchar_t *>(sv.data()),
-                               reinterpret_cast<const wchar_t *>(sv.data()) + sv.size(), value, base);
+                               reinterpret_cast<const wchar_t *>(sv.data() + sv.size()), value, base);
 }
 
 // bela::charconv float
@@ -658,7 +659,7 @@ template <typename F>
 requires std::floating_point<F>
 inline auto from_string_view(std::u16string_view sv, F &value, chars_format fmt = chars_format::general) {
   return from_chars(reinterpret_cast<const wchar_t *>(sv.data()),
-                    reinterpret_cast<const wchar_t *>(sv.data()) + sv.size(), value, fmt);
+                    reinterpret_cast<const wchar_t *>(sv.data() + sv.size()), value, fmt);
 }
 
 // std::charconv
@@ -674,7 +675,7 @@ inline auto to_chars_view(char (&a)[N], I val, int base = 10) {
 template <std::size_t N, typename I>
 requires bela::charconv_affirmed<I>
 inline auto to_chars_view(char8_t (&a)[N], I val, int base = 10) {
-  if (auto res = std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a) + N, val, base);
+  if (auto res = std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a + N), val, base);
       res.ec == successful) {
     return std::u8string_view{a, static_cast<size_t>(reinterpret_cast<const char8_t *>(res.ptr) - a)};
   }
@@ -682,6 +683,25 @@ inline auto to_chars_view(char8_t (&a)[N], I val, int base = 10) {
 }
 
 ///////// std::charconv float
+
+template <std::size_t N, typename F>
+requires std::floating_point<F>
+inline auto to_chars_view(char (&a)[N], F val, chars_format fmt) {
+  if (auto res = std::to_chars(a, a + N, val, fmt); res.ec == successful) {
+    return std::string_view{a, static_cast<size_t>(res.ptr - a)};
+  }
+  return std::string_view{};
+}
+
+template <std::size_t N, typename F>
+requires std::floating_point<F>
+inline auto to_chars_view(char8_t (&a)[N], F val, chars_format fmt) {
+  if (auto res = std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a + N), val, fmt);
+      res.ec == successful) {
+    return std::u8string_view{a, static_cast<size_t>(reinterpret_cast<const char8_t *>(res.ptr) - a)};
+  }
+  return std::u8string_view{};
+}
 
 template <std::size_t N, typename F>
 requires std::floating_point<F>
@@ -695,7 +715,7 @@ inline auto to_chars_view(char (&a)[N], F val, chars_format fmt, int precision) 
 template <std::size_t N, typename F>
 requires std::floating_point<F>
 inline auto to_chars_view(char8_t (&a)[N], F val, chars_format fmt, int precision) {
-  if (auto res = std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a) + N, fmt, precision); res) {
+  if (auto res = std::to_chars(reinterpret_cast<char *>(a), reinterpret_cast<char *>(a + N), fmt, precision); res) {
     return std::u8string_view{a, static_cast<size_t>(reinterpret_cast<const char *>(res.ptr) - a)};
   }
   return std::u8string_view{};
@@ -713,7 +733,7 @@ requires bela::charconv_affirmed<I>
 inline auto from_string_view(std::u8string_view sv, I &value, int base = 10) {
   _BELA_ASSERT(2 <= base && base <= 36, "base not in [2, 36]");
   return std::from_chars(reinterpret_cast<const char *>(sv.data()),
-                         reinterpret_cast<const char *>(sv.data()) + sv.size(), value, base);
+                         reinterpret_cast<const char *>(sv.data() + sv.size()), value, base);
 }
 
 template <typename F>
@@ -726,7 +746,7 @@ template <typename F>
 requires std::floating_point<F>
 inline auto from_string_view(std::u8string_view sv, F &value, chars_format fmt = chars_format::general) {
   return std::from_chars(reinterpret_cast<const char *>(sv.data()),
-                         reinterpret_cast<const char *>(sv.data()) + sv.size(), value, fmt);
+                         reinterpret_cast<const char *>(sv.data() + sv.size()), value, fmt);
 }
 
 } // namespace bela

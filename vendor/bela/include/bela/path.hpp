@@ -100,7 +100,7 @@ std::wstring PathAbsoluteCatPieces(std::span<std::wstring_view> pieces);
 // Support 5 or more arguments
 template <typename... AV>
 [[nodiscard]] inline std::wstring PathCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d,
-                                          const AlphaNum &e, const AV &... args) {
+                                          const AlphaNum &e, const AV &...args) {
   return path_internal::PathCatPieces(
       {a.Piece(), b.Piece(), c.Piece(), d.Piece(), e.Piece(), static_cast<const AlphaNum &>(args).Piece()...});
 }

@@ -72,6 +72,47 @@ struct mach_header_64 {
   uint32_t reserved;   /* reserved */
 };
 
+inline status_t macho_resolve(uint16_t type, hazel_result &hr) {
+  switch (type) {
+  case 1:
+    hr.assign(types::macho_object, L"Mach-O Object file");
+    return Found;
+  case 2:
+    hr.assign(types::macho_executable, L"Mach-O Executable");
+    return Found;
+  case 3:
+    hr.assign(types::macho_fixed_virtual_memory_shared_lib, L"Mach-O Shared Lib, FVM");
+    return Found;
+  case 4:
+    hr.assign(types::macho_core, L"Mach-O Core File");
+    return Found;
+  case 5:
+    hr.assign(types::macho_preload_executable, L"Mach-O Preloaded Executable");
+    return Found;
+  case 6:
+    hr.assign(types::macho_dynamically_linked_shared_lib, L"Mach-O dynlinked shared lib");
+    return Found;
+  case 7:
+    hr.assign(types::macho_dynamic_linker, L"The Mach-O dynamic linker");
+    return Found;
+  case 8:
+    hr.assign(types::macho_bundle, L"Mach-O Bundle file");
+    return Found;
+  case 9:
+    hr.assign(types::macho_dynamically_linked_shared_lib_stub, L"Mach-O Shared lib stub");
+    return Found;
+  case 10:
+    hr.assign(types::macho_dsym_companion, L"Mach-O dSYM companion file");
+    return Found;
+  case 11:
+    hr.assign(types::macho_kext_bundle, L"Mach-O kext bundle file");
+    return Found;
+  default:
+    break;
+  }
+  return None;
+}
+
 status_t LookupExecutableFile(const bela::bytes_view &bv, hazel_result &hr) {
   if (bv.size() < 4) {
     return None;
@@ -196,7 +237,9 @@ status_t LookupExecutableFile(const bela::bytes_view &bv, hazel_result &hr) {
       if (bv.size() >= minsize) {
         type = bv[12] << 24 | bv[13] << 12 | bv[14] << 8 | bv[15];
       }
-    } else if (bv.starts_with("\xCE\xFA\xED\xFE") || bv.starts_with("\xCF\xFA\xED\xFE")) {
+      return macho_resolve(type, hr);
+    }
+    if (bv.starts_with("\xCE\xFA\xED\xFE") || bv.starts_with("\xCF\xFA\xED\xFE")) {
       /* Reverse endian */
       size_t minsize;
       if (bv[0] == 0xCE) {
@@ -207,46 +250,9 @@ status_t LookupExecutableFile(const bela::bytes_view &bv, hazel_result &hr) {
       if (bv.size() >= minsize) {
         type = bv[15] << 24 | bv[14] << 12 | bv[13] << 8 | bv[12];
       }
+      return macho_resolve(type, hr);
     }
-    switch (type) {
-    default:
-      break;
-    case 1:
-      hr.assign(types::macho_object, L"Mach-O Object file");
-      return Found;
-    case 2:
-      hr.assign(types::macho_executable, L"Mach-O Executable");
-      return Found;
-    case 3:
-      hr.assign(types::macho_fixed_virtual_memory_shared_lib, L"Mach-O Shared Lib, FVM");
-      return Found;
-    case 4:
-      hr.assign(types::macho_core, L"Mach-O Core File");
-      return Found;
-    case 5:
-      hr.assign(types::macho_preload_executable, L"Mach-O Preloaded Executable");
-      return Found;
-    case 6:
-      hr.assign(types::macho_dynamically_linked_shared_lib, L"Mach-O dynlinked shared lib");
-      return Found;
-    case 7:
-      hr.assign(types::macho_dynamic_linker, L"The Mach-O dynamic linker");
-      return Found;
-    case 8:
-      hr.assign(types::macho_bundle, L"Mach-O Bundle file");
-      return Found;
-    case 9:
-      hr.assign(types::macho_dynamically_linked_shared_lib_stub, L"Mach-O Shared lib stub");
-      return Found;
-    case 10:
-      hr.assign(types::macho_dsym_companion, L"Mach-O dSYM companion file");
-      return Found;
-    case 11:
-      hr.assign(types::macho_kext_bundle, L"Mach-O kext bundle file");
-      return Found;
-    }
-    break;
-  }
+  } break;
   case 0xF0: // PowerPC Windows
     [[fallthrough]];
   case 0x83: // Alpha 32-bit

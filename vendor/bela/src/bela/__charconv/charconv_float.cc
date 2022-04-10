@@ -55,7 +55,7 @@ template <> struct Floating_type_traits<long double> : Floating_type_traits<doub
 [[nodiscard]] inline uint32_t bit_scan_reverse(const uint32_t value) noexcept {
   unsigned long Index; // Intentionally uninitialized for better codegen
 
-  if (_BitScanReverse(&Index, value) != 0u) {
+  if (_BitScanReverse(&Index, value) != 0U) {
     return Index + 1;
   }
 
@@ -66,7 +66,7 @@ template <> struct Floating_type_traits<long double> : Floating_type_traits<doub
   unsigned long Index; // Intentionally uninitialized for better codegen
 
 #ifdef _WIN64
-  if (_BitScanReverse64(&Index, value) != 0u) {
+  if (_BitScanReverse64(&Index, value) != 0U) {
     return Index + 1;
   }
 #else  // ^^^ 64-bit ^^^ / vvv 32-bit vvv
@@ -151,7 +151,7 @@ inline constexpr wchar_t Charconv_digits[] = {'0', '1', '2', '3', '4', '5', '6',
 // - Otherwise, no initialization is performed."
 // Therefore, Mydata's elements are not initialized.
 struct Big_integer_flt {
-  Big_integer_flt() noexcept {}
+  Big_integer_flt() noexcept = default;
 
   Big_integer_flt(const Big_integer_flt &other) noexcept : Myused(other.Myused) {
     memcpy(Mydata, other.Mydata, other.Myused * sizeof(uint32_t));
@@ -562,7 +562,7 @@ struct Big_integer_flt {
 // Computes the number of zeroes higher than the most significant set bit in _Ux
 [[nodiscard]] inline uint32_t Count_sequential_high_zeroes(const uint32_t Ux) noexcept {
   unsigned long Index; // Intentionally uninitialized for better codegen
-  return _BitScanReverse(&Index, Ux) != 0u ? 31 - Index : 32;
+  return _BitScanReverse(&Index, Ux) != 0U ? 31 - Index : 32;
 }
 
 // This high-precision integer division implementation was translated from the implementation of
@@ -1713,11 +1713,12 @@ template <class Floating>
   }
   if (Folded_start == 'i') { // possibly inf
     return Infinity_from_chars(first, last, value, Minus_sign, next);
-  } else if (Folded_start == 'n') { // possibly nan
-    return Nan_from_chars(first, last, value, Minus_sign, next);
-  } else { // definitely invalid
-    return {first, errc::invalid_argument};
   }
+  if (Folded_start == 'n') { // possibly nan
+    return Nan_from_chars(first, last, value, Minus_sign, next);
+  }
+  // definitely invalid
+  return {first, errc::invalid_argument};
 }
 
 from_chars_result from_chars(const wchar_t *const first, const wchar_t *const last, float &value,
@@ -2505,13 +2506,14 @@ template <Floating_to_chars_overload Overload, class Floating>
 
   if constexpr (Overload == Floating_to_chars_overload::Plain) {
     return Floating_to_chars_ryu(first, last, value, chars_format{});
-  } else if constexpr (Overload == Floating_to_chars_overload::Format_only) {
+  }
+  if constexpr (Overload == Floating_to_chars_overload::Format_only) {
     if (fmt == chars_format::hex) {
       return Floating_to_chars_hex_shortest(first, last, value);
     }
-
     return Floating_to_chars_ryu(first, last, value, fmt);
-  } else if constexpr (Overload == Floating_to_chars_overload::Format_precision) {
+  }
+  if constexpr (Overload == Floating_to_chars_overload::Format_precision) {
     switch (fmt) {
     case chars_format::scientific:
       return Floating_to_chars_scientific_precision(first, last, value, precision);

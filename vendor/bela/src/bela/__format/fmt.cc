@@ -7,20 +7,11 @@
 #include <bela/fmt.hpp>
 #include <bela/codecvt.hpp>
 #include <bela/numbers.hpp>
+#include <bela/strings.hpp>
 #include "writer.hpp"
 
 namespace bela {
 namespace format_internal {
-constexpr const size_t npos = static_cast<size_t>(-1);
-inline size_t memsearch(const wchar_t *begin, const wchar_t *end, int ch) {
-  for (auto it = begin; it != end; it++) {
-    if (*it == ch) {
-      return it - begin;
-    }
-  }
-  return npos;
-}
-
 using StringWriter = Writer<std::wstring>;
 using BufferWriter = Writer<buffer_view>;
 
@@ -40,8 +31,8 @@ bool StrFormatInternal(Writer<T> &w, const std::wstring_view fmt, const FormatAr
 
   while (it < end) {
     ///  Fast search %,
-    auto pos = memsearch(it, end, '%');
-    if (pos == npos) {
+    auto pos = CharFind(it, end, '%');
+    if (pos == bela::MaximumPos) {
       w.append({it, static_cast<size_t>(end - it)});
       return !w.overflow();
     }

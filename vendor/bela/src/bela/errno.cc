@@ -1,5 +1,6 @@
 // Windows ERROR
 #include <bela/base.hpp>
+#include <bela/str_cat.hpp>
 /*
 from: C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\errno.h
 #define EPERM           1
