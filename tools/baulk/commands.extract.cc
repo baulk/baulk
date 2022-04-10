@@ -1,7 +1,7 @@
 #include "baulk.hpp"
 #include <bela/terminal.hpp>
 #include <baulk/archive.hpp>
-#include "extract.hpp"
+#include "extractor.hpp"
 #include "commands.hpp"
 
 namespace baulk::commands {
@@ -24,10 +24,7 @@ int cmd_extract(const argv_t &argv) {
     usage_extract();
     return 1;
   }
-  auto arfile = argv[0];
-  auto dest = argv.size() > 1 ? std::wstring(argv[1]) : baulk::archive::FileDestination(arfile);
-  bela::error_code ec;
-  return extract_auto_with_mode(arfile, dest, false, ec) ? 0 : 1;
+  return baulk::extract_command_unchecked(argv, baulk::extract_command_auto);
 }
 
 } // namespace baulk::commands

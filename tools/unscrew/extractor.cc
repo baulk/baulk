@@ -313,6 +313,7 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
   case file_format_t::tar:
     return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
   case file_format_t::msi:
+    fd->Assgin(INVALID_HANDLE_VALUE, false);
     return std::make_shared<MsiExtractor>(archive_file, destination);
   case file_format_t::cab:
     [[fallthrough]];
@@ -329,6 +330,7 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
   case file_format_t::nsis:
     [[fallthrough]];
   case file_format_t::_7z:
+    fd->Assgin(INVALID_HANDLE_VALUE, false);
     return std::make_shared<_7zExtractor>(archive_file, destination, afmt);
   default:
     break;

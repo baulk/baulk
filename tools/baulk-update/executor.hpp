@@ -19,13 +19,13 @@ private:
   bool latest_download_url(const bela::version &ov);
   bool latest_download_url_fallback(const bela::version &ov);
   std::optional<std::wstring> download_file() const;
-  bool extract_file(const std::wstring_view arfile);
+  bool extract_file(const std::filesystem::path &archive_file);
   bool apply_baulk_files();
   bool replace_baulk_files();
   void cleanup();
   std::wstring specified;
   std::wstring download_url;
-  std::wstring extract_dest;
+  std::filesystem::path destination;
   bela::version latest_version;
   bool forceMode{false};
 };

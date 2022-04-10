@@ -166,6 +166,7 @@ public:
     if (ec && ec != bela::ErrEnded) {
       return false;
     }
+    ec.clear();
     return true;
   }
 

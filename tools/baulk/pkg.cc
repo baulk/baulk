@@ -13,7 +13,7 @@
 #include "bucket.hpp"
 #include "launcher.hpp"
 #include "pkg.hpp"
-#include "extract.hpp"
+#include "extractor.hpp"
 
 namespace baulk::package {
 
@@ -133,85 +133,50 @@ bool PackageMakeLinks(const baulk::Package &pkg) {
   return true;
 }
 
-inline bool RenameForce(std::wstring_view source, std::wstring_view target, bela::error_code &ec) {
-  if (bela::PathExists(target)) {
-    bela::fs::ForceDeleteFolders(target, ec);
-  }
-  DbgPrint(L"lpExistingFileName %s lpNewFileName %s", source, target);
-  if (MoveFileExW(source.data(), target.data(), MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING) != TRUE) {
-    ec = bela::make_system_error_code();
-    return false;
-  }
-  return true;
-}
-
-inline std::wstring UnarchivePath(std::wstring_view path) {
-  auto dir = bela::DirName(path);
-  auto filename = bela::BaseName(path);
-  auto extName = bela::ExtensionEx(filename);
-  if (filename.size() <= extName.size()) {
-    return bela::StringCat(dir, L"\\out");
-  }
-  if (extName.empty()) {
-    return bela::StringCat(dir, L"\\", filename, L".out");
-  }
-  return bela::StringCat(dir, L"\\", filename.substr(0, filename.size() - extName.size()));
-}
-
 bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
-  auto h = baulk::LookupHandler(pkg.extension);
-  if (!h) {
+  auto fn = baulk::resolve_extract_handle(pkg.extension);
+  if (!fn) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
     return false;
   }
-  auto outdir = UnarchivePath(pkgfile);
-  DbgPrint(L"baulk decompress %s to %s\n", pkg.name, outdir);
+  std::filesystem::path archive_file(pkgfile);
+  std::filesystem::path strict_folder;
+  auto destination = baulk::make_unqiue_extracted_destination(archive_file, strict_folder);
+  if (!destination) {
+    bela::FPrintF(stderr, L"destination '%v' already exists\n", strict_folder);
+    return false;
+  }
   bela::error_code ec;
-  if (bela::PathExists(outdir)) {
-    bela::fs::ForceDeleteFolders(outdir, ec);
-  }
-  if (!h->extract(pkgfile, outdir, ec)) {
-    bela::FPrintF(stderr, L"baulk decompress %s error: %s\n", pkgfile, ec);
+  if (!fn(archive_file, *destination, ec)) {
+    bela::FPrintF(stderr, L"baulk extract: %v error: %v\n", archive_file.filename(), ec);
     return false;
   }
-  h->regularize(outdir);
-  auto pkgRoot = baulk::vfs::AppPackageFolder(pkg.name);
-  std::wstring pkgold;
+  std::filesystem::path packages(baulk::vfs::AppPackages());
+  auto pkgRoot = packages / pkg.name;
   std::error_code e;
-  if (bela::PathExists(pkgRoot)) {
-    pkgold = bela::StringCat(pkgRoot, L".old");
-    if (!RenameForce(pkgRoot, pkgold, ec)) {
-      bela::FPrintF(stderr, L"baulk rename %s to old error: \x1b[31m%s\x1b[0m\n", pkgRoot, ec);
-      return false;
-    }
-  }
-  if (!RenameForce(outdir, pkgRoot, ec)) {
-    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", outdir, pkgRoot, ec);
-    if (!pkgold.empty()) {
-      RenameForce(pkgRoot, pkgold, ec);
-    }
+  // rename failed
+  if (![&]() -> bool {
+        std::wstring oldPath;
+        if (std::filesystem::exists(pkgRoot, e)) {
+          oldPath = bela::StringCat(pkgRoot, L".old");
+          if (std::filesystem::rename(pkgRoot, oldPath, e); e) {
+            bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", pkgRoot, oldPath, ec);
+            return false;
+          }
+        }
+        if (std::filesystem::rename(*destination, pkgRoot, e); e) {
+          bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", *destination, pkgRoot, ec);
+          if (!oldPath.empty()) {
+            std::filesystem::rename(oldPath, pkgRoot, e);
+          }
+          return false;
+        }
+        if (!oldPath.empty()) {
+          std::filesystem::remove_all(oldPath, e);
+        }
+        return true;
+      }()) {
     return false;
-  }
-  // rename exe name
-  if (bela::EqualsIgnoreCase(pkg.extension, L"exe")) {
-    auto fn = baulk::fs::FileName(pkgfile);
-    std::wstring rfn;
-    if (!pkg.rename.empty()) {
-      rfn = pkg.rename;
-    } else {
-      rfn = bela::StringCat(pkg.name, std::filesystem::path(pkgfile).extension().native());
-    }
-    if (!bela::EqualsIgnoreCase(fn, rfn)) {
-      auto expnadfile = bela::StringCat(pkgRoot, L"/", fn);
-      auto target = bela::StringCat(pkgRoot, L"/", rfn);
-      if (MoveFileExW(expnadfile.data(), target.data(), MOVEFILE_REPLACE_EXISTING) != TRUE) {
-        ec = bela::make_system_error_code();
-        bela::FPrintF(stderr, L"baulk rename package file %s to %s error: \x1b[31m%s\x1b[0m\n", expnadfile, target, ec);
-      }
-    }
-  }
-  if (!pkgold.empty()) {
-    bela::fs::ForceDeleteFolders(pkgold, ec);
   }
   // create a links
   if (!PackageLocalMetaWrite(pkg, ec)) {

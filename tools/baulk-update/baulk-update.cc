@@ -12,7 +12,6 @@
 #include <baulk/json_utils.hpp>
 #include <baulk/fs.hpp>
 #include <baulk/vfs.hpp>
-#include <baulk/archive/extract.hpp>
 #include "executor.hpp"
 
 // https://www.catch22.net/tuts/win32/self-deleting-executables

@@ -3,9 +3,11 @@
 #include <bela/process.hpp>
 #include <bela/str_split_narrow.hpp>
 #include <bela/ascii.hpp>
+#include <bela/terminal.hpp>
 #include <baulk/vfs.hpp>
 #include <baulk/fs.hpp>
-#include <baulk/archive/extract.hpp>
+#include <baulk/archive/extractor.hpp>
+#include <baulk/indicators.hpp>
 #include "executor.hpp"
 
 namespace baulk {
@@ -17,6 +19,91 @@ constexpr std::wstring_view file_suffix_with_arch() {
 #else
   return L"";
 #endif
+}
+
+void terminal_size_initialize(bela::terminal::terminal_size &termsz) {
+  if (bela::terminal::IsTerminal(stderr)) {
+    bela::terminal::TerminalSize(stderr, termsz);
+    return;
+  }
+  if (bela::terminal::IsCygwinTerminal(stderr)) {
+    CygwinTerminalSize(termsz);
+  }
+}
+
+inline void progress_show(bela::terminal::terminal_size &termsz, const std::wstring_view filename) {
+  if (baulk::IsDebugMode) {
+    bela::FPrintF(stderr, L"\x1b[33m* x %s\x1b[0m\n", filename);
+    return;
+  }
+  auto suglen = static_cast<size_t>(termsz.columns) - 8;
+  if (auto n = bela::string_width<wchar_t>(filename); n <= suglen) {
+    bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx %s\x1b[0m", filename);
+    return;
+  }
+  bela::FPrintF(stderr, L"\x1b[2K\r\x1b[33mx ...\\%s\x1b[0m", bela::BaseName(filename));
+}
+
+class ZipExtractor {
+public:
+  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
+               const std::filesystem::path &destination_, const baulk::archive::ExtractorOptions &opts)
+      : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_), destination(destination_) {}
+  bool Extract(bela::error_code &ec);
+  bool Initialize(int64_t size, int64_t offset, bela::error_code &ec) {
+    return extractor.OpenReader(fd, destination, size, offset, ec);
+  }
+
+private:
+  bela::io::FD fd;
+  std::filesystem::path archive_file;
+  std::filesystem::path destination;
+  baulk::archive::zip::Extractor extractor;
+};
+
+bool ZipExtractor::Extract(bela::error_code &ec) {
+  bela::FPrintF(stderr, L"Extracting \x1b[35m%v\x1b[0m ...\n", archive_file.filename());
+  bela::terminal::terminal_size termsz;
+  terminal_size_initialize(termsz);
+  auto uncompressed_size = extractor.UncompressedSize();
+  int64_t completed_bytes = 0;
+  if (!extractor.Extract(
+          [&](const baulk::archive::zip::File &file, const std::wstring &relative_name) -> bool {
+            progress_show(termsz, relative_name);
+            return true;
+          },
+          nullptr, ec)) {
+
+    return false;
+  }
+  if (!baulk::IsDebugMode) {
+    bela::FPrintF(stderr, L"\n");
+  }
+  return true;
+}
+
+bool extract_zip(const std::filesystem::path &archive_file, const std::filesystem::path &destination,
+                 bela::error_code &ec) {
+  baulk::archive::file_format_t afmt{};
+  int64_t baseOffset = 0;
+  auto fd = archive::OpenFile(archive_file.native(), baseOffset, afmt, ec);
+  if (!fd) {
+    bela::FPrintF(stderr, L"baulk open archive %s error: %s\n", archive_file.filename(), ec);
+    return false;
+  }
+  if (afmt != baulk::archive::file_format_t::zip) {
+    bela::FPrintF(stderr, L"baulk unzip %s terminated. file format: %s\n", archive_file.filename(),
+                  baulk::archive::FormatToMIME(afmt));
+    return false;
+  }
+  ZipExtractor extractor(std::move(*fd), archive_file, destination, baulk::archive::ExtractorOptions{});
+  if (!extractor.Initialize(bela::SizeUnInitialized, baseOffset, ec)) {
+    return false;
+  }
+  if (!extractor.Extract(ec)) {
+    return false;
+  }
+  return baulk::fs::MakeFlattened(destination, ec);
 }
 
 void Executor::cleanup() {
@@ -37,22 +124,17 @@ void Executor::cleanup() {
   CloseHandle(pi.hProcess);
 }
 
-bool Executor::extract_file(const std::wstring_view arfile) {
-  extract_dest = baulk::archive::FileDestination(arfile);
+bool Executor::extract_file(const std::filesystem::path &archive_file) {
+  destination = archive_file.parent_path() / baulk::archive::PathStripExtension(archive_file.filename().native());
+  std::error_code e;
+  if (std::filesystem::exists(destination, e)) {
+    std::filesystem::remove_all(destination, e);
+  }
   bela::error_code ec;
-  if (bela::PathExists(extract_dest)) {
-    bela::fs::ForceDeleteFolders(extract_dest, ec);
-  }
-  baulk::archive::ZipExtractor zr(false, IsDebugMode);
-  if (!zr.OpenReader(arfile, extract_dest, ec)) {
-    bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
+  if (!extract_zip(archive_file, destination, ec)) {
+    bela::FPrintF(stderr, L"baulk extract: %v error: %v\n", archive_file.filename(), ec);
     return false;
   }
-  if (!zr.Extract(ec)) {
-    bela::FPrintF(stderr, L"baulk extract %s error: %s\n", arfile, ec);
-    return false;
-  }
-  baulk::fs::MakeFlattened(extract_dest, ec);
   return true;
 }
 
@@ -92,13 +174,12 @@ bool Executor::apply_baulk_files() {
     return true;
   };
 
-  std::filesystem::path root(extract_dest);
   std::error_code e;
-  for (const auto &p : std::filesystem::recursive_directory_iterator{root, e}) {
+  for (const auto &p : std::filesystem::recursive_directory_iterator{destination, e}) {
     if (p.is_directory(e)) {
       continue;
     }
-    auto relativePath = std::filesystem::relative(p.path(), root, e);
+    auto relativePath = std::filesystem::relative(p.path(), destination, e);
     if (e) {
       continue;
     }
@@ -146,11 +227,10 @@ inline bool replace_baulk_update(const std::filesystem::path &location, const st
 
 bool Executor::replace_baulk_files() {
   std::filesystem::path location(vfs::AppLocation());
-  std::filesystem::path source(extract_dest);
-  if (!replace_baulk_exec(location, source)) {
+  if (!replace_baulk_exec(location, destination)) {
     return false;
   }
-  return replace_baulk_update(location, source);
+  return replace_baulk_update(location, destination);
 }
 
 bool Executor::Execute() {

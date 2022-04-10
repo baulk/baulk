@@ -6,6 +6,7 @@
 #include <functional>
 #include <filesystem>
 #include <baulk/fs.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk::archive::msi {
 enum MessageLevel { MessageFatal = 0, MessageError = 1, MessageWarn = 2 };
@@ -85,24 +86,24 @@ public:
         std::filesystem::remove_all(entry.path(), e);
       }
     }
-    // remove some child folder
-    constexpr std::wstring_view childs[] = {L"Program Files", L"ProgramFiles64", L"PFiles", L"Files"};
-    auto overflow = [&](const std::filesystem::path &p) {
-      for (const auto &entry : std::filesystem::directory_iterator{destination, e}) {
+
+    auto overflow = [&](const std::filesystem::path &child) {
+      for (const auto &entry : std::filesystem::directory_iterator{child, e}) {
         auto newPath = destination / entry.path().filename();
+        bela::FPrintF(stderr, L"move %v to %v\n", entry.path(), newPath);
         std::filesystem::rename(entry.path(), newPath, e);
       }
     };
-
-    for (const auto c : childs) {
-      auto entry = destination / c;
-      if (!std::filesystem::exists(entry, e)) {
+    // remove some child folder
+    constexpr std::wstring_view childLists[] = {L"Program Files", L"ProgramFiles64", L"PFiles", L"Files"};
+    for (const auto c : childLists) {
+      auto child = destination / c;
+      if (!std::filesystem::exists(child, e)) {
         continue;
       }
-      if (auto flat = baulk::fs::Flattened(destination); flat) {
-        overflow(*flat);
-      }
-      std::filesystem::remove_all(entry, e);
+      overflow(child);
+      bela::FPrintF(stderr, L"remove %v\n", child);
+      std::filesystem::remove_all(child, e);
     }
     return baulk::fs::MakeFlattened(destination, ec);
   }

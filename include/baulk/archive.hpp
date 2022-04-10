@@ -15,6 +15,7 @@ using bela::ErrGeneral;
 using bela::ErrUnimplemented;
 constexpr long ErrExtractGeneral = 800000;
 constexpr long ErrAnotherWay = 800001;
+constexpr long ErrNoOverlayArchive = 800002;
 namespace fs = std::filesystem;
 class File {
 public:

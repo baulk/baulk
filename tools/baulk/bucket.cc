@@ -10,7 +10,7 @@
 #include <xml.hpp>
 #include "baulk.hpp"
 #include "bucket.hpp"
-#include "extract.hpp"
+#include "extractor.hpp"
 
 namespace baulk {
 // BucketNewestWithGithub github archive style bucket check latest
@@ -105,7 +105,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
   if (!baulk::fs::MakeDirectories(baulk::vfs::AppTemp(), ec)) {
     return false;
   }
-  std::optional<std::wstring> saveFile;
+  std::optional<std::filesystem::path> archive_file;
   bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata\nurl: \x1b[36m%s\x1b[0m\n", bucket.name, master);
   for (int i = 0; i < 4; i++) {
     ec.clear();
@@ -113,37 +113,37 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
       bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m\n", bucket.name,
                     i);
     }
-    if (saveFile = baulk::net::WinGet(master,
-                                      {
-                                          .hash_value = L"",
-                                          .cwd = baulk::vfs::AppTemp(),
-                                          .force_overwrite = true,
-                                      },
-                                      ec);
-        saveFile) {
+    if (archive_file = baulk::net::WinGet(master,
+                                          {
+                                              .hash_value = L"",
+                                              .cwd = baulk::vfs::AppTemp(),
+                                              .force_overwrite = true,
+                                          },
+                                          ec);
+        archive_file) {
       break;
     }
   }
-  if (!saveFile) {
+  if (!archive_file) {
     return false;
   }
 
   auto deleter = bela::finally([&] {
-    bela::error_code ec_;
-    bela::fs::ForceDeleteFile(*saveFile, ec_);
+    std::error_code e_;
+    std::filesystem::remove(*archive_file, e_);
   });
 
-  auto extractDir = bela::StringCat(baulk::vfs::AppTemp(), L"\\", bucket.name);
-  if (!baulk::extract_zip(*saveFile, extractDir, ec)) {
+  auto bucketTemp = bela::StringCat(baulk::vfs::AppTemp(), L"\\", bucket.name);
+  if (!baulk::extract_zip(*archive_file, bucketTemp, ec)) {
+    bela::FPrintF(stderr, L"baulk extract bucket '%v' archive: %v\n", bucket.name, ec);
     return false;
   }
-  baulk::make_flattened(extractDir);
-  auto bucketdir = bela::StringCat(baulk::vfs::AppBuckets(), L"\\", bucket.name);
-  if (bela::PathExists(bucketdir)) {
-    bela::fs::ForceDeleteFolders(bucketdir, ec);
+  auto bucketReal = bela::StringCat(baulk::vfs::AppBuckets(), L"\\", bucket.name);
+  if (bela::PathExists(bucketReal)) {
+    bela::fs::ForceDeleteFolders(bucketReal, ec);
   }
-  if (MoveFileW(extractDir.data(), bucketdir.data()) != TRUE) {
-    ec = bela::make_system_error_code();
+  if (MoveFileW(bucketTemp.data(), bucketReal.data()) != TRUE) {
+    ec = bela::make_system_error_code(L"MoveFileW() ");
     return false;
   }
   return true;

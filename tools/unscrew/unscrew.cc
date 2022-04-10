@@ -97,6 +97,7 @@ bool Executor::Execute(bela::error_code &ec) {
       {L"NuGet Package (*.nupkg)", L"*.nupkg"},                                      // nuget
       {L"Unix Archive (*.tar;*.gz;*.zstd;*.xz;*.bz2;*.br)", L"*.tar;*.gz;*.zstd;*.xz;*.bz2;*.br"},
       {L"Java Archive (*.jar)", L"*.jar"},
+      {L"Windows Installer Package (*.msi;*.msp)", L"*.msi;*.msp"},
       {L"All Files (*.*)", L"*.*"}
       //
   };
