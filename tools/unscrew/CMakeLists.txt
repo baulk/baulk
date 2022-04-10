@@ -8,6 +8,7 @@ target_link_libraries(
   baulk.misc
   belashl
   belatime
+  Msi
   uxtheme
   dwmapi
   comctl32

@@ -4,11 +4,14 @@
 #include <bela/strip.hpp>
 #include <bela/process.hpp>
 #include <bela/simulator.hpp>
+#include <bela/picker.hpp>
 #include <ShObjIdl.h>
 #include <ShlObj_core.h>
 #include <baulk/vfs.hpp>
 #include <baulk/archive.hpp>
+#include <baulk/archive/msi.hpp>
 #include <baulk/archive/extractor.hpp>
+#include <version.hpp>
 
 namespace baulk {
 using baulk::archive::file_format_t;
@@ -148,6 +151,54 @@ bool UniversalExtractor::Extract(ProgressBar *bar, bela::error_code &ec) {
   return single_file_extract(bar, ec);
 }
 
+class MsiExtractor final : public Extractor {
+public:
+  MsiExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_)
+      : archive_file(archive_file_), destination(destination_) {}
+  bool Extract(ProgressBar *bar, bela::error_code &ec);
+
+private:
+  std::filesystem::path archive_file;
+  std::filesystem::path destination;
+};
+
+bool MsiExtractor::Extract(ProgressBar *bar, bela::error_code &ec) {
+  baulk::archive::msi::Extractor extractor;
+  if (!extractor.Initialize(
+          archive_file, destination,
+          [&](baulk::archive::msi::Dispatcher &d) {
+            d.Assign(
+                [&](int64_t extracted, int64_t total) -> bool {
+                  bar->Update(extracted, total);
+                  return !bar->Cancelled();
+                },
+                [&](std::wstring_view message, baulk::archive::msi::MessageLevel level) {
+                  switch (level) {
+                  case baulk::archive::msi::MessageFatal:
+                    bela::BelaMessageBox(nullptr, L"Extract Fatal", message.data(), BAULK_APPLINK, bela::mbs_t::FATAL);
+                    break;
+                  case baulk::archive::msi::MessageError:
+                    bela::BelaMessageBox(nullptr, L"Extract Error", message.data(), BAULK_APPLINK, bela::mbs_t::FATAL);
+                    break;
+                  case baulk::archive::msi::MessageWarn:
+                    bela::BelaMessageBox(nullptr, L"Extract Warn", message.data(), BAULK_APPLINK, bela::mbs_t::WARN);
+                    break;
+                  default:
+                    break;
+                  }
+                });
+          },
+          ec)) {
+    return false;
+  }
+  bar->Title(bela::StringCat(L"Extracting ", archive_file.filename()));
+  bar->UpdateLine(1, destination.native(), TRUE);
+  if (!extractor.Extract(ec)) {
+    return false;
+  }
+  return extractor.MakeFlattened(ec);
+}
+
 inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
   HKEY hkey = nullptr;
   if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\7-Zip-Zstandard)", &hkey) != ERROR_SUCCESS) {
@@ -261,6 +312,8 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
     [[fallthrough]];
   case file_format_t::tar:
     return std::make_shared<UniversalExtractor>(std::move(*fd), archive_file, destination, opts, baseOffset, afmt);
+  case file_format_t::msi:
+    return std::make_shared<MsiExtractor>(archive_file, destination);
   case file_format_t::cab:
     [[fallthrough]];
   case file_format_t::deb:
