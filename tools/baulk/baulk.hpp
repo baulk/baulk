@@ -121,7 +121,7 @@ struct Package {
   std::wstring homepage;
   std::wstring notes;
   std::wstring license;
-  std::wstring hashValue;
+  std::wstring hash;
   std::vector<std::wstring> urls;
   std::vector<std::wstring> forceDeletes; // uninstall delete dirs
   std::vector<std::wstring> suggest;

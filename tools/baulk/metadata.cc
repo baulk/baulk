@@ -12,6 +12,57 @@ inline auto PackageMetaJoinNative(const Bucket &bucket, std::wstring_view pkgNam
   return bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name, L"\\bucket\\", pkgName, L".json");
 }
 
+#if defined(_M_X64)
+constexpr std::string_view native_arch = "64bit";
+#elif defined(_M_ARM64)
+constexpr std::string_view native_arch = "arm64";
+#else
+constexpr std::string_view native_arch = "32bit";
+#endif
+
+inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv, bela::error_code ec) {
+  auto __ = bela::finally([&] {
+    if (pkg.links.empty()) {
+      jv.fetch_paths_checked("links", pkg.links);
+    }
+    if (pkg.launchers.empty()) {
+      jv.fetch_paths_checked("launchers", pkg.launchers);
+    }
+    if (pkg.urls.empty()) {
+      pkg.urls.emplace_back(jv.fetch("url"));
+      pkg.hash = jv.fetch("hash");
+    }
+  });
+  if (auto sv = jv.subview("architecture"); sv) {
+    if (auto av = sv->subview(native_arch); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hash = av->fetch("hash");
+      jv.fetch_paths_checked("links", pkg.links);
+      jv.fetch_paths_checked("launchers", pkg.launchers);
+      return;
+    }
+    if (auto av = sv->subview("32bit"); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hash = av->fetch("hash");
+      jv.fetch_paths_checked("links", pkg.links);
+      jv.fetch_paths_checked("launchers", pkg.launchers);
+      return;
+    }
+    return;
+  }
+#if defined(_M_X64)
+  jv.fetch_strings_checked("url64", pkg.urls);
+  pkg.hash = jv.fetch("url64.hash");
+  jv.fetch_paths_checked("links64", pkg.links);
+  jv.fetch_paths_checked("launchers64", pkg.launchers);
+#elif defined(_M_ARM64)
+  jv.fetch_strings_checked("urlarm64", pkg.urls);
+  pkg.hash = jv.fetch("urlarm64.hash");
+  jv.fetch_paths_checked("linksarm64", pkg.links);
+  jv.fetch_paths_checked("launchersarm64", pkg.launchers);
+#endif
+}
+
 std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
   auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
   auto pkj = baulk::json::parse_file(pkgMeta, ec);
@@ -36,9 +87,9 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
 #if defined(_M_X64)
   // x64
   if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url64.hash");
+    pkg.hash = jv.fetch("url64.hash");
   } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url.hash");
+    pkg.hash = jv.fetch("url.hash");
   } else {
     ec = bela::make_error_code(bela::ErrGeneral, pkgName, L"@", bucket.name, L" not yet port to x64 platform.");
     return std::nullopt;
@@ -125,12 +176,12 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
   if (auto sv = jv.subview("architecture"); sv) {
     if (auto av = sv->subview("64bit"); av) {
       pkg.urls.emplace_back(av->fetch("url"));
-      pkg.hashValue = av->fetch("hash");
+      pkg.hash = av->fetch("hash");
       return std::make_optional(std::move(pkg));
     }
   }
   pkg.urls.emplace_back(jv.fetch("url"));
-  pkg.hashValue = jv.fetch("hash");
+  pkg.hash = jv.fetch("hash");
   return std::make_optional(std::move(pkg));
 }
 

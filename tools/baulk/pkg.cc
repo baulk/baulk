@@ -238,9 +238,9 @@ bool PackageInstall(const baulk::Package &pkg) {
   }
   DbgPrint(L"baulk '%s/%s' url: '%s'\n", pkg.name, pkg.version, url);
   auto urlFileName = net::url_path_name(url);
-  if (!pkg.hashValue.empty()) {
+  if (!pkg.hash.empty()) {
     DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, urlFileName);
-    if (auto pkgFile = PackageCached(urlFileName, pkg.hashValue); pkgFile) {
+    if (auto pkgFile = PackageCached(urlFileName, pkg.hash); pkgFile) {
       return PackageExpand(pkg, *pkgFile);
     }
   }
@@ -255,10 +255,10 @@ bool PackageInstall(const baulk::Package &pkg) {
     if (i != 0) {
       bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", urlFileName, i);
     }
-    //  downloads, pkg.hashValue, true
+    //  downloads, pkg.hash, true
     if (pkgFile = baulk::net::WinGet(url,
                                      {
-                                         .hash_value = pkg.hashValue,
+                                         .hash_value = pkg.hash,
                                          .cwd = downloads,
                                          .force_overwrite = true,
                                      },
@@ -268,10 +268,10 @@ bool PackageInstall(const baulk::Package &pkg) {
       continue;
     }
     // hash not check
-    if (pkg.hashValue.empty()) {
+    if (pkg.hash.empty()) {
       break;
     }
-    if (hash::HashEqual(*pkgFile, pkg.hashValue, ec)) {
+    if (hash::HashEqual(*pkgFile, pkg.hash, ec)) {
       break;
     }
     bela::FPrintF(stderr, L"baulk download '%s' error: \x1b[31m%s\x1b[0m\n", bela::BaseName(*pkgFile), ec);

@@ -64,7 +64,7 @@ private:
 };
 
 bool ZipExtractor::Extract(bela::error_code &ec) {
-  bela::FPrintF(stderr, L"Extracting \x1b[35m%v\x1b[0m ...\n", archive_file.filename());
+  bela::FPrintF(stderr, L"Extracting \x1b[36m%v\x1b[0m ...\n", archive_file.filename());
   bela::terminal::terminal_size termsz;
   terminal_size_initialize(termsz);
   auto uncompressed_size = extractor.UncompressedSize();
@@ -117,7 +117,6 @@ bool UniversalExtractor::tar_extract(baulk::archive::tar::FileReader &fr, baulk:
   if (!extractor.InitializeExtractor(destination, ec)) {
     return false;
   }
-  bela::FPrintF(stderr, L"Extracting \x1b[35m%v\x1b[0m ...\n", archive_file.filename());
   bela::terminal::terminal_size termsz;
   terminal_size_initialize(termsz);
   if (!extractor.Extract(
@@ -190,6 +189,7 @@ bool UniversalExtractor::single_file_extract(bela::error_code &ec) {
 }
 
 bool UniversalExtractor::Extract(bela::error_code &ec) {
+  bela::FPrintF(stderr, L"Extracting \x1b[36m%v\x1b[0m ...\n", archive_file.filename());
   if (tar_extract(ec)) {
     return true;
   }
@@ -211,6 +211,7 @@ private:
 };
 
 bool MsiExtractor::Extract(bela::error_code &ec) {
+  bela::FPrintF(stderr, L"Extracting \x1b[36m%v\x1b[0m ...\n", archive_file.filename());
   baulk::archive::msi::Extractor extractor;
   baulk::ProgressBar bar;
   bar.FileName(bela::StringCat(L"Extracting ", archive_file.filename()));
@@ -324,6 +325,7 @@ public:
                baulk::archive::file_format_t afmt_)
       : archive_file(archive_file_), destination(destination_), afmt(afmt_) {}
   bool Extract(bela::error_code &ec) {
+    bela::FPrintF(stderr, L"Extracting \x1b[36m%v\x1b[0m ...\n", archive_file.filename());
     auto _7z = lookup_sevenzip();
     if (!_7z) {
       ec = bela::make_error_code(ERROR_NOT_FOUND, L"7z.exe not found");
