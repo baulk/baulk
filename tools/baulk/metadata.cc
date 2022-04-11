@@ -105,7 +105,7 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
   if (jv.fetch_strings_checked("urlarm64", pkg.urls)) {
     pkg.hash = jv.fetch("urlarm64.hash");
   } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hashValue = jv.fetch("url.hash");
+    pkg.hash = jv.fetch("url.hash");
   } else if (jv.fetch_strings_checked("url64", pkg.urls)) {
     pkg.hash = jv.fetch("url64.hash");
   } else {
