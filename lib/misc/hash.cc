@@ -10,8 +10,8 @@ namespace baulk::hash {
 
 template <typename Hasher> struct Sumizer {
   Hasher hasher;
-  bool filechecksum(std::wstring_view file, std::wstring &hv, bela::error_code &ec) {
-    HANDLE FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+  bool filechecksum(const std::filesystem::path &file, std::wstring &hv, bela::error_code &ec) {
+    HANDLE FileHandle = CreateFileW(file.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (FileHandle == INVALID_HANDLE_VALUE) {
       ec = bela::make_system_error_code();
@@ -33,7 +33,7 @@ template <typename Hasher> struct Sumizer {
     hv = hasher.Finalize();
     return true;
   }
-  std::optional<std::wstring> operator()(std::wstring_view file, bela::error_code &ec) {
+  std::optional<std::wstring> operator()(const std::filesystem::path &file, bela::error_code &ec) {
     std::wstring hv;
     if (filechecksum(file, hv, ec)) {
       return std::make_optional(std::move(hv));
@@ -42,7 +42,7 @@ template <typename Hasher> struct Sumizer {
   }
 };
 
-std::optional<std::wstring> FileHash(std::wstring_view file, hash_t method, bela::error_code &ec) {
+std::optional<std::wstring> FileHash(const std::filesystem::path &file, hash_t method, bela::error_code &ec) {
   switch (method) {
   case hash_t::SHA224: {
     Sumizer<bela::hash::sha256::Hasher> sumizer;
@@ -114,7 +114,7 @@ constexpr HashPrefix hnmaps[] = {
     {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
     {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
 };
-bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error_code &ec) {
+bool HashEqual(const std::filesystem::path &file, std::wstring_view hash_value, bela::error_code &ec) {
   std::wstring_view value = hash_value;
   auto m = hash_t::SHA256;
   if (auto pos = hash_value.find(':'); pos != std::wstring_view::npos) {
@@ -145,9 +145,9 @@ bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error
   return true;
 }
 
-std::optional<file_hash_sums> HashSums(std::wstring_view file, bela::error_code &ec) {
-  HANDLE FileHandle = CreateFileW(file.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+std::optional<file_hash_sums> HashSums(const std::filesystem::path &file, bela::error_code &ec) {
+  HANDLE FileHandle = CreateFileW(file.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (FileHandle == INVALID_HANDLE_VALUE) {
     ec = bela::make_system_error_code();
     return std::nullopt;

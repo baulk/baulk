@@ -2,6 +2,7 @@
 #ifndef BAULK_HASH_HPP
 #define BAULK_HASH_HPP
 #include <bela/base.hpp>
+#include <filesystem>
 
 namespace baulk::hash {
 enum class hash_t {
@@ -16,13 +17,13 @@ enum class hash_t {
   SHA3_512, //
   BLAKE3
 };
-bool HashEqual(std::wstring_view file, std::wstring_view hash_value, bela::error_code &ec);
-std::optional<std::wstring> FileHash(std::wstring_view file, hash_t method, bela::error_code &ec);
+bool HashEqual(const std::filesystem::path &file, std::wstring_view hash_value, bela::error_code &ec);
+std::optional<std::wstring> FileHash(const std::filesystem::path &file, hash_t method, bela::error_code &ec);
 struct file_hash_sums {
   std::wstring sha256sum;
   std::wstring blake3sum;
 };
-std::optional<file_hash_sums> HashSums(std::wstring_view file, bela::error_code &ec);
+std::optional<file_hash_sums> HashSums(const std::filesystem::path &file, bela::error_code &ec);
 } // namespace baulk::hash
 
 #endif

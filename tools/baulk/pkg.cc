@@ -33,6 +33,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     j["version"] = bela::encode_into<wchar_t, char>(pkg.version);
     j["bucket"] = bela::encode_into<wchar_t, char>(pkg.bucket);
     j["date"] = bela::FormatTime<char>(bela::Now());
+    j["mask"] = bela::integral_cast(pkg.mask);
     AddArray(j, "force_delete", pkg.forceDeletes);
     if (!pkg.venv.empty()) {
       nlohmann::json venv;
@@ -84,17 +85,19 @@ bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
 }
 
 // Package cached
-std::optional<std::wstring> PackageCached(std::wstring_view filename, std::wstring_view hash) {
-  auto pkgfile = bela::StringCat(vfs::AppTemp(), L"\\", filename);
-  if (!bela::PathExists(pkgfile)) {
+std::optional<std::filesystem::path> PackageCached(const std::filesystem::path &downloads, std::wstring_view filename,
+                                                   std::wstring_view hash) {
+  std::filesystem::path archive_file = downloads / filename;
+  std::error_code e;
+  if (!std::filesystem::exists(archive_file, e)) {
     return std::nullopt;
   }
   bela::error_code ec;
-  if (!baulk::hash::HashEqual(pkgfile, hash, ec)) {
+  if (!baulk::hash::HashEqual(archive_file, hash, ec)) {
     bela::FPrintF(stderr, L"package file %s error: %s\n", filename, ec);
     return std::nullopt;
   }
-  return std::make_optional(std::move(pkgfile));
+  return std::make_optional(std::move(archive_file));
 }
 
 bool PackageMakeLinks(const baulk::Package &pkg) {
@@ -133,13 +136,51 @@ bool PackageMakeLinks(const baulk::Package &pkg) {
   return true;
 }
 
-bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
+// single exe package
+bool expand_fallback_exe(const baulk::Package &pkg, const std::filesystem::path &archive_file) {
+  std::filesystem::path packages(baulk::vfs::AppPackages());
+  auto pkgRoot = packages / pkg.name;
+  auto oldPath = packages / bela::StringCat(pkg.name, L".out");
+  auto exefile = bela::StringCat(pkg.name, L".exe");
+  std::error_code e;
+  bela::error_code ec;
+  if (std::filesystem::exists(pkgRoot, e)) {
+    if (std::filesystem::rename(pkgRoot, oldPath, e); e) {
+      ec = e;
+      bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", pkgRoot, oldPath, ec);
+      return false;
+    }
+  }
+  if (!std::filesystem::create_directories(pkgRoot, e)) {
+    ec = e;
+    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", pkgRoot, oldPath, ec);
+    std::filesystem::rename(oldPath, pkgRoot, e);
+    return false;
+  }
+  auto exePath = pkgRoot / exefile;
+  if (!std::filesystem::copy_file(archive_file, exePath, std::filesystem::copy_options::overwrite_existing, e)) {
+    ec = e;
+    bela::FPrintF(stderr, L"baulk rename %s to %s error: \x1b[31m%s\x1b[0m\n", pkgRoot, oldPath, ec);
+    std::filesystem::rename(oldPath, pkgRoot, e);
+    return false;
+  }
+  auto pkgCopy = pkg;
+  pkgCopy.links.emplace_back(exefile, exefile);
+  pkgCopy.mask |= MaskCompatibilityMode; // keep launcher
+  if (!PackageLocalMetaWrite(pkgCopy, ec)) {
+    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec);
+    return false;
+  }
+  std::filesystem::remove_all(oldPath, e);
+  return PackageMakeLinks(pkgCopy);
+}
+
+bool PackageExpand(const baulk::Package &pkg, const std::filesystem::path &archive_file) {
   auto fn = baulk::resolve_extract_handle(pkg.extension);
   if (!fn) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
     return false;
   }
-  std::filesystem::path archive_file(pkgfile);
   std::filesystem::path strict_folder;
   auto destination = baulk::make_unqiue_extracted_destination(archive_file, strict_folder);
   if (!destination) {
@@ -148,6 +189,9 @@ bool PackageExpand(const baulk::Package &pkg, std::wstring_view pkgfile) {
   }
   bela::error_code ec;
   if (!fn(archive_file, *destination, ec)) {
+    if (ec == baulk::archive::ErrNoOverlayArchive) {
+      return expand_fallback_exe(pkg, archive_file);
+    }
     bela::FPrintF(stderr, L"baulk extract: %v error: %v\n", archive_file.filename(), ec);
     return false;
   }
@@ -212,6 +256,13 @@ bool PackageInstall(const baulk::Package &pkg) {
     bela::version localVersion(pkgLocal->version);
     // new version less installed version or weights < weigths
     if (pkgVersion < localVersion || (pkgVersion == localVersion && pkg.weights <= pkgLocal->weights)) {
+      if ((pkgLocal->mask & MaskCompatibilityMode) != 0) {
+        bela::FPrintF(stderr,
+                      L"baulk already installed \x1b[35m%s\x1b[0m/\x1b[34m%s\x1b[0m version \x1b[32m%s\x1b[0m "
+                      L"[\x1b[36mCompatibility Mode\x1b[0m]\n",
+                      pkg.name, pkg.bucket, pkgLocal->version);
+        return true;
+      }
       return PackageMakeLinks(pkg);
     }
     if (baulk::IsFrozenedPackage(pkg.name) && !baulk::IsForceMode) {
@@ -237,49 +288,49 @@ bool PackageInstall(const baulk::Package &pkg) {
     return false;
   }
   DbgPrint(L"baulk '%s/%s' url: '%s'\n", pkg.name, pkg.version, url);
-  auto urlFileName = net::url_path_name(url);
+  std::filesystem::path downloads(vfs::AppTemp());
+  auto filename = net::url_path_name(url);
   if (!pkg.hash.empty()) {
-    DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, urlFileName);
-    if (auto pkgFile = PackageCached(urlFileName, pkg.hash); pkgFile) {
-      return PackageExpand(pkg, *pkgFile);
+    DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, filename);
+    if (auto archive_file = PackageCached(downloads, filename, pkg.hash); archive_file) {
+      return PackageExpand(pkg, *archive_file);
     }
   }
-  auto downloads = vfs::AppTemp();
   if (!baulk::fs::MakeDirectories(downloads, ec)) {
     bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec);
     return false;
   }
-  bela::FPrintF(stderr, L"baulk: download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", urlFileName, url);
-  std::optional<std::wstring> pkgFile;
+  bela::FPrintF(stderr, L"baulk: download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", filename, url);
+  std::optional<std::filesystem::path> archive_file;
   for (int i = 0; i < 4; i++) {
     if (i != 0) {
-      bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", urlFileName, i);
+      bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", filename, i);
     }
     //  downloads, pkg.hash, true
-    if (pkgFile = baulk::net::WinGet(url,
-                                     {
-                                         .hash_value = pkg.hash,
-                                         .cwd = downloads,
-                                         .force_overwrite = true,
-                                     },
-                                     ec);
-        !pkgFile) {
-      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", urlFileName, ec);
+    if (archive_file = baulk::net::WinGet(url,
+                                          {
+                                              .hash_value = pkg.hash,
+                                              .cwd = downloads,
+                                              .force_overwrite = true,
+                                          },
+                                          ec);
+        !archive_file) {
+      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", filename, ec);
       continue;
     }
     // hash not check
     if (pkg.hash.empty()) {
       break;
     }
-    if (hash::HashEqual(*pkgFile, pkg.hash, ec)) {
+    if (hash::HashEqual(*archive_file, pkg.hash, ec)) {
       break;
     }
-    bela::FPrintF(stderr, L"baulk download '%s' error: \x1b[31m%s\x1b[0m\n", bela::BaseName(*pkgFile), ec);
+    bela::FPrintF(stderr, L"baulk download '%s' error: \x1b[31m%s\x1b[0m\n", archive_file->filename(), ec);
   }
-  if (!pkgFile) {
+  if (!archive_file) {
     return false;
   }
-  if (!PackageExpand(pkg, *pkgFile)) {
+  if (!PackageExpand(pkg, *archive_file)) {
     return false;
   }
   if (!pkg.suggest.empty()) {

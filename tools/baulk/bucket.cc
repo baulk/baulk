@@ -161,6 +161,7 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::
       .name = std::wstring(pkgName),
       .version = jv.fetch("version"),
       .bucket = jv.fetch("bucket"),
+      .mask = static_cast<PackageMask>(jv.fetch_as_integer("mask", bela::integral_cast(MaskNone))), // install mask
   };
   jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
   if (auto sv = jv.subview("venv"); sv) {

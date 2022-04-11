@@ -111,6 +111,50 @@ struct PackageEnv {
   }
 };
 
+enum PackageMask : uint32_t {
+  MaskNone = 0,
+  MaskCompatibilityMode = 1, // Compatibility Mode
+};
+
+[[nodiscard]] constexpr PackageMask operator&(PackageMask L, PackageMask R) noexcept {
+  using K = std::underlying_type_t<PackageMask>;
+  return static_cast<PackageMask>(static_cast<K>(L) & static_cast<K>(R));
+}
+[[nodiscard]] constexpr PackageMask operator|(PackageMask L, PackageMask R) noexcept {
+  using K = std::underlying_type_t<PackageMask>;
+  return static_cast<PackageMask>(static_cast<K>(L) | static_cast<K>(R));
+}
+
+[[nodiscard]] constexpr PackageMask
+operator^(const PackageMask _Left, const PackageMask _Right) noexcept { // bitwise XOR, every static_cast is intentional
+  using K = std::underlying_type_t<PackageMask>;
+  return static_cast<PackageMask>(static_cast<K>(_Left) ^ static_cast<K>(_Right));
+}
+
+template <class I>
+requires std::integral<I>
+constexpr PackageMask &operator<<=(PackageMask &_Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT
+  return _Arg = _Arg << _Shift;
+}
+
+template <class I>
+requires std::integral<I>
+constexpr PackageMask &operator>>=(PackageMask &_Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT
+  return _Arg = _Arg >> _Shift;
+}
+
+constexpr PackageMask &operator|=(PackageMask &_Left, const PackageMask _Right) noexcept { // bitwise OR
+  return _Left = _Left | _Right;
+}
+
+constexpr PackageMask &operator&=(PackageMask &_Left, const PackageMask _Right) noexcept { // bitwise AND
+  return _Left = _Left & _Right;
+}
+
+constexpr PackageMask &operator^=(PackageMask &_Left, const PackageMask _Right) noexcept { // bitwise XOR
+  return _Left = _Left ^ _Right;
+}
+
 struct Package {
   std::wstring name;
   std::wstring description;
@@ -130,6 +174,7 @@ struct Package {
   PackageEnv venv;
   int weights{0}; // Weights derived from bucket
   BucketVariant variant{BucketVariant::Native};
+  PackageMask mask{MaskNone};
   bool IsExeExtension() const { return bela::EqualsIgnoreCase(L"exe", extension); }
   bool IsZipExtension() const { return bela::EqualsIgnoreCase(L"zip", extension); }
   bool IsTarExtension() const { return bela::EqualsIgnoreCase(L"tar", extension); }

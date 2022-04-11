@@ -48,6 +48,10 @@ int cmd_search(const argv_t &argv) {
       bela::FPrintF(stderr, L"baulk search: parse package meta error: \x1b[31m%s\x1b[0m\n", ec);
       return false;
     }
+    if (baulk::IsDebugMode) {
+      bela::FPrintF(stderr, L"\x1b[33m* %v urls:\x1b[0m\n  \x1b[33m%v\x1b[0m\n", pkg->name,
+                    bela::StrJoin(pkg->urls, L"\x1b[0m\n  \x1b[33m"));
+    }
     auto pkgLocal = baulk::PackageLocalMeta(pkgName, ec);
     if (pkgLocal && bela::EndsWithIgnoreCase(pkgLocal->bucket, pkg->bucket)) {
       bela::FPrintF(stderr,

@@ -11,16 +11,23 @@ namespace baulk {
 inline auto PackageMetaJoinNative(const Bucket &bucket, std::wstring_view pkgName) {
   return bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name, L"\\bucket\\", pkgName, L".json");
 }
-
 #if defined(_M_X64)
-constexpr std::string_view native_arch = "64bit";
+constexpr std::string_view host_architecture = "64bit";
+constexpr std::wstring_view host_architecture_name = L"x64";
 #elif defined(_M_ARM64)
-constexpr std::string_view native_arch = "arm64";
+constexpr std::string_view host_architecture = "arm64";
+constexpr std::wstring_view host_architecture_name = L"ARM64";
 #else
-constexpr std::string_view native_arch = "32bit";
+constexpr std::string_view host_architecture = "32bit";
+constexpr std::wstring_view host_architecture_name = L"x86";
 #endif
 
-inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv, bela::error_code ec) {
+constexpr std::string_view arm64_architecture = "arm64";
+constexpr std::string_view x64bit_architecture = "64bit";
+constexpr std::string_view x32bit_architecture = "32bit";
+
+inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv) {
+  using namespace std::string_view_literals;
   auto __ = bela::finally([&] {
     if (pkg.links.empty()) {
       jv.fetch_paths_checked("links", pkg.links);
@@ -33,34 +40,42 @@ inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv, bela::er
       pkg.hash = jv.fetch("hash");
     }
   });
+  auto fnload = [&](baulk::json::json_view &jv_, const std::string_view arch) -> bool {
+    if (auto av = jv_.subview(arch); av) {
+      pkg.urls.emplace_back(av->fetch("url"));
+      pkg.hash = av->fetch("hash");
+      jv.fetch_paths_checked("links", pkg.links);
+      jv.fetch_paths_checked("launchers", pkg.launchers);
+      return true;
+    }
+    return false;
+  };
   if (auto sv = jv.subview("architecture"); sv) {
-    if (auto av = sv->subview(native_arch); av) {
-      pkg.urls.emplace_back(av->fetch("url"));
-      pkg.hash = av->fetch("hash");
-      jv.fetch_paths_checked("links", pkg.links);
-      jv.fetch_paths_checked("launchers", pkg.launchers);
+    if (fnload(*sv, host_architecture)) {
       return;
     }
-    if (auto av = sv->subview("32bit"); av) {
-      pkg.urls.emplace_back(av->fetch("url"));
-      pkg.hash = av->fetch("hash");
-      jv.fetch_paths_checked("links", pkg.links);
-      jv.fetch_paths_checked("launchers", pkg.launchers);
+    if constexpr (host_architecture != x64bit_architecture) {
+      if (fnload(*sv, x64bit_architecture)) {
+        return;
+      }
+    }
+    if (fnload(*sv, x32bit_architecture)) {
       return;
     }
+  }
+  if constexpr (host_architecture == x64bit_architecture) {
+    jv.fetch_strings_checked("url64", pkg.urls);
+    pkg.hash = jv.fetch("url64.hash");
+    jv.fetch_paths_checked("links64", pkg.links);
+    jv.fetch_paths_checked("launchers64", pkg.launchers);
     return;
   }
-#if defined(_M_X64)
-  jv.fetch_strings_checked("url64", pkg.urls);
-  pkg.hash = jv.fetch("url64.hash");
-  jv.fetch_paths_checked("links64", pkg.links);
-  jv.fetch_paths_checked("launchers64", pkg.launchers);
-#elif defined(_M_ARM64)
-  jv.fetch_strings_checked("urlarm64", pkg.urls);
-  pkg.hash = jv.fetch("urlarm64.hash");
-  jv.fetch_paths_checked("linksarm64", pkg.links);
-  jv.fetch_paths_checked("launchersarm64", pkg.launchers);
-#endif
+  if constexpr (host_architecture == arm64_architecture) {
+    jv.fetch_strings_checked("urlarm64", pkg.urls);
+    pkg.hash = jv.fetch("urlarm64.hash");
+    jv.fetch_paths_checked("linksarm64", pkg.links);
+    jv.fetch_paths_checked("launchersarm64", pkg.launchers);
+  }
 }
 
 std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
@@ -75,7 +90,7 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
       .description = jv.fetch("description"),
       .version = jv.fetch("version"),
       .bucket = std::wstring{bucket.name},
-      .extension = bela::AsciiStrToLower(jv.fetch("extension")), // to lower
+      .extension = bela::AsciiStrToLower(jv.fetch("extension", L"auto")), // to lower
       .rename = jv.fetch("rename"),
       .homepage = jv.fetch("homepage"),
       .notes = jv.fetch("notes"),
@@ -83,55 +98,11 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
   };
   jv.fetch_strings_checked("suggest", pkg.suggest);
   jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
-
-#if defined(_M_X64)
-  // x64
-  if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.hash = jv.fetch("url64.hash");
-  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hash = jv.fetch("url.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgName, L"@", bucket.name, L" not yet port to x64 platform.");
+  PackageResolveURL(pkg, jv);
+  if (pkg.urls.empty()) {
+    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to ", host_architecture_name, L" platform.");
     return std::nullopt;
   }
-  if (!jv.fetch_paths_checked("links64", pkg.links)) {
-    jv.fetch_paths_checked("links", pkg.links);
-  }
-  if (!jv.fetch_paths_checked("launchers64", pkg.launchers)) {
-    jv.fetch_paths_checked("launchers", pkg.launchers);
-  }
-#elif defined(_M_ARM64)
-  // ARM64 support
-  if (jv.fetch_strings_checked("urlarm64", pkg.urls)) {
-    pkg.hash = jv.fetch("urlarm64.hash");
-  } else if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hash = jv.fetch("url.hash");
-  } else if (jv.fetch_strings_checked("url64", pkg.urls)) {
-    pkg.hash = jv.fetch("url64.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to ARM64 platform.");
-    return std::nullopt;
-  }
-  if (!jv.fetch_paths_checked("linksarm64", pkg.links)) {
-    if (!jv.fetch_paths_checked("links", pkg.links)) {
-      jv.fetch_paths_checked("links64", pkg.links);
-    }
-  }
-  if (!jv.fetch_paths_checked("launchersarm64", pkg.launchers)) {
-    if (!jv.fetch_paths_checked("launchers", pkg.launchers)) {
-      jv.fetch_paths_checked("launchers", pkg.links);
-    }
-  }
-#else
-  if (jv.fetch_strings_checked("url", pkg.urls)) {
-    pkg.hash = jv.fetch("url.hash");
-  } else {
-    ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet ported.");
-    return std::nullopt;
-  }
-  jv.fetch_paths_checked("links", pkg.links);
-  jv.fetch_paths_checked("launchers", pkg.launchers);
-#endif
   if (auto sv = jv.subview("venv"); sv) {
     DbgPrint(L"pkg '%s' support virtual env\n", pkg.name);
     pkg.venv.category = sv->fetch("category");
