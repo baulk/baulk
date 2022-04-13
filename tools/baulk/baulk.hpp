@@ -161,7 +161,6 @@ struct Package {
   std::wstring version;
   std::wstring bucket;
   std::wstring extension;
-  std::wstring rename; // only exe extension support rename feature
   std::wstring homepage;
   std::wstring notes;
   std::wstring license;

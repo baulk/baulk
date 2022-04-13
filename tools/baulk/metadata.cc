@@ -91,7 +91,6 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
       .version = jv.fetch("version"),
       .bucket = std::wstring{bucket.name},
       .extension = bela::AsciiStrToLower(jv.fetch("extension", L"auto")), // to lower
-      .rename = jv.fetch("rename"),
       .homepage = jv.fetch("homepage"),
       .notes = jv.fetch("notes"),
       .license = jv.fetch("license"),
