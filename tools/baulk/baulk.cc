@@ -1,6 +1,7 @@
 #include <bela/path.hpp>
 #include <baulk/argv.hpp>
 #include <baulk/net.hpp>
+#include <objbase.h>
 #include "baulk.hpp"
 #include "commands.hpp"
 
@@ -156,7 +157,21 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
 
 } // namespace baulk
 
+class dotcom_global_initializer {
+public:
+  dotcom_global_initializer() {
+    auto hr = CoInitialize(NULL);
+    if (FAILED(hr)) {
+      auto ec = bela::make_system_error_code();
+      MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);
+      exit(1);
+    }
+  }
+  ~dotcom_global_initializer() { CoUninitialize(); }
+};
+
 int wmain(int argc, wchar_t **argv) {
+  dotcom_global_initializer di;
   if (auto cmd = baulk::ParseArgv(argc, argv); cmd) {
     return (*cmd)();
   }

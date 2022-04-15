@@ -7,6 +7,7 @@
 #include <bela/process.hpp>
 #include <bela/str_cat.hpp>
 #include <filesystem>
+#include "vs/searcher.hpp"
 #include "registry.hpp"
 #include "json_utils.hpp"
 
@@ -22,78 +23,6 @@ namespace env_internal {
 inline std::optional<std::wstring> lookup_vc_version(std::wstring_view vsdir, bela::error_code &ec) {
   auto file = bela::StringCat(vsdir, L"/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt");
   return bela::io::ReadLine(file, ec);
-}
-
-// const fs::path vswhere_exe = program_files_32_bit / "Microsoft Visual Studio"
-// / "Installer" / "vswhere.exe";
-inline std::optional<std::wstring> lookup_vswhere() {
-  constexpr std::wstring_view relativevswhere = L"/Microsoft Visual Studio/Installer/vswhere.exe";
-  constexpr std::wstring_view evv[] = {L"ProgramFiles(x86)", L"ProgramFiles"};
-  for (auto e : evv) {
-    if (auto vswhere_exe = bela::StringCat(bela::GetEnv(e), relativevswhere); bela::PathFileIsExists(vswhere_exe)) {
-      return std::make_optional(std::move(vswhere_exe));
-    }
-  }
-  return std::nullopt;
-}
-
-struct vs_instance {
-  std::wstring path;
-  std::wstring version;
-  std::wstring instance_id;
-  std::wstring product_id;
-  bool is_launchable{true};
-  bool is_prerelease{false};
-};
-using vs_instances = std::vector<vs_instance>;
-
-std::optional<vs_instances> decode_vs_instances(const std::string_view text, bela::error_code &ec) {
-  // Workaround: Fix vswhere UTF-8 -flag may be wrong
-  auto ws = bela::fromascii(text);
-  auto s = bela::encode_into<wchar_t, char>(ws);
-  auto o = baulk::json::parse(s, ec);
-  if (!o) {
-    return std::nullopt;
-  }
-  if (!o->obj.is_array()) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
-    return std::nullopt;
-  }
-  vs_instances vss;
-  for (auto &so : o->obj) {
-    baulk::json::json_view jv(so);
-    vs_instance vs{
-        .path = jv.fetch("installationPath"),
-        .version = jv.fetch("installationVersion"),
-        .instance_id = jv.fetch("instanceId"),
-        .product_id = jv.fetch("productId"),
-        .is_launchable = jv.fetch_as_boolean("isLaunchable", false),
-        .is_prerelease = jv.fetch_as_boolean("isPrerelease", false),
-    };
-    vss.emplace_back(std::move(vs));
-  }
-  if (vss.empty()) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(vss));
-}
-
-inline std::optional<vs_instances> vs_instances_lookup(bela::error_code &ec) {
-  auto vswhere = lookup_vswhere();
-  if (!vswhere) {
-    ec = bela::make_error_code(L"vswhere not installed");
-    return std::nullopt;
-  }
-  bela::process::Process process;
-  // Force -utf8 convert to UTF8: include -prerelease
-  if (process.Capture(*vswhere, L"-format", L"json", L"-sort", L"-prerelease") == 0) {
-    return decode_vs_instances(process.Out(), ec);
-  }
-  if (process.ExitCode() != 0) {
-    ec = bela::make_error_code(process.ExitCode(), L"vswhere exit with: ", process.ExitCode());
-  }
-  return std::nullopt;
 }
 
 inline bool sdk_search_version(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
@@ -135,7 +64,8 @@ public:
   vs_env_builder(const vs_env_builder &) = delete;
   vs_env_builder &operator=(const vs_env_builder &) = delete;
   bool initialize_windows_sdk(const std::wstring_view arch, bela::error_code &ec);
-  bool initialize_vs_env(const vs_instance &vs, const std::wstring_view arch, bool usePreviewVS, bela::error_code &ec);
+  bool initialize_vs_env(const baulk::vs::vs_instance_t &vs, const std::wstring_view arch, bool usePreviewVS,
+                         bela::error_code &ec);
   void flush();
 
 private:
@@ -242,27 +172,27 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
 }
 
 // initialize vs env
-inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::wstring_view arch, bool usePreviewVS,
-                                              bela::error_code &ec) {
-  auto vcver = lookup_vc_version(vs.path, ec);
+inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs, const std::wstring_view arch,
+                                              bool usePreviewVS, bela::error_code &ec) {
+  auto vcver = lookup_vc_version(vs.InstallLocation, ec);
   if (!vcver) {
     return false;
   }
-  std::vector<std::wstring_view> vv = bela::StrSplit(vs.version, bela::ByChar('.'), bela::SkipEmpty());
+  std::vector<std::wstring_view> vv = bela::StrSplit(vs.Version, bela::ByChar('.'), bela::SkipEmpty());
   if (vv.size() > 2) {
     // VS160COMNTOOLS
     auto key = bela::StringCat(L"VS", vv[0], L"0COMNTOOLS");
-    auto p = bela::StringCat(vs.path, LR"(\Common7\IDE\Tools\)");
+    auto p = bela::StringCat(vs.InstallLocation, LR"(\Common7\IDE\Tools\)");
     simulator->SetEnv(key, p);
   }
   // Libs
-  JoinEnv(includes, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\include)");
-  JoinEnv(includes, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\include)");
+  JoinEnv(includes, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\include)");
+  JoinEnv(includes, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\include)");
   // Libs
-  JoinEnv(libs, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
-  JoinEnv(libs, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
+  JoinEnv(libs, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", arch);
+  JoinEnv(libs, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", arch);
   // Paths
-  JoinEnv(paths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
+  JoinEnv(paths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
 
   constexpr std::wstring_view vsPathSuffix[] = {
       // IDE tools
@@ -292,46 +222,51 @@ inline bool vs_env_builder::initialize_vs_env(const vs_instance &vs, const std::
       LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
   };
   for (auto p : vsPathSuffix) {
-    JoinEnv(paths, vs.path, p);
+    JoinEnv(paths, vs.InstallLocation, p);
   }
   // add libpaths
-  JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", HostArch);
-  JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", HostArch);
-  JoinEnv(libpaths, vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\x86\store\references)");
-  auto ifcpath = bela::StringCat(vs.path, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
+  JoinEnv(libpaths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ATLMFC\lib\)", HostArch);
+  JoinEnv(libpaths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\)", HostArch);
+  JoinEnv(libpaths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\lib\x86\store\references)");
+  auto ifcpath = bela::StringCat(vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\ifc\)", arch);
   if (bela::PathExists(ifcpath)) {
     simulator->SetEnv(L"IFCPATH", ifcpath, true);
   }
-  simulator->SetEnv(L"VCIDEInstallDir", bela::StringCat(vs.path, LR"(Common7\IDE\VC)"), true);
+  simulator->SetEnv(L"VCIDEInstallDir", bela::StringCat(vs.InstallLocation, LR"(Common7\IDE\VC)"), true);
   return true;
 }
 } // namespace env_internal
 
 // InitializeVisualStudioEnv initialize vs env
-inline bool InitializeVisualStudioEnv(bela::env::Simulator &simulator, const std::wstring_view arch,
-                                      const bool usePreviewVS, bela::error_code &ec) {
-  auto vss = env_internal::vs_instances_lookup(ec);
-  if (!vss) {
-    return false;
+inline std::optional<std::wstring> InitializeVisualStudioEnv(bela::env::Simulator &simulator,
+                                                             const std::wstring_view arch, const bool usePreviewVS,
+                                                             bela::error_code &ec) {
+  baulk::vs::Searcher searcher;
+  if (!searcher.Initialize(ec)) {
+    return std::nullopt;
   }
-  if (vss->empty()) {
+  baulk::vs::vs_instances_t vsis;
+  if (!searcher.Search(vsis, ec)) {
+    return std::nullopt;
+  }
+  if (vsis.empty()) {
     ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
-    return false;
+    return std::nullopt;
   }
-  auto vs_matched = [&](const baulk::env::env_internal::vs_instance &vs_) { return vs_.is_prerelease == usePreviewVS; };
-  auto vs = vss->begin();
-  if (auto result = std::find_if(vss->begin(), vss->end(), vs_matched); result != vss->end()) {
+  auto vs_matched = [&](const baulk::vs::vs_instance_t &vs_) { return vs_.IsPreview == usePreviewVS; };
+  auto vs = vsis.begin();
+  if (auto result = std::find_if(vsis.begin(), vsis.end(), vs_matched); result != vsis.end()) {
     vs = result;
   }
   env_internal::vs_env_builder builder(&simulator);
   if (!builder.initialize_vs_env(*vs, arch, usePreviewVS, ec)) {
-    return false;
+    return std::nullopt;
   }
   if (!builder.initialize_windows_sdk(arch, ec)) {
-    return false;
+    return std::nullopt;
   }
   builder.flush();
-  return true;
+  return std::make_optional(bela::StringCat(vs->DisplayName, vs->IsPreview ? L" Preview [" : L" [", vs->Version, L"]"));
 }
 } // namespace baulk::env
 

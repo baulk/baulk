@@ -183,20 +183,23 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
     bela::FPrintF(stderr, L"initialize git env failed: %s\n", ec);
   }
 
-  if (initializeVSEnv) {
-    if (!baulk::env::InitializeVisualStudioEnv(simulator, arch, false, ec)) {
+  [&]() {
+    if (initializeVSEnv) {
+      if (auto vs = baulk::env::InitializeVisualStudioEnv(simulator, arch, false, ec); vs) {
+        DbgPrint(L"Initialize %v done", *vs);
+        return;
+      }
       bela::FPrintF(stderr, L"Initialize visual studio env failed %s\n", ec);
-    } else {
-      DbgPrint(L"Initialize visual studio env done");
+      return;
     }
-  }
-  if (initializeVSPreviewEnv) {
-    if (!baulk::env::InitializeVisualStudioEnv(simulator, arch, true, ec)) {
+    if (initializeVSPreviewEnv) {
+      if (auto vs = baulk::env::InitializeVisualStudioEnv(simulator, arch, true, ec); vs) {
+        DbgPrint(L"Initialize %v done", *vs);
+        return;
+      }
       bela::FPrintF(stderr, L"Initialize visual studio (Preview) env failed %s\n", ec);
-    } else {
-      DbgPrint(L"Initialize visual studio (Preview) env done");
     }
-  }
+  }();
 
   std::vector<std::wstring> paths = {baulk::vfs::AppLocationPath(), std::wstring(baulk::vfs::AppLinks())};
   if (IsDebugMode) {
@@ -214,7 +217,21 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
 }
 } // namespace baulk
 
+class dotcom_global_initializer {
+public:
+  dotcom_global_initializer() {
+    auto hr = CoInitialize(NULL);
+    if (FAILED(hr)) {
+      auto ec = bela::make_system_error_code();
+      MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);
+      exit(1);
+    }
+  }
+  ~dotcom_global_initializer() { CoUninitialize(); }
+};
+
 int wmain(int argc, wchar_t **argv) {
+  dotcom_global_initializer di;
   baulk::Executor executor;
   if (!executor.ParseArgv(argc, argv)) {
     return 1;
