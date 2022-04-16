@@ -100,7 +100,7 @@ inline void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, 
   string_append(dest, a, b, c);
 }
 inline void StrAppend(std::wstring *dest, const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d) {
-  string_append(dest, a, b, d);
+  string_append(dest, a, b, c, d);
 }
 
 // Support 5 or more arguments
@@ -151,7 +151,7 @@ inline void StrAppend(std::string *dest, const AlphaNumNarrow &a, const AlphaNum
 
 inline void StrAppend(std::string *dest, const AlphaNumNarrow &a, const AlphaNumNarrow &b, const AlphaNumNarrow &c,
                       const AlphaNumNarrow &d) {
-  string_append(dest, a, b, d);
+  string_append(dest, a, b, c, d);
 }
 
 template <typename... AV>

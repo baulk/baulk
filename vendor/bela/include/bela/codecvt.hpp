@@ -155,7 +155,7 @@ namespace codecvt_internal {
  * allowed in earlier algorithms.
  */
 // clang-format off
-static constexpr const char trailingbytesu8[256] = {
+static constexpr const char trailing_bytes_from_utf8[256] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -166,12 +166,12 @@ static constexpr const char trailingbytesu8[256] = {
     2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
 };
 // clang-format on
-constexpr const char32_t offsetfromu8[6] = {0x00000000UL, 0x00003080UL, 0x000E2080UL,
-                                            0x03C82080UL, 0xFA082080UL, 0x82082080UL};
+constexpr const char32_t offset_from_utf8[6] = {0x00000000UL, 0x00003080UL, 0x000E2080UL,
+                                                0x03C82080UL, 0xFA082080UL, 0x82082080UL};
 
-inline char32_t decode_rune(const char8_t *it, int nb) {
+constexpr char32_t decode_rune(const char8_t *it, int nbytes) {
   char32_t ch = 0;
-  switch (nb) {
+  switch (nbytes) {
   case 5:
     ch += *it++;
     ch <<= 6; /* remember, illegal UTF-8 */
@@ -195,7 +195,7 @@ inline char32_t decode_rune(const char8_t *it, int nb) {
   case 0:
     ch += *it++;
   }
-  ch -= offsetfromu8[nb];
+  ch -= offset_from_utf8[nbytes];
   return ch;
 }
 } // namespace codecvt_internal
@@ -210,7 +210,7 @@ requires bela::u8_character<From> && bela::u16_character<To>
   string_t us;
   us.reserve(sv.size());
   while (it < end) {
-    uint16_t nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
+    uint16_t nb = codecvt_internal::trailing_bytes_from_utf8[static_cast<uint8_t>(*it)];
     if (nb >= end - it) {
       break;
     }
@@ -364,7 +364,7 @@ requires bela::u8_character<CharT>
   auto it = sv.data();
   auto end = it + sv.size();
   while (it < end) {
-    unsigned short nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
+    unsigned short nb = codecvt_internal::trailing_bytes_from_utf8[static_cast<uint8_t>(*it)];
     if (nb >= end - it) {
       break;
     }
@@ -415,7 +415,7 @@ requires bela::u8_character<CharT> size_t string_width(std::basic_string_view<Ch
   auto it = reinterpret_cast<const char8_t *>(sv.data());
   auto end = it + sv.size();
   while (it < end) {
-    unsigned short nb = codecvt_internal::trailingbytesu8[static_cast<uint8_t>(*it)];
+    unsigned short nb = codecvt_internal::trailing_bytes_from_utf8[static_cast<uint8_t>(*it)];
     if (nb >= end - it) {
       break;
     }
@@ -430,6 +430,39 @@ requires bela::character<CharT>
 [[nodiscard]] constexpr size_t string_width(CharT (&str)[N]) {
   // string_length
   return string_width<CharT>({str, N});
+}
+
+inline char32_t RuneNext(std::u16string_view &sv) {
+  if (sv.empty()) {
+    return 0;
+  }
+  char32_t rune = sv[0];
+  if (!bela::rune_is_surrogate(rune)) {
+    sv.remove_prefix(1);
+    return rune;
+  }
+  char32_t rune_part = sv[1];
+  sv.remove_prefix(2);
+  return ((rune - 0xD800) << 10) + (rune_part - 0xDC00) + 0x10000U;
+}
+
+inline char32_t RuneNext(std::u8string_view &sv) {
+  if (sv.empty()) {
+    return 0;
+  }
+  char32_t rune = sv[0];
+  if (rune < 128) {
+    sv.remove_prefix(1);
+    return rune;
+  }
+  auto nbytes = codecvt_internal::trailing_bytes_from_utf8[static_cast<uint8_t>(rune)];
+  if (sv.size() < static_cast<size_t>(nbytes)) {
+    sv.remove_prefix(1);
+    return 0;
+  }
+  rune = codecvt_internal::decode_rune(sv.data(), nbytes);
+  sv.remove_prefix(nbytes + 1);
+  return rune;
 }
 
 } // namespace bela

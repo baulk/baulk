@@ -7,7 +7,6 @@ add_library(
   city.cc
   codecvt.cc
   escaping.cc
-  fnmatch.cc
   int128.cc
   match.cc
   numbers.cc
@@ -20,6 +19,7 @@ add_library(
   terminal.cc
   __charconv/charconv.cc
   __charconv/charconv_float.cc
+  __fnmatch/fnmatch.cc
   __format/fmt.cc)
 
 if(BELA_ENABLE_LTO)

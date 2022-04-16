@@ -1,5 +1,5 @@
 ////
-#include <bela/unicode.hpp>
+#include "unicode.hpp"
 
 namespace bela::unicode::details {
 LookupTables const smTables = {

@@ -2,6 +2,9 @@
 #ifndef BELA_SIMULATOR_HPP
 #define BELA_SIMULATOR_HPP
 #include "env.hpp"
+#ifdef PathAppend
+#undef PathAppend
+#endif
 
 namespace bela::env {
 struct StringCaseInsensitiveHash {

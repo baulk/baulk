@@ -1,25 +1,56 @@
 # bela::hash https://docs.microsoft.com/en-us/cpp/intrinsics/arm64-intrinsics
 # https://static.docs.arm.com/ihi0073/c/IHI0073C_arm_neon_intrinsics_ref.pdf
-string(TOLOWER "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" BELA_COMPILER_ARCH_ID)
-message(STATUS "CMAKE_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID}")
-# blake3
-if("${BELA_COMPILER_ARCH_ID}" STREQUAL "x86_64"
-   OR "${BELA_COMPILER_ARCH_ID}" STREQUAL "amd64"
-   OR "${BELA_COMPILER_ARCH_ID}" STREQUAL "x64"
-   OR "${BELA_COMPILER_ARCH_ID}" STREQUAL "x86")
-  # support clang-cl
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(BLAKE3_SIMDSRC blake3/blake3_sse2_x86-64_windows_gnu.S blake3/blake3_sse41_x86-64_windows_gnu.S
-                       blake3/blake3_avx2_x86-64_windows_gnu.S blake3/blake3_avx512_x86-64_windows_gnu.S)
+
+set(BELA_BLAKE3_SOURCES blake3/blake3.c blake3/blake3_dispatch.c blake3/blake3_portable.c)
+
+# FIXME CMAKE CMAKE_MSVC_RUNTIME_LIBRARY_DEFAULT
+if(BELA_ARCHITECTURE_64BIT)
+  if(BELA_ENABLE_ASSEMBLY_FILES)
+    if(MSVC)
+      enable_language(ASM_MASM)
+      list(
+        APPEND
+        BELA_BLAKE3_SOURCES
+        blake3/blake3_sse2_x86-64_windows_msvc.asm
+        blake3/blake3_sse41_x86-64_windows_msvc.asm
+        blake3/blake3_avx2_x86-64_windows_msvc.asm
+        blake3/blake3_avx512_x86-64_windows_msvc.asm)
+    elseif(WIN32 OR CYGWIN)
+      list(
+        APPEND
+        BELA_BLAKE3_SOURCES
+        blake3/blake3_sse2_x86-64_windows_gnu.S
+        blake3/blake3_sse41_x86-64_windows_gnu.S
+        blake3/blake3_avx2_x86-64_windows_gnu.S
+        blake3/blake3_avx512_x86-64_windows_gnu.S)
+    else()
+      list(
+        APPEND
+        BELA_BLAKE3_SOURCES
+        blake3/blake3_sse2_x86-64_unix.S
+        blake3/blake3_sse41_x86-64_unix.S
+        blake3/blake3_avx2_x86-64_unix.S
+        blake3/blake3_avx512_x86-64_unix.S)
+    endif()
   else()
-    # msvc
-    set(BLAKE3_SIMDSRC blake3/blake3_sse2.c blake3/blake3_sse41.c blake3/blake3_avx2.c blake3/blake3_avx512.c)
-    set_source_files_properties(blake3_avx512.c PROPERTIES COMPILE_FLAGS "-arch:AVX512")
-  endif()
-elseif("${BELA_COMPILER_ARCH_ID}" STREQUAL "arm64")
-  set(BLAKE3_SIMDSRC blake3/blake3_neon.c)
-else()
-  message(FATAL "unsupport target")
+    list(
+      APPEND
+      BELA_BLAKE3_SOURCES
+      blake3/blake3_sse2.c
+      blake3/blake3_sse41.c
+      blake3/blake3_avx2.c
+      blake3/blake3_avx512.c)
+  endif(BELA_ENABLE_ASSEMBLY_FILES)
+elseif(BELA_ARCHITECTURE_ARM64)
+  list(APPEND BELA_BLAKE3_SOURCES blake3/blake3_neon.c)
+elseif(BELA_ARCHITECTURE_32BIT)
+  list(
+    APPEND
+    BELA_BLAKE3_SOURCES
+    blake3/blake3_sse2.c
+    blake3/blake3_sse41.c
+    blake3/blake3_avx2.c
+    blake3/blake3_avx512.c)
 endif()
 
 add_library(
@@ -28,10 +59,7 @@ add_library(
   sha512.cc
   sha3.cc
   sm3.cc
-  blake3/blake3.c
-  blake3/blake3_dispatch.c
-  blake3/blake3_portable.c
-  ${BLAKE3_SIMDSRC})
+  ${BELA_BLAKE3_SOURCES})
 
 target_link_libraries(belahash bela)
 

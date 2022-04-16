@@ -232,7 +232,7 @@ bool File::parseFile(bela::error_code &ec) {
   if (shstrndx < 0) {
     return false;
   }
-  bela::Buffer buffer(sections[shstrndx].Size + 8);
+  bela::Buffer buffer(static_cast<size_t>(sections[shstrndx].Size + 8));
   if (!sectionData(sections[shstrndx], buffer, ec)) {
     return false;
   }

@@ -187,5 +187,32 @@ int wmain(int argc, wchar_t **argv) {
   constexpr auto a = u8"abc";
   constexpr auto b = "abc";
   constexpr auto e = bela::BytesEqual(a, b, 3);
+  std::wstring ss;
+  bela::StrAppend(&ss, L"kk (", ss.size(), L") ", L"zzz");
+  bela::FPrintF(stderr, L"%v\n", ss);
+  std::u8string_view text =
+      u8"💖 统一码（Unicode），也叫万国码、单一码，是计算机科学领域里的一项业界标准，包括字符集、编"
+      u8"码方案等。Unicode 是为了解决传统的字符编码方案的局限而产生的，它为每种语言中的每个字符设"
+      u8"定了统一并且唯一的二进制编码，以满足跨语言、跨平台进行文本转换、处理的要求。";
+  for (; !text.empty();) {
+    auto rune = bela::RuneNext(text);
+    if (rune == 0) {
+      break;
+    }
+    bela::FPrintF(stderr, L"%c", rune);
+  }
+  bela::FPrintF(stderr, L"\n---------------\n");
+  std::u16string_view u16text =
+      u"💖 统一码（Unicode），也叫万国码、单一码，是计算机科学领域里的一项业界标准，包括字符集、编"
+      u"码方案等。Unicode 是为了解决传统的字符编码方案的局限而产生的，它为每种语言中的每个字符设"
+      u"定了统一并且唯一的二进制编码，以满足跨语言、跨平台进行文本转换、处理的要求。";
+  for (; !u16text.empty();) {
+    auto rune = bela::RuneNext(u16text);
+    if (rune == 0) {
+      break;
+    }
+    bela::FPrintF(stderr, L"%c", rune);
+  }
+  bela::FPrintF(stderr, L"\n---------------\n");
   return 0;
 }

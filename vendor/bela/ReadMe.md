@@ -42,7 +42,7 @@ bela base [Abseil](https://github.com/abseil/abseil-cpp): strcat. numbers subsit
 bela base Visual C++: charconv (support wchar_t only)  
 bela Use parallel-hashmap [https://github.com/greg7mdp/parallel-hashmap](https://github.com/greg7mdp/parallel-hashmap)  
 bela Use semver [https://github.com/Neargye/semver](https://github.com/Neargye/semver)  
-bela Use musl fnmatch(MIT) [https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c](https://github.com/bminor/musl/blob/master/src/regex/fnmatch.c)  
+bela Port Daniel Wakefield's fnmatch(BSD) to C++20 [https://github.com/danwakefield/fnmatch/blob/master/fnmatch.go](https://github.com/danwakefield/fnmatch/blob/master/fnmatch.go)  
 bela Use LLVM tokenize commandline (support wchar_t only)  
 bela Use [https://github.com/BLAKE3-team/BLAKE3](https://github.com/BLAKE3-team/BLAKE3)  
 bela::hash uses the Hash algorithm code contributed by different people. You can check the corresponding file header for details.

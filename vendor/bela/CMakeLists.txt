@@ -1,5 +1,5 @@
-# top cmake
-cmake_minimum_required(VERSION 3.18)
+# bela sources
+cmake_minimum_required(VERSION 3.22)
 
 project(bela CXX C ASM)
 
@@ -16,11 +16,12 @@ endif()
 
 option(ENABLE_TEST "Enable test" OFF)
 option(BELA_ENABLE_LTO "bela enable LTO" OFF)
+option(BELA_ENABLE_ASSEMBLY_FILES "bela enable assembly files" OFF)
 
 message(STATUS "CMAKE_ASM_COMPILER_ID ${CMAKE_ASM_COMPILER_ID}")
 
 if(NOT (DEFINED CMAKE_CXX_STANDARD))
-  set(CMAKE_CXX_STANDARD 20) # /std:c++latest
+  set(CMAKE_CXX_STANDARD 20)
 endif()
 
 if(CMAKE_CXX_STANDARD LESS 20 OR CMAKE_CXX_STANDARD STREQUAL "98")
@@ -32,19 +33,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 if("^${CMAKE_SOURCE_DIR}$" STREQUAL "^${PROJECT_SOURCE_DIR}$")
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
   set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+  if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -utf-8 -W3 -DUNICODE=1 -D_UNICODE=1 -wd26812")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -utf-8 -W3 -permissive- -Zc:__cplusplus -DUNICODE=1 -D_UNICODE=1 -wd26812")
+  endif(MSVC)
 endif()
 
-if(MSVC)
-  add_compile_options("-utf-8")
-  add_compile_options("-permissive-")
-  add_compile_options("-Zc:__cplusplus")
-  add_compile_options("-W3")
-  add_compile_options("-DUNICODE=1")
-  add_compile_options("-D_UNICODE=1")
-  add_compile_options("-wd26812")
-endif(MSVC)
+include(CheckSymbolExists)
 
-include_directories(./include)
+if(MSVC)
+  check_symbol_exists(_M_X64 "" BELA_ARCHITECTURE_64BIT)
+  check_symbol_exists(_M_IX86 "" BELA_ARCHITECTURE_32BIT)
+  check_symbol_exists(_M_ARM64 "" BELA_ARCHITECTURE_ARM64)
+else()
+  check_symbol_exists(__x86_64__ "" BELA_ARCHITECTURE_64BIT)
+  check_symbol_exists(__aarch64__ "" BELA_ARCHITECTURE_ARM64)
+endif()
+
+include_directories(include)
 
 add_subdirectory(src/bela)
 add_subdirectory(src/belawin)

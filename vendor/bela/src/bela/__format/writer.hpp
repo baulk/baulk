@@ -377,7 +377,7 @@ public:
     case __types::__boolean:
       [[fallthrough]];
     case __types::__character:
-      append_numeric_hex(a.character.c == 0 ? L"0" : L"1", width, pc, align_left);
+      append_numeric_hex(static_cast<uint64_t>(a.character.c), width, pc, align_left);
       return;
     case __types::__signed_integral:
       append_numeric_hex(a.signed_integral.i, width, pc, align_left);

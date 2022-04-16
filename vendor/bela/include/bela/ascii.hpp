@@ -178,7 +178,7 @@ extern const char kToLower[256];
 //
 // Returns an ASCII character, converting to lowercase if uppercase is
 // passed. Note that character values > 127 are simply returned.
-[[nodiscard]] constexpr wchar_t ascii_tolower(wchar_t c) { return (c > 0xFF ? c : ascii_internal::kToLower[c]); }
+[[nodiscard]] constexpr wchar_t ascii_tolower(wchar_t c) { return (c > 0x7F ? c : ascii_internal::kToLower[c]); }
 [[nodiscard]] constexpr char ascii_tolower(char c) { return ascii_internal::kToLower[c]; }
 
 void AsciiStrToLower(std::wstring *s);

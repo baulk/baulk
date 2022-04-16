@@ -139,8 +139,8 @@ inline size_t CharFind(const char8_t *begin, const char8_t *end, char8_t ch) {
 }
 #endif
 
-constexpr char16_t ascii_tolower(char16_t c) { return (c > 0xFF ? c : ascii_internal::kToLower[c]); }
-constexpr char16_t ascii_toupper(char16_t c) { return (c > 0xFF ? c : ascii_internal::kToUpper[c]); }
+constexpr char16_t ascii_tolower(char16_t c) { return (c > 0x7F ? c : ascii_internal::kToLower[c]); }
+constexpr char16_t ascii_toupper(char16_t c) { return (c > 0x7F ? c : ascii_internal::kToUpper[c]); }
 constexpr char8_t ascii_tolower(char8_t c) { return static_cast<char8_t>(ascii_internal::kToLower[c]); }
 constexpr char8_t ascii_toupper(char8_t c) { return static_cast<char8_t>(ascii_internal::kToUpper[c]); }
 
