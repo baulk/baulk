@@ -1,11 +1,8 @@
 # wind
-add_executable(wind
-  wind.cc
-  wind.rc
-  wind.manifest
-)
+add_executable(wind wind.cc wind.rc wind.manifest)
 
-target_link_libraries(wind
+target_link_libraries(
+  wind
   baulk.net
   baulk.misc
   belatime
@@ -13,7 +10,6 @@ target_link_libraries(wind
   belawin
   winhttp
   ws2_32
-  Msi
-)
+  Msi)
 
 install(TARGETS wind DESTINATION bin)
