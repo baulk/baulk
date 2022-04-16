@@ -8,7 +8,7 @@
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
 
-Baulk 是一个极简的，便携的 Windows 包包管理器。
+Baulk 是一个极简的、便携的 Windows 包管理器。
 
 ## 为什么有 Baulk
 
