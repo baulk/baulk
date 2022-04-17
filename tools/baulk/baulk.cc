@@ -42,9 +42,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       .Add(L"https-proxy", cli::required_argument, 1001) // option
       .Add(L"force-delete", cli::no_argument, 1002)
       .Add(L"trace", cli::no_argument, 'T')
-      .Add(L"bucket")
-      .Add(L"unzip")
-      .Add(L"untar");
+      .Add(L"bucket");
 
   bela::error_code ec;
   auto result = pa.Execute(
