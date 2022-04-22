@@ -11,9 +11,11 @@ namespace baulk::compiler {
 bool Executor::Initialize(bela::error_code &init_ec) {
   simulator.InitializeCleanupEnv();
   if (auto vs = baulk::env::InitializeVisualStudioEnv(simulator, baulk::env::HostArch, false, init_ec); vs) {
-    return false;
+    DbgPrint(L"initialize vs env success: %v", *vs);
+    initialized = true;
+    return true;
   }
-  initialized = true;
-  return true;
+  DbgPrint(L"initialize vs env error: %v", init_ec);
+  return false;
 }
 } // namespace baulk::compiler
