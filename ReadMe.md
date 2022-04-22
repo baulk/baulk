@@ -39,7 +39,7 @@ We can go to Github Release to download the latest version：[https://github.com
 |Installation Mode|x64|arm64|Remark|
 |---|---|---|---|
 |Completely Portable|`Baulk-${VERSION}-win-x64.zip`|`Baulk-${VERSION}-win-arm64.zip`|Unzip it to any directory and double-click baulk-terminal.exe (you can also create a shortcut for it)|
-|Installation without administrator rights|`BaulkSetup-x64.exe`|` BaulkSetup-arm64.exe`|Double click to run the installer|
+|Installation without administrator rights|`BaulkUserSetup-x64.exe`|` BaulkUserSetup-arm64.exe`|Double click to run the installer|
 |Install with administrator privileges|`BaulkSetup-x64.exe`|`BaulkSetup-arm64.exe`|Double click to run the installer|
 |Experimental Experience Appx|`Baulk-x64.appx`|`Baulk-arm64.appx`|`baulk version > 4.0`|
 
