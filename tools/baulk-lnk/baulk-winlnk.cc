@@ -12,7 +12,7 @@ int WINAPI wWinMain(HINSTANCE /*unused*/, HINSTANCE /*unused*/, LPWSTR /*unused*
     bela::BelaMessageBox(nullptr, L"unable detect launcher target:", ec.message.data(), nullptr, bela::mbs_t::FATAL);
     return 1;
   }
-  baulk::DbgPrint(L"resolve target: %s\n", *target);
+  baulk::DbgPrint(L"resolve target: %s", *target);
   auto isconsole = IsSubsytemConsole(*target);
   std::wstring newcmd(GetCommandLineW());
   STARTUPINFOW si;

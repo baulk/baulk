@@ -12,7 +12,7 @@ int wmain(int argc, wchar_t **argv) {
     bela::FPrintF(stderr, L"unable detect launcher target: %s\n", ec);
     return 1;
   }
-  baulk::DbgPrint(L"resolve target: %s\n", *target);
+  baulk::DbgPrint(L"resolve target: %s", *target);
   auto isconsole = IsSubsytemConsole(*target);
   std::wstring newcmd(GetCommandLineW());
   STARTUPINFOW si;
