@@ -70,6 +70,9 @@ template <class T>
 concept integral_superset = std::integral<T> || std::is_enum_v<T>;
 
 template <class T>
+concept fundamental = std::integral<T> || std::is_enum_v<T> || std::floating_point<T> || std::is_pointer_v<T>;
+
+template <class T>
 concept strict_enum = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
 
 template <typename E>
@@ -78,6 +81,12 @@ constexpr auto integral_cast(E e) { return static_cast<std::underlying_type_t<E>
 
 template <class T> constexpr typename std::make_unsigned<T>::type unsigned_cast(T __x) noexcept {
   return static_cast<typename std::make_unsigned<T>::type>(__x);
+}
+
+// narrow_cast(): a searchable way to do narrowing casts of values
+template <class T, class U>
+requires(bela::fundamental<T> &&bela::fundamental<U>) constexpr T narrow_cast(U &&u) noexcept {
+  return static_cast<T>(std::forward<U>(u));
 }
 
 template <typename T, typename K>
