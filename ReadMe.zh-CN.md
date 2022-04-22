@@ -37,7 +37,7 @@ Baulk 最初是为了解决 [Clangbuilder](https://github.com/fstudio/clangbuild
 |安装模式|x64|arm64|备注|
 |---|---|---|---|
 |完全便携|`Baulk-${VERSION}-win-x64.zip`|`Baulk-${VERSION}-win-arm64.zip`|解压到任意目录双击 baulk-terminal.exe 即可，（也可为其创建快捷方式）|
-|无需管理员权限安装|`BaulkSetup-x64.exe`|` BaulkSetup-arm64.exe`|双击运行安装程序即可|
+|无需管理员权限安装|`BaulkUserSetup-x64.exe`|` BaulkUserSetup-arm64.exe`|双击运行安装程序即可|
 |需要管理员权限安装|`BaulkSetup-x64.exe`|`BaulkSetup-arm64.exe`|双击运行安装程序即可|
 |实验性体验 Appx|`Baulk-x64.appx`|`Baulk-arm64.appx`|`baulk version > 4.0`|
 
