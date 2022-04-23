@@ -115,6 +115,11 @@ private:
     return nullptr;
   }
   bool sectionData(const Section &sec, bela::Buffer &buffer, bela::error_code &ec) const {
+    if (bela::narrow_cast<int64_t>(sec.Offset + sec.Size) > size) {
+      ec = bela::make_error_code(bela::ErrFileTooSmall, L"corrupted ELF file, section overflow file: ", size,
+                                 L" section end: ", sec.Offset + sec.Size);
+      return false;
+    }
     buffer.grow(static_cast<size_t>(sec.Size));
     if (!fd.ReadAt(buffer, static_cast<size_t>(sec.Size), sec.Offset, ec)) {
       return false;
@@ -171,7 +176,7 @@ public:
       return std::nullopt;
     }
     if (so.empty()) {
-      ec = bela::make_error_code(ErrGeneral, L"DynString: 0x", bela::AlphaNum(bela::Hex(tag)), L" not exists");
+      ec = bela::make_error_code(ErrGeneral, L"DynString: 0x", bela::Hex(tag), L" not exists");
       return std::nullopt;
     }
     return std::make_optional(std::move(so.front()));

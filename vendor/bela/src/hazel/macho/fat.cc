@@ -79,7 +79,7 @@ bool FatFile::parseFile(bela::error_code &ec) {
     auto seenArch = (static_cast<uint64_t>(fa.cputype) << 32) | static_cast<uint64_t>(fa.cpusubtype);
     if (auto it = seenArches.find(seenArch); it != seenArches.end()) {
       ec = bela::make_error_code(ErrGeneral, L"duplicate architecture cpu=", fa.cputype, L", subcpu=#",
-                                 bela::AlphaNum(bela::Hex(fa.cpusubtype)));
+                                 bela::Hex(fa.cpusubtype));
       return false;
     }
     seenArches[seenArch] = true;
@@ -89,9 +89,8 @@ bool FatFile::parseFile(bela::error_code &ec) {
       continue;
     }
     if (machoType != mt) {
-      ec = bela::make_error_code(ErrGeneral, L"Mach-O type for architecture #", i, L" (type=#",
-                                 bela::AlphaNum(bela::Hex(machoType)), L") does not match first (type=#",
-                                 bela::AlphaNum(bela::Hex(mt)), L")");
+      ec = bela::make_error_code(ErrGeneral, L"Mach-O type for architecture #", i, L" (type=#", bela::Hex(machoType),
+                                 L") does not match first (type=#", bela::Hex(mt), L")");
       return false;
     }
   }

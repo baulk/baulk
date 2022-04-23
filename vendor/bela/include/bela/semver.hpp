@@ -17,7 +17,7 @@
 
 namespace bela {
 namespace semver {
-enum struct prerelease : std::uint8_t {
+enum struct prerelease : std::uint32_t {
   alpha = 0, // alpha
   beta = 1,
   rc = 2,
@@ -213,22 +213,22 @@ constexpr bool check_delimiter(const CharT *first, const CharT *last, CharT d) n
 } // namespace detail
 
 struct version {
-  std::uint32_t major = 0;
-  std::uint32_t minor = 0;
-  std::uint32_t patch = 0;
-  std::uint32_t build = 0;
-  prerelease prerelease_type = prerelease::none;
-  std::uint32_t prerelease_number = 0;
+  std::uint32_t major{0};
+  std::uint32_t minor{0};
+  std::uint32_t patch{0};
+  std::uint32_t build{0};
+  prerelease prerelease_type{prerelease::none};
+  std::uint32_t prerelease_number{0};
 
   constexpr version(std::uint32_t major, std::uint32_t minor, std::uint32_t patch, std::uint32_t build,
                     prerelease prerelease_type = prerelease::none, std::uint8_t prerelease_number = 0) noexcept
       : major{major}, minor{minor}, patch{patch}, build{build}, prerelease_type{prerelease_type},
         prerelease_number{prerelease_type == prerelease::none ? static_cast<std::uint8_t>(0) : prerelease_number} {}
 
-  constexpr version(std::string_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
-  constexpr version(std::wstring_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
-  constexpr version(std::u8string_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
-  constexpr version(std::u16string_view str) : version(0, 0, 0, 0, prerelease::none, 0) { from_string_noexcept(str); }
+  constexpr version(std::string_view str) { from_string_noexcept(str); }
+  constexpr version(std::wstring_view str) { from_string_noexcept(str); }
+  constexpr version(std::u8string_view str) { from_string_noexcept(str); }
+  constexpr version(std::u16string_view str) { from_string_noexcept(str); }
 
   constexpr version() = default;
   // https://semver.org/#how-should-i-deal-with-revisions-in-the-0yz-initial-development-phase
@@ -379,7 +379,7 @@ constexpr version operator""_version(const char *str, std::size_t size) { return
 
 template <typename CharT>
 constexpr std::optional<version> from_string_noexcept(std::basic_string_view<CharT> str) noexcept {
-  if (version v{0, 0, 0, 0}; v.from_string_noexcept(str)) {
+  if (version v; v.from_string_noexcept(str)) {
     return v;
   }
   return std::nullopt;

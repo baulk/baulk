@@ -39,6 +39,11 @@ std::optional<Buffer> File::readSectionData(const Section &sec, bela::error_code
   if (sec.Size == 0) {
     return std::make_optional<Buffer>();
   }
+  if (bela::narrow_cast<int64_t>(sec.Offset + sec.Size) > size) {
+    ec = bela::make_error_code(bela::ErrFileTooSmall, L"corrupted PE file, section overflow file: ", size,
+                               L" section end: ", sec.Offset + sec.Size);
+    return false;
+  }
   Buffer buffer(sec.Size);
   if (!fd.ReadAt(buffer, sec.Size, sec.Offset, ec)) {
     ec = bela::make_error_code(ec.code, L"unable read section data: ", ec.message);

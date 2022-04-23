@@ -37,23 +37,21 @@
 #include <utility>
 #include <vector>
 #include <string_view>
+#include "types.hpp"
 
 namespace bela {
-[[nodiscard]] std::wstring
-StrReplaceAll(std::wstring_view s, std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements);
-template <typename StrToStrMapping>
-[[nodiscard]] std::wstring StrReplaceAll(std::wstring_view s, const StrToStrMapping &replacements);
-int StrReplaceAll(std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements,
-                  std::wstring *target);
 // Implementation details only, past this point.
 namespace strings_internal {
 
+template <typename C>
+requires bela::character<C>
 struct ViableSubstitution {
-  std::wstring_view old;
-  std::wstring_view replacement;
+  using string_view_t = std::basic_string_view<C, std::char_traits<C>>;
+  string_view_t old;
+  string_view_t replacement;
   size_t offset;
 
-  ViableSubstitution(std::wstring_view old_str, std::wstring_view replacement_str, size_t offset_val)
+  ViableSubstitution(string_view_t old_str, string_view_t replacement_str, size_t offset_val)
       : old(old_str), replacement(replacement_str), offset(offset_val) {}
 
   // One substitution occurs "before" another (takes priority) if either
@@ -69,14 +67,15 @@ struct ViableSubstitution {
 // replacements. subs can be implemented as a priority_queue. However, it turns
 // out that most callers have small enough a list of substitutions that the
 // overhead of such a queue isn't worth it.
-template <typename StrToStrMapping>
-std::vector<ViableSubstitution> FindSubstitutions(std::wstring_view s, const StrToStrMapping &replacements) {
-  std::vector<ViableSubstitution> subs;
+template <typename StrToStrMapping, typename C>
+requires bela::character<C> std::vector<ViableSubstitution<C>>
+FindSubstitutions(std::basic_string_view<C, std::char_traits<C>> s, const StrToStrMapping &replacements) {
+  std::vector<ViableSubstitution<C>> subs;
   subs.reserve(replacements.size());
 
   for (const auto &rep : replacements) {
     using std::get;
-    std::wstring_view old(get<0>(rep));
+    std::basic_string_view<C, std::char_traits<C>> old(get<0>(rep));
 
     size_t pos = s.find(old);
     if (pos == s.npos)
@@ -100,30 +99,45 @@ std::vector<ViableSubstitution> FindSubstitutions(std::wstring_view s, const Str
   return subs;
 }
 
-int ApplySubstitutions(std::wstring_view s, std::vector<ViableSubstitution> *subs_ptr, std::wstring *result_ptr);
+int ApplySubstitutions(std::wstring_view s, std::vector<ViableSubstitution<wchar_t>> *subs_ptr,
+                       std::wstring *result_ptr);
+int ApplySubstitutions(std::string_view s, std::vector<ViableSubstitution<char>> *subs_ptr, std::string *result_ptr);
 
 } // namespace strings_internal
 
-template <typename StrToStrMapping>
-std::wstring StrReplaceAll(std::wstring_view s, const StrToStrMapping &replacements) {
-  auto subs = strings_internal::FindSubstitutions(s, replacements);
-  std::wstring result;
+template <typename StrToStrMapping, typename C>
+requires bela::character<C> std::basic_string<C, std::char_traits<C>, std::allocator<C>>
+StrReplaceAll(std::basic_string_view<C, std::char_traits<C>> s, const StrToStrMapping &replacements) {
+  auto subs = strings_internal::FindSubstitutions<StrToStrMapping, C>(s, replacements);
+  std::basic_string<C, std::char_traits<C>, std::allocator<C>> result;
   result.reserve(s.size());
   strings_internal::ApplySubstitutions(s, &subs, &result);
   return result;
 }
 
-template <typename StrToStrMapping> int StrReplaceAll(const StrToStrMapping &replacements, std::wstring *target) {
-  auto subs = strings_internal::FindSubstitutions(*target, replacements);
+template <typename StrToStrMapping, typename C>
+int StrReplaceAll(const StrToStrMapping &replacements,
+                  std::basic_string<C, std::char_traits<C>, std::allocator<C>> *target) {
+  auto subs = strings_internal::FindSubstitutions<StrToStrMapping, C>(*target, replacements);
   if (subs.empty())
     return 0;
 
-  std::wstring result;
+  std::basic_string<C, std::char_traits<C>, std::allocator<C>> result;
   result.reserve(target->size());
   int substitutions = strings_internal::ApplySubstitutions(*target, &subs, &result);
   target->swap(result);
   return substitutions;
 }
+
+[[nodiscard]] std::wstring
+StrReplaceAll(std::wstring_view s, std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements);
+int StrReplaceAll(std::initializer_list<std::pair<std::wstring_view, std::wstring_view>> replacements,
+                  std::wstring *target);
+
+[[nodiscard]] std::string
+StrReplaceAll(std::string_view s, std::initializer_list<std::pair<std::string_view, std::string_view>> replacements);
+int StrReplaceAll(std::initializer_list<std::pair<std::string_view, std::string_view>> replacements,
+                  std::string *target);
 
 } // namespace bela
 

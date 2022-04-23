@@ -13,7 +13,6 @@ add_library(
   str_split.cc
   str_split_narrow.cc
   str_replace.cc
-  str_replace_narrow.cc
   str_cat.cc
   subsitute.cc
   terminal.cc

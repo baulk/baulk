@@ -65,7 +65,7 @@ int wmain(int argc, wchar_t **argv) {
                 bela::encode_into(sh, buf0), bela::encode_into(sh, buf1), bela::encode_into(sh, buf2),
                 bela::encode_into(sh, buf3));
 
-  auto s = bela::StringCat(L"Look emoji -->", em, L" U+", bela::AlphaNum(bela::Hex(em)));
+  auto s = bela::StringCat(L"Look emoji -->", em, L" U+", bela::Hex(em));
   bela::FPrintF(stderr, L"emoji %c %c %c %c %U %U %s P: %p\n", em, sh, blueheart, se, em, em2, s,
                 reinterpret_cast<const void *>(&em));
   bela::FPrintF(stderr, L"Unicode %c Width: %d \u2600 %d 中 %d ©: %d [%c] %d [%c] %d \n", em, bela::rune_width(em),

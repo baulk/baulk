@@ -3,7 +3,6 @@
 #include <bela/str_join.hpp>
 #include <bela/str_join_narrow.hpp>
 #include <bela/str_replace.hpp>
-#include <bela/str_replace_narrow.hpp>
 #include <bela/terminal.hpp>
 
 int wmain() {
@@ -29,6 +28,7 @@ int wmain() {
     }
     bela::FPrintF(stderr, L"Join: %s\n", bela::narrow::StrJoin(pvv, "/"));
   }
-  bela::FPrintF(stderr, L"%s\n", bela::narrow::StrReplaceAll("ABCdefg", {{"de", "xx"}}));
+  bela::FPrintF(stderr, L"%s\n", bela::StrReplaceAll("++++++++++++++++++++dexxxABCdefg", {{"de", "xx"}}));
+  bela::FPrintF(stderr, L"%s\n", bela::StrReplaceAll(L"wwwwwwwwwwwwwwwwde~~~~~~~~~~~~ABCdefg", {{L"de", L"xx"}}));
   return 0;
 }

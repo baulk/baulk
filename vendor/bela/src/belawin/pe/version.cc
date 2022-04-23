@@ -87,11 +87,11 @@ bool VersionLoader::getValue(const wchar_t *name, std::wstring &value) const {
       {defaultLangage, 1252},
   };
   for (const auto &lc : langCodepages) {
-    wchar_t subBlock[MAX_PATH];
-    _snwprintf_s(subBlock, MAX_PATH, MAX_PATH, L"\\StringFileInfo\\%04x%04x\\%ls", lc.language, lc.codePage, name);
+    auto block = bela::StringCat(L"\\StringFileInfo\\", bela::Hex(lc.language, bela::kZeroPad4),
+                                 bela::Hex(lc.codePage, bela::kZeroPad4), L"\\", name);
     LPVOID valuePtr = nullptr;
     uint32_t size;
-    if (VerQueryValueW(buffer.data(), subBlock, reinterpret_cast<LPVOID *>(&valuePtr), &size) == TRUE &&
+    if (VerQueryValueW(buffer.data(), block.data(), reinterpret_cast<LPVOID *>(&valuePtr), &size) == TRUE &&
         valuePtr != nullptr && size > 0) {
       value.assign(cleanupString(valuePtr, size - 1));
     }
