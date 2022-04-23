@@ -7,11 +7,11 @@
 
 namespace bela::unicode {
 
-constexpr char32_t MaxRune = '\U0010FFFF';     // Maximum valid Unicode code point.
-constexpr char32_t ReplacementChar = '\uFFFD'; // Represents invalid code points.
-constexpr char32_t MaxASCII = '\u007F';        // maximum ASCII value.
-constexpr char32_t MaxLatin1 = '\u00FF';       // maximum Latin-1 value.
-constexpr auto UpperLower = MaxRune + 1;       // (Cannot be a valid delta.)
+constexpr char32_t MaxRune = U'\U0010FFFF';     // Maximum valid Unicode code point.
+constexpr char32_t ReplacementChar = U'\uFFFD'; // Represents invalid code points.
+constexpr char32_t MaxASCII = U'\u007F';        // maximum ASCII value.
+constexpr char32_t MaxLatin1 = U'\u00FF';       // maximum Latin-1 value.
+constexpr auto UpperLower = MaxRune + 1;        // (Cannot be a valid delta.)
 
 enum { UpperCase = 0, LowerCase = 1, TitleCase = 2, MaxCase = 3 };
 struct CaseRange {

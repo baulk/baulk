@@ -296,16 +296,16 @@ bool Simulator::InitializeCleanupEnv() {
 
 bool Simulator::LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath) const {
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
-    auto ncmd = bela::PathAbsolute(cmd);
+    auto ncmd = bela::FullPath(cmd);
     return FindExecutable(ncmd, pathexts, exe);
   }
   if (!absPath) {
-    auto cwdfile = bela::PathAbsolute(cmd);
+    auto cwdfile = bela::FullPath(cmd);
     if (FindExecutable(cwdfile, pathexts, exe)) {
       return true;
     }
   }
-  for (const auto& p : paths) {
+  for (const auto &p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
     if (FindExecutable(exefile, pathexts, exe)) {
       return true;
@@ -359,16 +359,16 @@ bool LookPath(std::wstring_view cmd, std::wstring &exe, const std::vector<std::w
   std::vector<std::wstring> exts;
   cleanupPathExt(bela::GetEnv(L"PATHEXT"), exts);
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
-    auto ncmd = bela::PathAbsolute(cmd);
+    auto ncmd = bela::FullPath(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
   if (!absPath) {
-    auto cwdfile = bela::PathAbsolute(cmd);
+    auto cwdfile = bela::FullPath(cmd);
     if (FindExecutable(cwdfile, exts, exe)) {
       return true;
     }
   }
-  for (const auto& p : paths) {
+  for (const auto &p : paths) {
     auto exefile = bela::StringCat(p, L"\\", cmd);
     if (FindExecutable(exefile, exts, exe)) {
       return true;
@@ -381,11 +381,11 @@ bool LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath) {
   std::vector<std::wstring> exts;
   cleanupPathExt(bela::GetEnv(L"PATHEXT"), exts);
   if (cmd.find_first_of(L":\\/") != std::wstring_view::npos) {
-    auto ncmd = bela::PathAbsolute(cmd);
+    auto ncmd = bela::FullPath(cmd);
     return FindExecutable(ncmd, exts, exe);
   }
   if (!absPath) {
-    auto cwdfile = bela::PathAbsolute(cmd);
+    auto cwdfile = bela::FullPath(cmd);
     if (FindExecutable(cwdfile, exts, exe)) {
       return true;
     }

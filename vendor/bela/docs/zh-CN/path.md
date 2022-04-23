@@ -2,7 +2,7 @@
 
 ## PathCat 函数
 
-`PathCat`,`PathAbsoluteCat` 函数借鉴了 `StringCat` 函数，将路径组件连接起来。例子如下：
+`PathCat`,`JoinPath` 函数借鉴了 `StringCat` 函数，将路径组件连接起来。例子如下：
 
 ```c++
   auto p = bela::PathCat(L"\\\\?\\C:\\Windows/System32", L"drivers/etc", L"hosts");
@@ -16,9 +16,9 @@
   auto p5 = bela::PathCat(L"C:\\Windows\\System32\\drivers\\..\\.\\IME");
   bela::FPrintF(stderr, L"PathCat: %s\n", p5);
 ```
-`PathCat` 的思路是获得 root 后，将其他路径按路径分隔符拆分成数组然后合成，`PathAbsoluteCat` 与 `PathCat` 不一致的地方在于，`PathAbsoluteCat` 将会把路径参数中的第一个解析为绝对路径，然后再参与计算。
+`PathCat` 的思路是获得 root 后，将其他路径按路径分隔符拆分成数组然后合成，`JoinPath` 与 `PathCat` 不一致的地方在于，`JoinPath` 将会把路径参数中的第一个解析为绝对路径，然后再参与计算。
 
-`PathCat`，`PathAbsoluteCat` 并不会判断路径是否存在，因此需要注意。
+`PathCat`，`JoinPath` 并不会判断路径是否存在，因此需要注意。
 
 路径解析错误是很多软件的漏洞根源，合理的规范化路径非常有必要，而 `PathCat` 在规范化路径时，使用 C++17/C++20(Span) 的特性，减少内存分配，简化了规范化流程。
 

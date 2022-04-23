@@ -46,7 +46,7 @@ FILETIME TimeToFileTime(bela::Time t) {
 
 bool Extractor::OpenReader(std::wstring_view path, bela::error_code &ec) {
   if (destination.empty()) {
-    auto p = bela::PathAbsolute(path);
+    auto p = bela::FullPath(path);
     if (bela::EndsWithIgnoreCase(p, L".zip")) {
       p.resize(p.size() - 4);
     } else {

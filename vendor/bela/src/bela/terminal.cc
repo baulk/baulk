@@ -197,7 +197,7 @@ private:
 bela::ssize_t WriteAuto(FILE *fd, std::wstring_view data) { return Filter::Instance().WriteAuto(fd, data); }
 bela::ssize_t WriteAuto(FILE *fd, std::string_view data) { return Filter::Instance().WriteAuto(fd, data); }
 
-bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
+bela::ssize_t WriteDirect(FILE *fd, std::wstring_view data) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
   if (IsTerminal(FileHandle)) {
     return WriteTerminal(FileHandle, data);
@@ -205,7 +205,7 @@ bela::ssize_t WriteAutoFallback(FILE *fd, std::wstring_view data) {
   return WriteSameFile(FileHandle, data);
 }
 
-bela::ssize_t WriteAutoFallback(FILE *fd, std::string_view data) {
+bela::ssize_t WriteDirect(FILE *fd, std::string_view data) {
   auto FileHandle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fd)));
   if (IsTerminal(FileHandle)) {
     return WriteTerminal(FileHandle, bela::encode_into<char, wchar_t>(data));

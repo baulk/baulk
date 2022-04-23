@@ -39,7 +39,7 @@ SymbolSearcher::SymbolSearcher(std::wstring_view exe, Machine machine) {
     Paths.emplace_back(bela::WindowsExpandEnv(L"%SystemRoot%\\System32"));
   }
 #endif
-  auto self = bela::PathAbsolute(exe);
+  auto self = bela::FullPath(exe);
   bela::PathStripName(self);
   Paths.emplace_back(self);
   auto path_ = bela::GetEnv(L"Path");

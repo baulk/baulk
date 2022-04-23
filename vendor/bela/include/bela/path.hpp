@@ -16,9 +16,11 @@ constexpr const wchar_t PathSeparator = L'\\';
 constexpr const wchar_t PathUnixSeparator = L'/';
 constexpr const size_t PathMax = 0x8000;
 constexpr bool IsPathSeparator(wchar_t c) { return c == PathSeparator || c == PathUnixSeparator; }
-// BaseName DirName - parse pathname components
+// IsReservedName is reserved name
+bool IsReservedName(std::wstring_view name);
+// BaseName - parse basename components
 std::wstring_view BaseName(std::wstring_view name);
-// BaseName DirName - parse pathname components
+// DirName - parse dir components
 std::wstring_view DirName(std::wstring_view path);
 
 inline std::wstring_view Extension(std::wstring_view path) {
@@ -50,31 +52,30 @@ std::vector<std::string_view> SplitPath(std::string_view sv);
 
 // PathStripName
 void PathStripName(std::wstring &s);
-std::wstring PathAbsolute(std::wstring_view p);
+std::wstring FullPath(std::wstring_view p);
 namespace path_internal {
 std::wstring PathCatPieces(std::span<std::wstring_view> pieces);
-std::wstring PathAbsoluteCatPieces(std::span<std::wstring_view> pieces);
+std::wstring JoinPathPieces(std::span<std::wstring_view> pieces);
 } // namespace path_internal
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a) {
+[[nodiscard]] inline std::wstring JoinPath(const AlphaNum &a) {
   std::wstring_view pv[] = {a.Piece()};
-  return path_internal::PathAbsoluteCatPieces(pv);
+  return path_internal::JoinPathPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b) {
+[[nodiscard]] inline std::wstring JoinPath(const AlphaNum &a, const AlphaNum &b) {
   std::wstring_view pv[] = {a.Piece(), b.Piece()};
-  return path_internal::PathAbsoluteCatPieces(pv);
+  return path_internal::JoinPathPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
+[[nodiscard]] inline std::wstring JoinPath(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece()};
-  return path_internal::PathAbsoluteCatPieces(pv);
+  return path_internal::JoinPathPieces(pv);
 }
 
-[[nodiscard]] inline std::wstring PathAbsoluteCat(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c,
-                                                  const AlphaNum &d) {
+[[nodiscard]] inline std::wstring JoinPath(const AlphaNum &a, const AlphaNum &b, const AlphaNum &c, const AlphaNum &d) {
   std::wstring_view pv[] = {a.Piece(), b.Piece(), c.Piece(), d.Piece()};
-  return path_internal::PathAbsoluteCatPieces(pv);
+  return path_internal::JoinPathPieces(pv);
 }
 
 [[nodiscard]] inline std::wstring PathCat(const AlphaNum &a) {

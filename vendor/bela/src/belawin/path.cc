@@ -9,35 +9,67 @@
 #include <bela/env.hpp>
 
 namespace bela {
+
+namespace path_internal {
+template <typename T> class Literal;
+template <> class Literal<char> {
+public:
+  static constexpr std::string_view Dot = ".";
+  static constexpr std::string_view DotDot = "..";
+  static constexpr std::string_view PathSeparators = "\\/";
+};
+template <> class Literal<wchar_t> {
+public:
+  static constexpr std::wstring_view Dot = L".";
+  static constexpr std::wstring_view DotDot = L"..";
+  static constexpr std::wstring_view PathSeparators = L"\\/";
+};
+template <> class Literal<char16_t> {
+public:
+  static constexpr std::u16string_view Dot = u".";
+  static constexpr std::u16string_view DotDot = u"..";
+  static constexpr std::u16string_view PathSeparators = u"\\/";
+};
+template <> class Literal<char8_t> {
+public:
+  static constexpr std::u8string_view Dot = u8".";
+  static constexpr std::u8string_view DotDot = u8"..";
+  static constexpr std::u8string_view PathSeparators = u8"\\/";
+};
+
+} // namespace path_internal
+
 // https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file
 // https://googleprojectzero.blogspot.com/2016/02/the-definitive-guide-on-win32-to-nt.html
 bool IsReservedName(std::wstring_view name) {
-  constexpr std::wstring_view reservednames[] = {L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4",
-                                                 L"COM5", L"COM6", L"COM7", L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3",
-                                                 L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
-  for (const auto r : reservednames) {
-    if (bela::EqualsIgnoreCase(r, name)) {
-      return true;
-    }
-  }
-  return false;
+  constexpr std::wstring_view reserved_names[] = {
+      L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4", L"COM5", L"COM6", L"COM7",
+      L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3", L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
+  return std::find(std::begin(reserved_names), std::end(reserved_names), bela::AsciiStrToUpper(name)) ==
+         std::end(reserved_names);
 }
 
-std::wstring PathAbsolute(std::wstring_view p) {
-  DWORD dwlen = MAX_PATH;
-  std::wstring buf;
+inline std::wstring FullPathInternal(std::wstring_view p) {
+  std::wstring absPath;
+  DWORD absLen = MAX_PATH;
   for (;;) {
-    buf.resize(dwlen);
-    dwlen = GetFullPathNameW(p.data(), dwlen, buf.data(), nullptr);
-    if (dwlen == 0) {
+    absPath.resize(absLen);
+    if (absLen = GetFullPathNameW(p.data(), absLen, absPath.data(), nullptr); absLen == 0) {
       return L"";
     }
-    if (dwlen < buf.size()) {
-      buf.resize(dwlen);
+    if (absLen < absPath.size()) {
+      absPath.resize(absLen);
       break;
     }
   }
-  return buf;
+  return absPath;
+}
+
+std::wstring FullPath(std::wstring_view p) {
+  if (p.starts_with('~')) {
+    return FullPathInternal(bela::StringCat(bela::GetEnv(L"USERPROFILE"), L"//", p.substr(1)));
+  }
+  return FullPathInternal(p);
 }
 
 std::wstring_view BaseName(std::wstring_view name) {
@@ -86,20 +118,20 @@ std::wstring_view DirName(std::wstring_view path) {
   return path.substr(0, i + 1);
 }
 
-bool SplitPathInternal(std::wstring_view sv, std::vector<std::wstring_view> &output) {
-  constexpr std::wstring_view dotdot = L"..";
-  constexpr std::wstring_view dot = L".";
+template <typename C>
+bool SplitPathInternal(std::basic_string_view<C, std::char_traits<C>> sv,
+                       std::vector<std::basic_string_view<C, std::char_traits<C>>> &output) {
   size_t first = 0;
   while (first < sv.size()) {
-    const auto second = sv.find_first_of(L"/\\", first);
+    const auto second = sv.find_first_of(path_internal::Literal<C>::PathSeparators, first);
     if (first != second) {
       auto s = sv.substr(first, second - first);
-      if (s == dotdot) {
+      if (s == path_internal::Literal<C>::DotDot) {
         if (output.empty()) {
           return false;
         }
         output.pop_back();
-      } else if (s != dot) {
+      } else if (s != path_internal::Literal<C>::Dot) {
         output.emplace_back(s);
       }
     }
@@ -117,31 +149,6 @@ std::vector<std::wstring_view> SplitPath(std::wstring_view sv) {
     pv.clear();
   }
   return pv;
-}
-
-bool SplitPathInternal(std::string_view sv, std::vector<std::string_view> &output) {
-  constexpr std::string_view dotdot = "..";
-  constexpr std::string_view dot = ".";
-  size_t first = 0;
-  while (first < sv.size()) {
-    const auto second = sv.find_first_of("/\\", first);
-    if (first != second) {
-      auto s = sv.substr(first, second - first);
-      if (s == dotdot) {
-        if (output.empty()) {
-          return false;
-        }
-        output.pop_back();
-      } else if (s != dot) {
-        output.emplace_back(s);
-      }
-    }
-    if (second == std::string_view::npos) {
-      break;
-    }
-    first = second + 1;
-  }
-  return true;
 }
 
 std::vector<std::string_view> SplitPath(std::string_view sv) {
@@ -226,17 +233,12 @@ std::wstring_view PathStripRootName(std::wstring_view &p) {
   return L"";
 }
 
-std::wstring PathAbsoluteCatPieces(std::span<std::wstring_view> pieces) {
-  if (pieces.empty()) {
-    return L"";
-  }
-  auto p0 = bela::PathAbsolute(pieces[0]);
-  std::wstring_view p0s = p0;
-  auto root = PathStripRootName(p0s);
+std::wstring parth_cat_pieces(std::wstring_view p0, std::span<std::wstring_view> pieces) {
+  auto root = PathStripRootName(p0);
   std::vector<std::wstring_view> pv;
-  SplitPathInternal(p0s, pv);
-  for (size_t i = 1; i < pieces.size(); i++) {
-    if (!SplitPathInternal(pieces[i], pv)) {
+  SplitPathInternal(p0, pv);
+  for (const auto p : pieces) {
+    if (!SplitPathInternal(p, pv)) {
       return L".";
     }
   }
@@ -257,31 +259,17 @@ std::wstring PathAbsoluteCatPieces(std::span<std::wstring_view> pieces) {
 }
 
 std::wstring PathCatPieces(std::span<std::wstring_view> pieces) {
-  std::wstring_view p0s = pieces[0];
-  auto root = PathStripRootName(p0s);
-  std::vector<std::wstring_view> pv;
-  SplitPathInternal(p0s, pv);
-  for (size_t i = 1; i < pieces.size(); i++) {
-    if (!SplitPathInternal(pieces[i], pv)) {
-      return L".";
-    }
+  if (pieces.empty()) {
+    return L"";
   }
-  std::wstring s;
-  auto alsize = root.size();
-  for (const auto p : pv) {
-    alsize += p.size() + 1;
+  return parth_cat_pieces(pieces[0], pieces.subspan(1));
+}
+
+std::wstring JoinPathPieces(std::span<std::wstring_view> pieces) {
+  if (pieces.empty()) {
+    return L"";
   }
-  s.reserve(alsize + 1);
-  if (!root.empty()) {
-    s.assign(root);
-  }
-  for (const auto p : pv) {
-    if (!s.empty()) {
-      s.push_back(L'\\');
-    }
-    s.append(p);
-  }
-  return s;
+  return parth_cat_pieces(bela::FullPath(pieces[0]), pieces.subspan(1));
 }
 
 } // namespace path_internal

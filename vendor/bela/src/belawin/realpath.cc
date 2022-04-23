@@ -200,7 +200,7 @@ std::optional<std::wstring> RealPathEx(std::wstring_view src, bela::error_code &
   }
 
   if (b.size() == 0) {
-    return std::make_optional(bela::PathAbsolute(src));
+    return std::make_optional(bela::FullPath(src));
   }
   auto p = b.as_bytes_view().unchecked_cast<REPARSE_DATA_BUFFER>();
 
