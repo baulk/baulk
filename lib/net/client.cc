@@ -275,6 +275,7 @@ std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, c
     }
     // else:  // part download support
   } else {
+    total_size += filePart->CurrentBytes();
     DbgPrint(L"%s download from bytes: %d", u->filename, filePart->CurrentBytes());
   }
   // Pare progress bar

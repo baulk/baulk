@@ -235,7 +235,8 @@ public:
     }
     // part download
     if (position > 0) {
-      bela::StrAppend(&flattened_headers, L"Range: bytes=", position, L"-", length - 1);
+      // https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Range
+      bela::StrAppend(&flattened_headers, L"Range: bytes=", position, L"-");
     }
     if (!cookies.empty()) {
       bela::StrAppend(&flattened_headers, L"Cookie: ", bela::StrJoin(cookies, L"; "), L"\r\n");
