@@ -48,8 +48,7 @@ if("${BAULK_ARCH_NAME}" STREQUAL "x86_64"
     "contrib/optimizations/inflate.c"
     "crc32_simd.c"
     "crc32_simd.h"
-    "crc_folding.c"
-    "fill_window_sse.c")
+    "crc_folding.c")
 elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
   list(
     APPEND
