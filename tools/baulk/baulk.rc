@@ -1,6 +1,6 @@
 // Baulk resources
 #include "windows.h"
-#include "revision.h"
+#include "version.h"
 
 ICON_MAIN ICON "baulk.ico"
 

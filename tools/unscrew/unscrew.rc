@@ -1,7 +1,7 @@
 //Microsoft Visual C++ generated resource script.
 //
 #include "windows.h"
-#include "revision.h"
+#include "version.h"
 #include "resource.h"
 
 ICON_BAULK_APP ICON "unscrew.ico"

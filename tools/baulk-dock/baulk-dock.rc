@@ -1,6 +1,6 @@
 /////////////////
 #include "windows.h"
-#include "revision.h"
+#include "version.h"
 #include "resource.h"
 
 ICON_BAULK_BASE ICON "res/baulk-dock.ico"

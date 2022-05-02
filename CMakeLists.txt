@@ -99,7 +99,7 @@ set(CPACK_PACKAGE_CONTACT "Baulk contributors")
 
 include(CPack)
 # Generate version code
-configure_file(${CMAKE_SOURCE_DIR}/include/revision.h.cmake ${CMAKE_BINARY_DIR}/include/revision.h)
+configure_file(${CMAKE_SOURCE_DIR}/include/version.h.cmake ${CMAKE_BINARY_DIR}/include/version.h)
 
 include_directories("${CMAKE_BINARY_DIR}/include" "./include" "./vendor/bela/include")
 

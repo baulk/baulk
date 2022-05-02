@@ -3,8 +3,8 @@
 #define BAULK_BAULKREV_HPP
 
 #ifdef __has_include
-#if __has_include(<revision.h>)
-#include <revision.h>
+#if __has_include(<version.h>)
+#include <version.h>
 #endif
 #endif
 
