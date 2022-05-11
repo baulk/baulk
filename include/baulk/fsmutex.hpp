@@ -10,8 +10,13 @@
 namespace baulk {
 namespace mutex_internal {
 inline bool process_is_running(DWORD pid) {
-  if (HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid); hProcess != nullptr) {
-    CloseHandle(hProcess);
+  HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+  if (hProcess == nullptr) {
+    return false;
+  }
+  auto closer = bela::finally([&] { CloseHandle(hProcess); });
+  DWORD exitCode = 0;
+  if (GetExitCodeProcess(hProcess, &exitCode) == TRUE && exitCode == STILL_ACTIVE) {
     return true;
   }
   return false;
