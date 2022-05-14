@@ -241,6 +241,80 @@ void float_scientific_check() {
   }
 }
 
+void hex_check_short() {
+  constexpr short nums[] = {
+      //
+      (std::numeric_limits<short>::max)(), //
+      (std::numeric_limits<short>::min)()
+      //
+  };
+  for (const auto n : nums) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+  constexpr unsigned short nums2[] = {
+      //
+      (std::numeric_limits<unsigned short>::max)(), //
+      (std::numeric_limits<unsigned short>::min)()
+      //
+  };
+  for (const auto n : nums2) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+}
+
+void hex_check_long() {
+  constexpr long nums[] = {
+      //
+      (std::numeric_limits<long>::max)(), //
+      (std::numeric_limits<long>::min)()
+      //
+  };
+  for (const auto n : nums) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+  constexpr unsigned long nums2[] = {
+      //
+      (std::numeric_limits<unsigned long>::max)(), //
+      (std::numeric_limits<unsigned long>::min)()
+      //
+  };
+  for (const auto n : nums2) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+}
+void hex_check_longlong() {
+  constexpr long long nums[] = {
+      //
+      (std::numeric_limits<long long>::max)(), //
+      (std::numeric_limits<long long>::min)()
+      //
+  };
+  for (const auto n : nums) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+  constexpr unsigned long long nums2[] = {
+      //
+      (std::numeric_limits<unsigned long long>::max)(), //
+      (std::numeric_limits<unsigned long long>::min)()
+      //
+  };
+  for (const auto n : nums2) {
+    wchar_t buf[20];
+    auto sv = bela::to_chars_view(buf, n, 16);
+    bela::FPrintF(stderr, L"%v --> hex: %v\n", n, sv);
+  }
+}
+
 int wmain() {
   const wchar_t *w = L"196.1082741";
   double n;
@@ -269,5 +343,8 @@ int wmain() {
   double_to_chars_check();
   double_scientific_check();
   float_scientific_check();
+  hex_check_short();
+  hex_check_long();
+  hex_check_longlong();
   return 0;
 }
