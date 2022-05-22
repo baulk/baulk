@@ -84,7 +84,22 @@ Usually you can run `baulk -h` to see help for commands (other commands are also
 
 ## Advanced Experience with Baulk
 
+TBD
 
+## Build Baulk
+
++  Visual Studio 2022 (17.2 or later)
++  Windows SDK 10.0.22000.0
++  CMake 3.22.0 or Later
+
+```ps
+git clone https://github.com/baulk/baulk.git
+cd baulk
+mkdir build
+cd build
+cmake -GNinja ..
+ninja all
+```
 
 ## Article
 
