@@ -6,6 +6,10 @@ if(BAULK_ENABLE_LTO)
   set_property(TARGET unscrew-extension PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+if(MSVC)
+  target_compile_options(unscrew-extension PRIVATE "/await")
+endif()
+
 target_link_libraries(
   unscrew-extension
   runtimeobject.lib

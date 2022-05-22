@@ -6,6 +6,11 @@ if(BAULK_ENABLE_LTO)
   set_property(TARGET baulk-extension PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+
+if(MSVC)
+  target_compile_options(baulk-extension PRIVATE "/await")
+endif()
+
 target_link_libraries(
   baulk-extension
   runtimeobject.lib
