@@ -228,7 +228,6 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
     LR"(\MSBuild\Current\Bin)",
     LR"(\VC\Tools\Llvm\bin)",
 #endif
-    LR"(\MSBuild\Current\bin\Roslyn)",
     // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
     LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
     LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
