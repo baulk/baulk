@@ -12,9 +12,13 @@
 #include "json_utils.hpp"
 
 namespace baulk::env {
-#ifdef _M_X64
+#if defined(_M_X64)
 // Always build x64 binary
 [[maybe_unused]] constexpr std::wstring_view HostArch = L"x64"; // Hostx64 x64
+#elif defined(_M_ARM64)
+// https://blogs.windows.com/windowsdeveloper/2022/05/24/create-next-generation-experiences-at-scale-with-windows/
+// https://developercommunity.visualstudio.com/t/Native-ARM-Support-for-Visual-Studio/1161018
+[[maybe_unused]] constexpr std::wstring_view HostArch = L"arm64"; // HostArm64 ARM64
 #else
 [[maybe_unused]] constexpr std::wstring_view HostArch = L"x86"; // Hostx86 x86
 #endif
@@ -39,7 +43,9 @@ inline bool sdk_search_version(std::wstring_view sdkroot, std::wstring_view sdkv
 }
 
 std::optional<std::wstring> dotnet_framwork_folder() {
-#ifdef _M_X64
+#if defined(_M_X64)
+  auto dotnet = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
+#elif defined(_M_ARM64)
   auto dotnet = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework64)");
 #else
   auto dotnet = bela::WindowsExpandEnv(LR"(%SystemRoot%\Microsoft.NET\Framework)");
@@ -140,7 +146,7 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
   JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\NETFXSDK\\4.8\\Lib\\um\\", arch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", HostArch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", HostArch);
-#ifdef _M_X64
+#if defined(_M_X64)
   JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"), LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
 #else
   JoinEnv(paths, bela::GetEnv(L"ProgramFiles"), LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\)");
@@ -195,31 +201,37 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
   JoinEnv(paths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
 
   constexpr std::wstring_view vsPathSuffix[] = {
-      // IDE tools
-      LR"(\Common7\IDE\VC\VCPackages)",
-      LR"(\Common7\IDE)",
-      LR"(\Common7\IDE\Tools)",
+    // IDE tools
+    LR"(\Common7\IDE\VC\VCPackages)",
+    LR"(\Common7\IDE)",
+    LR"(\Common7\IDE\Tools)",
   // Performance Tools
-#ifdef _M_X64
-      LR"(\Team Tools\Performance Tools\x64)",
+#if defined(_M_X64)
+    LR"(\Team Tools\Performance Tools\x64)",
+#elif defined(_M_ARM64)
+    LR"(\Team Tools\Performance Tools)", // TODO: Wait arm native clang
 #endif
-      LR"(\Team Tools\Performance Tools)",
-      // Extension
-      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)",
-      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)",
-      // MSBuild and LLVM
-      LR"(\MSBuild\Current\bin\Roslyn)",
-      LR"(\Common7\Tools\devinit)",
-#ifdef _M_X64
-      LR"(\MSBuild\Current\Bin\amd64)",
-      LR"(\VC\Tools\Llvm\x64\bin)",
+    LR"(\Team Tools\Performance Tools)",
+    // Extension
+    LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)",
+    LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)",
+    // MSBuild and LLVM
+    LR"(\MSBuild\Current\bin\Roslyn)",
+    LR"(\Common7\Tools\devinit)",
+#if defined(_M_X64)
+    LR"(\MSBuild\Current\Bin\amd64)",
+    LR"(\VC\Tools\Llvm\x64\bin)",
+#elif defined(_M_ARM64)
+    LR"(\MSBuild\Current\Bin\arm64)",
+    LR"(\VC\Tools\Llvm\bin)", // TODO: Wait arm native clang
 #else
-      LR"(\MSBuild\Current\Bin)",
-      LR"(\VC\Tools\Llvm\bin)",
+    LR"(\MSBuild\Current\Bin)",
+    LR"(\VC\Tools\Llvm\bin)",
 #endif
-      // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
-      LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
-      LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
+    LR"(\MSBuild\Current\bin\Roslyn)",
+    // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
+    LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
+    LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
   };
   for (auto p : vsPathSuffix) {
     JoinEnv(paths, vs.InstallLocation, p);

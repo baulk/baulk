@@ -59,7 +59,7 @@ inline bool AccumulatePwsh(std::wstring_view dir, std::vector<PwshMeta> &pwshs) 
   constexpr const std::wstring_view pwsh_exe = L"pwsh.exe";
   constexpr const std::wstring_view previewsv = L"-preview";
   std::error_code e;
-  for (const auto &it : std::filesystem::directory_iterator(pwshdir,e)) {
+  for (const auto &it : std::filesystem::directory_iterator(pwshdir, e)) {
     const auto versionPath = it.path();
     const auto exe = versionPath / pwsh_exe;
     if (std::filesystem::exists(exe)) {
@@ -84,18 +84,6 @@ inline std::wstring PwshCore() {
   if (AccumulatePwsh(L"%ProgramFiles%\\PowerShell", pwshs)) {
     return PwshNewest(pwshs);
   }
-#if defined(_M_AMD64) || defined(_M_ARM64)
-  // No point in looking for WOW if we're not somewhere it exists
-  if (AccumulatePwsh(L"%ProgramFiles(x86)%\\PowerShell", pwshs)) {
-    return PwshNewest(pwshs);
-  }
-#endif
-#if defined(_M_ARM64)
-  // no point in looking for WOA if we're not on ARM64
-  if (AccumulatePwsh(L"%ProgramFiles(Arm)%\\PowerShell", pwshs)) {
-    return PwshNewest(pwshs);
-  }
-#endif
   return L"";
 }
 
@@ -104,18 +92,6 @@ inline std::wstring PwshCorePreview() {
   if (AccumulatePwsh(L"%ProgramFiles%\\PowerShell", pwshs)) {
     return PwshPreview(pwshs);
   }
-#if defined(_M_AMD64) || defined(_M_ARM64)
-  // No point in looking for WOW if we're not somewhere it exists
-  if (AccumulatePwsh(L"%ProgramFiles(x86)%\\PowerShell", pwshs)) {
-    return PwshPreview(pwshs);
-  }
-#endif
-#if defined(_M_ARM64)
-  // no point in looking for WOA if we're not on ARM64
-  if (AccumulatePwsh(L"%ProgramFiles(Arm)%\\PowerShell", pwshs)) {
-    return PwshPreview(pwshs);
-  }
-#endif
   return L"";
 }
 
