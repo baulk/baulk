@@ -11,6 +11,7 @@
 #include <baulk/archive.hpp>
 #include <baulk/archive/msi.hpp>
 #include <baulk/archive/extractor.hpp>
+#include <baulk/archive/7zfinder.hpp>
 #include <version.hpp>
 
 namespace baulk {
@@ -199,46 +200,13 @@ bool MsiExtractor::Extract(ProgressBar *bar, bela::error_code &ec) {
   return extractor.MakeFlattened(ec);
 }
 
-inline std::optional<std::wstring> find7zInstallPath(bela::error_code &ec) {
-  HKEY hkey = nullptr;
-  if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\7-Zip-Zstandard)", &hkey) != ERROR_SUCCESS) {
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, LR"(SOFTWARE\7-Zip)", &hkey) != ERROR_SUCCESS) {
-      ec = bela::make_system_error_code();
-      return std::nullopt;
-    }
-  }
-  auto closer = bela::finally([&] { RegCloseKey(hkey); });
-  wchar_t buffer[4096];
-  DWORD type = 0;
-  DWORD bufsize = sizeof(buffer);
-  if (RegQueryValueExW(hkey, L"Path64", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ERROR_SUCCESS &&
-      type == REG_SZ) {
-    if (auto s7z = bela::StringCat(bela::StripSuffix(buffer, L"\\"), L"\\7zG.exe"); bela::PathExists(s7z)) {
-      return std::make_optional(std::move(s7z));
-    }
-  }
-  if (RegQueryValueExW(hkey, L"Path", nullptr, &type, reinterpret_cast<LPBYTE>(buffer), &bufsize) != ERROR_SUCCESS) {
-    ec = bela::make_system_error_code();
-    return std::nullopt;
-  }
-  if (type != REG_SZ) {
-    ec = bela::make_error_code(bela::ErrGeneral, L"reg key Path not REG_SZ: ", type);
-    return std::nullopt;
-  }
-  if (auto s7z = bela::StringCat(bela::StripSuffix(buffer, L"\\"), L"\\7zG.exe"); bela::PathExists(s7z)) {
-    return std::make_optional(std::move(s7z));
-  }
-  ec = bela::make_error_code(ERROR_NOT_FOUND, L"7zG.exe not found");
-  return std::nullopt;
-}
-
 inline std::optional<std::wstring> lookup_sevenzip() {
   bela::error_code ec;
   baulk::vfs::InitializeFastPathFs(ec);
   if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\baulk7zG.exe"); bela::PathExists(s7z)) {
     return std::make_optional(std::move(s7z));
   }
-  if (auto ps7z = find7zInstallPath(ec); ps7z) {
+  if (auto ps7z = baulk::archive::Find7z(L"7zG.exe", ec); ps7z) {
     return std::make_optional(std::move(*ps7z));
   }
   if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\7zG.exe"); !bela::PathExists(s7z)) {
