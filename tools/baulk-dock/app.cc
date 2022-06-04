@@ -182,6 +182,7 @@ LRESULT MainWindow::InitializeWindow() {
   bela::error_code ec;
   themes.Load(ec);
   systemVersion = bela::windows::version();
+  //isMicaEnabled = baulk::windows::mica_system_backdrop_enabled(systemVersion);
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);
@@ -191,6 +192,7 @@ LRESULT MainWindow::InitializeWindow() {
     return S_FALSE;
   }
   RECT layout = {100, 100, 800, 290};
+  // https://stackoverflow.com/questions/38179033/when-should-ws-ex-noredirectionbitmap-be-used
   auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
   Create(nullptr, layout, L"Baulk environment dock", noresizewnd, extend_style);
   return S_OK;
@@ -431,10 +433,10 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
 
   InitializeControl();
-  if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
-    baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
-  }
-  // if (baulk::windows::mica_materials_enabled(systemVersion)) {
+  // if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
+  //   baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
+  // }
+  // if (baulk::windows::mica_system_backdrop_enabled(systemVersion)) {
   //   baulk::windows::EnableMicaMaterials(m_hWnd);
   // }
   return S_OK;

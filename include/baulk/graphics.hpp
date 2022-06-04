@@ -171,25 +171,10 @@ inline bool PersonalizeWindowUI(HWND hWnd, const PersonalizeThemes &themes) {
 }
 
 inline bool EnableMicaMaterials(HWND hWnd) {
-  MARGINS margins = {-1};
-  ::DwmExtendFrameIntoClientArea(hWnd, &margins);
-  auto micaPreference = dwm::DWMWCP_TRUE;
-  if (DwmSetWindowAttribute(hWnd, dwm::DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference)) != S_OK) {
-    return false;
-  }
-  // auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
-  // return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle | WS_EX_NOREDIRECTIONBITMAP) != 0;
-  return true;
-}
-
-inline bool DisableMicaMaterials(HWND hWnd) {
-  enum DWM_BOOL { DWMWCP_FALSE = 0, DWMWCP_TRUE = 1 };
-  auto micaPreference = dwm::DWMWCP_FALSE;
-  if (DwmSetWindowAttribute(hWnd, dwm::DWMWA_MICA_EFFECT, &micaPreference, sizeof(micaPreference)) != S_OK) {
-    return false;
-  }
-  // auto oldExtendStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & (~WS_EX_NOREDIRECTIONBITMAP);
-  // return SetWindowLongPtrW(hWnd, GWL_EXSTYLE, oldExtendStyle) != 0;
+  // DWM_SYSTEMBACKDROP_TYPE
+  //
+  auto flag = dwm::DWMSBT_MAINWINDOW;
+  DwmSetWindowAttribute(hWnd, dwm::DWMWA_SYSTEMBACKDROP_TYPE, &flag, sizeof(flag));
   return true;
 }
 
