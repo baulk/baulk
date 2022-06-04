@@ -70,8 +70,7 @@ public:
   vs_env_builder(const vs_env_builder &) = delete;
   vs_env_builder &operator=(const vs_env_builder &) = delete;
   bool initialize_windows_sdk(const std::wstring_view arch, bela::error_code &ec);
-  bool initialize_vs_env(const baulk::vs::vs_instance_t &vs, const std::wstring_view arch, bool usePreviewVS,
-                         bela::error_code &ec);
+  bool initialize_vs_env(const baulk::vs::vs_instance_t &vs, const std::wstring_view arch, bela::error_code &ec);
   void flush();
 
 private:
@@ -179,7 +178,7 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
 
 // initialize vs env
 inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs, const std::wstring_view arch,
-                                              bool usePreviewVS, bela::error_code &ec) {
+                                              bela::error_code &ec) {
   auto vcver = lookup_vc_version(vs.InstallLocation, ec);
   if (!vcver) {
     return false;
@@ -248,6 +247,38 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
 }
 } // namespace env_internal
 
+inline std::optional<std::wstring> InitializeVisualStudioSpecificInstanceEnv(bela::env::Simulator &simulator,
+                                                                             const std::wstring_view vsInstance,
+                                                                             const std::wstring_view arch,
+                                                                             bela::error_code &ec) {
+  baulk::vs::Searcher searcher;
+  if (!searcher.Initialize(ec)) {
+    return std::nullopt;
+  }
+  baulk::vs::vs_instances_t vsis;
+  if (!searcher.Search(vsis, ec)) {
+    return std::nullopt;
+  }
+  if (vsis.empty()) {
+    ec = bela::make_error_code(bela::ErrGeneral, L"empty visual studio instance");
+    return std::nullopt;
+  }
+  auto vs_matched = [&](const baulk::vs::vs_instance_t &vs_) { return vs_.InstanceId == vsInstance; };
+  auto vs = vsis.begin();
+  if (auto result = std::find_if(vsis.begin(), vsis.end(), vs_matched); result != vsis.end()) {
+    vs = result;
+  }
+  env_internal::vs_env_builder builder(&simulator);
+  if (!builder.initialize_vs_env(*vs, arch, ec)) {
+    return std::nullopt;
+  }
+  if (!builder.initialize_windows_sdk(arch, ec)) {
+    return std::nullopt;
+  }
+  builder.flush();
+  return std::make_optional(bela::StringCat(vs->DisplayName, vs->IsPreview ? L" Preview [" : L" [", vs->Version, L"]"));
+}
+
 // InitializeVisualStudioEnv initialize vs env
 inline std::optional<std::wstring> InitializeVisualStudioEnv(bela::env::Simulator &simulator,
                                                              const std::wstring_view arch, const bool usePreviewVS,
@@ -270,7 +301,7 @@ inline std::optional<std::wstring> InitializeVisualStudioEnv(bela::env::Simulato
     vs = result;
   }
   env_internal::vs_env_builder builder(&simulator);
-  if (!builder.initialize_vs_env(*vs, arch, usePreviewVS, ec)) {
+  if (!builder.initialize_vs_env(*vs, arch, ec)) {
     return std::nullopt;
   }
   if (!builder.initialize_windows_sdk(arch, ec)) {

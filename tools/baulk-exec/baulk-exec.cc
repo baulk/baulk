@@ -24,10 +24,12 @@ Usage: baulk-exec [option] <command> [<args>] ...
   -E|--venv            Choose to load a specific package virtual environment
   --vs                 Load Visual Studio related environment variables
   --vs-preview         Load Visual Studio (Preview) related environment variables
+  --vs-instance        Load environment variables for a specific installation of Visual Studio (accept: instanceId)
   --time               Summarize command system resource usage
 
 Example:
   baulk-exec -V --vs TUNNEL_DEBUG=1 pwsh
+  baulk-exec -V --vs-instance 93c61b61 pwsh
 
 Built-in alias:
   winsh          A fake shell. It may be pwsh or powershell and cmd.
@@ -87,6 +89,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
       .Add(L"venv", bela::required_argument, L'E')
       .Add(L"vs", bela::no_argument, 1000) // load visual studio environment
       .Add(L"vs-preview", bela::no_argument, 1001)
+      .Add(L"vs-instance", bela::required_argument, 1002)
       .Add(L"time", bela::no_argument, 1004)
       .Add(L"clang", bela::no_argument, 9999); // Deprecated
   bool initializeVSEnv = false;
@@ -133,6 +136,8 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
             initializeVSPreviewEnv = true;
           }
           break;
+        case 1002:
+          vsInstance = oa;
           break;
         case 1004:
           summarizeTime = true;
@@ -184,6 +189,14 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
   }
 
   [&]() {
+    if (!vsInstance.empty()) {
+      if (auto vs = baulk::env::InitializeVisualStudioSpecificInstanceEnv(simulator, vsInstance, arch, ec); vs) {
+        DbgPrint(L"Initialize %v done", *vs);
+        return;
+      }
+      bela::FPrintF(stderr, L"Initialize visual studio '%s' env failed %s\n", vsInstance, ec);
+      return;
+    }
     if (initializeVSEnv) {
       if (auto vs = baulk::env::InitializeVisualStudioEnv(simulator, arch, false, ec); vs) {
         DbgPrint(L"Initialize %v done", *vs);

@@ -39,6 +39,7 @@ private:
   bela::env::Simulator simulator;
   argv_t argv;
   std::wstring cwd;
+  std::wstring vsInstance;
   bool cleanup{false};
   bool console{true};
   bool summarizeTime{false};
