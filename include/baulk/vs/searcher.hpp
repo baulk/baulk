@@ -114,6 +114,7 @@ inline bool Searcher::AddInstance(ISetupInstance2 *inst2, vs_instances_t &vsInst
     return false;
   }
   vs_instance_t vsi;
+  vsi.InstanceId.assign(bstrId);
   InstanceState state;
   if (FAILED(inst2->GetState(&state))) {
     ec = bela::make_system_error_code(L"GetState() ");
