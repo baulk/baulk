@@ -84,7 +84,11 @@ Usually you can run `baulk -h` to see help for commands (other commands are also
 
 ## Advanced Experience with Baulk
 
-TBD
+## Other Baulk Tools
+
+[Barrels](https://github.com/baulk/barrels) - Baulk environment dock (Windows 11 22H2 or Later)
+
+![](./docs/images/barrels.png)
 
 ## Build Baulk
 

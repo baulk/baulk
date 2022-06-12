@@ -83,6 +83,11 @@ baulk uninstall wget
 
 ## 进阶体验 Baulk
 
+## 其他 Baulk 工具
+
+[Barrels](https://github.com/baulk/barrels) - Baulk environment dock (Windows 11 22H2 or Later)
+
+![](./docs/images/barrels.png)
 
 ## 其他
 
