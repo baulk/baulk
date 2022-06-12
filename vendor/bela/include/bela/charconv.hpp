@@ -81,6 +81,8 @@ namespace std {
 #include "macros.hpp"
 #include "utility.hpp"
 #include "types.hpp"
+#include "__charconv/tables.hpp"
+#include "__charconv/to_chars_base_10.hpp"
 
 namespace bela {
 constexpr auto successful = std::errc{};
@@ -100,8 +102,6 @@ struct to_chars_result {
 };
 
 namespace __itoa {
-wchar_t *__u64toa(uint64_t __value, wchar_t *__buffer) noexcept;
-wchar_t *__u32toa(uint32_t __value, wchar_t *__buffer) noexcept;
 static constexpr uint64_t __pow10_64[] = {
     UINT64_C(0),
     UINT64_C(10),
@@ -138,7 +138,7 @@ template <typename I, typename = void> struct __traits_base {
     return __t - (__v < __pow10_64[__t]) + 1;
   }
 
-  static wchar_t *__convert(I __v, wchar_t *__p) { return __u64toa(__v, __p); }
+  static wchar_t *__convert(I __v, wchar_t *__p) { return __base_10_u64(__v, __p); }
   static decltype(__pow10_64) &__pow() { return __pow10_64; }
 };
 
@@ -150,7 +150,7 @@ template <typename I> struct __traits_base<I, decltype(void(uint32_t{std::declva
     return __t - (__v < __pow10_32[__t]) + 1;
   }
 
-  static wchar_t *__convert(I __v, wchar_t *__p) { return __u32toa(__v, __p); }
+  static wchar_t *__convert(I __v, wchar_t *__p) { return __base_10_u32(__v, __p); }
 
   static decltype(__pow10_32) &__pow() { return __pow10_32; }
 };

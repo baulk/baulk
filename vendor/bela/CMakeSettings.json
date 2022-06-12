@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "-DENABLE_TEST=ON",
+      "cmakeCommandArgs": "-DENABLE_BELA_TEST=ON",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "variables": []

@@ -219,6 +219,24 @@ struct COFFSymbol {
   uint8_t StorageClass;
   uint8_t NumberOfAuxSymbols;
 };
+// COFFSymbolAuxFormat5 describes the expected form of an aux symbol
+// attached to a section definition symbol. The PE format defines a
+// number of different aux symbol formats: format 1 for function
+// definitions, format 2 for .be and .ef symbols, and so on. Format 5
+// holds extra info associated with a section definition, including
+// number of relocations + line numbers, as well as COMDAT info. See
+// https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions
+// for more on what's going on here.
+struct COFFSymbolAuxFormat5 {
+  uint32_t Size;
+  uint16_t NumRelocs;
+  uint16_t NumLineNumbers;
+  uint32_t Checksum;
+  uint16_t SecNum;
+  uint8_t Selection;
+  uint8_t Reserved[3]; // padding
+};
+
 #pragma pack(pop)
 
 struct Section {

@@ -297,7 +297,7 @@ private:
       cachedEnv.append(name).push_back(L'=');
       cachedEnv.append(value).push_back(L'\0');
     }
-    cachedEnv.append(L"\0");
+    cachedEnv.push_back(L'\0');
     return cachedEnv;
   }
 };

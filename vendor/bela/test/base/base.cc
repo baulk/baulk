@@ -213,6 +213,9 @@ int wmain(int argc, wchar_t **argv) {
     }
     bela::FPrintF(stderr, L"%c", rune);
   }
-  bela::FPrintF(stderr, L"\n---------------\n");
+  std::wstring abc;
+  abc.push_back('\0');
+  abc.append(L"\0");
+  bela::FPrintF(stderr, L"\n---------------: %d\n", abc.size());
   return 0;
 }

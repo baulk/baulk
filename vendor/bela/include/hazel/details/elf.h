@@ -24,7 +24,6 @@
 
 namespace llvm {
 namespace ELF {
-
 using Elf32_Addr = uint32_t; // Program address
 using Elf32_Off = uint32_t;  // File offset
 using Elf32_Half = uint16_t;
@@ -563,6 +562,15 @@ enum : unsigned {
   EF_MIPS_ARCH = 0xf0000000       // Mask for applying EF_MIPS_ARCH_ variant
 };
 
+// MIPS-specific section indexes
+enum {
+  SHN_MIPS_ACOMMON = 0xff00,   // Common symbols which are defined and allocated
+  SHN_MIPS_TEXT = 0xff01,      // Not ABI compliant
+  SHN_MIPS_DATA = 0xff02,      // Not ABI compliant
+  SHN_MIPS_SCOMMON = 0xff03,   // Common symbols for global data area
+  SHN_MIPS_SUNDEFINED = 0xff04 // Undefined symbols for global data area
+};
+
 // ELF Relocation types for Mips
 enum {
 #include "ELFRelocs/Mips.def"
@@ -753,16 +761,18 @@ enum : unsigned {
   EF_AMDGPU_MACH_AMDGCN_GFX1035       = 0x03d,
   EF_AMDGPU_MACH_AMDGCN_GFX1034       = 0x03e,
   EF_AMDGPU_MACH_AMDGCN_GFX90A        = 0x03f,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X40 = 0x040,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X41 = 0x041,
+  EF_AMDGPU_MACH_AMDGCN_GFX940        = 0x040,
+  EF_AMDGPU_MACH_AMDGCN_GFX1100       = 0x041,
   EF_AMDGPU_MACH_AMDGCN_GFX1013       = 0x042,
   EF_AMDGPU_MACH_AMDGCN_RESERVED_0X43 = 0x043,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X44 = 0x044,
-  EF_AMDGPU_MACH_AMDGCN_RESERVED_0X45 = 0x045,
+  EF_AMDGPU_MACH_AMDGCN_GFX1103       = 0x044,
+  EF_AMDGPU_MACH_AMDGCN_GFX1036       = 0x045,
+  EF_AMDGPU_MACH_AMDGCN_GFX1101       = 0x046,
+  EF_AMDGPU_MACH_AMDGCN_GFX1102       = 0x047,
 
   // First/last AMDGCN-based processors.
   EF_AMDGPU_MACH_AMDGCN_FIRST = EF_AMDGPU_MACH_AMDGCN_GFX600,
-  EF_AMDGPU_MACH_AMDGCN_LAST = EF_AMDGPU_MACH_AMDGCN_RESERVED_0X45,
+  EF_AMDGPU_MACH_AMDGCN_LAST = EF_AMDGPU_MACH_AMDGCN_GFX1102,
 
   // Indicates if the "xnack" target feature is enabled for all code contained
   // in the object.
@@ -865,6 +875,23 @@ enum {
 #include "ELFRelocs/VE.def"
 };
 
+// CSKY Specific e_flags
+enum : unsigned {
+  EF_CSKY_801 = 0xa,
+  EF_CSKY_802 = 0x10,
+  EF_CSKY_803 = 0x9,
+  EF_CSKY_805 = 0x11,
+  EF_CSKY_807 = 0x6,
+  EF_CSKY_810 = 0x8,
+  EF_CSKY_860 = 0xb,
+  EF_CSKY_800 = 0x1f,
+  EF_CSKY_FLOAT = 0x2000,
+  EF_CSKY_DSP = 0x4000,
+  EF_CSKY_ABIV2 = 0x20000000,
+  EF_CSKY_EFV1 = 0x1000000,
+  EF_CSKY_EFV2 = 0x2000000,
+  EF_CSKY_EFV3 = 0x3000000
+};
 
 // ELF Relocation types for CSKY
 enum {
@@ -989,6 +1016,8 @@ enum : unsigned {
   SHT_MSP430_ATTRIBUTES = 0x70000003U,
 
   SHT_RISCV_ATTRIBUTES = 0x70000003U,
+
+  SHT_CSKY_ATTRIBUTES = 0x70000001U,
 
   SHT_HIPROC = 0x7fffffff, // Highest processor arch-specific type.
   SHT_LOUSER = 0x80000000, // Lowest type reserved for applications.
@@ -1539,6 +1568,31 @@ enum {
   NT_GNU_PROPERTY_TYPE_0 = 5,
 };
 
+// Android note types.
+enum {
+  NT_ANDROID_TYPE_IDENT = 1,
+  NT_ANDROID_TYPE_KUSER = 3,
+  NT_ANDROID_TYPE_MEMTAG = 4,
+};
+
+// Memory tagging values used in NT_ANDROID_TYPE_MEMTAG notes.
+enum {
+  // Enumeration to determine the tagging mode. In Android-land, 'SYNC' means
+  // running all threads in MTE Synchronous mode, and 'ASYNC' means to use the
+  // kernels auto-upgrade feature to allow for either MTE Asynchronous,
+  // Asymmetric, or Synchronous mode. This allows silicon vendors to specify, on
+  // a per-cpu basis what 'ASYNC' should mean. Generally, the expectation is
+  // "pick the most precise mode that's very fast".
+  NT_MEMTAG_LEVEL_NONE = 0,
+  NT_MEMTAG_LEVEL_ASYNC = 1,
+  NT_MEMTAG_LEVEL_SYNC = 2,
+  NT_MEMTAG_LEVEL_MASK = 3,
+  // Bits indicating whether the loader should prepare for MTE to be enabled on
+  // the heap and/or stack.
+  NT_MEMTAG_HEAP = 4,
+  NT_MEMTAG_STACK = 8,
+};
+
 // Property types used in GNU_PROPERTY_TYPE_0 notes.
 enum : unsigned {
   GNU_PROPERTY_STACK_SIZE = 1,
@@ -1718,7 +1772,6 @@ enum {
   ELFCOMPRESS_LOPROC = 0x70000000, // Start of processor-specific.
   ELFCOMPRESS_HIPROC = 0x7fffffff  // End of processor-specific.
 };
-
 
 } // end namespace ELF
 } // end namespace llvm

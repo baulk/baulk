@@ -16,7 +16,6 @@ add_library(
   str_cat.cc
   subsitute.cc
   terminal.cc
-  __charconv/charconv.cc
   __charconv/charconv_float.cc
   __fnmatch/fnmatch.cc
   __format/fmt.cc)

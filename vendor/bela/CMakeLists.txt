@@ -14,7 +14,7 @@ This process created the file `CMakeCache.txt' and the directory `CMakeFiles'.
 Please delete them.")
 endif()
 
-option(ENABLE_TEST "Enable test" OFF)
+option(ENABLE_BELA_TEST "Enable test" OFF)
 option(BELA_ENABLE_LTO "bela enable LTO" OFF)
 option(BELA_ENABLE_ASSEMBLY_FILES "bela enable assembly files" OFF)
 
@@ -59,6 +59,6 @@ add_subdirectory(src/belatime)
 add_subdirectory(src/belaund)
 add_subdirectory(src/belahash)
 add_subdirectory(src/hazel)
-if(ENABLE_TEST)
+if(ENABLE_BELA_TEST)
   add_subdirectory(test)
 endif()

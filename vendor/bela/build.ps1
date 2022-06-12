@@ -97,7 +97,7 @@ catch {
 }
 $env:CC = "cl"
 $env:CXX = "cl"
-$ExitCode = Execute -FilePath "cmake" -WD $WD -Arguments "-GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TEST=ON .."
+$ExitCode = Execute -FilePath "cmake" -WD $WD -Arguments "-GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_BELA_TEST=ON .."
 if ($ExitCode -ne 0) {
     exit $ExitCode
 }
