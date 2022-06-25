@@ -728,8 +728,8 @@ void AppendNumberUnit(std::wstring *out, double n, DisplayUnit unit) {
 //   is non-zero.
 // Unlike Go, we format the zero duration as 0, with no unit.
 std::wstring FormatDuration(Duration d) {
-  const Duration min_duration = Seconds(kint64min);
-  if (d == min_duration) {
+  constexpr Duration kMinDuration = Seconds(kint64min);
+  if (d == kMinDuration) {
     // Avoid needing to negate kint64min by directly returning what the
     // following code should produce in that case.
     return L"-2562047788015215h30m8s";

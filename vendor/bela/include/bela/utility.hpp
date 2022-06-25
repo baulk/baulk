@@ -2,6 +2,7 @@
 #ifndef BELA_UTILITY_HPP
 #define BELA_UTILITY_HPP
 #include <intrin.h>
+#include <bit>
 
 #if (defined(_M_AMD64) || defined(__x86_64__)) || (defined(_M_ARM) || defined(__arm__))
 #define _BELA_HAS_BITSCAN64
@@ -20,6 +21,8 @@ namespace bela {
 #endif
 }
 
+//template <std::integral I> constexpr int __bela_popcount(I i) noexcept { return std::popcount(i); }
+
 #ifndef _MSC_VER
 
 inline constexpr int __bela_ctz(unsigned __x) noexcept { return __builtin_ctz(__x); }
@@ -33,12 +36,6 @@ inline constexpr int __bela_clz(unsigned __x) noexcept { return __builtin_clz(__
 inline constexpr int __bela_clz(unsigned long __x) noexcept { return __builtin_clzl(__x); }
 
 inline constexpr int __bela_clz(unsigned long long __x) noexcept { return __builtin_clzll(__x); }
-
-inline constexpr int __bela_popcount(unsigned __x) noexcept { return __builtin_popcount(__x); }
-
-inline constexpr int __bela_popcount(unsigned long __x) noexcept { return __builtin_popcountl(__x); }
-
-inline constexpr int __bela_popcount(unsigned long long __x) noexcept { return __builtin_popcountll(__x); }
 
 #else // _LIBCPP_COMPILER_MSVC
 
@@ -101,23 +98,6 @@ inline int __bela_clz(unsigned long long __x) {
 #endif
   return 64; // Undefined Behavior.
 }
-
-inline int __bela_popcount(unsigned __x) {
-  static_assert(sizeof(unsigned) == 4, "");
-  return __popcnt(__x);
-}
-
-inline int __bela_popcount(unsigned long __x) {
-  static_assert(sizeof(unsigned long) == 4, "");
-  return __popcnt(__x);
-}
-
-#ifdef _BELA_64BIT
-inline int __bela_popcount(unsigned long long __x) {
-  static_assert(sizeof(unsigned long long) == 8, "");
-  return static_cast<int>(__popcnt64(__x));
-}
-#endif
 
 #endif // _LIBCPP_COMPILER_MSVC
 

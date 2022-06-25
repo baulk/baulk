@@ -12,10 +12,7 @@
 
 namespace bela::__itoa {
 
-template <class = void> struct __digits_base_10 { static const wchar_t __value[200]; };
-
-template <class I>
-const wchar_t __digits_base_10<I>::__value[200] = {
+constexpr wchar_t __digits_base_10[200] = {
     // clang-format off
     '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
     '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '1', '8', '1', '9',

@@ -81,7 +81,6 @@ namespace std {
 #include "macros.hpp"
 #include "utility.hpp"
 #include "types.hpp"
-#include "__charconv/tables.hpp"
 #include "__charconv/to_chars_base_10.hpp"
 
 namespace bela {
@@ -243,155 +242,155 @@ requires std::signed_integral<I> to_chars_result __to_chars_itoa(wchar_t *__firs
 }
 
 namespace __itoa {
-  // https://reviews.llvm.org/D97705
-  static constexpr wchar_t __base_2_lut[64] = {
-      '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '1', '1', '0', '1', '0', '0', '0', '1',
-      '0', '1', '0', '1', '1', '0', '0', '1', '1', '1', '1', '0', '0', '0', '1', '0', '0', '1', '1', '0', '1', '0',
-      '1', '0', '1', '1', '1', '1', '0', '0', '1', '1', '0', '1', '1', '1', '1', '0', '1', '1', '1', '1'};
+// https://reviews.llvm.org/D97705
+static constexpr wchar_t __base_2_lut[64] = {
+    '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '1', '1', '0', '1', '0', '0', '0', '1',
+    '0', '1', '0', '1', '1', '0', '0', '1', '1', '1', '1', '0', '0', '0', '1', '0', '0', '1', '1', '0', '1', '0',
+    '1', '0', '1', '1', '1', '1', '0', '0', '1', '1', '0', '1', '1', '1', '1', '0', '1', '1', '1', '1'};
 
-  static constexpr wchar_t __base_8_lut[128] = {
-      '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '1', '0', '1', '1', '1', '2',
-      '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '2', '0', '2', '1', '2', '2', '2', '3', '2', '4', '2', '5',
-      '2', '6', '2', '7', '3', '0', '3', '1', '3', '2', '3', '3', '3', '4', '3', '5', '3', '6', '3', '7', '4', '0',
-      '4', '1', '4', '2', '4', '3', '4', '4', '4', '5', '4', '6', '4', '7', '5', '0', '5', '1', '5', '2', '5', '3',
-      '5', '4', '5', '5', '5', '6', '5', '7', '6', '0', '6', '1', '6', '2', '6', '3', '6', '4', '6', '5', '6', '6',
-      '6', '7', '7', '0', '7', '1', '7', '2', '7', '3', '7', '4', '7', '5', '7', '6', '7', '7'};
+static constexpr wchar_t __base_8_lut[128] = {
+    '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '1', '0', '1', '1', '1', '2',
+    '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '2', '0', '2', '1', '2', '2', '2', '3', '2', '4', '2', '5',
+    '2', '6', '2', '7', '3', '0', '3', '1', '3', '2', '3', '3', '3', '4', '3', '5', '3', '6', '3', '7', '4', '0',
+    '4', '1', '4', '2', '4', '3', '4', '4', '4', '5', '4', '6', '4', '7', '5', '0', '5', '1', '5', '2', '5', '3',
+    '5', '4', '5', '5', '5', '6', '5', '7', '6', '0', '6', '1', '6', '2', '6', '3', '6', '4', '6', '5', '6', '6',
+    '6', '7', '7', '0', '7', '1', '7', '2', '7', '3', '7', '4', '7', '5', '7', '6', '7', '7'};
 
-  static constexpr wchar_t __base_16_lut[512] = {
-      '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9', '0', 'a', '0',
-      'b', '0', 'c', '0', 'd', '0', 'e', '0', 'f', '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6',
-      '1', '7', '1', '8', '1', '9', '1', 'a', '1', 'b', '1', 'c', '1', 'd', '1', 'e', '1', 'f', '2', '0', '2', '1', '2',
-      '2', '2', '3', '2', '4', '2', '5', '2', '6', '2', '7', '2', '8', '2', '9', '2', 'a', '2', 'b', '2', 'c', '2', 'd',
-      '2', 'e', '2', 'f', '3', '0', '3', '1', '3', '2', '3', '3', '3', '4', '3', '5', '3', '6', '3', '7', '3', '8', '3',
-      '9', '3', 'a', '3', 'b', '3', 'c', '3', 'd', '3', 'e', '3', 'f', '4', '0', '4', '1', '4', '2', '4', '3', '4', '4',
-      '4', '5', '4', '6', '4', '7', '4', '8', '4', '9', '4', 'a', '4', 'b', '4', 'c', '4', 'd', '4', 'e', '4', 'f', '5',
-      '0', '5', '1', '5', '2', '5', '3', '5', '4', '5', '5', '5', '6', '5', '7', '5', '8', '5', '9', '5', 'a', '5', 'b',
-      '5', 'c', '5', 'd', '5', 'e', '5', 'f', '6', '0', '6', '1', '6', '2', '6', '3', '6', '4', '6', '5', '6', '6', '6',
-      '7', '6', '8', '6', '9', '6', 'a', '6', 'b', '6', 'c', '6', 'd', '6', 'e', '6', 'f', '7', '0', '7', '1', '7', '2',
-      '7', '3', '7', '4', '7', '5', '7', '6', '7', '7', '7', '8', '7', '9', '7', 'a', '7', 'b', '7', 'c', '7', 'd', '7',
-      'e', '7', 'f', '8', '0', '8', '1', '8', '2', '8', '3', '8', '4', '8', '5', '8', '6', '8', '7', '8', '8', '8', '9',
-      '8', 'a', '8', 'b', '8', 'c', '8', 'd', '8', 'e', '8', 'f', '9', '0', '9', '1', '9', '2', '9', '3', '9', '4', '9',
-      '5', '9', '6', '9', '7', '9', '8', '9', '9', '9', 'a', '9', 'b', '9', 'c', '9', 'd', '9', 'e', '9', 'f', 'a', '0',
-      'a', '1', 'a', '2', 'a', '3', 'a', '4', 'a', '5', 'a', '6', 'a', '7', 'a', '8', 'a', '9', 'a', 'a', 'a', 'b', 'a',
-      'c', 'a', 'd', 'a', 'e', 'a', 'f', 'b', '0', 'b', '1', 'b', '2', 'b', '3', 'b', '4', 'b', '5', 'b', '6', 'b', '7',
-      'b', '8', 'b', '9', 'b', 'a', 'b', 'b', 'b', 'c', 'b', 'd', 'b', 'e', 'b', 'f', 'c', '0', 'c', '1', 'c', '2', 'c',
-      '3', 'c', '4', 'c', '5', 'c', '6', 'c', '7', 'c', '8', 'c', '9', 'c', 'a', 'c', 'b', 'c', 'c', 'c', 'd', 'c', 'e',
-      'c', 'f', 'd', '0', 'd', '1', 'd', '2', 'd', '3', 'd', '4', 'd', '5', 'd', '6', 'd', '7', 'd', '8', 'd', '9', 'd',
-      'a', 'd', 'b', 'd', 'c', 'd', 'd', 'd', 'e', 'd', 'f', 'e', '0', 'e', '1', 'e', '2', 'e', '3', 'e', '4', 'e', '5',
-      'e', '6', 'e', '7', 'e', '8', 'e', '9', 'e', 'a', 'e', 'b', 'e', 'c', 'e', 'd', 'e', 'e', 'e', 'f', 'f', '0', 'f',
-      '1', 'f', '2', 'f', '3', 'f', '4', 'f', '5', 'f', '6', 'f', '7', 'f', '8', 'f', '9', 'f', 'a', 'f', 'b', 'f', 'c',
-      'f', 'd', 'f', 'e', 'f', 'f'};
+static constexpr wchar_t __base_16_lut[512] = {
+    '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9', '0', 'a', '0',
+    'b', '0', 'c', '0', 'd', '0', 'e', '0', 'f', '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6',
+    '1', '7', '1', '8', '1', '9', '1', 'a', '1', 'b', '1', 'c', '1', 'd', '1', 'e', '1', 'f', '2', '0', '2', '1', '2',
+    '2', '2', '3', '2', '4', '2', '5', '2', '6', '2', '7', '2', '8', '2', '9', '2', 'a', '2', 'b', '2', 'c', '2', 'd',
+    '2', 'e', '2', 'f', '3', '0', '3', '1', '3', '2', '3', '3', '3', '4', '3', '5', '3', '6', '3', '7', '3', '8', '3',
+    '9', '3', 'a', '3', 'b', '3', 'c', '3', 'd', '3', 'e', '3', 'f', '4', '0', '4', '1', '4', '2', '4', '3', '4', '4',
+    '4', '5', '4', '6', '4', '7', '4', '8', '4', '9', '4', 'a', '4', 'b', '4', 'c', '4', 'd', '4', 'e', '4', 'f', '5',
+    '0', '5', '1', '5', '2', '5', '3', '5', '4', '5', '5', '5', '6', '5', '7', '5', '8', '5', '9', '5', 'a', '5', 'b',
+    '5', 'c', '5', 'd', '5', 'e', '5', 'f', '6', '0', '6', '1', '6', '2', '6', '3', '6', '4', '6', '5', '6', '6', '6',
+    '7', '6', '8', '6', '9', '6', 'a', '6', 'b', '6', 'c', '6', 'd', '6', 'e', '6', 'f', '7', '0', '7', '1', '7', '2',
+    '7', '3', '7', '4', '7', '5', '7', '6', '7', '7', '7', '8', '7', '9', '7', 'a', '7', 'b', '7', 'c', '7', 'd', '7',
+    'e', '7', 'f', '8', '0', '8', '1', '8', '2', '8', '3', '8', '4', '8', '5', '8', '6', '8', '7', '8', '8', '8', '9',
+    '8', 'a', '8', 'b', '8', 'c', '8', 'd', '8', 'e', '8', 'f', '9', '0', '9', '1', '9', '2', '9', '3', '9', '4', '9',
+    '5', '9', '6', '9', '7', '9', '8', '9', '9', '9', 'a', '9', 'b', '9', 'c', '9', 'd', '9', 'e', '9', 'f', 'a', '0',
+    'a', '1', 'a', '2', 'a', '3', 'a', '4', 'a', '5', 'a', '6', 'a', '7', 'a', '8', 'a', '9', 'a', 'a', 'a', 'b', 'a',
+    'c', 'a', 'd', 'a', 'e', 'a', 'f', 'b', '0', 'b', '1', 'b', '2', 'b', '3', 'b', '4', 'b', '5', 'b', '6', 'b', '7',
+    'b', '8', 'b', '9', 'b', 'a', 'b', 'b', 'b', 'c', 'b', 'd', 'b', 'e', 'b', 'f', 'c', '0', 'c', '1', 'c', '2', 'c',
+    '3', 'c', '4', 'c', '5', 'c', '6', 'c', '7', 'c', '8', 'c', '9', 'c', 'a', 'c', 'b', 'c', 'c', 'c', 'd', 'c', 'e',
+    'c', 'f', 'd', '0', 'd', '1', 'd', '2', 'd', '3', 'd', '4', 'd', '5', 'd', '6', 'd', '7', 'd', '8', 'd', '9', 'd',
+    'a', 'd', 'b', 'd', 'c', 'd', 'd', 'd', 'e', 'd', 'f', 'e', '0', 'e', '1', 'e', '2', 'e', '3', 'e', '4', 'e', '5',
+    'e', '6', 'e', '7', 'e', '8', 'e', '9', 'e', 'a', 'e', 'b', 'e', 'c', 'e', 'd', 'e', 'e', 'e', 'f', 'f', '0', 'f',
+    '1', 'f', '2', 'f', '3', 'f', '4', 'f', '5', 'f', '6', 'f', '7', 'f', '8', 'f', '9', 'f', 'a', 'f', 'b', 'f', 'c',
+    'f', 'd', 'f', 'e', 'f', 'f'};
 
-  template <unsigned B> struct __integral;
+template <unsigned B> struct __integral;
 
-  template <> struct __integral<2> {
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static constexpr int __width(I __value) noexcept {
-      // If value == 0 still need one digit. If the value != this has no
-      // effect since the code scans for the most significant bit set. (Note
-      // that __libcpp_clz doesn't work for 0.)
-      return std::numeric_limits<I>::digits - __bela_clz(__value | 1);
+template <> struct __integral<2> {
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static constexpr int __width(I __value) noexcept {
+    // If value == 0 still need one digit. If the value != this has no
+    // effect since the code scans for the most significant bit set. (Note
+    // that __libcpp_clz doesn't work for 0.)
+    return std::numeric_limits<I>::digits - __bela_clz(__value | 1);
+  }
+
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
+    ptrdiff_t __cap = __last - __first;
+    int __n = __width(__value);
+    if (__n > __cap)
+      return {__last, std::errc::value_too_large};
+
+    __last = __first + __n;
+    wchar_t *__p = __last;
+    const unsigned __divisor = 16;
+    while (__value > __divisor) {
+      unsigned __c = __value % __divisor;
+      __value /= __divisor;
+      __p -= 4;
+      std::memcpy(__p, &__base_2_lut[4 * __c], 4 * sizeof(wchar_t));
     }
+    do {
+      unsigned __c = __value % 2;
+      __value /= 2;
+      *--__p = L"01"[__c];
+    } while (__value != 0);
+    return {__last, std::errc(0)};
+  }
+};
 
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
-      ptrdiff_t __cap = __last - __first;
-      int __n = __width(__value);
-      if (__n > __cap)
-        return {__last, std::errc::value_too_large};
+template <> struct __integral<8> {
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static constexpr int __width(I __value) noexcept {
+    // If value == 0 still need one digit. If the value != this has no
+    // effect since the code scans for the most significat bit set. (Note
+    // that __libcpp_clz doesn't work for 0.)
+    return ((std::numeric_limits<I>::digits - __bela_clz(__value | 1)) + 2) / 3;
+  }
 
-      __last = __first + __n;
-      wchar_t *__p = __last;
-      const unsigned __divisor = 16;
-      while (__value > __divisor) {
-        unsigned __c = __value % __divisor;
-        __value /= __divisor;
-        __p -= 4;
-        std::memcpy(__p, &__base_2_lut[4 * __c], 4 * sizeof(wchar_t));
-      }
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
+    ptrdiff_t __cap = __last - __first;
+    int __n = __width(__value);
+    if (__n > __cap)
+      return {__last, std::errc::value_too_large};
+
+    __last = __first + __n;
+    wchar_t *__p = __last;
+    unsigned __divisor = 64;
+    while (__value > __divisor) {
+      unsigned __c = __value % __divisor;
+      __value /= __divisor;
+      __p -= 2;
+      std::memcpy(__p, &__base_8_lut[2 * __c], 2 * sizeof(wchar_t));
+    }
+    do {
+      unsigned __c = __value % 8;
+      __value /= 8;
+      *--__p = L"01234567"[__c];
+    } while (__value != 0);
+    return {__last, std::errc(0)};
+  }
+};
+
+template <> struct __integral<16> {
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static constexpr int __width(I __value) noexcept {
+    // If value == 0 still need one digit. If the value != this has no
+    // effect since the code scans for the most significat bit set. (Note
+    // that __libcpp_clz doesn't work for 0.)
+    return (std::numeric_limits<I>::digits - __bela_clz(__value | 1) + 3) / 4;
+  }
+
+  template <typename I>
+  requires std::unsigned_integral<I>
+  static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
+    ptrdiff_t __cap = __last - __first;
+    int __n = __width(__value);
+    if (__n > __cap)
+      return {__last, std::errc::value_too_large};
+
+    __last = __first + __n;
+    wchar_t *__p = __last;
+    unsigned __divisor = 256;
+    while (__value > __divisor) {
+      unsigned __c = __value % __divisor;
+      __value /= __divisor;
+      __p -= 2;
+      std::memcpy(__p, &__base_16_lut[2 * __c], 2 * sizeof(wchar_t));
+    }
+    if (__first != __last)
       do {
-        unsigned __c = __value % 2;
-        __value /= 2;
-        *--__p = L"01"[__c];
+        unsigned __c = __value % 16;
+        __value /= 16;
+        *--__p = L"0123456789abcdef"[__c];
       } while (__value != 0);
-      return {__last, std::errc(0)};
-    }
-  };
-
-  template <> struct __integral<8> {
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static constexpr int __width(I __value) noexcept {
-      // If value == 0 still need one digit. If the value != this has no
-      // effect since the code scans for the most significat bit set. (Note
-      // that __libcpp_clz doesn't work for 0.)
-      return ((std::numeric_limits<I>::digits - __bela_clz(__value | 1)) + 2) / 3;
-    }
-
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
-      ptrdiff_t __cap = __last - __first;
-      int __n = __width(__value);
-      if (__n > __cap)
-        return {__last, std::errc::value_too_large};
-
-      __last = __first + __n;
-      wchar_t *__p = __last;
-      unsigned __divisor = 64;
-      while (__value > __divisor) {
-        unsigned __c = __value % __divisor;
-        __value /= __divisor;
-        __p -= 2;
-        std::memcpy(__p, &__base_8_lut[2 * __c], 2 * sizeof(wchar_t));
-      }
-      do {
-        unsigned __c = __value % 8;
-        __value /= 8;
-        *--__p = L"01234567"[__c];
-      } while (__value != 0);
-      return {__last, std::errc(0)};
-    }
-  };
-
-  template <> struct __integral<16> {
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static constexpr int __width(I __value) noexcept {
-      // If value == 0 still need one digit. If the value != this has no
-      // effect since the code scans for the most significat bit set. (Note
-      // that __libcpp_clz doesn't work for 0.)
-      return (std::numeric_limits<I>::digits - __bela_clz(__value | 1) + 3) / 4;
-    }
-
-    template <typename I>
-    requires std::unsigned_integral<I>
-    static to_chars_result __to_chars(wchar_t *__first, wchar_t *__last, I __value) {
-      ptrdiff_t __cap = __last - __first;
-      int __n = __width(__value);
-      if (__n > __cap)
-        return {__last, std::errc::value_too_large};
-
-      __last = __first + __n;
-      wchar_t *__p = __last;
-      unsigned __divisor = 256;
-      while (__value > __divisor) {
-        unsigned __c = __value % __divisor;
-        __value /= __divisor;
-        __p -= 2;
-        std::memcpy(__p, &__base_16_lut[2 * __c], 2 * sizeof(wchar_t));
-      }
-      if (__first != __last)
-        do {
-          unsigned __c = __value % 16;
-          __value /= 16;
-          *--__p = L"0123456789abcdef"[__c];
-        } while (__value != 0);
-      return {__last, std::errc(0)};
-    }
-  };
+    return {__last, std::errc(0)};
+  }
+};
 } // namespace __itoa
 
 template <class I>
