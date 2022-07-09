@@ -31,9 +31,8 @@ constexpr int DataDirEntries = 16;               // Tables count.
 // Machine Types
 // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#machine-types
 enum class Machine : uint16_t {
-  UNKNOWN = 0,
-  TARGET_HOST = 0x0001, // Useful for indicating we want to interact with the
-                        // host and not a WoW guest.
+  UNKNOWN = 0,          //
+  TARGET_HOST = 0x0001, //  WoW guest.
   I386 = 0x014c,        // Intel 386.
   R3000 = 0x0162,       // MIPS little-endian, 0x160 big-endian
   R4000 = 0x0166,       // MIPS little-endian
@@ -41,37 +40,35 @@ enum class Machine : uint16_t {
   WCEMIPSV2 = 0x0169,   // MIPS little-endian WCE v2
   ALPHA = 0x0184,       // Alpha_AXP
   SH3 = 0x01a2,         // SH3 little-endian
-  SH3DSP = 0x01a3,
-  SH3E = 0x01a4,  // SH3E little-endian
-  SH4 = 0x01a6,   // SH4 little-endian
-  SH5 = 0x01a8,   // SH5
-  ARM = 0x01c0,   // ARM Little-Endian
-  THUMB = 0x01c2, // ARM Thumb/Thumb-2 Little-Endian
-  ARMNT = 0x01c4, // ARM Thumb-2 Little-Endian
-  AM33 = 0x01d3,
-  POWERPC = 0x01F0, // IBM PowerPC Little-Endian
-  POWERPCFP = 0x01f1,
-  IA64 = 0x0200,      // Intel 64
-  MIPS16 = 0x0266,    // MIPS
-  ALPHA64 = 0x0284,   // ALPHA64
-  MIPSFPU = 0x0366,   // MIPS
-  MIPSFPU16 = 0x0466, // MIPS
-  TRICORE = 0x0520,   // Infineon
-  CEF = 0x0CEF,
-  EBC = 0x0EBC,   // EFI Byte Code
-  AMD64 = 0x8664, // AMD64 (K8)
-  M32R = 0x9041,  // M32R little-endian
-  ARM64 = 0xAA64, // ARM64 Little-Endian
-  RISCV32 = 0x5032,
-  RISCV64 = 0x5064,
-  RISCV128 = 0x5128,
-  CHPEX86 = 0x3A64,
-  // 10.0.22000.0/km/ntimage.h LINE-245
-  // #define IMAGE_FILE_MACHINE_CHPE_X86          0x3A64
-  // #define IMAGE_FILE_MACHINE_ARM64EC           0xA641
-  // #define IMAGE_FILE_MACHINE_ARM64X            0xA64E
-  ARM64EC = 0xA641,
-  ARM64X = 0xA64E,
+  SH3DSP = 0x01a3,      //
+  SH3E = 0x01a4,        // SH3E little-endian
+  SH4 = 0x01a6,         // SH4 little-endian
+  SH5 = 0x01a8,         // SH5
+  ARM = 0x01c0,         // ARM Little-Endian
+  THUMB = 0x01c2,       // ARM Thumb/Thumb-2 Little-Endian
+  ARMNT = 0x01c4,       // ARM Thumb-2 Little-Endian
+  AM33 = 0x01d3,        //
+  POWERPC = 0x01F0,     // IBM PowerPC Little-Endian
+  POWERPCFP = 0x01f1,   //
+  IA64 = 0x0200,        // Intel 64
+  LOONGARCH32 = 0x6232, // LoongArch32
+  LOONGARCH64 = 0x6264, // LoongArch64
+  MIPS16 = 0x0266,      // MIPS
+  ALPHA64 = 0x0284,     // ALPHA64
+  MIPSFPU = 0x0366,     // MIPS
+  MIPSFPU16 = 0x0466,   // MIPS
+  TRICORE = 0x0520,     // Infineon
+  CEF = 0x0CEF,         //
+  EBC = 0x0EBC,         // EFI Byte Code
+  AMD64 = 0x8664,       // AMD64 (K8)
+  M32R = 0x9041,        // M32R little-endian
+  ARM64 = 0xAA64,       // ARM64 Little-Endian
+  RISCV32 = 0x5032,     // RISC-V 32bit
+  RISCV64 = 0x5064,     // RISC-V 64bit
+  RISCV128 = 0x5128,    // RISC-V 128bit
+  CHPEX86 = 0x3A64,     // #define IMAGE_FILE_MACHINE_CHPE_X86          0x3A64
+  ARM64EC = 0xA641,     // #define IMAGE_FILE_MACHINE_ARM64EC           0xA641
+  ARM64X = 0xA64E,      // #define IMAGE_FILE_MACHINE_ARM64X            0xA64E
   CEE = 0xC0EE
 };
 enum class Subsystem : uint16_t {
