@@ -328,6 +328,7 @@ std::shared_ptr<Extractor> MakeExtractor(const std::filesystem::path &archive_fi
   if (!fd) {
     return nullptr;
   }
+  DbgPrint(L"extract archive: %v format: %v", archive_file, bela::integral_cast(afmt));
   switch (afmt) {
   case baulk::archive::file_format_t::none:
     ec = bela::make_error_code(bela::ErrGeneral, L"unable to detect format '", archive_file.filename(), L"'");
@@ -442,6 +443,7 @@ bool extract_7z(const std::filesystem::path &archive_file, const std::filesystem
   }
   return baulk::fs::MakeFlattened(destination, ec);
 }
+
 bool extract_tar(const std::filesystem::path &archive_file, const std::filesystem::path &destination,
                  bela::error_code &ec) {
   baulk::archive::file_format_t afmt{};
