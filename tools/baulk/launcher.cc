@@ -1,4 +1,5 @@
 //
+#include <chrono>
 #include <bela/subsitute.hpp>
 #include <bela/base.hpp>
 #include <bela/path.hpp>
@@ -12,9 +13,7 @@
 #include <baulk/json_utils.hpp>
 #include <baulk/hash.hpp>
 #include "launcher.hpp"
-#include "rcwriter.hpp"
-// template
-#include "launcher.template.ipp"
+#include "generated.hpp"
 
 namespace baulk {
 
@@ -98,23 +97,6 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
   return true;
 }
 
-// GenerateLinkSource generate link sources
-std::wstring GenerateLinkSource(std::wstring_view target, bool isConsole) {
-  std::wstring escapetarget;
-  escapetarget.reserve(target.size() + 10);
-  for (auto c : target) {
-    if (c == '\\') {
-      escapetarget.append(L"\\\\");
-      continue;
-    }
-    escapetarget.push_back(c);
-  }
-  if (isConsole) {
-    return bela::Substitute(launcher_internal::consoletemplete, escapetarget);
-  }
-  return bela::Substitute(launcher_internal::windowstemplate, escapetarget);
-}
-
 class Builder {
 public:
   Builder() = default;
@@ -160,80 +142,82 @@ inline std::wstring_view StripExtension(std::wstring_view filename) {
   return filename.substr(0, pos);
 }
 
-inline void StringFilling(std::wstring &s, std::wstring_view d) {
-  if (s.empty()) {
-    s = d;
+inline void string_overwrite(std::wstring &s, std::wstring_view v) {
+  if (!v.empty()) {
+    s = v;
   }
 }
-
+/*
+✅ 🈯️ 💹 ❇️ ✳️ ❎ 🌐 💠 Ⓜ️ 🌀 💤 🏧
+🚾 ♿️ 🅿️ 🈳 🈂️ 🛂 🛃 🛄 🛅 🚹 🚺 🚼 🚻 🚮 🎦 📶 🈁 🔣 ℹ️ 🔤 🔡 🔠 🆖 🆗 🆙 🆒 🆕 🆓 
+0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔢 #️⃣ *️⃣ 
+⏏️ ▶️ ⏸ ⏯ ⏹ ⏺ ⏭ ⏮ ⏩ ⏪ ⏫ ⏬ ◀️ 🔼 🔽 ➡️ ⬅️ ⬆️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↕️ ↔️ ↪️ ↩️ ⤴️ ⤵️ 🔀 🔁 🔂 🔄 🔃 
+🎵 🎶 ➕ ➖ ➗ ✖️ ♾ 💲 💱 ™️ ©️ ®️ 〰️ ➰ ➿ 🔚 🔙 🔛 🔝 🔜 ✔️ ☑️
+*/
 bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view appLinks,
                       const baulk::LinkMeta &linkMeta, bela::error_code &ec) {
-  constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain", L"-ENTRY:wWinMain"};
-  constexpr const std::wstring_view subsyetmName[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
-  auto realexe = bela::RealPathEx(source, ec);
-  if (!realexe) {
+  auto realExePath = bela::RealPathEx(source, ec);
+  if (!realExePath) {
     return false;
   }
-  auto isConsole = bela::pe::IsSubsystemConsole(*realexe);
-  DbgPrint(L"executable %s is subsystem console: %v\n", *realexe, isConsole);
+  auto isConsoleExe = bela::pe::IsSubsystemConsole(*realExePath);
+  DbgPrint(L"executable %s is subsystem console: %v\n", *realExePath, isConsoleExe);
   auto name = StripExtension(linkMeta.alias);
   auto cxxSourceName = bela::StringCat(name, L".cc");
   auto cxxSourcePath = buildPath / cxxSourceName;
   auto rcSourceName = bela::StringCat(name, L".rc");
   auto rcSourcePath = buildPath / rcSourceName;
-  if (!bela::io::WriteText(GenerateLinkSource(source, isConsole), cxxSourcePath.native(), ec)) {
+  if (!generated::MakeSource(source, cxxSourcePath.native(), isConsoleExe, ec)) {
     return false;
   }
-  bool rcwrited = false;
+  auto now = bela::LocalDateTime(bela::Now());
+  bela::pe::Version version{
+      .CompanyName = bela::StringCat(pkg.name, L" contributors"),
+      .FileDescription = pkg.description,
+      .FileVersion = pkg.version,
+      .InternalName = linkMeta.alias,
+      .LegalCopyright = bela::StringCat(L"Copyright \xA9 ", now.Year(), L", Baulk contributors 💞."),
+      .OriginalFileName = linkMeta.alias,
+      .ProductName = pkg.name,
+      .ProductVersion = pkg.version,
+  };
   if (auto vi = bela::pe::Lookup(source, ec); vi) {
-    baulk::rc::Writer w;
-    if (vi->CompanyName.empty()) {
-      vi->CompanyName = bela::StringCat(pkg.name, L" contributors");
-    }
-    StringFilling(vi->FileDescription, pkg.description);
-    StringFilling(vi->FileVersion, pkg.version);
-    StringFilling(vi->ProductVersion, pkg.version);
-    StringFilling(vi->ProductName, pkg.name);
-    StringFilling(vi->OriginalFileName, linkMeta.alias);
-    StringFilling(vi->InternalName, linkMeta.alias);
-    rcwrited = w.WriteVersion(*vi, rcSourcePath.native(), ec);
-  } else {
-    bela::pe::Version nvi;
-    nvi.CompanyName = bela::StringCat(pkg.name, L" contributors");
-    nvi.FileDescription = pkg.description;
-    nvi.FileVersion = pkg.version;
-    nvi.ProductVersion = pkg.version;
-    nvi.ProductName = pkg.name;
-    nvi.OriginalFileName = linkMeta.alias;
-    nvi.InternalName = linkMeta.alias;
-    baulk::rc::Writer w;
-    rcwrited = w.WriteVersion(nvi, rcSourcePath.native(), ec);
-  }
-  if (rcwrited) {
-    if (LinkExecutor().Execute(buildPath.native(), L"rc", L"-nologo", L"-c65001", rcSourceName) != 0) {
-      rcwrited = false;
-    }
+    string_overwrite(version.CompanyName, vi->CompanyName);
+    string_overwrite(version.FileDescription, vi->FileDescription);
+    string_overwrite(version.FileVersion, vi->FileVersion);
+    string_overwrite(version.InternalName, vi->InternalName);
+    string_overwrite(version.LegalCopyright, vi->LegalCopyright);
+    string_overwrite(version.OriginalFileName, vi->OriginalFileName);
+    string_overwrite(version.ProductVersion, vi->ProductVersion);
+    string_overwrite(version.ProductName, vi->ProductName);
+    string_overwrite(version.Comments, vi->Comments);
+    string_overwrite(version.LegalTrademarks, vi->LegalTrademarks);
+    string_overwrite(version.PrivateBuild, vi->PrivateBuild);
+    string_overwrite(version.SpecialBuild, vi->SpecialBuild);
   }
   DbgPrint(L"compile %s [%s]", cxxSourceName, buildPath.native());
   if (LinkExecutor().Execute(buildPath.native(), L"cl", L"-c", L"-std:c++20", L"-nologo", L"-Os", cxxSourceName) != 0) {
     ec = LinkExecutor().LastErrorCode();
     return false;
   }
-  int exitcode = 0;
-  DbgPrint(L"link %s.obj rcwrited: %b", name, rcwrited);
-  auto index = isConsole ? 0 : 1;
-  if (rcwrited) {
-    exitcode = LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
-                                      L"-NODEFAULTLIB", subsyetmName[index], entry[index],
+  auto subIndex = isConsoleExe ? 0 : 1;
+  auto complier_exitcode = [&]() -> int {
+    constexpr const std::wstring_view entry[] = {L"-ENTRY:wmain", L"-ENTRY:wWinMain"};
+    constexpr const std::wstring_view subsyetmName[] = {L"-SUBSYSTEM:CONSOLE", L"-SUBSYSTEM:WINDOWS"};
+    if (generated::MakeResource(version, rcSourcePath.native(), ec)) {
+      if (LinkExecutor().Execute(buildPath.native(), L"rc", L"-nologo", L"-c65001", rcSourceName) == 0) {
+        return LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF",
+                                      L"-NODEFAULTLIB", subsyetmName[subIndex], entry[subIndex],
                                       bela::StringCat(name, L".obj"), bela::StringCat(name, L".res"), L"kernel32.lib",
                                       L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
-  } else {
-    exitcode =
-        LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
-                               subsyetmName[index], entry[index], bela::StringCat(name, L".obj"), L"kernel32.lib",
-                               L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
-  }
-  if (exitcode != 0) {
+      }
+    }
+    return LinkExecutor().Execute(buildPath.native(), L"link", L"-nologo", L"-OPT:REF", L"-OPT:ICF", L"-NODEFAULTLIB",
+                                  subsyetmName[subIndex], entry[subIndex], bela::StringCat(name, L".obj"),
+                                  L"kernel32.lib", L"user32.lib", bela::StringCat(L"-OUT:", linkMeta.alias));
+  }();
+
+  if (complier_exitcode != 0) {
     ec = LinkExecutor().LastErrorCode();
     return false;
   }
