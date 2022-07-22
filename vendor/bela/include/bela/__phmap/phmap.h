@@ -418,6 +418,10 @@ struct GroupSse2Impl
 #endif
     }
 
+#ifdef __INTEL_COMPILER
+#pragma warning push
+#pragma warning disable 68
+#endif
     // Returns a bitmask representing the positions of empty or deleted slots.
     // -----------------------------------------------------------------------
     BitMask<uint32_t, kWidth> MatchEmptyOrDeleted() const {
@@ -433,6 +437,9 @@ struct GroupSse2Impl
         return TrailingZeros(
             static_cast<uint32_t>(_mm_movemask_epi8(_mm_cmpgt_epi8_fixed(special, ctrl)) + 1));
     }
+#ifdef __INTEL_COMPILER
+#pragma warning pop
+#endif
 
     // ----------------------------------------------------------------------
     void ConvertSpecialToEmptyAndFullToDeleted(ctrl_t* dst) const {
@@ -614,7 +621,7 @@ const typename T::key_type& GetKey(const typename T::key_type& key, char) {
 // container.
 // --------------------------------------------------------------------------
 template <class Container, typename Enabler = void>
-struct HashtableDebugAccess 
+struct HashtableDebugAccess
 {
     // Returns the number of probes required to find `key` in `c`.  The "number of
     // probes" is a concept that can vary by container.  Implementations should
@@ -3096,7 +3103,7 @@ public:
     }
 
     template <class K = key_type, class F>
-    iterator lazy_emplace_with_hash(size_t hashval, const key_arg<K>& key, F&& f) {
+    iterator lazy_emplace_with_hash(const key_arg<K>& key, size_t hashval, F&& f) {
         Inner& inner = sets_[subidx(hashval)];
         auto&  set   = inner.set_;
         typename Lockable::UniqueLock m(inner);
@@ -3276,10 +3283,10 @@ public:
         return false;
     }
 
-    // if map does not contains key, it is inserted and the mapped value is value-constructed 
-    // with the provided arguments (if any), as with try_emplace. 
-    // if map already  contains key, then the lambda is called with the mapped value (under 
+    // if map already  contains key, the first lambda is called with the mapped value (under 
     // write lock protection) and can update the mapped value.
+    // if map does not contains key, the second lambda is called and it should invoke the 
+    // passed constructor to construct the value
     // returns true if key was not already present, false otherwise.
     // ---------------------------------------------------------------------------------------
     template <class K = key_type, class FExists, class FEmplace>
@@ -3311,13 +3318,40 @@ public:
         }
     }
 
+#if __cplusplus >= 201703L
+    template <class ExecutionPolicy, class F>
+    void for_each(ExecutionPolicy&& policy, F&& fCallback) const {
+        std::for_each(
+            std::forward<ExecutionPolicy>(policy), sets_.begin(), sets_.end(),
+            [&](auto const& inner) {
+                typename Lockable::SharedLock m(const_cast<Inner&>(inner));
+                std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
+            }
+        );
+    }
+#endif
+
     // this version allows to modify the values
-    void for_each_m(std::function<void (value_type&)> && fCallback) {
+    template <class F>
+    void for_each_m(F&& fCallback) {
         for (auto& inner : sets_) {
             typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
             std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
         }
     }
+
+#if __cplusplus >= 201703L
+    template <class ExecutionPolicy, class F>
+    void for_each_m(ExecutionPolicy&& policy, F&& fCallback) {
+        std::for_each(
+            std::forward<ExecutionPolicy>(policy), sets_.begin(), sets_.end(),
+            [&](auto& inner) {
+                typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
+                std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
+            }
+        );
+    }
+#endif
 
     // Extension API: support for heterogeneous keys.
     //
@@ -3328,6 +3362,7 @@ public:
     //   flat_hash_set<std::string> s;
     //   // Uses "abc" directly without copying it into std::string.
     //   s.erase("abc");
+    //
     // --------------------------------------------------------------------
     template <class K = key_type>
     size_type erase(const key_arg<K>& key) {
@@ -3359,15 +3394,22 @@ public:
     //     ++it;
     //   }
     // }
+    //
+    // Do not use erase APIs taking iterators when accessing the map concurrently
     // --------------------------------------------------------------------
-    void _erase(iterator it) {
-        assert(it.inner_ != nullptr);
-        it.inner_->set_._erase(it.it_);
+    void _erase(iterator it, bool do_lock = true) {
+        Inner* inner = it.inner_;
+        assert(inner != nullptr);
+        auto&  set   = inner->set_;
+        // typename Lockable::UniqueLock m(*inner); // don't lock here 
+        
+        set._erase(it.it_);
     }
     void _erase(const_iterator cit) { _erase(cit.iter_); }
 
     // This overload is necessary because otherwise erase<K>(const K&) would be
     // a better match if non-const iterator is passed as an argument.
+    // Do not use erase APIs taking iterators when accessing the map concurrently
     // --------------------------------------------------------------------
     iterator erase(iterator it) { _erase(it++); return it; }
 
@@ -3380,6 +3422,7 @@ public:
 
     // Moves elements from `src` into `this`.
     // If the element already exists in `this`, it is left unmodified in `src`.
+    // Do not use erase APIs taking iterators when accessing the map concurrently
     // --------------------------------------------------------------------
     template <typename E = Eq>
     void merge(parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, E, Alloc>& src) {  // NOLINT
@@ -4387,8 +4430,16 @@ namespace hashtable_debug_internal {
 
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
+
+template<typename, typename = void >
+struct has_member_type_raw_hash_set : std::false_type
+{};
+template<typename T>
+struct has_member_type_raw_hash_set<T, phmap::void_t<typename T::raw_hash_set>> : std::true_type
+{};
+
 template <typename Set>
-struct HashtableDebugAccess<Set, phmap::void_t<typename Set::raw_hash_set>> 
+struct HashtableDebugAccess<Set, typename std::enable_if<has_member_type_raw_hash_set<Set>::value>::type>
 {
     using Traits = typename Set::PolicyTraits;
     using Slot = typename Traits::slot_type;
@@ -4443,6 +4494,28 @@ struct HashtableDebugAccess<Set, phmap::void_t<typename Set::raw_hash_set>>
             m += per_slot * size;
         }
         return m;
+    }
+};
+
+
+template<typename, typename = void >
+struct has_member_type_EmbeddedSet : std::false_type
+{};
+template<typename T>
+struct has_member_type_EmbeddedSet<T, phmap::void_t<typename T::EmbeddedSet>> : std::true_type
+{};
+
+template <typename Set>
+struct HashtableDebugAccess<Set, typename std::enable_if<has_member_type_EmbeddedSet<Set>::value>::type> {
+    using Traits = typename Set::PolicyTraits;
+    using Slot = typename Traits::slot_type;
+    using EmbeddedSet = typename Set::EmbeddedSet;
+
+    static size_t GetNumProbes(const Set& set, const typename Set::key_type& key) {
+        size_t hashval = set.hash(key);
+        auto& inner = set.sets_[set.subidx(hashval)];
+        auto& inner_set = inner.set_;
+        return HashtableDebugAccess<EmbeddedSet>::GetNumProbes(inner_set, key);
     }
 };
 
@@ -4955,9 +5028,6 @@ namespace phmap {
             return old_size - c.size();
         }
     } // priv
-} // phmap
-
-namespace std {
 
     // ======== erase_if for phmap set containers ==================================
     template <class T, class Hash, class Eq, class Alloc, class Pred> 
@@ -5001,7 +5071,7 @@ namespace std {
         return phmap::priv::erase_if(c, std::move(pred));
     }
 
-} // std
+} // phmap
 
 #ifdef _MSC_VER
      #pragma warning(pop)  
