@@ -87,7 +87,7 @@ Copy-Item -Recurse "$SourceRoot\script\FragmentsDel.bat" -Destination "$AppxBuil
 
 Copy-Item -Recurse "$PSScriptRoot\baulk\Assets" -Destination "$AppxBuildRoot"
 
-(Get-Content -Path "$PSScriptRoot\unscrew\AppxManifest.xml") -replace '@@VERSION@@', "$FullVersion" -replace '@@ARCHITECTURE@@', "$ArchitecturesAllowed" | Set-Content -Encoding utf8NoBOM "$AppxBuildRoot\AppxManifest.xml"
+(Get-Content -Path "$PSScriptRoot\baulk\AppxManifest.xml") -replace '@@VERSION@@', "$FullVersion" -replace '@@ARCHITECTURE@@', "$ArchitecturesAllowed" | Set-Content -Encoding utf8NoBOM "$AppxBuildRoot\AppxManifest.xml"
 
 MakeAppx.exe pack /d "appx\\" /p "$BaulkAppxName" /nv
 
