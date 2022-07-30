@@ -47,6 +47,12 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
       AddArray(venv, "dependencies", pkg.venv.dependencies); // venv dependencies
       j["venv"] = std::move(venv);
     }
+    if (!pkg.scripts.no_uninstall_scripts()) {
+      nlohmann::json script;
+      script["pre_uninstall"] = bela::encode_into<wchar_t, char>(pkg.scripts.preun);
+      script["post_uninstall"] = bela::encode_into<wchar_t, char>(pkg.scripts.postun);
+      j["script"] = std::move(script);
+    }
     std::wstring file(vfs::AppLocks());
     if (!baulk::fs::MakeDirectories(file, ec)) {
       return false;

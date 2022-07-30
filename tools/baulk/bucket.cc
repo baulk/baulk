@@ -167,6 +167,10 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::
   if (auto sv = jv.subview("venv"); sv) {
     pkg.venv.category = sv->fetch("category");
   }
+  if (auto sv = jv.subview("scripts"); sv) {
+    pkg.scripts.preun = sv->fetch("pre_uninstall");
+    pkg.scripts.postun = sv->fetch("post_uninstall");
+  }
   pkg.weights = baulk::BucketWeights(pkg.bucket);
   return std::make_optional(std::move(pkg));
 }

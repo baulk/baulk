@@ -155,6 +155,14 @@ constexpr PackageMask &operator^=(PackageMask &_Left, const PackageMask _Right) 
   return _Left = _Left ^ _Right;
 }
 
+struct InstallationScripts {
+  std::wstring pre;
+  std::wstring post;
+  std::wstring preun;
+  std::wstring postun;
+  bool no_uninstall_scripts() const { return preun.empty() && postun.empty(); }
+};
+
 struct Package {
   std::wstring name;
   std::wstring description;
@@ -168,8 +176,13 @@ struct Package {
   std::vector<std::wstring> urls;
   std::vector<std::wstring> forceDeletes; // uninstall delete dirs
   std::vector<std::wstring> suggest;
+  std::vector<std::wstring> pre_install_scripts;
+  std::vector<std::wstring> post_install_scripts;
+  std::vector<std::wstring> pre_uninstall_scripts;
+  std::vector<std::wstring> post_uninstall_scripts;
   std::vector<LinkMeta> links;
   std::vector<LinkMeta> launchers;
+  InstallationScripts scripts;
   PackageEnv venv;
   int weights{0}; // Weights derived from bucket
   BucketVariant variant{BucketVariant::Native};

@@ -112,6 +112,12 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
     sv->fetch_strings_checked("env", pkg.venv.envs);
     sv->fetch_strings_checked("dependencies", pkg.venv.dependencies);
   }
+  if (auto sv = jv.subview("scripts"); sv) {
+    pkg.scripts.pre = sv->fetch("pre_install");
+    pkg.scripts.post = sv->fetch("post_install");
+    pkg.scripts.preun = sv->fetch("pre_uninstall");
+    pkg.scripts.postun = sv->fetch("post_uninstall");
+  }
   return std::make_optional(std::move(pkg));
 }
 
@@ -142,7 +148,6 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
   };
   pkg.variant = BucketVariant::Scoop;
   jv.fetch_paths_checked("bin", pkg.launchers);
-
   if (auto sv = jv.subview("architecture"); sv) {
     if (auto av = sv->subview("64bit"); av) {
       pkg.urls.emplace_back(av->fetch("url"));

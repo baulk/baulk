@@ -12,5 +12,8 @@
         "env": [
             "JAVA_HOME=${BAULK_PKGROOT}"
         ]
+    },
+    "scripts": {
+        "pre_install": "echo \"hello world\""
     }
 }
