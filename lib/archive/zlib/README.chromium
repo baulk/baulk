@@ -28,3 +28,5 @@ Local Modifications:
  - Code in contrib/ other than contrib/minizip was added to match zlib's
    contributor layout.
  - In sync with 1.2.12 release plus a few fixes from 'develop' branch.
+ - ZIP reader modified to allow for progress callbacks during extraction.
+ - ZIP reader modified to add detection of AES encrypted content.
