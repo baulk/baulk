@@ -6,6 +6,7 @@
 #define _UNICODE 1
 #endif
 #include <bela/base.hpp>
+#include <bela/str_cat.hpp>
 #include <Windowsx.h>
 #include <cassert>
 #include <Prsht.h>
@@ -182,7 +183,7 @@ LRESULT MainWindow::InitializeWindow() {
   bela::error_code ec;
   themes.Load(ec);
   systemVersion = bela::windows::version();
-  //isMicaEnabled = baulk::windows::mica_system_backdrop_enabled(systemVersion);
+  // isMicaEnabled = baulk::windows::mica_system_backdrop_enabled(systemVersion);
   hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(ICON_BAULK_BASE));
   if (!InitializeBase(ec)) {
     bela::BelaMessageBox(nullptr, L"unable search baulk env", ec.message.data(), nullptr, bela::mbs_t::FATAL);
@@ -192,9 +193,7 @@ LRESULT MainWindow::InitializeWindow() {
     return S_FALSE;
   }
   RECT layout = {100, 100, 800, 290};
-  // https://stackoverflow.com/questions/38179033/when-should-ws-ex-noredirectionbitmap-be-used
-  auto extend_style = isMicaEnabled ? (WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP) : WS_EX_APPWINDOW;
-  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, extend_style);
+  Create(nullptr, layout, L"Baulk environment dock", noresizewnd, WS_EX_APPWINDOW);
   return S_OK;
 }
 
@@ -235,7 +234,7 @@ HRESULT MainWindow::CreateDeviceResources() {
     hr = renderTarget->CreateSolidColorBrush(FromColor(themes.Mode.text), &textBrush);
   }
   if (SUCCEEDED(hr)) {
-    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Navy), &borderBrush);
+    hr = renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Orange), &borderBrush);
   }
   if (SUCCEEDED(hr)) {
     LoadResourceBitmap(hInst, renderTarget, wicFactory, MAKEINTRESOURCE(IMAGE_BAULK_BASE64), L"PNG", 64, 64, &bitmap);
@@ -260,14 +259,8 @@ HRESULT MainWindow::OnRender() {
   renderTarget->BeginDraw();
   renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
   renderTarget->Clear(FromColor(themes.Mode.background));
-  // renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
+  renderTarget->DrawRectangle(D2D1::RectF(20, 10, dsz.width - 20, dsz.height - 20), borderBrush, 1.0);
 
-  renderTarget->DrawLine(D2D1::Point2F(180, 110), D2D1::Point2F(dsz.width - 45, 110), borderBrush, 0.7f);
-  if (bitmap != nullptr) {
-    auto isz = bitmap->GetSize();
-    renderTarget->DrawBitmap(bitmap, D2D1::RectF(60, 130, 60 + isz.width, 130 + isz.height), 1.0,
-                             D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
-  }
   for (const auto &label : labels) {
     if (label.empty()) {
       continue;
@@ -303,22 +296,30 @@ void MainWindow::OnResize(UINT width, UINT height) {
 
 HRESULT MainWindow::InitializeControl() {
 #ifdef _M_X64
-  tables.Archs = {L"x64", L"arm64", L"x86", L"arm"};
+  tables.archTarget = {L"x64", L"arm64", L"x86", L"arm"};
 #elif defined(_M_ARM64)
-  tables.Archs = {L"arm64", L"x86", L"x64", L"arm"};
+  tables.archTarget = {L"arm64", L"x86", L"x64", L"arm"};
 #else
-  tables.Archs = {L"x86", L"x64", L"arm64", L"arm"};
+  tables.archTarget = {L"x86", L"x64", L"arm64", L"arm"};
 #endif
-  for (const auto &a : tables.Archs) {
-    ::SendMessageW(hvsarchbox.hWnd, CB_ADDSTRING, 0, (LPARAM)a.data());
+  for (const auto &a : tables.archTarget) {
+    ::SendMessageW(archTargetBox.hWnd, CB_ADDSTRING, 0, (LPARAM)a.data());
   }
-  ::SendMessageW(hvsarchbox.hWnd, CB_ADDSTRING, 0, (LPARAM)L"--none--");
-  ::SendMessageW(hvsarchbox.hWnd, CB_SETCURSEL, 0, 0);
-  for (const auto e : tables.Envs) {
-    ::SendMessageW(hvenvbox.hWnd, CB_ADDSTRING, 0, (LPARAM)e.Desc.data());
+  if (tables.archTarget.size() > 0) {
+    ::SendMessageW(archTargetBox.hWnd, CB_SETCURSEL, 0, 0);
   }
-  ::SendMessageW(hvenvbox.hWnd, CB_ADDSTRING, 0, (LPARAM)L"--none--");
-  ::SendMessageW(hvenvbox.hWnd, CB_SETCURSEL, static_cast<LPARAM>(tables.Envs.size()), 0);
+  for (const auto &v : vsInstances) {
+    auto displayName = bela::StringCat(v.DisplayName, v.IsPreview ? L" Preview" : L"");
+    ::SendMessageW(vsInstanceBox.hWnd, CB_ADDSTRING, 0, (LPARAM)displayName.data());
+  }
+
+  if (vsInstances.size() > 0) {
+    ::SendMessageW(vsInstanceBox.hWnd, CB_SETCURSEL, 0, 0);
+  }
+
+  for (const auto e : tables.envInstance) {
+    ::SendMessageW(envInstanceBox.hWnd, CB_ADDSTRING, 0, (LPARAM)e.Desc.data());
+  }
   return S_OK;
 }
 
@@ -384,8 +385,8 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
   WINDOWPLACEMENT placement;
   placement.length = sizeof(WINDOWPLACEMENT);
-  auto w = MulDiv(480, dpiX, 96);
-  auto h = MulDiv(290, dpiX, 96);
+  auto w = MulDiv(700, dpiX, 96);
+  auto h = MulDiv(320, dpiX, 96);
   if (LoadPlacement(placement)) {
     ::SetWindowPos(m_hWnd, nullptr, placement.rcNormalPosition.left, placement.rcNormalPosition.top, w, h,
                    SWP_NOZORDER | SWP_NOACTIVATE);
@@ -418,27 +419,20 @@ LRESULT MainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
   };
 
   // combobox
-  MakeWindow(WC_COMBOBOXW, L"", cbstyle, 180, 20, 240, 30, nullptr, hvsarchbox);
-  MakeWindow(WC_COMBOBOXW, L"", cbstyle, 180, 55, 240, 30, nullptr, hvenvbox);
-
-  // button
-  MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 180, 130, 240, 27, nullptr, hcleanenv);
-  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 180, 180, 240, 30, (HMENU)IDC_BUTTON_STARTENV,
+  labels.emplace_back(30, 20, 330, 50, L"Visual Studio:");
+  MakeWindow(WC_COMBOBOXW, L"", cbstyle, 30, 50, 300, 30, nullptr, vsInstanceBox);
+  labels.emplace_back(350, 20, 650, 50, L"Target Architecture:");
+  MakeWindow(WC_COMBOBOXW, L"", cbstyle, 350, 50, 300, 30, nullptr, archTargetBox);
+  labels.emplace_back(30, 90, 330, 120, L"Virtual Environments:");
+  MakeWindow(WC_COMBOBOXW, L"", cbstyle, 30, 120, 300, 30, nullptr, envInstanceBox);
+  MakeWindow(WC_BUTTONW, L"Make Cleanup Environment", chboxstyle, 350, 120, 240, 27, nullptr, makeCleanupEnvBox);
+  MakeWindow(WC_BUTTONW, L"Open Baulk Terminal", pbstyle | BS_ICON, 350, 200, 300, 30, (HMENU)IDC_BUTTON_STARTENV,
              hbaulkenv);
-  // SetWindowTheme(hcleanenv.hWnd, nullptr, nullptr);
+  // SetWindowTheme(makeCleanupEnvBox.hWnd, nullptr, nullptr);
   HMENU hSystemMenu = ::GetSystemMenu(m_hWnd, FALSE);
   InsertMenuW(hSystemMenu, SC_CLOSE, MF_ENABLED, IDM_BAULK_DOCK_ABOUT, L"About Baulk environment dock\tAlt+F1");
 
-  labels.emplace_back(30, 20, 180, 60, L"Visual Studio \U0001F19A"); //💻
-  labels.emplace_back(30, 60, 180, 120, L"Virtual Env \U0001f6e0");  //⚙
-
   InitializeControl();
-  // if (baulk::windows::title_bar_customization_enabled(systemVersion)) {
-  //   baulk::windows::PersonalizeWindowUI(m_hWnd, themes);
-  // }
-  // if (baulk::windows::mica_system_backdrop_enabled(systemVersion)) {
-  //   baulk::windows::EnableMicaMaterials(m_hWnd);
-  // }
   return S_OK;
 }
 
@@ -480,9 +474,9 @@ LRESULT MainWindow::OnDpiChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL &
                    SWP_NOZORDER | SWP_NOACTIVATE);
     ::SendMessageW(w.hWnd, WM_SETFONT, w.mono ? (WPARAM)hMonoFont : (WPARAM)hFont, TRUE);
   };
-  UpdateWindowPos(hvsarchbox);
-  UpdateWindowPos(hvenvbox);
-  UpdateWindowPos(hcleanenv);
+  UpdateWindowPos(archTargetBox);
+  UpdateWindowPos(envInstanceBox);
+  UpdateWindowPos(makeCleanupEnvBox);
   UpdateWindowPos(hbaulkenv);
   return S_OK;
 }
@@ -554,8 +548,8 @@ SIZE GetCheckBoxSize(HWND hWnd, int dpiX) {
 
 void MainWindow::DrawButtonText(const NMCUSTOMDRAW *customDraw) {
   const Widget *w = nullptr;
-  if (customDraw->hdr.hwndFrom == hcleanenv.hWnd) {
-    w = &hcleanenv;
+  if (customDraw->hdr.hwndFrom == makeCleanupEnvBox.hWnd) {
+    w = &makeCleanupEnvBox;
   }
   if (w == nullptr) {
     return;
@@ -586,7 +580,7 @@ void MainWindow::DrawButtonText(const NMCUSTOMDRAW *customDraw) {
 }
 
 INT_PTR MainWindow::OnCustomDraw(const NMCUSTOMDRAW *customDraw) {
-  if (customDraw->hdr.hwndFrom != hcleanenv.hWnd) {
+  if (customDraw->hdr.hwndFrom != makeCleanupEnvBox.hWnd) {
     return CDRF_DODEFAULT;
   }
   switch (customDraw->dwDrawStage) {

@@ -13,6 +13,7 @@
 #include <bela/phmap.hpp>
 #include <bela/base.hpp>
 #include <baulk/graphics.hpp>
+#include <baulk/vs/searcher.hpp>
 #include "resource.h"
 
 #ifndef SYSCOMMAND_ID_HANDLER
@@ -56,14 +57,14 @@ struct EnvNode {
 };
 
 struct BaulkDockTable {
-  std::vector<std::wstring> Archs;
-  std::vector<EnvNode> Envs;
-  BaulkDockTable &AddVirtualEnv(std::wstring_view d, std::wstring_view v) {
-    Envs.emplace_back(d, v);
+  std::vector<std::wstring> archTarget;
+  std::vector<EnvNode> envInstance;
+  BaulkDockTable &Append(std::wstring_view d, std::wstring_view v) {
+    envInstance.emplace_back(d, v);
     return *this;
   }
-  BaulkDockTable &AddVirtualEnv(EnvNode &&node) {
-    Envs.emplace_back(std::move(node));
+  BaulkDockTable &Append(EnvNode &&node) {
+    envInstance.emplace_back(std::move(node));
     return *this;
   }
 };
@@ -144,19 +145,20 @@ private:
   HFONT hFont{nullptr};
   HFONT hMonoFont{nullptr};
   // combobox
-  Widget hvsarchbox;
-  Widget hvenvbox;
+  Widget vsInstanceBox;
+  Widget archTargetBox;
+  Widget envInstanceBox;
   // checkbox
-  Widget hcleanenv;
+  Widget makeCleanupEnvBox;
   // button about
   Widget hbaulkenv;
   std::vector<Label> labels;
+  baulk::vs::vs_instances_t vsInstances;
   std::wstring baulkroot;
   BaulkDockTable tables;
   HBRUSH hBrush{nullptr};
   int dpiX{0};
   int dpiY{0};
-  bool isMicaEnabled{false};
 };
 } // namespace baulk::dock
 #endif

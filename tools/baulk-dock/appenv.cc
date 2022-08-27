@@ -59,7 +59,12 @@ private:
   WIN32_FIND_DATAW wfd;
 };
 
-bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgName, EnvNode &node) {
+inline bool search_vs_instances(baulk::vs::vs_instances_t &vsInstances, bela::error_code &ec) {
+  baulk::vs::Searcher s;
+  return s.Initialize(ec) && s.Search(vsInstances, ec);
+}
+
+bool LookupVirtualEnvironments(std::wstring_view lockfile, std::wstring_view pkgName, EnvNode &node) {
   bela::error_code ec;
   auto jo = json::parse_file(lockfile, ec);
   if (!jo) {
@@ -71,7 +76,7 @@ bool SearchVirtualEnv(std::wstring_view lockfile, std::wstring_view pkgName, Env
     node.Value = pkgName;
     node.Desc = pkgName;
     if (auto category = sv->fetch("category"); !category.empty()) {
-      bela::StrAppend(&node.Desc, L"(", category, L")    ", version, L"");
+      bela::StrAppend(&node.Desc, L" - ", version, L" [", category, L"]");
     }
     return true;
   }
@@ -82,6 +87,7 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
   if (!vfs::InitializeFastPathFs(ec)) {
     return false;
   }
+  search_vs_instances(vsInstances, ec);
   Finder finder;
   if (finder.First(vfs::AppLocks(), L"*.json", ec)) {
     do {
@@ -95,8 +101,8 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
       auto lockfile = bela::StringCat(vfs::AppLocks(), L"\\", pkgname);
       pkgname.remove_suffix(5);
       baulk::dock::EnvNode node;
-      if (SearchVirtualEnv(lockfile, pkgname, node)) {
-        tables.AddVirtualEnv(std::move(node));
+      if (LookupVirtualEnvironments(lockfile, pkgname, node)) {
+        tables.Append(std::move(node));
       }
     } while (finder.Next());
   }
@@ -173,16 +179,24 @@ LRESULT MainWindow::OnStartupEnv(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL 
     ea.Assign(*wt).Append(L"--title").Append(L"Windows Terminal \U0001F496 Baulk").Append(L"--");
   }
   ea.Append(baulkexec).Append(L"-W").Append(GetCwd());
-  if (Button_GetCheck(hcleanenv.hWnd) == BST_CHECKED) {
+  if (Button_GetCheck(makeCleanupEnvBox.hWnd) == BST_CHECKED) {
     ea.Append(L"--cleanup");
   }
-  if (auto index = ComboBox_GetCurSel(hvsarchbox.hWnd);
-      index >= 0 && static_cast<size_t>(index) < tables.Archs.size()) {
-    ea.Append(L"--vs").Append(L"-A").Append(tables.Archs[index]);
+  if (auto index = ComboBox_GetCurSel(vsInstanceBox.hWnd);
+      index >= 0 && static_cast<size_t>(index) < vsInstances.size()) {
+    ea.Append(L"--vs-instance").Append(vsInstances[index].InstanceId);
+  } else {
+    ea.Append(L"--vs");
   }
-  if (auto index = ComboBox_GetCurSel(hvenvbox.hWnd); index >= 0 && static_cast<size_t>(index) < tables.Envs.size()) {
-    ea.Append(L"-E").Append(tables.Envs[index].Value);
+  if (auto index = ComboBox_GetCurSel(archTargetBox.hWnd);
+      index >= 0 && static_cast<size_t>(index) < tables.archTarget.size()) {
+    ea.Append(L"-A").Append(tables.archTarget[index]);
   }
+  if (auto index = ComboBox_GetCurSel(envInstanceBox.hWnd);
+      index >= 0 && static_cast<size_t>(index) < tables.envInstance.size()) {
+    ea.Append(L"-E").Append(tables.envInstance[index].Value);
+  }
+
   ea.Append(L"winsh");
   STARTUPINFOW si;
   PROCESS_INFORMATION pi;
