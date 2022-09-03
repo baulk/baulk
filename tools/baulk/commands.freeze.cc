@@ -42,7 +42,7 @@ int cmd_freeze(const argv_t &argv) {
     bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
-  auto jo = json::parse_file(Profile(), ec);
+  auto jo = parse_json_file(Profile(), ec);
   if (!jo) {
     bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec);
     return 1;
@@ -84,7 +84,7 @@ int cmd_unfreeze(const argv_t &argv) {
     bela::FPrintF(stderr, L"baulk freeze: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
-  auto jo = json::parse_file(Profile(), ec);
+  auto jo = parse_json_file(Profile(), ec);
   if (!jo) {
     bela::FPrintF(stderr, L"baulk: unable load profile %s\n", ec);
     return 1;

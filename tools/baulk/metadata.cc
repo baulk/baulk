@@ -26,7 +26,7 @@ constexpr std::string_view arm64_architecture = "arm64";
 constexpr std::string_view x64bit_architecture = "64bit";
 constexpr std::string_view x32bit_architecture = "32bit";
 
-inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv) {
+inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
   using namespace std::string_view_literals;
   auto __ = bela::finally([&] {
     if (pkg.links.empty()) {
@@ -40,7 +40,7 @@ inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv) {
       pkg.hash = jv.fetch("hash");
     }
   });
-  auto fnload = [&](baulk::json::json_view &jv_, const std::string_view arch) -> bool {
+  auto fnload = [&](baulk::json_view &jv_, const std::string_view arch) -> bool {
     if (auto av = jv_.subview(arch); av) {
       pkg.urls.emplace_back(av->fetch("url"));
       pkg.hash = av->fetch("hash");
@@ -80,7 +80,7 @@ inline void PackageResolveURL(Package &pkg, baulk::json::json_view &jv) {
 
 std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstring_view pkgName, bela::error_code &ec) {
   auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
-  auto pkj = baulk::json::parse_file(pkgMeta, ec);
+  auto pkj = baulk::parse_json_file(pkgMeta, ec);
   if (!pkj) {
     return std::nullopt;
   }
@@ -125,7 +125,7 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
   return std::nullopt;
 #endif
   auto pkgMeta = PackageMetaJoinNative(bucket, pkgName);
-  auto pkj = baulk::json::parse_file(pkgMeta, ec);
+  auto pkj = baulk::parse_json_file(pkgMeta, ec);
   if (!pkj) {
     return std::nullopt;
   }

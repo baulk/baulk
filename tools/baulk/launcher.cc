@@ -23,7 +23,7 @@ bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela:
   }
   auto linkMeta = bela::StringCat(vfs::AppLinks(), L"\\baulk.linkmeta.json");
   nlohmann::json obj;
-  if (auto jv = json::parse_file(linkMeta, ec); jv) {
+  if (auto jv = parse_json_file(linkMeta, ec); jv) {
     obj = std::move(jv->obj);
   }
   try {
@@ -56,7 +56,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
   auto linkMeta = bela::StringCat(vfs::AppLinks(), L"\\baulk.linkmeta.json");
   auto appLinks = vfs::AppLinks();
   nlohmann::json obj;
-  if (auto jv = json::parse_file(linkMeta, ec); jv) {
+  if (auto jv = parse_json_file(linkMeta, ec); jv) {
     obj = std::move(jv->obj);
   }
   std::string newjson;

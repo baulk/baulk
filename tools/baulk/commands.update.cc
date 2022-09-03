@@ -40,7 +40,7 @@ private:
 bool BucketUpdater::Initialize() {
   lockFile = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
   bela::error_code ec;
-  auto jo = json::parse_file(lockFile, ec);
+  auto jo = parse_json_file(lockFile, ec);
   if (!jo) {
     return ec.code == ENOENT;
   }

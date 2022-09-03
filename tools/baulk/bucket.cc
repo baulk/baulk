@@ -152,7 +152,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
 // installed package meta;
 std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::error_code &ec) {
   auto pkglock = bela::StringCat(baulk::vfs::AppLocks(), L"\\", pkgName, L".json");
-  auto pkj = baulk::json::parse_file(pkglock, ec);
+  auto pkj = baulk::parse_json_file(pkglock, ec);
   if (!pkj) {
     return std::nullopt;
   }

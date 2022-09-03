@@ -7,7 +7,7 @@
 #include "json.hpp"
 
 namespace example {
-inline std::optional<nlohmann::json> parse_file(const std::wstring_view file, bela::error_code &ec) {
+inline std::optional<nlohmann::json> parse_json_file(const std::wstring_view file, bela::error_code &ec) {
   FILE *fd = nullptr;
   if (auto eno = _wfopen_s(&fd, file.data(), L"rb"); eno != 0) {
     ec = bela::make_error_code_from_errno(eno, bela::StringCat(L"open json file '", bela::BaseName(file), L"' "));
@@ -68,7 +68,7 @@ private:
     return InitializeFromLegacy(binPath, ec);
   }
   bool vfsInitializeFromEnv(const std::wstring &file, bela::error_code &ec) {
-    auto j = parse_file(file, ec);
+    auto j = parse_json_file(file, ec);
     if (!j) {
       return false;
     }

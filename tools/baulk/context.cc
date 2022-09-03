@@ -72,7 +72,7 @@ constexpr std::wstring_view default_content = LR"({
 bool Context::initializeInternal(const std::wstring &profile_, bela::error_code &ec) {
   profile = profile_;
   DbgPrint(L"Baulk use profile '%s'", profile);
-  auto jo = baulk::json::parse_file(profile, ec);
+  auto jo = baulk::parse_json_file(profile, ec);
   if (!jo) {
     buckets.emplace_back(L"Baulk default bucket", L"Baulk", baulk_internal::DefaultBucket);
     bela::FPrintF(stderr, L"baulk: \x1b[31m%s\x1b[0m\nprofile path %s\n", ec, profile_);

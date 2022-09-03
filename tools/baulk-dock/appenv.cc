@@ -66,7 +66,7 @@ inline bool search_vs_instances(baulk::vs::vs_instances_t &vsInstances, bela::er
 
 bool LookupVirtualEnvironments(std::wstring_view lockfile, std::wstring_view pkgName, EnvNode &node) {
   bela::error_code ec;
-  auto jo = json::parse_file(lockfile, ec);
+  auto jo = baulk::parse_json_file(lockfile, ec);
   if (!jo) {
     return false;
   }
@@ -112,7 +112,7 @@ bool MainWindow::InitializeBase(bela::error_code &ec) {
 bool MainWindow::LoadPlacement(WINDOWPLACEMENT &placement) {
   auto posFilePath = bela::StringCat(vfs::AppData(), L"\\baulk\\baulk-dock.pos.json");
   bela::error_code ec;
-  auto jo = json::parse_file(posFilePath, ec);
+  auto jo = baulk::parse_json_file(posFilePath, ec);
   if (!jo) {
     return false;
   }

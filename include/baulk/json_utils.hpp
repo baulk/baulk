@@ -5,7 +5,7 @@
 #include <bela/path.hpp>
 #include <json.hpp>
 
-namespace baulk::json {
+namespace baulk {
 template <typename T, typename Allocator = std::allocator<T>>
 requires bela::character<T> std::basic_string<T, std::char_traits<T>, Allocator>
 FromSlash(std::basic_string<T, std::char_traits<T>, Allocator> &&s) {
@@ -136,12 +136,13 @@ private:
   const nlohmann::json &obj;
 };
 
-struct json {
+struct json_container {
+  json_container(nlohmann::json &&o) : obj(std::move(o)) {}
   nlohmann::json obj;
   json_view view() const { return json_view(obj); }
 };
 
-inline std::optional<json> parse_file(const std::wstring_view file, bela::error_code &ec) {
+inline std::optional<json_container> parse_json_file(const std::wstring_view file, bela::error_code &ec) {
   FILE *fd = nullptr;
   if (auto eno = _wfopen_s(&fd, file.data(), L"rb"); eno != 0) {
     ec = bela::make_error_code_from_errno(eno, bela::StringCat(L"open json file '", bela::BaseName(file), L"' "));
@@ -150,7 +151,7 @@ inline std::optional<json> parse_file(const std::wstring_view file, bela::error_
   auto closer = bela::finally([&] { fclose(fd); });
   try {
     // comments support
-    return std::make_optional(json{.obj = nlohmann::json::parse(fd, nullptr, true, true)});
+    return std::make_optional<json_container>(nlohmann::json::parse(fd, nullptr, true, true));
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, L"parse json file '", bela::BaseName(file), L"' error: ",
                                bela::encode_into<char, wchar_t>(e.what()));
@@ -158,16 +159,16 @@ inline std::optional<json> parse_file(const std::wstring_view file, bela::error_
   return std::nullopt;
 }
 
-inline std::optional<json> parse(const std::string_view text, bela::error_code &ec) {
+inline std::optional<json_container> parse(const std::string_view text, bela::error_code &ec) {
   try {
     // comments support
-    return std::make_optional(json{.obj = nlohmann::json::parse(text, nullptr, true, true)});
+    return std::make_optional<json_container>(nlohmann::json::parse(text, nullptr, true, true));
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
   }
   return std::nullopt;
 }
 
-} // namespace baulk::json
+} // namespace baulk
 
 #endif

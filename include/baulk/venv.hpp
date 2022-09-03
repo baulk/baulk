@@ -160,7 +160,7 @@ private:
     return true;
   }
   std::optional<PackageEnv> loadPackageEnv(std::wstring_view pkgName, bela::error_code &ec) {
-    auto jo = baulk::json::parse_file(bela::StringCat(baulk::vfs::AppLocks(), L"\\", pkgName, L".json"), ec);
+    auto jo = baulk::parse_json_file(bela::StringCat(baulk::vfs::AppLocks(), L"\\", pkgName, L".json"), ec);
     if (!jo) {
       return std::nullopt;
     }
@@ -180,7 +180,7 @@ private:
     return std::make_optional(std::move(pkgEnv));
   }
   bool loadPackageLocalEnv(std::wstring_view pkgName, PackageEnv &pkgEnv, bela::error_code &ec) {
-    auto jo = baulk::json::parse_file(bela::StringCat(baulk::vfs::AppEtc(), L"\\", pkgName, L".local.json"), ec);
+    auto jo = baulk::parse_json_file(bela::StringCat(baulk::vfs::AppEtc(), L"\\", pkgName, L".local.json"), ec);
     if (!jo) {
       ec.clear();
       return true;

@@ -3,6 +3,7 @@
 #include <bela/match.hpp>
 #include <bela/ascii.hpp>
 #include <baulk/fs.hpp>
+#include <bela/terminal.hpp>
 
 namespace baulk::fs {
 
@@ -104,13 +105,14 @@ bool MakeFlattened(const std::filesystem::path &d, bela::error_code &ec) {
   if (std::filesystem::equivalent(d, *flat, e)) {
     return true;
   }
-  for (const auto &entry : std::filesystem::directory_iterator{*flat, e}) {
-    auto newPath = d / entry.path().filename();
-    std::filesystem::rename(entry.path(), newPath, e);
+  auto filename = bela::StringCat(d.filename().c_str(), L".", GetCurrentProcessId(), L".new");
+  auto newPath = d.parent_path() / filename;
+  std::filesystem::rename(*flat, newPath, e);
+  if (std::filesystem::remove_all(d, e); e) {
+    ec = bela::make_error_code_from_std(e, L"remove empty folder error: ");
+    return false;
   }
-  if (!depth1.empty()) {
-    std::filesystem::remove_all(depth1, e);
-  }
+  std::filesystem::rename(newPath, d, e);
   return true;
 }
 

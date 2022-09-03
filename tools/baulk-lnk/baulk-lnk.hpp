@@ -39,7 +39,7 @@ inline std::optional<std::wstring> ResolveTarget(bela::error_code &ec) {
   baulk::DbgPrint(L"resolve launcher: %v", command);
   auto linkMeta = fsArg0.parent_path() / L"baulk.linkmeta.json";
   baulk::DbgPrint(L"resolve link metadata: %v", linkMeta);
-  auto jo = baulk::json::parse_file(linkMeta.native(), ec);
+  auto jo = baulk::parse_json_file(linkMeta.native(), ec);
   if (!jo) {
     baulk::DbgPrint(L"resolve link metadata error: %v", ec);
     return std::nullopt;

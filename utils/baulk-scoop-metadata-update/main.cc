@@ -5,12 +5,12 @@
 
 int convert_from(std::wstring_view theirs, std::wstring_view ours) {
   bela::error_code ec;
-  auto tv = baulk::json::parse_file(theirs, ec);
+  auto tv = baulk::parse_json_file(theirs, ec);
   if (!tv) {
     bela::FPrintF(stderr, L"parse scoop json file: %v\n", ec);
     return 1;
   }
-  auto ov = baulk::json::parse_file(ours, ec);
+  auto ov = baulk::parse_json_file(ours, ec);
   if (!ov) {
     bela::FPrintF(stderr, L"parse baulk json file: %v\n", ec);
     return 1;
