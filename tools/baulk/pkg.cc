@@ -49,7 +49,6 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     }
     std::wstring file(vfs::AppLocks());
     if (!baulk::fs::MakeDirectories(file, ec)) {
-      bela::FPrintF(stderr,L"MakeDirectories %v\n",ec);
       return false;
     }
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
