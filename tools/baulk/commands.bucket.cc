@@ -252,8 +252,8 @@ bool PruneBucket(const baulk::Bucket &bucket) {
     bela::FPrintF(stderr, L"unable update %s error: %s\n", lockfile, ec);
     return false;
   }
-  auto bucketDir = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
-  bela::fs::ForceDeleteFolders(bucketDir, ec);
+  auto buckets = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
+  bela::fs::ForceDeleteFolders(buckets, ec);
   return true;
 }
 

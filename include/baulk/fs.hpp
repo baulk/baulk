@@ -22,7 +22,7 @@ inline bool MakeDirectories(const std::filesystem::path &path, bela::error_code 
     return true;
   }
   if (std::filesystem::create_directories(path, e); e) {
-    ec = bela::make_error_code_from_std(e);
+    ec = bela::make_error_code_from_std(e, L"create directories: ");
     return false;
   }
   return true;

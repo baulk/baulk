@@ -49,9 +49,11 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
     }
     std::wstring file(vfs::AppLocks());
     if (!baulk::fs::MakeDirectories(file, ec)) {
+      bela::FPrintF(stderr,L"MakeDirectories %v\n",ec);
       return false;
     }
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
+    DbgPrint(L"write %s lock: %s", pkg.name, file);
     return bela::io::AtomicWriteText(file, bela::io::as_bytes<char>(j.dump(4)), ec);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
@@ -168,7 +170,7 @@ bool expand_fallback_exe(const baulk::Package &pkg, const std::filesystem::path 
   pkgCopy.links.emplace_back(exefile, exefile);
   pkgCopy.mask |= MaskCompatibilityMode; // keep launcher
   if (!PackageLocalMetaWrite(pkgCopy, ec)) {
-    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec);
+    bela::FPrintF(stderr, L"baulk write local meta error: %s\n", ec);
     return false;
   }
   std::filesystem::remove_all(oldPath, e);
@@ -224,7 +226,7 @@ bool PackageExpand(const baulk::Package &pkg, const std::filesystem::path &archi
   }
   // create a links
   if (!PackageLocalMetaWrite(pkg, ec)) {
-    bela::FPrintF(stderr, L"baulk unable write local meta: %s\n", ec);
+    bela::FPrintF(stderr, L"baulk write local meta error: %s\n", ec);
     return false;
   }
   return PackageMakeLinks(pkg);
