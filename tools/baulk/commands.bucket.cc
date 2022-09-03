@@ -65,8 +65,7 @@ bool BucketModifier::Initialize() {
 }
 
 bool BucketModifier::Apply() {
-  auto jsontext = meta.dump(4);
-  return bela::io::WriteTextAtomic(jsontext, baulk::Profile(), ec);
+  return bela::io::AtomicWriteText(baulk::Profile(), bela::io::as_bytes<char>(meta.dump(4)), ec);
 }
 
 bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket) {
@@ -217,16 +216,16 @@ int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
 }
 
 bool PruneBucket(const baulk::Bucket &bucket) {
-  auto bucketslock = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
+  auto lockfile = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
   nlohmann::json newjson = nlohmann::json::array();
   [&]() -> bool {
     FILE *fd = nullptr;
-    if (auto en = _wfopen_s(&fd, bucketslock.data(), L"rb"); en != 0) {
+    if (auto en = _wfopen_s(&fd, lockfile.data(), L"rb"); en != 0) {
       if (en == ENOENT) {
         return true;
       }
       auto ec = bela::make_error_code_from_errno(en);
-      bela::FPrintF(stderr, L"unable load %s error: %s\n", bucketslock, ec);
+      bela::FPrintF(stderr, L"unable load %s error: %s\n", lockfile, ec);
       return false;
     }
     auto closer = bela::finally([&] { fclose(fd); });
@@ -248,10 +247,9 @@ bool PruneBucket(const baulk::Bucket &bucket) {
     }
     return true;
   }();
-  auto meta = newjson.dump(4);
   bela::error_code ec;
-  if (!bela::io::WriteTextAtomic(meta, bucketslock, ec)) {
-    bela::FPrintF(stderr, L"unable update %s error: %s\n", bucketslock, ec);
+  if (!bela::io::AtomicWriteText(lockfile, bela::io::as_bytes<char>(newjson.dump(4)), ec)) {
+    bela::FPrintF(stderr, L"unable update %s error: %s\n", lockfile, ec);
     return false;
   }
   auto bucketDir = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);

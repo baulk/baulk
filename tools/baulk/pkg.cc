@@ -52,7 +52,7 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
       return false;
     }
     bela::StrAppend(&file, L"\\", pkg.name, L".json");
-    return bela::io::WriteTextAtomic(j.dump(4), file, ec);
+    return bela::io::AtomicWriteText(file, bela::io::as_bytes<char>(j.dump(4)), ec);
   } catch (const std::exception &e) {
     ec = bela::make_error_code(bela::ErrGeneral, bela::encode_into<char, wchar_t>(e.what()));
   }

@@ -33,14 +33,14 @@ public:
 
 private:
   bucket_status_t status;
-  std::wstring lockFile;
+  std::wstring lockfile;
   bool updated{false};
 };
 
 bool BucketUpdater::Initialize() {
-  lockFile = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
+  lockfile = bela::StringCat(vfs::AppBuckets(), L"\\buckets.lock.json");
   bela::error_code ec;
-  auto jo = parse_json_file(lockFile, ec);
+  auto jo = parse_json_file(lockfile, ec);
   if (!jo) {
     return ec.code == ENOENT;
   }
@@ -75,10 +75,9 @@ bool BucketUpdater::Immobilized() {
       o["time"] = b.second.updated;
       j.push_back(std::move(o));
     }
-    auto meta = j.dump(4);
     bela::error_code ec;
-    if (!bela::io::WriteTextAtomic(meta, lockFile, ec)) {
-      bela::FPrintF(stderr, L"baulk unable: update %s error: %s\n", lockFile, ec);
+    if (!bela::io::AtomicWriteText(lockfile, bela::io::as_bytes<char>(j.dump(4)), ec)) {
+      bela::FPrintF(stderr, L"baulk update: unable %s error: %s\n", lockfile, ec);
       return false;
     }
   } catch (const std::exception &e) {

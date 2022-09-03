@@ -114,7 +114,7 @@ bool PathFs::NewFsPaths(bela::error_code &ec) {
   }
   auto baulkEnv = bela::StringCat(table.basePath, L"\\baulk.env");
   if (!bela::PathFileIsExists(baulkEnv)) {
-    if (!bela::io::WriteText(bela::Substitute(envTemplate, mode), baulkEnv, ec)) {
+    if (!bela::io::WriteText(baulkEnv, bela::Substitute(envTemplate, mode), ec)) {
       return false;
     }
   }

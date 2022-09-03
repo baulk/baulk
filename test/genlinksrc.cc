@@ -169,13 +169,13 @@ int wmain(int argc, wchar_t **argv) {
   auto s2 = baulk::GenerateLinkSource(argv[1], bela::pe::Subsystem::GUI);
   auto s3 = baulk::GenerateBatLinkSource(argv[1], bela::pe::Subsystem::GUI);
   bela::error_code ec;
-  if (!bela::io::WriteText(s1, L"genfile_console.cc", ec)) {
+  if (!bela::io::WriteText(L"genfile_console.cc", s1, ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
-  if (!bela::io::WriteTextU16LE(s2, L"genfile_windows.cc", ec)) {
+  if (!bela::io::WriteTextU16LE(L"genfile_windows.cc", s2, ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
-  if (!bela::io::WriteText(s3, L"genfile.bat", ec)) {
+  if (!bela::io::WriteText(L"genfile.bat", s3, ec)) {
     bela::FPrintF(stderr, L"unable writetext: %s\n", ec);
   }
   return 0;

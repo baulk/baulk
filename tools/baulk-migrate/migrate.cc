@@ -18,7 +18,7 @@ bool InitializePathFs(std::wstring_view basePath, bela::error_code &ec) {
     "mode": "Portable"
 })";
   auto baulkEnv = bela::StringCat(basePath, L"\\baulk.env");
-  if (!bela::io::WriteText(envContent, baulkEnv, ec)) {
+  if (!bela::io::WriteText(baulkEnv, envContent, ec)) {
     return false;
   }
   return true;

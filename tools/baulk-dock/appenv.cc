@@ -148,7 +148,7 @@ void MainWindow::SavePlacement(const WINDOWPLACEMENT &placement) {
   j["rcNormalPosition.right"] = placement.rcNormalPosition.right;
   j["rcNormalPosition.top"] = placement.rcNormalPosition.top;
   bela::error_code ec;
-  bela::io::WriteTextAtomic(j.dump(4), posfile, ec);
+  bela::io::AtomicWriteText(posfile, bela::io::as_bytes<char>(j.dump(4)), ec);
 }
 
 template <size_t Len = 256> std::wstring GetCwd() {

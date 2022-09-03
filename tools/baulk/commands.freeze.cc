@@ -64,8 +64,7 @@ int cmd_freeze(const argv_t &argv) {
   }
   jo->obj["freeze"] = pkgs;
   jo->obj["updated"] = bela::FormatTime<char>(bela::Now());
-  auto text = jo->obj.dump(4);
-  if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
+  if (!bela::io::AtomicWriteText(Profile(), bela::io::as_bytes<char>(jo->obj.dump(4)), ec)) {
     bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
     return 1;
   }
@@ -110,8 +109,7 @@ int cmd_unfreeze(const argv_t &argv) {
   }
   jo->obj["freeze"] = newFrozened;
   jo->obj["updated"] = bela::FormatTime<char>(bela::Now());
-  auto text = jo->obj.dump(4);
-  if (!bela::io::WriteTextAtomic(text, Profile(), ec)) {
+  if (!bela::io::AtomicWriteText(Profile(), bela::io::as_bytes<char>(jo->obj.dump(4)), ec)) {
     bela::FPrintF(stderr, L"baulk: unable update profile: %s\n", ec);
     return 1;
   }

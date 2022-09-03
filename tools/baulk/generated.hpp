@@ -207,7 +207,7 @@ inline bool MakeResource(bela::pe::Version &version, std::wstring_view file, bel
                         version.ProductVersion                                  // ProductVersion
 
   );
-  return bela::io::WriteText(ws, file, ec);
+  return bela::io::WriteText(file, ws, ec);
 }
 
 inline bool MakeSource(std::wstring_view target, std::wstring_view file, bool consoleExe, bela::error_code &ec) {
@@ -218,7 +218,7 @@ inline bool MakeSource(std::wstring_view target, std::wstring_view file, bool co
     }
     return bela::Substitute(template_internal::windows_exe_source, escape_target);
   }();
-  return bela::io::WriteText(source_code, file, ec);
+  return bela::io::WriteText(file, source_code, ec);
 }
 
 } // namespace baulk::generated

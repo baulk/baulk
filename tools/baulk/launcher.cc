@@ -42,7 +42,7 @@ bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela:
     obj["links"] = newlinks;
     obj["updated"] = bela::FormatTime<char>(bela::Now());
     obj["app_packages_root"] = bela::encode_into<wchar_t, char>(vfs::AppPackages());
-    if (!bela::io::WriteTextAtomic(obj.dump(4), linkMeta, ec)) {
+    if (!bela::io::AtomicWriteText(linkMeta, bela::io::as_bytes<char>(obj.dump(4)), ec)) {
       return false;
     }
   } catch (const std::exception &e) {
@@ -87,7 +87,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
     }
     obj["updated"] = bela::FormatTime<char>(bela::Now());
     obj["links"] = newlinks;
-    if (!bela::io::WriteTextAtomic(obj.dump(4), linkMeta, ec)) {
+    if (!bela::io::AtomicWriteText(linkMeta, bela::io::as_bytes<char>(obj.dump(4)), ec)) {
       return false;
     }
   } catch (const std::exception &e) {
@@ -149,10 +149,11 @@ inline void string_overwrite(std::wstring &s, std::wstring_view v) {
 }
 /*
 ✅ 🈯️ 💹 ❇️ ✳️ ❎ 🌐 💠 Ⓜ️ 🌀 💤 🏧
-🚾 ♿️ 🅿️ 🈳 🈂️ 🛂 🛃 🛄 🛅 🚹 🚺 🚼 🚻 🚮 🎦 📶 🈁 🔣 ℹ️ 🔤 🔡 🔠 🆖 🆗 🆙 🆒 🆕 🆓 
-0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔢 #️⃣ *️⃣ 
-⏏️ ▶️ ⏸ ⏯ ⏹ ⏺ ⏭ ⏮ ⏩ ⏪ ⏫ ⏬ ◀️ 🔼 🔽 ➡️ ⬅️ ⬆️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↕️ ↔️ ↪️ ↩️ ⤴️ ⤵️ 🔀 🔁 🔂 🔄 🔃 
-🎵 🎶 ➕ ➖ ➗ ✖️ ♾ 💲 💱 ™️ ©️ ®️ 〰️ ➰ ➿ 🔚 🔙 🔛 🔝 🔜 ✔️ ☑️
+🚾 ♿️ 🅿️ 🈳 🈂️ 🛂 🛃 🛄 🛅 🚹 🚺 🚼 🚻 🚮 🎦 📶 🈁 🔣 ℹ️ 🔤 🔡 🔠 🆖 🆗 🆙 🆒
+🆕 🆓 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔢 #️⃣ *️⃣ ⏏️
+▶️ ⏸ ⏯ ⏹ ⏺ ⏭ ⏮ ⏩ ⏪ ⏫ ⏬ ◀️ 🔼 🔽 ➡️ ⬅️ ⬆️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↕️ ↔️ ↪️ ↩️ ⤴️ ⤵️ 🔀 🔁
+🔂 🔄 🔃 🎵 🎶 ➕ ➖ ➗ ✖️ ♾ 💲 💱 ™️ ©️ ®️ 〰️ ➰ ➿ 🔚 🔙 🔛 🔝 🔜 ✔️
+☑️
 */
 bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::wstring_view appLinks,
                       const baulk::LinkMeta &linkMeta, bela::error_code &ec) {
