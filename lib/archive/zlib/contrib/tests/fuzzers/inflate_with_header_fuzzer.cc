@@ -42,7 +42,8 @@ static void chunked_inflate(gz_header* header,
   auto out_buffer = std::make_unique<uint8_t[]>(out_chunk_size);
   while (true) {
     stream.next_in = &data[stream.total_in];
-    stream.avail_in = std::min(in_chunk_size, size - stream.total_in);
+    stream.avail_in =
+        std::min(in_chunk_size, size - static_cast<size_t>(stream.total_in));
     stream.next_out = out_buffer.get();
     stream.avail_out = out_chunk_size;
 
@@ -76,8 +77,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   header.name = name_buf.get();
   header.comment = comment_buf.get();
 
-  int in_chunk_size = fdp.ConsumeIntegralInRange(1, 4097);
-  int out_chunk_size = fdp.ConsumeIntegralInRange(1, 4097);
+  size_t in_chunk_size = fdp.ConsumeIntegralInRange(1, 4097);
+  size_t out_chunk_size = fdp.ConsumeIntegralInRange(1, 4097);
   std::vector<uint8_t> remaining_data = fdp.ConsumeRemainingBytes<uint8_t>();
 
   chunked_inflate(&header, remaining_data.data(), remaining_data.size(),

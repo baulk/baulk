@@ -5,9 +5,10 @@
 #include <numbers>
 #include <bit>
 #include <bela/base.hpp>
+#include <bela/io.hpp>
 
 namespace baulk::echo {
-constexpr std::byte packet_end[4] = {std::byte('0'), std::byte('0'), std::byte('0'), std::byte('0')};
+constexpr uint8_t packet_end[4] = {'0', '0', '0', '0'};
 constexpr std::int64_t packet_max_len = (65536ll - std::size(packet_end));
 
 // Writer echo writer
