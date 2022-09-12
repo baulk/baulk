@@ -11,6 +11,9 @@ namespace baulk::echo {
 constexpr uint8_t packet_end[4] = {'0', '0', '0', '0'};
 constexpr std::int64_t packet_max_len = (65536ll - std::size(packet_end));
 
+constexpr std::string_view commands[] = {"install", "uninstall", "search", "list",   "version", "info",
+                                         "update",  "upgrade",   "freeze", "extact", "bucket"};
+
 // Writer echo writer
 class Writer {
 public:
