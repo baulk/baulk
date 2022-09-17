@@ -4,14 +4,11 @@
 //
 #include <bela/codecvt.hpp>
 #include <bela/types.hpp>
-#include "runewidth_table.hpp"
+#include <bela/__unicode/unicode-width.hpp>
 
 namespace bela {
-constexpr const bela::runewidth::interval nonprint[] = {
-    {0x0000, 0x001F}, {0x007F, 0x009F}, {0x00AD, 0x00AD}, {0x070F, 0x070F}, {0x180B, 0x180E}, {0x200B, 0x200F},
-    {0x2028, 0x202E}, {0x206A, 0x206F}, {0xD800, 0xDFFF}, {0xFEFF, 0xFEFF}, {0xFFF9, 0xFFFB}, {0xFFFE, 0xFFFF},
-};
-bool bisearch(char32_t rune, const bela::runewidth::interval *table, size_t max) {
+
+bool bisearch(char32_t rune, const bela::unicode::interval *table, size_t max) {
   size_t min = 0;
   size_t mid;
   if (rune < table[0].first || rune > table[max].last) {
@@ -37,22 +34,10 @@ size_t rune_width(char32_t rune) {
   if (rune == 0 || rune > 0x10FFFF || rune < 32 || (rune >= 0x7F && rune < 0xa0)) {
     return 0;
   }
-  if (bisearch(rune, bela::nonprint, std::size(bela::nonprint) - 1)) {
+  if (bisearch(rune, bela::unicode::zero_width, std::size(bela::unicode::zero_width) - 1)) {
     return 0;
   }
-  if (bisearch(rune, bela::runewidth::narrow, std::size(bela::runewidth::narrow) - 1)) {
-    return 1;
-  }
-  if (bisearch(rune, bela::runewidth::combining, std::size(bela::runewidth::combining) - 1)) {
-    return 0;
-  }
-  if (bisearch(rune, bela::runewidth::ambiguous, std::size(bela::runewidth::ambiguous) - 1)) {
-    return 2;
-  }
-  if (bisearch(rune, bela::runewidth::doublewidth, std::size(bela::runewidth::doublewidth) - 1)) {
-    return 2;
-  }
-  if (bisearch(rune, bela::runewidth::emoji, std::size(bela::runewidth::emoji) - 1)) {
+  if (bisearch(rune, bela::unicode::double_width, std::size(bela::unicode::double_width) - 1)) {
     return 2;
   }
   return 1;

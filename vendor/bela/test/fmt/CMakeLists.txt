@@ -24,3 +24,11 @@ add_executable(charconv_test
 target_link_libraries(charconv_test
   bela
 )
+
+add_executable(unicode_width_test
+  unicode-width.cc
+)
+
+target_link_libraries(unicode_width_test
+  bela
+)
