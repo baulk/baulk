@@ -89,15 +89,15 @@ bool StrFormatInternal(Writer<T> &w, const std::wstring_view fmt, const FormatAr
       ca++;
       break;
     case 'o':
-      w.append_numeric(args[ca], 8, width, pc, align_left);
+      w.append_numeric(args[ca], 8, width, frac_width, pc, align_left);
       ca++;
       break;
     case 'x':
-      w.append_numeric(args[ca], 16, width, pc, align_left);
+      w.append_numeric(args[ca], 16, width, frac_width, pc, align_left);
       ca++;
       break;
     case 'X':
-      w.append_numeric_hex(args[ca], width, pc, align_left);
+      w.append_numeric_hex(args[ca], width, frac_width, pc, align_left);
       ca++;
       break;
     case 'U':
@@ -122,7 +122,7 @@ bool StrFormatInternal(Writer<T> &w, const std::wstring_view fmt, const FormatAr
       break;
     case 'a':
       if (args[ca].type == __types::__float) {
-        w.append_double_hex(args[ca].floating.d, width, frac_width, pc, align_left);
+        w.append_double_hex(args[ca].floating.d, width, frac_width, pc, align_left, false);
       } else {
         w.append(L"%!f");
       }

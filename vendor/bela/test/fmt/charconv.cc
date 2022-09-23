@@ -315,6 +315,22 @@ void hex_check_longlong() {
   }
 }
 
+std::wstring EncodeSize(int64_t size) {
+  constexpr auto GB = 1024 * 1024 * 1024LL;
+  constexpr auto MB = 1024 * 1024LL;
+  constexpr auto KB = 1024LL;
+  if (size > GB) {
+    return bela::StrFormat(L"%.2f GB", (double)size / GB);
+  }
+  if (size > MB) {
+    return bela::StrFormat(L"%.2f MB", (double)size / MB);
+  }
+  if (size > KB) {
+    return bela::StrFormat(L"%.2f KB", (double)size / KB);
+  }
+  return bela::StringCat(size, L" bytes");
+}
+
 int wmain() {
   const wchar_t *w = L"196.1082741";
   double n;
@@ -340,11 +356,16 @@ int wmain() {
   for (const auto s : sizes) {
     bela::FPrintF(stderr, L"encode rate: %v\n", encode_rate(buffer, 64, s));
   }
+
   double_to_chars_check();
   double_scientific_check();
   float_scientific_check();
   hex_check_short();
   hex_check_long();
   hex_check_longlong();
+  auto d = (double)225'385'216 / MB;
+  bela::FPrintF(stderr, L"size %s %.2f MB %.2X\n", EncodeSize(225'385'216), d, d);
+  bela::FPrintF(stderr, L"size %s %.2f MB %.2x\n", EncodeSize(225'385'216), d, d);
+  bela::FPrintF(stderr, L"size %s %.2f MB %.4X\n", EncodeSize(-225'385'216), -d, -d);
   return 0;
 }

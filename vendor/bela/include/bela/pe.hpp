@@ -38,7 +38,7 @@ private:
     // Also, do not assume that the RVAs in this table point to the beginning of a section or that the sections that
     // contain specific tables have specific names.
     for (const auto &s : sections) {
-      if (s.VirtualAddress <= dd->VirtualAddress && dd->VirtualAddress < s.VirtualAddress + s.VirtualSize) {
+      if (s.VirtualAddress <= dd->VirtualAddress && dd->VirtualAddress - s.VirtualAddress < s.VirtualSize) {
         return &s;
       }
     }

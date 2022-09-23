@@ -116,6 +116,15 @@ public:
     c.push_back(L'-');
     c.append(sv);
   }
+
+  void append_numeric_auto(std::wstring_view sv, size_t width, wchar_t pc, bool align_left, bool sign) {
+    if (sign) {
+      append_signed_numeric(sv, width, pc, align_left);
+      return;
+    }
+    append(sv, width, pc, align_left);
+  }
+
   // append double
   void append_fixed(double d, size_t width, size_t frac_width, wchar_t pc, bool align_left) {
     wchar_t buffer[64];
@@ -125,7 +134,7 @@ public:
       sign = true;
     }
     if (auto sv = bela::to_chars_view(buffer, d, std::chars_format::fixed, static_cast<int>(frac_width)); !sv.empty()) {
-      append_signed_numeric(sv, width, pc, align_left);
+      append_numeric_auto(sv, width, pc, align_left, sign);
     }
   }
 
@@ -138,10 +147,10 @@ public:
     }
     if (auto sv = bela::to_chars_view(buffer, d, std::chars_format::scientific, static_cast<int>(frac_width));
         !sv.empty()) {
-      append_signed_numeric(sv, width, pc, align_left);
+      append_numeric_auto(sv, width, pc, align_left, sign);
     }
   }
-  void append_double_hex(double d, size_t width, size_t frac_width, wchar_t pc, bool align_left) {
+  void append_double_hex(double d, size_t width, size_t frac_width, wchar_t pc, bool align_left, bool uppercase) {
     wchar_t buffer[64];
     bool sign = false;
     if (d < 0) {
@@ -149,7 +158,12 @@ public:
       sign = true;
     }
     if (auto sv = bela::to_chars_view(buffer, d, std::chars_format::hex, static_cast<int>(frac_width)); !sv.empty()) {
-      append_signed_numeric(sv, width, pc, align_left);
+      if (uppercase) {
+        for (size_t i = 0; i < sv.size(); i++) {
+          buffer[i] = bela::ascii_toupper(buffer[i]);
+        }
+      }
+      append_numeric_auto(sv, width, pc, align_left, sign);
     }
   }
 
@@ -164,11 +178,7 @@ public:
     wchar_t buffer[64];
     bool sign = false;
     auto sv = bela::to_chars_view(buffer, make_unsigned_unchecked(i, sign));
-    if (sign) {
-      append_signed_numeric(sv, width, pc, align_left);
-      return;
-    }
-    append(sv, width, pc, align_left);
+    append_numeric_auto(sv, width, pc, align_left, sign);
   }
 
   // append unsigned int
@@ -182,11 +192,7 @@ public:
     wchar_t buffer[64];
     bool sign = false;
     auto sv = bela::to_chars_view(buffer, make_unsigned_unchecked(i, sign), base);
-    if (sign) {
-      append_signed_numeric(sv, width, pc, align_left);
-      return;
-    }
-    append(sv, width, pc, align_left);
+    append_numeric_auto(sv, width, pc, align_left, sign);
   }
 
   // append unsigned int
@@ -207,11 +213,7 @@ public:
     for (size_t i = 0; i < sv.size(); i++) {
       buffer[i] = bela::ascii_toupper(buffer[i]);
     }
-    if (sign) {
-      append_signed_numeric(sv, width, pc, align_left);
-      return;
-    }
-    append(sv, width, pc, align_left);
+    append_numeric_auto(sv, width, pc, align_left, sign);
   }
 
   void append_unicode(char32_t ch, size_t width, wchar_t pc, bool align_left) {
@@ -232,7 +234,7 @@ public:
       append_unicode(a.character.c, width, pc, align_left);
       return;
     case __types::__float:
-      append_fixed(a.floating.d, width, frac_width, pc, align_left);
+      append_fixed(a.floating.d, width, 6, pc, align_left);
       return;
     case __types::__unsigned_integral:
       append_fast_numeric(a.unsigned_integral.i, width, pc, align_left);
@@ -314,7 +316,7 @@ public:
     c.append(L"%!s");
   }
 
-  void append_numeric(const FormatArg &a, int base, size_t width, wchar_t pc, bool align_left) {
+  void append_numeric(const FormatArg &a, int base, size_t width, size_t frac_width, wchar_t pc, bool align_left) {
     switch (a.type) {
     case __types::__boolean:
       [[fallthrough]];
@@ -331,7 +333,7 @@ public:
       append_numeric(static_cast<uint64_t>(a.value), base, width, pc, align_left);
       return;
     case __types::__float:
-      append_numeric(static_cast<int64_t>(a.floating.d), base, width, pc, align_left);
+      append_double_hex(a.floating.d, width, frac_width, pc, align_left, false);
       return;
     default:
       break;
@@ -371,8 +373,7 @@ public:
     }
     c.append(L"%!?");
   }
-
-  void append_numeric_hex(const FormatArg &a, size_t width, wchar_t pc, bool align_left) {
+  void append_numeric_hex(const FormatArg &a, size_t width, size_t frac_width, wchar_t pc, bool align_left) {
     switch (a.type) {
     case __types::__boolean:
       [[fallthrough]];
@@ -389,7 +390,7 @@ public:
       append_numeric_hex(static_cast<uint64_t>(a.value), width, pc, align_left);
       return;
     case __types::__float:
-      append_numeric_hex(static_cast<int64_t>(a.floating.d), width, pc, align_left);
+      append_double_hex(a.floating.d, width, frac_width, pc, align_left, true);
       return;
     default:
       break;
