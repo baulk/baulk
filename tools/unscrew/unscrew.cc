@@ -49,7 +49,7 @@ public:
     //
     return bar->SetLine(dwLineNum, text.data(), fCompactPath, nullptr) == S_OK;
   }
-  bool Cancelled() { return false; }
+  bool Cancelled() { return bar->HasUserCancelled() == TRUE; }
 
 private:
   bela::comptr<IProgressDialog> bar;
@@ -246,7 +246,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
     return 0;
   }
   ec.clear();
-  if (!executor.Execute(ec) && ec) {
+  if (!executor.Execute(ec) && ec && ec != bela::ErrCanceled) {
     bela::BelaMessageBox(nullptr, baulk::AppTitle, ec.data(), BAULK_APPLINK, bela::mbs_t::FATAL);
     return 1;
   }
