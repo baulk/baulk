@@ -70,7 +70,7 @@ public:
   }
 
   IFACEMETHODIMP GetCanonicalName(_Out_ GUID *guidCommandName) {
-    *guidCommandName = GUID_NULL;
+    *guidCommandName = __uuidof(this);
     return S_OK;
   }
 
@@ -157,97 +157,7 @@ public:
     *ppEnum = nullptr;
     return E_NOTIMPL;
   }
-
-protected:
-  Microsoft::WRL::ComPtr<IUnknown> m_site;
-
-private:
-  std::wstring _GetPathFromExplorer() const;
 };
-
-std::wstring ExtractWithUnscrew::_GetPathFromExplorer() const {
-  using namespace winrt;
-
-  std::wstring path;
-  HRESULT hr = NOERROR;
-
-  auto hwnd = ::GetForegroundWindow();
-  if (hwnd == nullptr) {
-    return path;
-  }
-
-  WCHAR szName[MAX_PATH] = {0};
-  ::GetClassNameW(hwnd, szName, MAX_PATH);
-  if (0 == StrCmp(szName, L"WorkerW") || 0 == StrCmp(szName, L"Progman")) {
-    // special folder: desktop
-    hr = ::SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, szName);
-    if (FAILED(hr)) {
-      return path;
-    }
-
-    path = szName;
-    return path;
-  }
-
-  if (0 != StrCmpW(szName, L"CabinetWClass")) {
-    return path;
-  }
-
-  com_ptr<IShellWindows> shell;
-  try {
-    shell = create_instance<IShellWindows>(CLSID_ShellWindows, CLSCTX_ALL);
-  } catch (...) {
-    // look like try_create_instance is not available no more
-  }
-
-  if (shell == nullptr) {
-    return path;
-  }
-
-  com_ptr<IDispatch> disp;
-  VARIANT variant;
-  VariantInit(&variant);
-  variant.vt = VT_I4;
-  auto closer = bela::finally([&] { VariantClear(&variant); });
-
-  com_ptr<IWebBrowserApp> browser;
-  // look for correct explorer window
-  for (variant.intVal = 0; shell->Item(variant, disp.put()) == S_OK; variant.intVal++) {
-    com_ptr<IWebBrowserApp> tmp;
-    if (FAILED(disp->QueryInterface(tmp.put()))) {
-      disp = nullptr; // get rid of DEBUG non-nullptr warning
-      continue;
-    }
-
-    HWND tmpHWND = NULL;
-    hr = tmp->get_HWND(reinterpret_cast<SHANDLE_PTR *>(&tmpHWND));
-    if (hwnd == tmpHWND) {
-      browser = tmp;
-      disp = nullptr; // get rid of DEBUG non-nullptr warning
-      break;          // found
-    }
-
-    disp = nullptr; // get rid of DEBUG non-nullptr warning
-  }
-
-  if (browser != nullptr) {
-    BSTR url = nullptr;
-    hr = browser->get_LocationURL(&url);
-    if (FAILED(hr)) {
-      return path;
-    }
-
-    std::wstring sUrl(url, SysStringLen(url));
-    SysFreeString(url);
-    DWORD size = MAX_PATH;
-    hr = ::PathCreateFromUrlW(sUrl.c_str(), szName, &size, NULL);
-    if (SUCCEEDED(hr)) {
-      path = szName;
-    }
-  }
-
-  return path;
-}
 
 CoCreatableClass(ExtractWithUnscrew) CoCreatableClassWrlCreatorMapInclude(ExtractWithUnscrew); //
 

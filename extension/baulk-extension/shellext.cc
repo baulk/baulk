@@ -46,7 +46,7 @@ std::optional<std::wstring> LookupModuleBasePath(HMODULE hModule, bela::error_co
 class __declspec(uuid("803A733E-9F73-4F38-BB43-1005CEC3B19D")) OpenBaulkTerminalHere
     : public Microsoft::WRL::RuntimeClass<
           Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom | Microsoft::WRL::InhibitFtmBase>,
-          IExplorerCommand> {
+          IExplorerCommand, IObjectWithSite> {
 public:
   // IExplorerCommand
   IFACEMETHODIMP GetTitle(_In_opt_ IShellItemArray *items, _Outptr_result_nullonfailure_ PWSTR *ppszTitle) {
@@ -70,11 +70,11 @@ public:
   }
 
   IFACEMETHODIMP GetCanonicalName(_Out_ GUID *guidCommandName) {
-    *guidCommandName = GUID_NULL;
+    *guidCommandName = __uuidof(this);
     return S_OK;
   }
 
-  HRESULT GetState(IShellItemArray * /*psiItemArray*/, BOOL /*fOkToBeSlow*/, EXPCMDSTATE *pCmdState) {
+  HRESULT GetState(IShellItemArray *psiItemArray, BOOL /*fOkToBeSlow*/, EXPCMDSTATE *pCmdState) {
     // compute the visibility of the verb here, respect "fOkToBeSlow" if this is
     // slow (does IO for example) when called with fOkToBeSlow == FALSE return
     // E_PENDING and this object will be called back on a background thread with
@@ -83,33 +83,33 @@ public:
     // We however don't need to bother with any of that, so we'll just return
     // ECS_ENABLED.
 
+    Microsoft::WRL::ComPtr<IShellItem> psi;
+    if (GetBestLocationFromSelectionOrSite(psiItemArray, psi.GetAddressOf()) != S_OK) {
+      return false;
+    }
+
+    SFGAOF attributes;
+    const bool isFileSystemItem = psi && (psi->GetAttributes(SFGAO_FILESYSTEM, &attributes) == S_OK);
+    *pCmdState = isFileSystemItem ? ECS_ENABLED : ECS_HIDDEN;
     *pCmdState = ECS_ENABLED;
     return S_OK;
   }
 
   IFACEMETHODIMP Invoke(_In_opt_ IShellItemArray *psiItemArray, _In_opt_ IBindCtx *) noexcept {
-    std::wstring path;
-    if (psiItemArray == nullptr) {
-      // get the current path from explorer.exe
-      path = this->_GetPathFromExplorer();
-      // no go, unable to get a reasonable path
-      if (path.empty()) {
-        return S_FALSE;
-      }
-    } else {
-      DWORD count;
-      psiItemArray->GetCount(&count);
-      winrt::com_ptr<IShellItem> psi;
-      if (!SUCCEEDED(psiItemArray->GetItemAt(0, psi.put()))) {
-        return S_FALSE;
-      }
-      LPWSTR pszName;
-      if (!SUCCEEDED(psi->GetDisplayName(SIGDN_FILESYSPATH, &pszName))) {
-        return S_FALSE;
-      }
-      path = pszName;
-      CoTaskMemFree(pszName);
+    Microsoft::WRL::ComPtr<IShellItem> psi;
+    if (GetBestLocationFromSelectionOrSite(psiItemArray, psi.GetAddressOf()) != S_OK) {
+      return false;
     }
+    if (!psi) {
+      return S_FALSE;
+    }
+    std::wstring path;
+    LPWSTR pszName;
+    if (!SUCCEEDED(psi->GetDisplayName(SIGDN_FILESYSPATH, &pszName))) {
+      return S_FALSE;
+    }
+    path = pszName;
+    CoTaskMemFree(pszName);
     bela::error_code ec;
     auto basePath = LookupModuleBasePath(reinterpret_cast<HMODULE>(GetModuleInstanceHandle()), ec);
     if (!basePath) {
@@ -160,95 +160,60 @@ public:
     return E_NOTIMPL;
   }
 
+  IFACEMETHODIMP SetSite(_In_ IUnknown *site) noexcept {
+    site_ = site;
+    return S_OK;
+  }
+  IFACEMETHODIMP GetSite(_In_ REFIID riid, _COM_Outptr_ void **site) noexcept {
+    //
+    return site_.CopyTo(riid, site);
+  }
+
 protected:
-  Microsoft::WRL::ComPtr<IUnknown> m_site;
+  Microsoft::WRL::ComPtr<IUnknown> site_;
 
 private:
-  std::wstring _GetPathFromExplorer() const;
+  HRESULT GetLocationFromSite(IShellItem **location) const noexcept;
+  HRESULT GetBestLocationFromSelectionOrSite(IShellItemArray *psiArray, IShellItem **location) const noexcept;
 };
 
-std::wstring OpenBaulkTerminalHere::_GetPathFromExplorer() const {
-  using namespace winrt;
-
-  std::wstring path;
-  HRESULT hr = NOERROR;
-
-  auto hwnd = ::GetForegroundWindow();
-  if (hwnd == nullptr) {
-    return path;
+HRESULT OpenBaulkTerminalHere::GetLocationFromSite(IShellItem **location) const noexcept {
+  Microsoft::WRL::ComPtr<IServiceProvider> serviceProvider;
+  if (site_.As(&serviceProvider) != S_OK) {
+    return S_FALSE;
   }
+  Microsoft::WRL::ComPtr<IFolderView> folderView;
+  if (serviceProvider->QueryService(SID_SFolderView, folderView.GetAddressOf()) != S_OK) {
+    return S_FALSE;
+  }
+  return folderView->GetFolder(IID_PPV_ARGS(location));
+}
 
-  WCHAR szName[MAX_PATH] = {0};
-  ::GetClassNameW(hwnd, szName, MAX_PATH);
-  if (0 == StrCmp(szName, L"WorkerW") || 0 == StrCmp(szName, L"Progman")) {
-    // special folder: desktop
-    hr = ::SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, szName);
-    if (FAILED(hr)) {
-      return path;
+HRESULT OpenBaulkTerminalHere::GetBestLocationFromSelectionOrSite(IShellItemArray *psiArray,
+                                                                  IShellItem **location) const noexcept {
+  Microsoft::WRL::ComPtr<IShellItem> psi;
+  if (psiArray) {
+    DWORD count{};
+    if (psiArray->GetCount(&count) != S_OK) {
+      return S_FALSE;
     }
-
-    path = szName;
-    return path;
-  }
-
-  if (0 != StrCmpW(szName, L"CabinetWClass")) {
-    return path;
-  }
-
-  com_ptr<IShellWindows> shell;
-  try {
-    shell = create_instance<IShellWindows>(CLSID_ShellWindows, CLSCTX_ALL);
-  } catch (...) {
-    // look like try_create_instance is not available no more
-  }
-
-  if (shell == nullptr) {
-    return path;
-  }
-
-  com_ptr<IDispatch> disp;
-  VARIANT variant;
-  VariantInit(&variant);
-  variant.vt = VT_I4;
-  auto closer = bela::finally([&] { VariantClear(&variant); });
-
-  com_ptr<IWebBrowserApp> browser;
-  // look for correct explorer window
-  for (variant.intVal = 0; shell->Item(variant, disp.put()) == S_OK; variant.intVal++) {
-    com_ptr<IWebBrowserApp> tmp;
-    if (FAILED(disp->QueryInterface(tmp.put()))) {
-      disp = nullptr; // get rid of DEBUG non-nullptr warning
-      continue;
-    }
-
-    HWND tmpHWND = NULL;
-    hr = tmp->get_HWND(reinterpret_cast<SHANDLE_PTR *>(&tmpHWND));
-    if (hwnd == tmpHWND) {
-      browser = tmp;
-      disp = nullptr; // get rid of DEBUG non-nullptr warning
-      break;          // found
-    }
-
-    disp = nullptr; // get rid of DEBUG non-nullptr warning
-  }
-
-  if (browser != nullptr) {
-    BSTR url = nullptr;
-    hr = browser->get_LocationURL(&url);
-    if (FAILED(hr)) {
-      return path;
-    }
-
-    std::wstring sUrl(url, SysStringLen(url));
-    SysFreeString(url);
-    DWORD size = MAX_PATH;
-    hr = ::PathCreateFromUrlW(sUrl.c_str(), szName, &size, NULL);
-    if (SUCCEEDED(hr)) {
-      path = szName;
+    if (count) // Sometimes we get an array with a count of 0. Fall back to the site chain.
+    {
+      if (psiArray->GetCount(&count) != S_OK) {
+        return S_FALSE;
+      }
     }
   }
 
-  return path;
+  if (!psi) {
+    if (GetLocationFromSite(&psi) != S_OK) {
+      return S_FALSE;
+    }
+  }
+  if (!psi) {
+    return S_FALSE;
+  }
+  return psi.CopyTo(location);
 }
 
 CoCreatableClass(OpenBaulkTerminalHere) CoCreatableClassWrlCreatorMapInclude(OpenBaulkTerminalHere); //
