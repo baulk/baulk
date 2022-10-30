@@ -70,8 +70,12 @@ bool File::parseFile(bela::error_code &ec) {
   int shentsize = 0;
   int shnum = 0;
   int shstrndx = 0;
+  int wantPhentsize{0};
+  int wantShentsize{0};
   switch (fh.Class) {
   case ELFCLASS32: {
+    wantPhentsize = 8 * 4;
+    wantShentsize = 10 * 4;
     Elf32_Ehdr hdr;
     if (!fd.ReadAt(hdr, 0, ec)) {
       return false;
@@ -93,6 +97,8 @@ bool File::parseFile(bela::error_code &ec) {
     shstrndx = endian_cast(hdr.e_shstrndx);
   } break;
   case ELFCLASS64: {
+    wantPhentsize = 2 * 4 + 6 * 8;
+    wantShentsize = 4 * 4 + 6 * 8;
     Elf64_Ehdr hdr;
     if (!fd.ReadAt(hdr, 0, ec)) {
       return false;
@@ -115,6 +121,10 @@ bool File::parseFile(bela::error_code &ec) {
   } break;
   default:
     break;
+  }
+  if (phnum > 0 && phentsize < wantPhentsize) {
+    ec = bela::make_error_code(ErrGeneral, L"invalid ELF phentsize=", phentsize);
+    return false;
   }
   //
   if (shoff == 0 && shnum != 0) {
@@ -166,6 +176,10 @@ bool File::parseFile(bela::error_code &ec) {
   }
   if (shnum < 0 || shnum > 10000) {
     ec = bela::make_error_code(ErrGeneral, L"invalid ELF shnum ", shnum);
+    return false;
+  }
+  if (shnum > 0 && shentsize < wantShentsize) {
+    ec = bela::make_error_code(ErrGeneral, L"invalid ELF shentsize ", shstrndx);
     return false;
   }
   sections.resize(shnum);
