@@ -89,12 +89,15 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@COND_SYMVERS_TRUE@am__append_1 = \
-@COND_SYMVERS_TRUE@	-Wl,--version-script=$(top_srcdir)/src/liblzma/liblzma.map
+@COND_SYMVERS_GENERIC_TRUE@am__append_1 = \
+@COND_SYMVERS_GENERIC_TRUE@	-Wl,--version-script=$(top_srcdir)/src/liblzma/liblzma_generic.map
 
-@COND_THREADS_TRUE@am__append_2 = ../common/tuklib_cpucores.c
-@COND_THREADS_TRUE@am__append_3 = common/hardware_cputhreads.c
-@COND_MAIN_ENCODER_TRUE@am__append_4 = \
+@COND_SYMVERS_LINUX_TRUE@am__append_2 = \
+@COND_SYMVERS_LINUX_TRUE@	-Wl,--version-script=$(top_srcdir)/src/liblzma/liblzma_linux.map
+
+@COND_THREADS_TRUE@am__append_3 = ../common/tuklib_cpucores.c
+@COND_THREADS_TRUE@am__append_4 = common/hardware_cputhreads.c
+@COND_MAIN_ENCODER_TRUE@am__append_5 = \
 @COND_MAIN_ENCODER_TRUE@	common/alone_encoder.c \
 @COND_MAIN_ENCODER_TRUE@	common/block_buffer_encoder.c \
 @COND_MAIN_ENCODER_TRUE@	common/block_buffer_encoder.h \
@@ -115,12 +118,12 @@ host_triplet = @host@
 @COND_MAIN_ENCODER_TRUE@	common/stream_flags_encoder.c \
 @COND_MAIN_ENCODER_TRUE@	common/vli_encoder.c
 
-@COND_MAIN_ENCODER_TRUE@@COND_THREADS_TRUE@am__append_5 = \
+@COND_MAIN_ENCODER_TRUE@@COND_THREADS_TRUE@am__append_6 = \
 @COND_MAIN_ENCODER_TRUE@@COND_THREADS_TRUE@	common/outqueue.c \
 @COND_MAIN_ENCODER_TRUE@@COND_THREADS_TRUE@	common/outqueue.h \
 @COND_MAIN_ENCODER_TRUE@@COND_THREADS_TRUE@	common/stream_encoder_mt.c
 
-@COND_MAIN_DECODER_TRUE@am__append_6 = \
+@COND_MAIN_DECODER_TRUE@am__append_7 = \
 @COND_MAIN_DECODER_TRUE@	common/alone_decoder.c \
 @COND_MAIN_DECODER_TRUE@	common/alone_decoder.h \
 @COND_MAIN_DECODER_TRUE@	common/auto_decoder.c \
@@ -141,39 +144,39 @@ host_triplet = @host@
 @COND_MAIN_DECODER_TRUE@	common/stream_flags_decoder.c \
 @COND_MAIN_DECODER_TRUE@	common/vli_decoder.c
 
-@COND_CHECK_CRC32_TRUE@@COND_SMALL_TRUE@am__append_7 = check/crc32_small.c
-@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_8 = \
+@COND_CHECK_CRC32_TRUE@@COND_SMALL_TRUE@am__append_8 = check/crc32_small.c
+@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_9 = \
 @COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@	check/crc32_table.c \
 @COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@	check/crc32_table_le.h \
 @COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@	check/crc32_table_be.h
 
-@COND_ASM_X86_TRUE@@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_9 = check/crc32_x86.S
-@COND_ASM_X86_FALSE@@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_10 = check/crc32_fast.c
-@COND_CHECK_CRC64_TRUE@@COND_SMALL_TRUE@am__append_11 = check/crc64_small.c
-@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_12 = \
+@COND_ASM_X86_TRUE@@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_10 = check/crc32_x86.S
+@COND_ASM_X86_FALSE@@COND_CHECK_CRC32_TRUE@@COND_SMALL_FALSE@am__append_11 = check/crc32_fast.c
+@COND_CHECK_CRC64_TRUE@@COND_SMALL_TRUE@am__append_12 = check/crc64_small.c
+@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_13 = \
 @COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@	check/crc64_table.c \
 @COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@	check/crc64_table_le.h \
 @COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@	check/crc64_table_be.h
 
-@COND_ASM_X86_TRUE@@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_13 = check/crc64_x86.S
-@COND_ASM_X86_FALSE@@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_14 = check/crc64_fast.c
-@COND_CHECK_SHA256_TRUE@@COND_INTERNAL_SHA256_TRUE@am__append_15 = check/sha256.c
-@COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@am__append_16 = \
+@COND_ASM_X86_TRUE@@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_14 = check/crc64_x86.S
+@COND_ASM_X86_FALSE@@COND_CHECK_CRC64_TRUE@@COND_SMALL_FALSE@am__append_15 = check/crc64_fast.c
+@COND_CHECK_SHA256_TRUE@@COND_INTERNAL_SHA256_TRUE@am__append_16 = check/sha256.c
+@COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@am__append_17 = \
 @COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_encoder.c \
 @COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_encoder.h \
 @COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_encoder_hash.h \
 @COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_encoder_hash_table.h \
 @COND_ENCODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_encoder_mf.c
 
-@COND_DECODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@am__append_17 = \
+@COND_DECODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@am__append_18 = \
 @COND_DECODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_decoder.c \
 @COND_DECODER_LZ_TRUE@@COND_FILTER_LZ_TRUE@	lz/lz_decoder.h
 
-@COND_FILTER_LZMA1_TRUE@am__append_18 = lzma/fastpos_tablegen.c \
+@COND_FILTER_LZMA1_TRUE@am__append_19 = lzma/fastpos_tablegen.c \
 @COND_FILTER_LZMA1_TRUE@	rangecoder/price_tablegen.c
-@COND_FILTER_LZMA1_TRUE@am__append_19 = lzma/lzma_common.h \
+@COND_FILTER_LZMA1_TRUE@am__append_20 = lzma/lzma_common.h \
 @COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder_presets.c
-@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_20 = \
+@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_21 = \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/fastpos.h \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder.h \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder.c \
@@ -181,62 +184,62 @@ host_triplet = @host@
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder_optimum_fast.c \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder_optimum_normal.c
 
-@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@@COND_SMALL_FALSE@am__append_21 = lzma/fastpos_table.c
-@COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_22 = \
+@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@@COND_SMALL_FALSE@am__append_22 = lzma/fastpos_table.c
+@COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_23 = \
 @COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_decoder.c \
 @COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_decoder.h
 
-@COND_ENCODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_23 = \
+@COND_ENCODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_24 = \
 @COND_ENCODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma2_encoder.c \
 @COND_ENCODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma2_encoder.h
 
-@COND_DECODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_24 = \
+@COND_DECODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_25 = \
 @COND_DECODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma2_decoder.c \
 @COND_DECODER_LZMA2_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma2_decoder.h
 
-@COND_FILTER_LZMA1_TRUE@am__append_25 = rangecoder/range_common.h
-@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_26 = \
+@COND_FILTER_LZMA1_TRUE@am__append_26 = rangecoder/range_common.h
+@COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_27 = \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	rangecoder/range_encoder.h \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	rangecoder/price.h \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	rangecoder/price_table.c
 
-@COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_27 = rangecoder/range_decoder.h
-@COND_FILTER_DELTA_TRUE@am__append_28 = \
+@COND_DECODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_28 = rangecoder/range_decoder.h
+@COND_FILTER_DELTA_TRUE@am__append_29 = \
 @COND_FILTER_DELTA_TRUE@	delta/delta_common.c \
 @COND_FILTER_DELTA_TRUE@	delta/delta_common.h \
 @COND_FILTER_DELTA_TRUE@	delta/delta_private.h
 
-@COND_ENCODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@am__append_29 = \
+@COND_ENCODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@am__append_30 = \
 @COND_ENCODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@	delta/delta_encoder.c \
 @COND_ENCODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@	delta/delta_encoder.h
 
-@COND_DECODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@am__append_30 = \
+@COND_DECODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@am__append_31 = \
 @COND_DECODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@	delta/delta_decoder.c \
 @COND_DECODER_DELTA_TRUE@@COND_FILTER_DELTA_TRUE@	delta/delta_decoder.h
 
-@COND_FILTER_SIMPLE_TRUE@am__append_31 = \
+@COND_FILTER_SIMPLE_TRUE@am__append_32 = \
 @COND_FILTER_SIMPLE_TRUE@	simple/simple_coder.c \
 @COND_FILTER_SIMPLE_TRUE@	simple/simple_coder.h \
 @COND_FILTER_SIMPLE_TRUE@	simple/simple_private.h
 
-@COND_ENCODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_32 = \
+@COND_ENCODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_33 = \
 @COND_ENCODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@	simple/simple_encoder.c \
 @COND_ENCODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@	simple/simple_encoder.h
 
-@COND_DECODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_33 = \
+@COND_DECODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_34 = \
 @COND_DECODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@	simple/simple_decoder.c \
 @COND_DECODER_SIMPLE_TRUE@@COND_FILTER_SIMPLE_TRUE@	simple/simple_decoder.h
 
-@COND_FILTER_SIMPLE_TRUE@@COND_FILTER_X86_TRUE@am__append_34 = simple/x86.c
-@COND_FILTER_POWERPC_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_35 = simple/powerpc.c
-@COND_FILTER_IA64_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_36 = simple/ia64.c
-@COND_FILTER_ARM_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_37 = simple/arm.c
-@COND_FILTER_ARMTHUMB_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_38 = simple/armthumb.c
-@COND_FILTER_SIMPLE_TRUE@@COND_FILTER_SPARC_TRUE@am__append_39 = simple/sparc.c
-@COND_W32_TRUE@am__append_40 = liblzma.def liblzma.def.in empty.c
-@COND_W32_TRUE@am__append_41 = liblzma_w32res.rc
-@COND_W32_TRUE@am__append_42 = -Xlinker --output-def -Xlinker liblzma.def.in
-@COND_SHARED_TRUE@@COND_W32_TRUE@am__append_43 = liblzma.def
+@COND_FILTER_SIMPLE_TRUE@@COND_FILTER_X86_TRUE@am__append_35 = simple/x86.c
+@COND_FILTER_POWERPC_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_36 = simple/powerpc.c
+@COND_FILTER_IA64_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_37 = simple/ia64.c
+@COND_FILTER_ARM_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_38 = simple/arm.c
+@COND_FILTER_ARMTHUMB_TRUE@@COND_FILTER_SIMPLE_TRUE@am__append_39 = simple/armthumb.c
+@COND_FILTER_SIMPLE_TRUE@@COND_FILTER_SPARC_TRUE@am__append_40 = simple/sparc.c
+@COND_W32_TRUE@am__append_41 = liblzma.def liblzma.def.in empty.c
+@COND_W32_TRUE@am__append_42 = liblzma_w32res.rc
+@COND_W32_TRUE@am__append_43 = -Xlinker --output-def -Xlinker liblzma.def.in
+@COND_SHARED_TRUE@@COND_W32_TRUE@am__append_44 = liblzma.def
 subdir = src/liblzma
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_capsicum.m4 \
@@ -726,6 +729,7 @@ POSUB = @POSUB@
 PREFERABLY_POSIX_SHELL = @PREFERABLY_POSIX_SHELL@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_CXX = @PTHREAD_CXX@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 RC = @RC@
@@ -795,31 +799,32 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 xz = @xz@
 SUBDIRS = api
-EXTRA_DIST = liblzma.map validate_map.sh check/crc32_tablegen.c \
-	check/crc64_tablegen.c $(am__append_18) liblzma.pc.in
-CLEANFILES = $(am__append_40)
-doc_DATA = $(am__append_43)
+EXTRA_DIST = liblzma_generic.map liblzma_linux.map validate_map.sh \
+	check/crc32_tablegen.c check/crc64_tablegen.c $(am__append_19) \
+	liblzma.pc.in
+CLEANFILES = $(am__append_41)
+doc_DATA = $(am__append_44)
 lib_LTLIBRARIES = liblzma.la
-liblzma_la_SOURCES = ../common/tuklib_physmem.c $(am__append_2) \
+liblzma_la_SOURCES = ../common/tuklib_physmem.c $(am__append_3) \
 	common/common.c common/common.h common/memcmplen.h \
 	common/block_util.c common/easy_preset.c common/easy_preset.h \
 	common/filter_common.c common/filter_common.h \
 	common/hardware_physmem.c common/index.c common/index.h \
 	common/stream_flags_common.c common/stream_flags_common.h \
-	common/vli_size.c $(am__append_3) $(am__append_4) \
-	$(am__append_5) $(am__append_6) check/check.c check/check.h \
-	check/crc_macros.h $(am__append_7) $(am__append_8) \
-	$(am__append_9) $(am__append_10) $(am__append_11) \
-	$(am__append_12) $(am__append_13) $(am__append_14) \
-	$(am__append_15) $(am__append_16) $(am__append_17) \
-	$(am__append_19) $(am__append_20) $(am__append_21) \
-	$(am__append_22) $(am__append_23) $(am__append_24) \
-	$(am__append_25) $(am__append_26) $(am__append_27) \
-	$(am__append_28) $(am__append_29) $(am__append_30) \
-	$(am__append_31) $(am__append_32) $(am__append_33) \
-	$(am__append_34) $(am__append_35) $(am__append_36) \
-	$(am__append_37) $(am__append_38) $(am__append_39) \
-	$(am__append_41)
+	common/vli_size.c $(am__append_4) $(am__append_5) \
+	$(am__append_6) $(am__append_7) check/check.c check/check.h \
+	check/crc_macros.h $(am__append_8) $(am__append_9) \
+	$(am__append_10) $(am__append_11) $(am__append_12) \
+	$(am__append_13) $(am__append_14) $(am__append_15) \
+	$(am__append_16) $(am__append_17) $(am__append_18) \
+	$(am__append_20) $(am__append_21) $(am__append_22) \
+	$(am__append_23) $(am__append_24) $(am__append_25) \
+	$(am__append_26) $(am__append_27) $(am__append_28) \
+	$(am__append_29) $(am__append_30) $(am__append_31) \
+	$(am__append_32) $(am__append_33) $(am__append_34) \
+	$(am__append_35) $(am__append_36) $(am__append_37) \
+	$(am__append_38) $(am__append_39) $(am__append_40) \
+	$(am__append_42)
 liblzma_la_CPPFLAGS = \
 	-I$(top_srcdir)/src/liblzma/api \
 	-I$(top_srcdir)/src/liblzma/common \
@@ -832,8 +837,8 @@ liblzma_la_CPPFLAGS = \
 	-I$(top_srcdir)/src/common \
 	-DTUKLIB_SYMBOL_PREFIX=lzma_
 
-liblzma_la_LDFLAGS = -no-undefined -version-info 7:6:2 $(am__append_1) \
-	$(am__append_42)
+liblzma_la_LDFLAGS = -no-undefined -version-info 7:8:2 $(am__append_1) \
+	$(am__append_2) $(am__append_43)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liblzma.pc
 pc_verbose = $(pc_verbose_@AM_V@)
