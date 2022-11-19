@@ -5,7 +5,7 @@ set(BELA_BLAKE3_SOURCES blake3/blake3.c blake3/blake3_dispatch.c blake3/blake3_p
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(BELA_ENABLE_ASSEMBLY_FILES ON)
-endif(CLANG)
+endif()
 
 
 # FIXME CMAKE CMAKE_MSVC_RUNTIME_LIBRARY_DEFAULT
