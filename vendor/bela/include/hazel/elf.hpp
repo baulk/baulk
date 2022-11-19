@@ -3,7 +3,7 @@
 #define HAZEL_ELF_HPP
 #include <bela/endian.hpp>
 #include "hazel.hpp"
-#include "details/ELF.h"
+#include "details/elf.h"
 
 namespace hazel::elf {
 using namespace llvm::ELF;

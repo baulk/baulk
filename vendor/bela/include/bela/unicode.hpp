@@ -17,7 +17,7 @@ enum { UpperCase = 0, LowerCase = 1, TitleCase = 2, MaxCase = 3 };
 struct CaseRange {
   uint32_t lo;
   uint32_t hi;
-  char32_t delta[MaxCase];
+  int32_t delta[MaxCase];
 };
 constexpr const CaseRange CaseRanges_[] = {
     {0x0041, 0x005A, {0, 32, 0}},
@@ -351,7 +351,7 @@ char32_t convert(int case_, char32_t r, const CaseRange *caseRanges, size_t n) {
     auto m = lo + (hi - lo) / 2;
     auto cr = caseRanges[m];
     if (static_cast<char32_t>(cr.lo) <= r && r <= static_cast<char32_t>(cr.hi)) {
-      auto delta = cr.delta[case_];
+      auto delta = static_cast<char32_t>(cr.delta[case_]);
       if (delta > MaxRune) {
         // In an Upper-Lower sequence, which always starts with
         // an UpperCase letter, the real deltas always look like:

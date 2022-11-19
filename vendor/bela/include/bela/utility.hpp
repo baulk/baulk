@@ -16,12 +16,12 @@ namespace bela {
   // an empty function body and the noreturn attribute.
 #ifdef __GNUC__ // GCC, Clang, ICC
   __builtin_unreachable();
-#else defined(_MSC_VER) // MSVC
+#elif defined(_MSC_VER) // MSVC
   __assume(false);
 #endif
 }
 
-//template <std::integral I> constexpr int __bela_popcount(I i) noexcept { return std::popcount(i); }
+// template <std::integral I> constexpr int __bela_popcount(I i) noexcept { return std::popcount(i); }
 
 #ifndef _MSC_VER
 

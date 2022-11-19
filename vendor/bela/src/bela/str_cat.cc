@@ -86,7 +86,7 @@ inline constexpr wchar_t kHexTable<wchar_t>[513] =
 // Returns the number of non-pad digits of the output (it can never be zero
 // since 0 has one digit).
 inline size_t FastHexToBufferZeroPad16(uint64_t val, char *out) {
-#ifdef BELA_INTERNAL_HAVE_SSSE3
+#if defined(BELA_INTERNAL_HAVE_SSSE3) && !defined(__clang__)
   uint64_t be = bela::htons(val);
   const auto kNibbleMask = _mm_set1_epi8(0xf);
   const auto kHexDigits = _mm_setr_epi8('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');
@@ -127,7 +127,7 @@ inline size_t FastHexToBufferZeroPad16(uint64_t val, char16_t *out) {
 } // namespace strings_internal
 
 template <typename CharT>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 auto make_hex_string_view(Hex hex, CharT *end) {
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
   auto real_width = strings_internal::FastHexToBufferZeroPad16(hex.value, end - 16);
@@ -143,7 +143,7 @@ auto make_hex_string_view(Hex hex, CharT *end) {
 }
 
 template <typename CharT>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 auto make_dec_string_view(Dec dec, CharT *end) {
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
   CharT *const minfill = end - dec.width;

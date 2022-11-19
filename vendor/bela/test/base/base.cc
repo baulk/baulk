@@ -23,9 +23,11 @@ void string_no_const_print() {
   char16_t s4[32] = u"中国";
   char32_t s5[32] = U"🎉💖✔️💜😁😂😊🤣❤️😍😒👌";
   bela::FPrintF(stderr, L"string_no_const_print: %s %s %s %s %s\n", s1, s2, s3, s4, s5);
+#ifndef __clang__
   auto current = std::source_location::current();
   bela::FPrintF(stderr, L"%v: %v +%v (%v)\n", current.file_name(), current.function_name(), current.line(),
                 current.column());
+#endif
 }
 
 void string_const_print() {
