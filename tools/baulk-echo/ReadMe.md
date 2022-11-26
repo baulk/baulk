@@ -1,3 +1,0 @@
-# baulk-echo 
-
-## Protocol
