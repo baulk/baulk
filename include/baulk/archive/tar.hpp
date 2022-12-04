@@ -33,7 +33,8 @@ enum tar_format_t : int {
 
 // Type '0' indicates a regular file.
 constexpr char TypeReg = '0';
-constexpr char TypeRegA = '\x00'; // Deprecated: Use TypeReg instead.
+// Deprecated: Use TypeReg instead.
+constexpr char TypeRegA = '\x00'; 
 
 // Type '1' to '6' are header-only flags and may not have a data body.
 constexpr char TypeLink = '1';    // Hard link
