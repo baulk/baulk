@@ -222,7 +222,7 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
     LR"(\VC\Tools\Llvm\x64\bin)",
 #elif defined(_M_ARM64)
     LR"(\MSBuild\Current\Bin\arm64)",
-    LR"(\VC\Tools\Llvm\bin)", // TODO: Wait arm native clang
+    LR"(\VC\Tools\Llvm\ARM64\bin)",
 #else
     LR"(\MSBuild\Current\Bin)",
     LR"(\VC\Tools\Llvm\bin)",
