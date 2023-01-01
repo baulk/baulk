@@ -60,11 +60,11 @@
 #endif
 
 #ifndef BAULK_APPVERSION
-#define BAULK_APPVERSION L"Version: 4.0.0\nCopyright \xA9 2022, Baulk contributors."
+#define BAULK_APPVERSION L"Version: 4.0.0\nCopyright \xA9 2023, Baulk contributors."
 #endif
 
 #ifndef BAULK_COPYRIGHT
-#define BAULK_COPYRIGHT L"Copyright \xA9 2022, Baulk contributors."
+#define BAULK_COPYRIGHT L"Copyright \xA9 2023, Baulk contributors."
 #endif
 
 #endif
