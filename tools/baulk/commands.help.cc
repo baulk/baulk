@@ -39,7 +39,7 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
-  extact           Extract files according to the detected archive format
+  extract           Extract files according to the detected archive format
   brand            Display os device details
 
 Alias:

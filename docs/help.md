@@ -2,17 +2,17 @@
 
 ## Baulk Components
 
-|Command|Description|Remark|
-|---|---|---|
-|baulk|Minimal Package Manager for Windows|package manager|
-|baulk-exec|Baulk extended executor|Construct baulk isolation environment context, and run other commands in this environment<br>baulk-terminal --> wt --> baulk-exec --> pwsh|
-|baulk-dock|Baulk environment dock|Graphical tool to start different isolated terminal environments according to selection|
-|baulk-terminal|Baulk Windows Terminal Launcher|Start Windows Terminal and load the baulk isolation environment|
-|baulk-update|Baulk's own upgrade tool|A tool for updating baulk itself.|
-|unscrew|Unscrew Extractor|GUI extractor tools|
-|baulk-migrate|Baulk easy migration tool|**uncommon commands**: Migrate to new VFS mode, Usually no need to run|
-|baulk-lnk|Baulk extended launcher (cli)|**don't call internal command**: Launcher proxy, Start the command in the corresponding package according to the installation information|
-|baulk-wlnk|Baulk extended launcher (win32 gui)|**don't call internal command**: Launcher proxy, Start the command in the corresponding package according to the installation information |
+| Command        | Description                         | Remark                                                                                                                                     |
+| -------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| baulk          | Minimal Package Manager for Windows | package manager                                                                                                                            |
+| baulk-exec     | Baulk extended executor             | Construct baulk isolation environment context, and run other commands in this environment<br>baulk-terminal --> wt --> baulk-exec --> pwsh |
+| baulk-dock     | Baulk environment dock              | Graphical tool to start different isolated terminal environments according to selection                                                    |
+| baulk-terminal | Baulk Windows Terminal Launcher     | Start Windows Terminal and load the baulk isolation environment                                                                            |
+| baulk-update   | Baulk's own upgrade tool            | A tool for updating baulk itself.                                                                                                          |
+| unscrew        | Unscrew Extractor                   | GUI extractor tools                                                                                                                        |
+| baulk-migrate  | Baulk easy migration tool           | **uncommon commands**: Migrate to new VFS mode, Usually no need to run                                                                     |
+| baulk-lnk      | Baulk extended launcher (cli)       | **don't call internal command**: Launcher proxy, Start the command in the corresponding package according to the installation information  |
+| baulk-wlnk     | Baulk extended launcher (win32 gui) | **don't call internal command**: Launcher proxy, Start the command in the corresponding package according to the installation information  |
 
 ## Baulk Usage
 
@@ -49,7 +49,7 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
-  extact           Extract files according to the detected archive format
+  extract           Extract files according to the detected archive format
   brand            Display os device details
 
 Alias:
@@ -67,7 +67,7 @@ See 'baulk help <command>' to read usage a specific subcommand.
 
 ## Baulk executor
 
-baulk provides the `baulk-exec` command, which is a special launcher. Through this command, we can initialize the isolated baulk environment variable context and start a new process. The new process inherits the baulk isolated environment variable context. The tool enables baulk to install multiple versions of the same software in parallel, and releases provided by different manufacturers do not need to take into account environmental variables to interfere with each other. The advantage of using baulk-exec is that there is no need to modify the system environment variables, the environment variable context is temporary, and the process is destroyed when it exits. At present, the Baulk Terminal we run is also implemented by baulk-exec, and baulk-exec can also be widely used in various CI pipelines. 
+baulk provides the `baulk-exec` command, which is a special launcher. Through this command, we can initialize the isolated baulk environment variable context and start a new process. The new process inherits the baulk isolated environment variable context. The tool enables baulk to install multiple versions of the same software in parallel, and releases provided by different manufacturers do not need to take into account environmental variables to interfere with each other. The advantage of using baulk-exec is that there is no need to modify the system environment variables, the environment variable context is temporary, and the process is destroyed when it exits. At present, the Baulk Terminal we run is also implemented by baulk-exec, and baulk-exec can also be widely used in various CI pipelines.
 
 baulk-exec usage:
 
@@ -124,7 +124,7 @@ Usage: baulk-terminal [option] ...
 
 ```
 
-In addition to starting Windows Terminal through baulktermainl, you can also modify the command line of the default terminal of Windows Terminal and use baulk-exec to start the shell, so that the newly created shell has the environment variable context of baulk: 
+In addition to starting Windows Terminal through baulktermainl, you can also modify the command line of the default terminal of Windows Terminal and use baulk-exec to start the shell, so that the newly created shell has the environment variable context of baulk:
 
 ![](./images/onterminal.png)
 
@@ -166,7 +166,7 @@ Explorer context menu integration for Unscrew Extractor:
 
 ## Enabling Long Paths in Windows
 
-When extracting files with baulk, if you encounter a file that cannot be created because the name is too long, you can modify the long path setting. Unfortunately, Windows is not user-friendly here. 
+When extracting files with baulk, if you encounter a file that cannot be created because the name is too long, you can modify the long path setting. Unfortunately, Windows is not user-friendly here.
 
 You can use Powershell from an Adminstrative Terminal:
 
