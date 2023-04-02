@@ -167,7 +167,7 @@ std::optional<std::wstring> Executor::download_file() const {
     bela::FPrintF(stderr, L"baulk unable create directories %s error: %s\n", vfs::AppTemp(), ec);
     return std::nullopt;
   }
-  if (auto arfile = baulk::net::WinGet(download_url,
+  if (auto arfile = baulk::net::WinGet(baulk::net::HijackGithubUrl(download_url),
                                        {
                                            .hash_value = L"",
                                            .cwd = baulk::vfs::AppTemp(),

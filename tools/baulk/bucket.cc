@@ -113,7 +113,7 @@ bool BucketUpdate(const baulk::Bucket &bucket, std::wstring_view id, bela::error
       bela::FPrintF(stderr, L"baulk: download \x1b[36m%s\x1b[0m metadata. retries: \x1b[33m%d\x1b[0m\n", bucket.name,
                     i);
     }
-    if (archive_file = baulk::net::WinGet(master,
+    if (archive_file = baulk::net::WinGet(baulk::net::HijackGithubUrl(master),
                                           {
                                               .hash_value = L"",
                                               .cwd = baulk::vfs::AppTemp(),

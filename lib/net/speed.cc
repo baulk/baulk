@@ -20,6 +20,16 @@ std::uint64_t UrlResponseTime(std::wstring_view url) {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(cur - begin).count();
 }
 
+std::wstring HijackGithubUrl(std::wstring_view url) {
+  if (auto ghProxy = bela::GetEnv(L"GITHUB_PROXY"); !ghProxy.empty()) {
+    bela::error_code ec;
+    if (auto u = native::crack_url(url, ec); u && bela::EqualsIgnoreCase(u->host, L"github.com")) {
+      return bela::StringCat(ghProxy, url);
+    }
+  }
+  return std::wstring(url);
+}
+
 std::wstring_view BestUrlInternal(const std::vector<std::wstring> &urls, std::wstring_view locale) {
   if (urls.empty()) {
     return L"";
@@ -50,11 +60,11 @@ std::wstring_view BestUrlInternal(const std::vector<std::wstring> &urls, std::ws
   return urls[pos];
 }
 
-std::wstring_view BestUrl(const std::vector<std::wstring> &urls, std::wstring_view locale) {
+std::wstring BestUrl(const std::vector<std::wstring> &urls, std::wstring_view locale) {
   auto url = BestUrlInternal(urls, locale);
   if (auto pos = url.find('#'); pos != std::wstring_view::npos) {
-    return url.substr(0, pos);
+    return HijackGithubUrl(url.substr(0, pos));
   }
-  return url;
+  return HijackGithubUrl(url);
 }
 } // namespace baulk::net

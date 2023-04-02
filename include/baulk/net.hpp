@@ -6,7 +6,8 @@
 #include <baulk/net/tcp.hpp>
 
 namespace baulk::net {
-std::wstring_view BestUrl(const std::vector<std::wstring> &urls, std::wstring_view locale);
-}
+std::wstring HijackGithubUrl(std::wstring_view url);
+std::wstring BestUrl(const std::vector<std::wstring> &urls, std::wstring_view locale);
+} // namespace baulk::net
 
 #endif

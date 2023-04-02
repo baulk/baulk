@@ -125,6 +125,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
         } break;
         case 'E':
           packageEnvs.emplace_back(oa);
+          DbgPrint(L"append env: %s\n", oa);
           break;
         case 1000:
           if (!initializeVSPreviewEnv) {
