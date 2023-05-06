@@ -191,8 +191,10 @@ host_triplet = @host@
 
 @COND_FILTER_LZMA1_TRUE@am__append_23 = lzma/fastpos_tablegen.c \
 @COND_FILTER_LZMA1_TRUE@	rangecoder/price_tablegen.c
-@COND_FILTER_LZMA1_TRUE@am__append_24 = lzma/lzma_common.h \
+@COND_FILTER_LZMA1_TRUE@am__append_24 = \
+@COND_FILTER_LZMA1_TRUE@	lzma/lzma_common.h \
 @COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder_presets.c
+
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@am__append_25 = \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/fastpos.h \
 @COND_ENCODER_LZMA1_TRUE@@COND_FILTER_LZMA1_TRUE@	lzma/lzma_encoder.h \
@@ -877,7 +879,7 @@ liblzma_la_CPPFLAGS = \
 	-I$(top_srcdir)/src/common \
 	-DTUKLIB_SYMBOL_PREFIX=lzma_
 
-liblzma_la_LDFLAGS = -no-undefined -version-info 9:2:4 $(am__append_1) \
+liblzma_la_LDFLAGS = -no-undefined -version-info 9:3:4 $(am__append_1) \
 	$(am__append_2) $(am__append_48)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liblzma.pc
