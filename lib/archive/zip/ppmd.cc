@@ -98,7 +98,7 @@ Byte ppmd_read(const IByteIn *pp) {
   if (pp == nullptr) {
     return 0;
   }
-  CByteInToLook *p = CONTAINER_FROM_VTBL(pp, CByteInToLook, vt);
+  CByteInToLook *p = Z7_CONTAINER_FROM_VTBL(pp, CByteInToLook, vt);
   if (p->sr == nullptr) {
     return 0;
   }
