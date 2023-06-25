@@ -7,6 +7,7 @@
 #include <numeric>
 #include <source_location>
 
+
 void string_no_const_print_v0() {
   char *s1 = nullptr;
   char8_t *s2 = nullptr;

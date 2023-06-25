@@ -4,7 +4,7 @@
 #include <string_view>
 
 namespace llvm {
-std::string demangle(const std::string &MangledName);
+std::string demangle(std::string_view MangledName);
 }
 namespace bela {
 using llvm::demangle;
