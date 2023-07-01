@@ -1,5 +1,6 @@
 #include <bela/picker.hpp>
 #include <bela/terminal.hpp>
+#include <bela/comutils.hpp>
 
 class dotcom_global_initializer {
 public:
@@ -16,6 +17,7 @@ public:
 int wmain() {
   dotcom_global_initializer dot;
   bela::FPrintF(stderr, L"dotcom initialized.\n");
+  bela::unique_variant v1;
   auto f = bela::FolderPicker(nullptr, nullptr);
   if (!f) {
     auto ec = bela::make_system_error_code();
@@ -23,5 +25,6 @@ int wmain() {
     return 1;
   }
   bela::FPrintF(stderr, L"Folder is: %s\n", *f);
+
   return 0;
 }
