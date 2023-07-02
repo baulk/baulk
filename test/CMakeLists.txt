@@ -78,7 +78,7 @@ target_link_libraries(titlebar_test belashl)
 
 
 add_executable(neofetch neofetch.cc base.manifest)
-target_link_libraries(neofetch belatime belawin DXGI)
+target_link_libraries(neofetch belatime belawin DXGI Propsys wbemuuid)
 
 add_executable(pathext_test pathextension.cc base.manifest)
 target_link_libraries(pathext_test belatime belawin)
@@ -88,3 +88,12 @@ target_link_libraries(extract_test baulk.archive)
 
 add_executable(vfsenv_test vfsenv.cc base.manifest)
 target_link_libraries(vfsenv_test belawin)
+
+add_executable(wmic_test wmic.cc base.manifest)
+target_link_libraries(wmic_test
+belawin
+belashl
+ws2_32
+DXGI
+Propsys
+wbemuuid)

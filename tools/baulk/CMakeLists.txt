@@ -14,6 +14,8 @@ target_link_libraries(
   winhttp
   ws2_32
   DXGI
+  wbemuuid
+  Propsys
   Msi)
 
 if(BAULK_ENABLE_LTO)

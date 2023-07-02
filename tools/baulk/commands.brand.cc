@@ -9,6 +9,21 @@ void usage_brand() {
 }
 
 int cmd_brand(const argv_t & /*unused*/) {
+  auto result = CoInitializeSecurity(NULL,
+                                     -1,                          // COM authentication
+                                     NULL,                        // Authentication services
+                                     NULL,                        // Reserved
+                                     RPC_C_AUTHN_LEVEL_DEFAULT,   // Default authentication
+                                     RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation
+                                     NULL,                        // Authentication info
+                                     EOAC_NONE,                   // Additional capabilities
+                                     NULL                         // Reserved
+  );
+  if (FAILED(result)) {
+    auto ec = bela::make_system_error_code();
+    bela::FPrintF(stderr, L"baulk brand: CoInitializeSecurity error: %s\n", ec);
+    return 1;
+  }
   baulk::brand::Detector detector;
   bela::error_code ec;
   if (!detector.Execute(ec)) {

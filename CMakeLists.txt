@@ -1,5 +1,5 @@
 # Copyright © 2023. Baulk contributors. All Rights Reserved.
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.25)
 project(Baulk)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
@@ -14,7 +14,7 @@ Please delete them.")
 endif()
 
 set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(BAULK_ENABLE_LTO OFF)

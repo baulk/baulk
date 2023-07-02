@@ -158,7 +158,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
 class dotcom_global_initializer {
 public:
   dotcom_global_initializer() {
-    auto hr = CoInitialize(NULL);
+    auto hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
       auto ec = bela::make_system_error_code();
       MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);

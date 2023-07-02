@@ -10,6 +10,8 @@
 #include <bela/comutils.hpp>
 #include <bela/str_replace.hpp>
 #include <dxgi.h>
+#include <format>
+#include "wmic.hpp"
 
 namespace baulk::brand {
 namespace brand_internal {
@@ -140,13 +142,13 @@ struct monitor {
   }
 };
 
-struct storage {
-  std::wstring diskDevice;
+struct logical_disk_drive {
+  std::wstring device_latter;
   uint64_t total{0};
   uint64_t avail{0};
   uint8_t latter{0};
   std::wstring operator()() const {
-    return bela::StringCat(diskDevice, L" ", (total - avail) / brand_internal::GiB, L"GB / ",
+    return bela::StringCat(device_latter, L" ", (total - avail) / brand_internal::GiB, L"GB / ",
                            total / brand_internal::GiB, L"GB (", (total - avail) * 100 / total, L"%)");
   }
 };
@@ -291,7 +293,8 @@ private:
   baulk::brand::processor processor;
   std::vector<monitor> monitors;
   std::vector<std::wstring> graphics;
-  std::vector<storage> storages;
+  std::vector<baulk::wmic::disk_drive> drives;
+  std::vector<logical_disk_drive> storages;
   memory_status mem_status;
 };
 
@@ -346,14 +349,23 @@ inline void Detector::Swap(Render &render) const {
   render.append_meta_line(L"WM", L"Desktop Window Manager");
   render.append_meta_line(L"CPU", processor());
   render.append_meta_line(L"GPU", bela::StrJoin(graphics, L", "));
-  render.append_meta_line(L"RAM", bela::StringCat((mem_status.total - mem_status.avail) / MiB, L"MB / ",
-                                                  mem_status.total / MiB, L"MB (", mem_status.load, L"%)"));
+  // std::format(L"{:2f} GB / {:2f} GB ({}%)",double(mem_status.total -
+  // mem_status.avail)/GiB,double(mem_status.total)/GiB);
+  render.append_meta_line(L"RAM",
+                          std::format(L"{:.2f} GB/{:.2f} GB ({}%)", double(mem_status.total - mem_status.avail) / GiB,
+                                      double(mem_status.total) / GiB, mem_status.load));
+  std::vector<std::wstring> dss;
+  for (const auto &d : drives) {
+    dss.emplace_back(
+        std::format(L"{} {} {} <Capacity: {:.2f} GB>", d.friendly_name, d.bus_type, d.media_name(), double(d.size) / GiB));
+  }
+  render.append_meta_line(L"Storage", bela::StrJoin(dss, L", "));
   std::vector<std::wstring> ss;
   for (const auto &so : storages) {
     ss.emplace_back(so());
   }
   render.append_meta_line(L"Disk", bela::StrJoin(ss, L", "));
-  render.append_meta_line(L"Emoji",L"😊 👍 💖 💘 🗂️ 🥝 🧱");
+  render.append_meta_line(L"Emoji", L"😊 👍 💖 💘 🗂️ 🥝 🧱");
   render.append_meta_line(L"", L"");
   // COLOR
   // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
@@ -483,7 +495,7 @@ inline bool Detector::detect_graphics(bela::error_code &ec) {
       // Microsoft Basic Render Driver
       continue;
     }
-    graphics.emplace_back(bela::StrReplaceAll(desc1.Description, {{L"(R)", L""}}));
+    graphics.emplace_back(desc1.Description);
   }
   return true;
 }
@@ -507,8 +519,8 @@ inline bool Detector::detect_storages(bela::error_code &ec) {
     if (GetDiskFreeSpaceExW(diskPath.data(), &freeBytesForCaller, &total, &avail) != TRUE) {
       return;
     }
-    storages.emplace_back(storage{
-        .diskDevice = diskPath.substr(0, 2),
+    storages.emplace_back(logical_disk_drive{
+        .device_latter = diskPath.substr(0, 2),
         .total = total.QuadPart,
         .avail = avail.QuadPart,
     });
@@ -524,6 +536,10 @@ inline bool Detector::detect_storages(bela::error_code &ec) {
       detect_drive(static_cast<uint8_t>(latter));
     }
     N >>= 1;
+  }
+  auto ds = baulk::wmic::search_disk_drives(ec);
+  if (ds) {
+    drives = std::move(ds->drives);
   }
   return true;
 }
