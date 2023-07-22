@@ -350,6 +350,13 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
       continue;
     }
     // https://www.winzip.com/win/en/aes_info.html
+    // Offset	Size(bytes)	Content
+    // 0	2	Extra field header ID (0x9901)
+    // 2	2	Data size (currently 7, but subject to possible increase in the future)
+    // 4	2	Integer version number specific to the zip vendor
+    // 6	2	2-character vendor ID
+    // 8	1	Integer mode value indicating AES encryption strength
+    // 9	2	The actual compression method used to compress the file
     if (fieldTag == winzipAesExtraID) {
       if (fb.Size() < 7) {
         continue;
