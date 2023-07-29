@@ -143,6 +143,38 @@ private:
   }
 };
 
+inline std::optional<std::wstring> resolve_filename(std::wstring_view es) {
+  constexpr std::wstring_view fns = L"filename";
+  constexpr std::wstring_view fnsu = L"filename*";
+  constexpr std::wstring_view utf8 = L"UTF-8";
+  auto s = bela::StripAsciiWhitespace(es);
+  auto pos = s.find('=');
+  if (pos == std::wstring_view::npos) {
+    return std::nullopt;
+  }
+  auto field = bela::StripAsciiWhitespace(s.substr(0, pos));
+  auto v = bela::StripAsciiWhitespace(s.substr(pos + 1));
+  if (field == fns) {
+    bela::ConsumePrefix(&v, L"\"");
+    bela::ConsumeSuffix(&v, L"\"");
+    return std::make_optional<>(std::wstring(v));
+  }
+  if (field != fnsu) {
+    return std::nullopt;
+  }
+  if (pos = v.find(L"''"); pos == std::wstring_view::npos) {
+    bela::ConsumePrefix(&v, L"\"");
+    bela::ConsumeSuffix(&v, L"\"");
+    return std::make_optional<>(std::wstring(v));
+  }
+  if (bela::EqualsIgnoreCase(v.substr(0, pos), utf8)) {
+    auto name = v.substr(pos + 2);
+    return std::make_optional<>(bela::encode_into<char, wchar_t>(url_decode(name)));
+  }
+  // unsupported encoding
+  return std::nullopt;
+}
+
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
 // https://www.rfc-editor.org/rfc/rfc6266#section-5
 inline std::optional<std::wstring> extract_filename(const headers_t &hkv) {
@@ -151,19 +183,9 @@ inline std::optional<std::wstring> extract_filename(const headers_t &hkv) {
     return std::nullopt;
   }
   std::vector<std::wstring_view> pvv = bela::StrSplit(it->second, bela::ByChar(';'), bela::SkipEmpty());
-  constexpr std::wstring_view fns = L"filename=";
-  constexpr std::wstring_view fnsu = L"filename*=";
   for (auto e : pvv) {
-    auto s = bela::StripAsciiWhitespace(e);
-    if (bela::ConsumePrefix(&s, fns)) {
-      bela::ConsumePrefix(&s, L"\"");
-      bela::ConsumeSuffix(&s, L"\"");
-      return std::make_optional<>(url_path_name(s));
-    }
-    if (bela::ConsumePrefix(&s, fnsu)) {
-      bela::ConsumePrefix(&s, L"\"");
-      bela::ConsumeSuffix(&s, L"\"");
-      return std::make_optional<>(decoded_url_path_name(s));
+    if (auto result = resolve_filename(e); result) {
+      return result;
     }
   }
   return std::nullopt;

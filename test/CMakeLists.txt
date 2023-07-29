@@ -2,6 +2,8 @@
 add_executable(ext_test ext.cc)
 target_link_libraries(ext_test belawin)
 
+add_executable(eh_test extract_header.cc)
+target_link_libraries(eh_test belawin)
 
 add_executable(decodemsi_test decodemsi.cc)
 target_link_libraries(decodemsi_test belawin)
