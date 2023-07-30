@@ -23,7 +23,7 @@ Features
 +  Environment isolation and virtual environment 
     +  All packages have their own directory, and the invocation of the program in the package is initiated through its launcher or symbolic link, and the environment variables do not interfere or affect. 
     +  There are different major versions of the same software, and different distributions can be switched through venv, such as openjdk/msjdk. 
-+  Excellent package extraction experience: Baulk itself provides decompression capabilities in zip/tar and other formats, supports automatic detection of filename encoding, and avoids garbled filenames caused by CodePagde. 
++  Excellent package extraction experience: Baulk itself provides decompression capabilities in zip/tar and other formats, supports automatic detection of filename encoding, and avoids garbled filenames caused by CodePage. 
     +  Baulk also provides baulk extract/unzip/untar commands for users to use baulk's decompression function in other scenarios.
     +  Baulk also provides Unscrew Extractor (unscrew) a minimalist graphical decompression tool that can be integrated into the right-click menu to provide the ability to decompress `tar.*` files with one click. 
 +  Limited compatibility with scoop manifest (compatibility mode, inability to use baulk advanced features like environment isolation and virtual environments). 
