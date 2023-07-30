@@ -21,7 +21,7 @@ Baulk 最初是为了解决 [Clangbuilder](https://github.com/fstudio/clangbuild
 +  环境隔离与虚拟环境
     +  所有的包都有自己的目录，包中程序的调用通过其启动器或者符号链接发起，环境变量不干扰，不影响。
     +  同一软件存在不同的大版本，不同的发行版可以通过 venv 进行切换，如 openjdk/msjdk。
-+  优秀的包提取体验：Baulk 自身提供了 zip/tar 等格式的解压能力，支持自动检测文件名编码，避免因 CodePagde 导致的文件名乱码。
++  优秀的包提取体验：Baulk 自身提供了 zip/tar 等格式的解压能力，支持自动检测文件名编码，避免因 CodePage 导致的文件名乱码。
     +  Baulk 还额外提供了 baulk extract/unzip/untar 这几个命令来供用户在其他场景使用 baulk 的解压功能。
     +  Baulk 还额外提供了 Unscrew Extractor (unscrew) 极简的图形化解压缩工具，能集成到右键菜单，提供一键解压 `tar.*` 文件的能力。
 +  对 scoop manifest 的有限兼容 (兼容模式，无法使用 baulk 高级特性，如环境隔离和虚拟环境)。
