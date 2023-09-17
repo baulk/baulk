@@ -1,7 +1,7 @@
 /**
- * pugixml parser - version 1.13
+ * pugixml parser - version 1.14
  * --------------------------------------------------------
- * Copyright (C) 2006-2022, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
+ * Copyright (C) 2006-2023, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
  * Report bugs and download new versions at https://pugixml.org/
  *
  * This library is distributed under the MIT License. See notice at the end
@@ -3279,6 +3279,7 @@ PUGI_IMPL_NS_BEGIN
 			char_t ch = 0;
 			xml_node_struct* cursor = root;
 			char_t* mark = s;
+			char_t* merged_pcdata = s;
 
 			while (*s != 0)
 			{
@@ -3473,20 +3474,37 @@ PUGI_IMPL_NS_BEGIN
 
 					if (cursor->parent || PUGI_IMPL_OPTSET(parse_fragment))
 					{
+						char_t* parsed_pcdata = s;
+
+						s = strconv_pcdata(s);
+
 						if (PUGI_IMPL_OPTSET(parse_embed_pcdata) && cursor->parent && !cursor->first_child && !cursor->value)
 						{
-							cursor->value = s; // Save the offset.
+							cursor->value = parsed_pcdata; // Save the offset.
+						}
+						else if (PUGI_IMPL_OPTSET(parse_merge_pcdata) && cursor->first_child && PUGI_IMPL_NODETYPE(cursor->first_child->prev_sibling_c) == node_pcdata)
+						{
+							assert(merged_pcdata >= cursor->first_child->prev_sibling_c->value);
+
+							// Catch up to the end of last parsed value; only needed for the first fragment.
+							merged_pcdata += strlength(merged_pcdata);
+
+							size_t length = strlength(parsed_pcdata);
+
+							// Must use memmove instead of memcpy as this move may overlap
+							memmove(merged_pcdata, parsed_pcdata, (length + 1) * sizeof(char_t));
+							merged_pcdata += length;
 						}
 						else
 						{
+							xml_node_struct* prev_cursor = cursor;
 							PUGI_IMPL_PUSHNODE(node_pcdata); // Append a new node on the tree.
 
-							cursor->value = s; // Save the offset.
+							cursor->value = parsed_pcdata; // Save the offset.
+							merged_pcdata = parsed_pcdata; // Used for parse_merge_pcdata above, cheaper to save unconditionally
 
-							PUGI_IMPL_POPNODE(); // Pop since this is a standalone.
+							cursor = prev_cursor; // Pop since this is a standalone.
 						}
-
-						s = strconv_pcdata(s);
 
 						if (!*s) break;
 					}
@@ -3566,7 +3584,7 @@ PUGI_IMPL_NS_BEGIN
 					return make_parse_result(status_unrecognized_tag, length - 1);
 
 				// check if there are any element nodes parsed
-				xml_node_struct* first_root_child_parsed = last_root_child ? last_root_child->next_sibling + 0 : root->first_child+ 0;
+				xml_node_struct* first_root_child_parsed = last_root_child ? last_root_child->next_sibling + 0 : root->first_child + 0;
 
 				if (!PUGI_IMPL_OPTSET(parse_fragment) && !has_element_node_siblings(first_root_child_parsed))
 					return make_parse_result(status_no_document_element, length - 1);
@@ -5401,11 +5419,11 @@ namespace pugi
 		return impl::strcpy_insitu(_attr->name, _attr->header, impl::xml_memory_page_name_allocated_mask, rhs, impl::strlength(rhs));
 	}
 
-	PUGI_IMPL_FN bool xml_attribute::set_value(const char_t* rhs, size_t sz)
+	PUGI_IMPL_FN bool xml_attribute::set_name(const char_t* rhs, size_t size)
 	{
 		if (!_attr) return false;
 
-		return impl::strcpy_insitu(_attr->value, _attr->header, impl::xml_memory_page_value_allocated_mask, rhs, sz);
+		return impl::strcpy_insitu(_attr->name, _attr->header, impl::xml_memory_page_name_allocated_mask, rhs, size);
 	}
 
 	PUGI_IMPL_FN bool xml_attribute::set_value(const char_t* rhs)
@@ -5413,6 +5431,13 @@ namespace pugi
 		if (!_attr) return false;
 
 		return impl::strcpy_insitu(_attr->value, _attr->header, impl::xml_memory_page_value_allocated_mask, rhs, impl::strlength(rhs));
+	}
+
+	PUGI_IMPL_FN bool xml_attribute::set_value(const char_t* rhs, size_t size)
+	{
+		if (!_attr) return false;
+
+		return impl::strcpy_insitu(_attr->value, _attr->header, impl::xml_memory_page_value_allocated_mask, rhs, size);
 	}
 
 	PUGI_IMPL_FN bool xml_attribute::set_value(int rhs)
@@ -5798,14 +5823,14 @@ namespace pugi
 		return impl::strcpy_insitu(_root->name, _root->header, impl::xml_memory_page_name_allocated_mask, rhs, impl::strlength(rhs));
 	}
 
-	PUGI_IMPL_FN bool xml_node::set_value(const char_t* rhs, size_t sz)
+	PUGI_IMPL_FN bool xml_node::set_name(const char_t* rhs, size_t size)
 	{
 		xml_node_type type_ = _root ? PUGI_IMPL_NODETYPE(_root) : node_null;
 
-		if (type_ != node_pcdata && type_ != node_cdata && type_ != node_comment && type_ != node_pi && type_ != node_doctype)
+		if (type_ != node_element && type_ != node_pi && type_ != node_declaration)
 			return false;
 
-		return impl::strcpy_insitu(_root->value, _root->header, impl::xml_memory_page_value_allocated_mask, rhs, sz);
+		return impl::strcpy_insitu(_root->name, _root->header, impl::xml_memory_page_name_allocated_mask, rhs, size);
 	}
 
 	PUGI_IMPL_FN bool xml_node::set_value(const char_t* rhs)
@@ -5816,6 +5841,16 @@ namespace pugi
 			return false;
 
 		return impl::strcpy_insitu(_root->value, _root->header, impl::xml_memory_page_value_allocated_mask, rhs, impl::strlength(rhs));
+	}
+
+	PUGI_IMPL_FN bool xml_node::set_value(const char_t* rhs, size_t size)
+	{
+		xml_node_type type_ = _root ? PUGI_IMPL_NODETYPE(_root) : node_null;
+
+		if (type_ != node_pcdata && type_ != node_cdata && type_ != node_comment && type_ != node_pi && type_ != node_doctype)
+			return false;
+
+		return impl::strcpy_insitu(_root->value, _root->header, impl::xml_memory_page_value_allocated_mask, rhs, size);
 	}
 
 	PUGI_IMPL_FN xml_attribute xml_node::append_attribute(const char_t* name_)
@@ -6286,6 +6321,9 @@ namespace pugi
 		// append_buffer is only valid for elements/documents
 		if (!impl::allow_insert_child(type(), node_element)) return impl::make_parse_result(status_append_invalid_root);
 
+		// append buffer can not merge PCDATA into existing PCDATA nodes
+		if ((options & parse_merge_pcdata) != 0 && last_child().type() == node_pcdata) return impl::make_parse_result(status_append_invalid_root);
+
 		// get document node
 		impl::xml_document_struct* doc = &impl::get_document(_root);
 
@@ -6690,18 +6728,18 @@ namespace pugi
 	}
 #endif
 
-	PUGI_IMPL_FN bool xml_text::set(const char_t* rhs, size_t sz)
-	{
-		xml_node_struct* dn = _data_new();
-
-		return dn ? impl::strcpy_insitu(dn->value, dn->header, impl::xml_memory_page_value_allocated_mask, rhs, sz) : false;
-	}
-
 	PUGI_IMPL_FN bool xml_text::set(const char_t* rhs)
 	{
 		xml_node_struct* dn = _data_new();
 
 		return dn ? impl::strcpy_insitu(dn->value, dn->header, impl::xml_memory_page_value_allocated_mask, rhs, impl::strlength(rhs)) : false;
+	}
+
+	PUGI_IMPL_FN bool xml_text::set(const char_t* rhs, size_t size)
+	{
+		xml_node_struct* dn = _data_new();
+
+		return dn ? impl::strcpy_insitu(dn->value, dn->header, impl::xml_memory_page_value_allocated_mask, rhs, size) : false;
 	}
 
 	PUGI_IMPL_FN bool xml_text::set(int rhs)
@@ -13163,7 +13201,7 @@ namespace pugi
 #endif
 
 /**
- * Copyright (c) 2006-2022 Arseny Kapoulkine
+ * Copyright (c) 2006-2023 Arseny Kapoulkine
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation

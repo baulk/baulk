@@ -46,6 +46,14 @@
 #define BELA_INTERNAL_WCHAR_T wchar_t
 #endif // defined(_MSC_VER)
 
+#ifndef _BLEA_INT128_HAS_CXX23
+#if ((defined(_MSVC_LANG) && _MSVC_LANG > 202002L) || __cplusplus > 202002L)
+#define _BLEA_INT128_HAS_CXX23 1
+#else
+#define _BLEA_INT128_HAS_CXX23 0
+#endif
+#endif // _BLEA_HAS_CXX23
+
 namespace bela {
 
 class int128;
@@ -254,8 +262,10 @@ public:
   static constexpr bool has_infinity = false;
   static constexpr bool has_quiet_NaN = false;
   static constexpr bool has_signaling_NaN = false;
+#if !_BLEA_INT128_HAS_CXX23
   static constexpr float_denorm_style has_denorm = denorm_absent;
   static constexpr bool has_denorm_loss = false;
+#endif
   static constexpr float_round_style round_style = round_toward_zero;
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
@@ -482,8 +492,10 @@ public:
   static constexpr bool has_infinity = false;
   static constexpr bool has_quiet_NaN = false;
   static constexpr bool has_signaling_NaN = false;
+#if !_BLEA_INT128_HAS_CXX23
   static constexpr float_denorm_style has_denorm = denorm_absent;
   static constexpr bool has_denorm_loss = false;
+#endif
   static constexpr float_round_style round_style = round_toward_zero;
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
@@ -619,8 +631,8 @@ constexpr uint128::uint128(unsigned long long v) : lo_{v}, hi_{0} {}
 
 #ifdef BELA_HAVE_INTRINSIC_INT128
 constexpr uint128::uint128(__int128 v)
-    : lo_{static_cast<uint64_t>(v & ~uint64_t{0})}, hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >>
-                                                                              64)} {}
+    : lo_{static_cast<uint64_t>(v & ~uint64_t{0})},
+      hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >> 64)} {}
 constexpr uint128::uint128(unsigned __int128 v)
     : lo_{static_cast<uint64_t>(v & ~uint64_t{0})}, hi_{static_cast<uint64_t>(v >> 64)} {}
 #endif // BELA_HAVE_INTRINSIC_INT128
@@ -646,8 +658,8 @@ constexpr uint128::uint128(unsigned long long v) : hi_{0}, lo_{v} {}
 
 #ifdef BELA_HAVE_INTRINSIC_INT128
 constexpr uint128::uint128(__int128 v)
-    : hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >> 64)}, lo_{static_cast<uint64_t>(v &
-                                                                                                     ~uint64_t{0})} {}
+    : hi_{static_cast<uint64_t>(static_cast<unsigned __int128>(v) >> 64)},
+      lo_{static_cast<uint64_t>(v & ~uint64_t{0})} {}
 constexpr uint128::uint128(unsigned __int128 v)
     : hi_{static_cast<uint64_t>(v >> 64)}, lo_{static_cast<uint64_t>(v & ~uint64_t{0})} {}
 #endif // BELA_HAVE_INTRINSIC_INT128
