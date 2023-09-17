@@ -1,4 +1,4 @@
 brotli 1.0.9
-liblzma: https://tukaani.org/xz/ 5.4.3
+liblzma: https://tukaani.org/xz/ 5.4.4
 zstd: https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz#lib
 zlib: https://github.com/chromium/chromium/tree/9b0deb8f9e201aa47961b933f5c5309027f3d226/third_party/zlib
