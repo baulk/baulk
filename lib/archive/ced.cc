@@ -1,6 +1,7 @@
 #include <bela/codecvt.hpp>
 #include <bela/path.hpp>
 #include <bela/str_split_narrow.hpp>
+#include <bela/str_split.hpp>
 #include <baulk/archive.hpp>
 #include <compact_enc_det/compact_enc_det.h>
 #include <filesystem>

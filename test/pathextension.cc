@@ -100,18 +100,68 @@ inline bool is_harmful_path(std::string_view child_path) {
   return entries <= 0;
 }
 
+bool create_symlink(const std::filesystem::path &destination, const std::filesystem::path &_New_symlink,
+                    std::string_view linkname, bool always_utf8, bela::error_code &ec) {
+  auto nativeLinkName = bela::encode_into<char, wchar_t>(linkname);
+  std::error_code e;
+  auto linkPath = std::filesystem::absolute(_New_symlink.parent_path() / nativeLinkName, e);
+  if (e) {
+    ec = bela::make_error_code_from_std(e, L"absolute() ");
+    return false;
+  }
+  auto rel = std::filesystem::relative(linkPath, destination, e);
+  if (e) {
+    ec = bela::make_error_code_from_std(e, L"relative() ");
+    return false;
+  }
+  bela::FPrintF(stderr, L"%s --R--> %s\n", linkname, rel);
+  if (bela::StrContains(rel.c_str(), L"..\\")) {
+     bela::FPrintF(stderr, L"%s BAD\n", linkPath, rel);
+    ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", nativeLinkName);
+    return false;
+  }
+  return true;
+}
+
+void createSymlinkMock() {
+  constexpr std::string_view svs[] = {
+      //
+      "../../..",            // bad
+      "././jack",            // good
+      "../zzz/../..",        // bad
+      "./././zz/../..",      // bad
+      "zzz/../zz",           // good
+      "zzz/../../../zzz",    // bad
+      "abc/file.zip"         // good
+      "ac/././././file.zip", // good
+      "../../../z",          // bad
+      "../LICENSE",          // GOOD
+  };
+  std::filesystem::path dest = L"C:\\Baulk\\Out";
+  std::filesystem::path newlink = L"C:\\Baulk\\Out\\python\\LICENSE";
+  for (const auto s : svs) {
+    bela::error_code ec;
+    if (!create_symlink(dest, newlink, s, true, ec)) {
+      bela::FPrintF(stderr, L"\x1b[31m%s\x1b[0m --> E: %s\n", s, ec);
+      continue;
+    }
+    bela::FPrintF(stderr, L"%s OK\n", s);
+  }
+}
+
 int wmain() {
   constexpr std::string_view svs[] = {
       //
-      "../",                 // bad
-      "././jack",            // good
-      "../zzz",              // bad
-      "./././zz/..",         // bad
-      "zzz/../zz",           // good
-      "zzz/../../zzz",       // bad
-      "abc/file.zip"         // good
-      "ac/././././file.zip", // good
-      "../../"               // bad
+      "../",                       // bad
+      "././jack",                  // good
+      "../zzz",                    // bad
+      "./././zz/..",               // bad
+      "zzz/../zz",                 // good
+      "zzz/../../zzz",             // bad
+      "abc/file.zip"               // good
+      "ac/././././file.zip",       // good
+      "../../",                    // bad
+      "python/LICENSE/../LICENSE", // GOOD
   };
   for (const auto s : svs) {
     bela::FPrintF(stderr, L"[%v] is harmful path: %v\n", s, is_harmful_path(s));
@@ -132,5 +182,6 @@ int wmain() {
     bela::FPrintF(stderr, L"[%s]--> %s | %s\n", sv, PathStripExtension(sv), FileDestination(sv));
   }
   pathfstest();
+  createSymlinkMock();
   return 0;
 }

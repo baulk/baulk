@@ -68,22 +68,30 @@ private:
   Reader reader;
   fs::path destination;
   bool create_symlink(const fs::path &_New_symlink, std::string_view linkname, bool always_utf8, bela::error_code &ec) {
-    if (baulk::archive::IsHarmfulPath(linkname)) {
-      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(linkname));
+    auto nativeLinkName = baulk::archive::EncodeToNativePath(linkname, always_utf8);
+    std::error_code e;
+    auto linkPath = fs::absolute(_New_symlink.parent_path() / nativeLinkName, e);
+    if (e) {
+      ec = bela::make_error_code_from_std(e, L"absolute() ");
       return false;
     }
-    std::filesystem::path linkPath(baulk::archive::EncodeToNativePath(linkname, always_utf8));
-    if (linkPath.is_absolute()) {
-      return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    auto relativePath = fs::relative(linkPath, destination, e);
+    if (e) {
+      ec = bela::make_error_code_from_std(e, L"relative() ");
+      return false;
     }
-    return baulk::archive::NewSymlink(_New_symlink, _New_symlink.parent_path() / linkPath, opts.overwrite_mode, ec);
+    if (bela::StrContains(relativePath.c_str(), L"..\\")) {
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path <s>: ", nativeLinkName);
+      return false;
+    }
+    return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
   }
 
   bool extract_entry(const File &file, const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::wstring encoded_path;
     auto out = baulk::archive::JoinSanitizeFsPath(destination, file.name, file.IsFileNameUTF8(), encoded_path);
     if (!out) {
-      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(file.name));
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path <s>: ", bela::encode_into<char, wchar_t>(file.name));
       return false;
     }
     if (filter && !filter(file, encoded_path)) {
@@ -175,16 +183,25 @@ private:
   ExtractorOptions opts;
   fs::path destination;
   bool create_symlink(const fs::path &_New_symlink, std::string_view linkname, bela::error_code &ec) {
-    if (baulk::archive::IsHarmfulPath(linkname)) {
-      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path: ", bela::encode_into<char, wchar_t>(linkname));
+    auto nativeLinkName = baulk::archive::EncodeToNativePath(linkname, true);
+    std::error_code e;
+    auto linkPath = fs::absolute(_New_symlink.parent_path() / nativeLinkName, e);
+    if (e) {
+      ec = bela::make_error_code_from_std(e, L"absolute() ");
       return false;
     }
-    std::filesystem::path linkPath(baulk::archive::EncodeToNativePath(linkname, true));
-    if (linkPath.is_absolute()) {
-      return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    auto relativePath = fs::relative(linkPath, destination, e);
+    if (e) {
+      ec = bela::make_error_code_from_std(e, L"relative() ");
+      return false;
     }
-    return baulk::archive::NewSymlink(_New_symlink, _New_symlink.parent_path() / linkPath, opts.overwrite_mode, ec);
+    if (bela::StrContains(relativePath.c_str(), L"..\\")) {
+      ec = bela::make_error_code(bela::ErrGeneral, L"harmful path <s>: ", nativeLinkName);
+      return false;
+    }
+    return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
   }
+  
   bool extract_entry(Reader &tr, const Header &fh, const Filter &filter, const OnProgress &progress,
                      bela::error_code &ec) {
     std::wstring encoded_path;
