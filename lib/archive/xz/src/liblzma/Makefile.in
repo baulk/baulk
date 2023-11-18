@@ -879,7 +879,7 @@ liblzma_la_CPPFLAGS = \
 	-I$(top_srcdir)/src/common \
 	-DTUKLIB_SYMBOL_PREFIX=lzma_
 
-liblzma_la_LDFLAGS = -no-undefined -version-info 9:4:4 $(am__append_1) \
+liblzma_la_LDFLAGS = -no-undefined -version-info 9:5:4 $(am__append_1) \
 	$(am__append_2) $(am__append_48)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liblzma.pc

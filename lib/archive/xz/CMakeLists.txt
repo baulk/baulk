@@ -697,6 +697,7 @@ if(HAVE_IMMINTRIN_H)
             int main(void) { return 0; }
     "
     HAVE_USABLE_CLMUL)
+
     tuklib_add_definition_if(liblzma HAVE_USABLE_CLMUL)
 endif()
 
