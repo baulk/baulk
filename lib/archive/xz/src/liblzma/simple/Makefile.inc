@@ -1,9 +1,5 @@
-##
+## SPDX-License-Identifier: 0BSD
 ## Author: Lasse Collin
-##
-## This file has been put into the public domain.
-## You can do whatever you want with this file.
-##
 
 liblzma_la_SOURCES += \
 	simple/simple_coder.c \
@@ -48,4 +44,8 @@ endif
 
 if COND_FILTER_SPARC
 liblzma_la_SOURCES += simple/sparc.c
+endif
+
+if COND_FILTER_RISCV
+liblzma_la_SOURCES += simple/riscv.c
 endif

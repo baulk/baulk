@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: 0BSD
+
+#############################################################################
 #
 # tuklib_physmem.cmake - see tuklib_physmem.m4 for description and comments
 #
@@ -6,9 +9,7 @@
 #
 # Author: Lasse Collin
 #
-# This file has been put into the public domain.
-# You can do whatever you want with this file.
-#
+#############################################################################
 
 include("${CMAKE_CURRENT_LIST_DIR}/tuklib_common.cmake")
 include(CheckCSourceCompiles)

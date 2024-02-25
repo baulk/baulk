@@ -5,18 +5,32 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckStructHasMember)
 include(CheckCSourceCompiles)
+include(cmake/tuklib_large_file_support.cmake)
 include(cmake/tuklib_integer.cmake)
 include(cmake/tuklib_cpucores.cmake)
 include(cmake/tuklib_physmem.cmake)
 include(cmake/tuklib_progname.cmake)
 include(cmake/tuklib_mbstr.cmake)
 
+
+# Get the package version from version.h into PACKAGE_VERSION variable.
+file(READ src/liblzma/api/lzma/version.h PACKAGE_VERSION)
+string(REGEX REPLACE
+"^.*\n\
+#define LZMA_VERSION_MAJOR ([0-9]+)\n\
+.*\
+#define LZMA_VERSION_MINOR ([0-9]+)\n\
+.*\
+#define LZMA_VERSION_PATCH ([0-9]+)\n\
+.*$"
+       "\\1.\\2.\\3" PACKAGE_VERSION "${PACKAGE_VERSION}")
+
 # Definitions common to all targets:
 add_compile_definitions(
     # Package info:
-    PACKAGE_NAME="${PACKAGE_NAME}"
-    PACKAGE_BUGREPORT="xz@tukaani.org"
-    PACKAGE_URL="https://tukaani.org/xz/"
+    PACKAGE_NAME="${PACKAGE_NAME_DEFINITION}"
+    PACKAGE_BUGREPORT="${PACKAGE_BUGREPORT}"
+    PACKAGE_URL="${PACKAGE_URL}"
 
     # Standard headers and types are available:
     HAVE_STDBOOL_H
@@ -41,38 +55,43 @@ add_compile_definitions(
 # it also adds the definitions to CMAKE_REQUIRED_DEFINITIONS.
 tuklib_use_system_extensions(ALL)
 
+# Check for large file support. It's required on some 32-bit platforms and
+# even on 64-bit MinGW-w64 to get 64-bit off_t. This can be forced off on
+# the CMake command line if needed: -DLARGE_FILE_SUPPORT=OFF
+tuklib_large_file_support(ALL)
+
 # This is needed by liblzma and xz.
 tuklib_integer(ALL)
 
 # Check for clock_gettime(). Do this before checking for threading so
 # that we know there if CLOCK_MONOTONIC is available.
-if(NOT WIN32 AND NOT DEFINED HAVE_CLOCK_GETTIME)
-    check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
-    if(NOT HAVE_CLOCK_GETTIME)
-        # With glibc <= 2.17 or Solaris 10 this needs librt.
-        unset(HAVE_CLOCK_GETTIME CACHE)
+check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
 
-        list(INSERT CMAKE_REQUIRED_LIBRARIES 0 rt)
-        check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
+if(NOT HAVE_CLOCK_GETTIME)
+    # With glibc <= 2.17 or Solaris 10 this needs librt.
+    # Add librt for the next check for HAVE_CLOCK_GETTIME. If it is
+    # found after including the library, we know that librt is required.
+    list(INSERT CMAKE_REQUIRED_LIBRARIES 0 rt)
+    check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME_LIBRT)
 
-        # If it was found now, add it to all targets and keep it
-        # in CMAKE_REQUIRED_LIBRARIES for further tests too.
-        if(HAVE_CLOCK_GETTIME)
-            link_libraries(rt)
-        else()
-            list(REMOVE_AT CMAKE_REQUIRED_LIBRARIES 0)
-        endif()
-    endif()
-    if(HAVE_CLOCK_GETTIME)
-        # Check if CLOCK_MONOTONIC is available for clock_gettime().
-        check_symbol_exists(CLOCK_MONOTONIC time.h HAVE_CLOCK_MONOTONIC)
-
-        add_compile_definitions(
-            HAVE_CLOCK_GETTIME
-            HAVE_CLOCK_MONOTONIC
-        )
+    # If it was found now, add librt to all targets and keep it in
+    # CMAKE_REQUIRED_LIBRARIES for further tests too.
+    if(HAVE_CLOCK_GETTIME_LIBRT)
+        link_libraries(rt)
+        set(LIBS "-lrt") # For liblzma.pc
+    else()
+        list(REMOVE_AT CMAKE_REQUIRED_LIBRARIES 0)
     endif()
 endif()
+
+if(HAVE_CLOCK_GETTIME OR HAVE_CLOCK_GETTIME_LIBRT)
+    add_compile_definitions(HAVE_CLOCK_GETTIME)
+
+    # Check if CLOCK_MONOTONIC is available for clock_gettime().
+    check_symbol_exists(CLOCK_MONOTONIC time.h HAVE_CLOCK_MONOTONIC)
+    tuklib_add_definition_if(ALL HAVE_CLOCK_MONOTONIC)
+endif()
+
 
 # Options for new enough GCC or Clang on any arch or operating system:
 if(CMAKE_C_COMPILER_ID MATCHES GNU|Clang)
@@ -111,7 +130,9 @@ add_library(liblzma
     src/liblzma/api/lzma/vli.h
     src/liblzma/check/check.c
     src/liblzma/check/check.h
-    src/liblzma/check/crc_macros.h
+    src/liblzma/check/crc_common.h
+    src/liblzma/check/crc_x86_clmul.h
+    src/liblzma/check/crc32_arm64.h
     src/liblzma/common/block_util.c
     src/liblzma/common/common.c
     src/liblzma/common/common.h
@@ -700,6 +721,56 @@ if(HAVE_IMMINTRIN_H)
 
     tuklib_add_definition_if(liblzma HAVE_USABLE_CLMUL)
 endif()
+
+# ARM64 C Language Extensions define CRC32 functions in arm_acle.h.
+# These are supported by at least GCC and Clang which both need
+# __attribute__((__target__("+crc"))), unless the needed compiler flags
+# are used to support the CRC instruction.
+option(ALLOW_ARM64_CRC32 "Allow ARM64 CRC32 instruction if supported by \
+the system" ON)
+
+if(ALLOW_ARM64_CRC32)
+    check_c_source_compiles("
+            #include <stdint.h>
+
+            #ifndef _MSC_VER
+            #include <arm_acle.h>
+            #endif
+
+            #if (defined(__GNUC__) || defined(__clang__)) && !defined(__EDG__)
+            __attribute__((__target__(\"+crc\")))
+            #endif
+            uint32_t my_crc(uint32_t a, uint64_t b)
+            {
+                return __crc32d(a, b);
+            }
+            int main(void) { return 0; }
+        "
+        HAVE_ARM64_CRC32)
+
+    if(HAVE_ARM64_CRC32)
+        target_compile_definitions(liblzma PRIVATE HAVE_ARM64_CRC32)
+
+        # Check for ARM64 CRC32 instruction runtime detection.
+        # getauxval() is supported on Linux.
+        check_symbol_exists(getauxval sys/auxv.h HAVE_GETAUXVAL)
+        tuklib_add_definition_if(liblzma HAVE_GETAUXVAL)
+
+        # elf_aux_info() is supported on FreeBSD.
+        check_symbol_exists(elf_aux_info sys/auxv.h HAVE_ELF_AUX_INFO)
+        tuklib_add_definition_if(liblzma HAVE_ELF_AUX_INFO)
+
+        # sysctlbyname("hw.optional.armv8_crc32", ...) is supported on Darwin
+        # (macOS, iOS, etc.). Note that sysctlbyname() is supported on FreeBSD,
+        # NetBSD, and possibly others too but the string is specific to
+        # Apple OSes. The C code is responsible for checking
+        # defined(__APPLE__) before using
+        # sysctlbyname("hw.optional.armv8_crc32", ...).
+        check_symbol_exists(sysctlbyname sys/sysctl.h HAVE_SYSCTLBYNAME)
+        tuklib_add_definition_if(liblzma HAVE_SYSCTLBYNAME)
+    endif()
+endif()
+
 
 target_compile_definitions(liblzma PRIVATE HAVE_VISIBILITY=0)
 target_compile_definitions(liblzma INTERFACE LZMA_API_STATIC)
