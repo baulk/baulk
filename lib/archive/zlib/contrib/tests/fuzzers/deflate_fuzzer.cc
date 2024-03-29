@@ -53,6 +53,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   // Stream with random-sized input and output buffers.
   while (fdp.ConsumeBool()) {
+    if (fdp.ConsumeBool()) {
+      // Check that copying the stream's state works. Gating this behind
+      // ConsumeBool() allows to interleave deflateCopy() with deflate() calls
+      // to better stress the code.
+      z_stream stream2;
+      ASSERT(deflateCopy(&stream2, &stream) == Z_OK);
+      ret = deflateEnd(&stream);
+      ASSERT(ret == Z_OK || Z_DATA_ERROR);
+      memset(&stream, 0xff, sizeof(stream));
+
+      ASSERT(deflateCopy(&stream, &stream2) == Z_OK);
+      ret = deflateEnd(&stream2);
+      ASSERT(ret == Z_OK || Z_DATA_ERROR);
+    }
+
     std::vector<uint8_t> src_chunk = fdp.ConsumeBytes<uint8_t>(
         fdp.ConsumeIntegralInRange(kMinChunk, kMaxChunk));
     std::vector<uint8_t> out_chunk(
@@ -84,14 +99,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     }
     ASSERT(ret == Z_OK || Z_BUF_ERROR);
   }
-
-  // Check that the bound was correct.
-  // size_t deflate_bound = deflateBound(&stream, src.size());
-  // TODO(crbug.com/40270738): This does not always hold.
-  // ASSERT(compressed.size() <= deflate_bound);
-
   deflateEnd(&stream);
 
+  // Check deflateBound().
+  // Use a newly initialized stream since computing the bound on a "used" stream
+  // may not yield a correct result (https://github.com/madler/zlib/issues/944).
+  z_stream bound_stream;
+  bound_stream.zalloc = Z_NULL;
+  bound_stream.zfree = Z_NULL;
+  ret = deflateInit2(&bound_stream, level, Z_DEFLATED, windowBits, memLevel,
+                     strategy);
+  ASSERT(ret == Z_OK);
+  size_t deflate_bound = deflateBound(&bound_stream, src.size());
+  ASSERT(compressed.size() <= deflate_bound);
+  deflateEnd(&bound_stream);
 
   // Verify that the data decompresses correctly.
   ret = inflateInit2(&stream, windowBits);
