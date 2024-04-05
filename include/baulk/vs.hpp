@@ -29,15 +29,20 @@ inline std::optional<std::wstring> lookup_vc_version(std::wstring_view vsdir, be
   return bela::io::ReadLine(file, ec);
 }
 
-inline bool sdk_search_version(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &sdkversion) {
+inline bool sdk_search_version(std::wstring_view sdkroot, std::wstring_view sdkver, std::wstring &installedVersion) {
   auto inc = bela::StringCat(sdkroot, L"\\Include");
   std::error_code e;
   for (const auto &entry : std::filesystem::directory_iterator{inc, e}) {
     auto filename = entry.path().filename();
     if (bela::StartsWith(filename.native(), sdkver)) {
-      sdkversion = filename.wstring();
+      installedVersion = filename.wstring();
       return true;
     }
+  }
+  // fallback
+  for (const auto &entry : std::filesystem::directory_iterator{inc, e}) {
+    installedVersion = entry.path().filename().wstring();
+    return true;
   }
   return false;
 }
@@ -126,25 +131,25 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
   if (!winsdk) {
     return false;
   }
-  std::wstring sdkversion;
-  if (!sdk_search_version(winsdk->InstallationFolder, winsdk->ProductVersion, sdkversion)) {
+  std::wstring installedVersion;
+  if (!sdk_search_version(winsdk->InstallationFolder, winsdk->ProductVersion, installedVersion)) {
     ec = bela::make_error_code(bela::ErrGeneral, L"invalid sdk version");
     return false;
   }
   constexpr std::wstring_view sdkincludes[] = {L"\\um", L"\\ucrt", L"\\km", L"\\cppwinrt", L"\\shared", L"\\winrt"};
   constexpr std::wstring_view sdklibs[] = {L"\\um\\", L"\\ucrt\\", L"\\km\\"};
   for (auto si : sdkincludes) {
-    JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", sdkversion, si);
+    JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\", installedVersion, si);
   }
   // NetFx SDK
   JoinEnv(includes, winsdk->InstallationFolder, L"\\Include\\NETFXSDK\\4.8\\Include\\um");
   for (auto sl : sdklibs) {
-    JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", sdkversion, sl, arch);
+    JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\", installedVersion, sl, arch);
   }
   // NetFx SDK
   JoinEnv(libs, winsdk->InstallationFolder, L"\\Lib\\NETFXSDK\\4.8\\Lib\\um\\", arch);
   JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", HostArch);
-  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", sdkversion, L"\\", HostArch);
+  JoinEnv(paths, winsdk->InstallationFolder, L"\\bin\\", installedVersion, L"\\", HostArch);
 #if defined(_M_X64)
   JoinEnv(paths, bela::GetEnv(L"ProgramFiles(x86)"), LR"(\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\)");
 #else
@@ -154,15 +159,15 @@ inline bool vs_env_builder::initialize_windows_sdk(const std::wstring_view arch,
     JoinEnv(paths, *frameworkdir);
   }
   // LIBPATHS
-  auto unionmetadata = bela::StringCat(winsdk->InstallationFolder, L"\\UnionMetadata\\", sdkversion);
+  auto unionmetadata = bela::StringCat(winsdk->InstallationFolder, L"\\UnionMetadata\\", installedVersion);
   JoinEnv(libpaths, unionmetadata);
-  auto references = bela::StringCat(winsdk->InstallationFolder, L"\\References\\", sdkversion);
+  auto references = bela::StringCat(winsdk->InstallationFolder, L"\\References\\", installedVersion);
   JoinEnv(libpaths, references);
   // WindowsLibPath
   // C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.19041.0
   // C:\Program Files (x86)\Windows Kits\10\References\10.0.19041.0
   simulator->SetEnv(L"WindowsLibPath", bela::JoinEnv({unionmetadata, references}));
-  simulator->SetEnv(L"WindowsSDKVersion", bela::StringCat(sdkversion, L"\\"));
+  simulator->SetEnv(L"WindowsSDKVersion", bela::StringCat(installedVersion, L"\\"));
 
   // ExtensionSdkDir
   if (auto ExtensionSdkDir = bela::WindowsExpandEnv(LR"(%ProgramFiles%\Microsoft SDKs\Windows Kits\10\ExtensionSDKs)");
@@ -200,36 +205,37 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
   JoinEnv(paths, vs.InstallLocation, LR"(\VC\Tools\MSVC\)", *vcver, LR"(\bin\Host)", HostArch, L"\\", arch);
 
   constexpr std::wstring_view vsPathSuffix[] = {
-    // IDE tools
-    LR"(\Common7\IDE\VC\VCPackages)",
-    LR"(\Common7\IDE)",
-    LR"(\Common7\IDE\Tools)",
+      // IDE tools
+      LR"(\Common7\IDE\VC\VCPackages)",
+      LR"(\Common7\IDE)",
+      LR"(\Common7\IDE\Tools)",
   // Performance Tools
 #if defined(_M_X64)
-    LR"(\Team Tools\Performance Tools\x64)",
+      LR"(\Team Tools\Performance Tools\x64)",
 #elif defined(_M_ARM64)
-    LR"(\Team Tools\Performance Tools)", // TODO: Wait arm native clang
+      LR"(\Team Tools\Performance Tools)", // TODO: Wait arm native clang
 #endif
-    LR"(\Team Tools\Performance Tools)",
-    // Extension
-    LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)",
-    LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)",
-    // MSBuild and LLVM
-    LR"(\MSBuild\Current\bin\Roslyn)",
-    LR"(\Common7\Tools\devinit)",
+      LR"(\Team Tools\Performance Tools)",
+      // Extension
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin)",
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja)",
+      // MSBuild and LLVM
+      LR"(\MSBuild\Current\bin\Roslyn)",
+      LR"(\Common7\Tools\devinit)",
 #if defined(_M_X64)
-    LR"(\MSBuild\Current\Bin\amd64)",
-    LR"(\VC\Tools\Llvm\x64\bin)",
+      LR"(\MSBuild\Current\Bin\amd64)",
+      LR"(\VC\Tools\Llvm\x64\bin)",
 #elif defined(_M_ARM64)
-    LR"(\MSBuild\Current\Bin\arm64)",
-    LR"(\VC\Tools\Llvm\ARM64\bin)",
+      LR"(\MSBuild\Current\Bin\arm64)",
+      LR"(\VC\Tools\Llvm\ARM64\bin)",
 #else
-    LR"(\MSBuild\Current\Bin)",
-    LR"(\VC\Tools\Llvm\bin)",
+      LR"(\MSBuild\Current\Bin)",
+      LR"(\VC\Tools\Llvm\bin)",
 #endif
-    // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
-    LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
-    LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
+      // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
+      LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",
+      LR"(\Common7\IDE\VC\Linux\bin\ConnectionManagerExe)",
+      LR"(\VC\vcpkg)",
   };
   for (auto p : vsPathSuffix) {
     JoinEnv(paths, vs.InstallLocation, p);
