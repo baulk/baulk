@@ -9,6 +9,10 @@
 namespace baulk::compiler {
 
 bool Executor::Initialize(bela::error_code &init_ec) {
+  bool disabled{false};
+  if (bela::SimpleAtob(bela::GetEnv(L"BAULK_FORCE_ENABLE_PROXY_LAUNCHER"), &disabled) && disabled) {
+    return false;
+  }
   simulator.InitializeCleanupEnv();
   if (auto vs = baulk::env::InitializeVisualStudioEnv(simulator, baulk::env::HostArch, false, init_ec); vs) {
     DbgPrint(L"initialize vs env success: %v", *vs);

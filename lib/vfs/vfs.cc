@@ -53,7 +53,8 @@ std::wstring_view GetAppBasePath() {
       basePath += UnpackagedFolderName;
     }
     // Create the directory if it doesn't exist
-    std::filesystem::create_directories(basePath);
+    std::error_code e;
+    std::filesystem::create_directories(basePath, e);
     return basePath;
   }();
   return basePath;
@@ -93,11 +94,14 @@ PathFs &PathFs::Instance() {
 }
 
 bool PathFs::Initialize(bela::error_code &ec) {
-  bool result = true;
+  bool result = false;
   std::call_once(initialized, [&, this] {
-    //
+    // initialize false
     result = InitializeInternal(ec);
   });
+  if (!result) {
+    ec = bela::make_error_code(L"reinitialize failed");
+  }
   return result;
 }
 
@@ -149,8 +153,8 @@ bool PathFs::InitializeInternal(bela::error_code &ec) {
   }
   auto envfile = bela::StringCat(table.appLocation, L"\\baulk.env");
   if (!bela::PathFileIsExists(envfile)) {
-    mode = L"Legacy";
-    return table.InitializeFromLegacy(ec);
+    mode = L"Portable";
+    return table.InitializeFromPortable(ec);
   }
   if (!InitializeBaulkEnv(envfile, ec)) {
     return false;

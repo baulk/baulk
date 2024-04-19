@@ -7,6 +7,10 @@ namespace baulk::vfs::vfs_internal {
 using namespace std::string_view_literals;
 // baulk >=4.0
 bool FsRedirectionTable::InitializeFromNewest(bela::error_code &ec) {
+  if (basePath.empty()) {
+    ec = bela::make_error_code(L"BUG: basePath is empty");
+    return false;
+  }
   etc = bela::StringCat(basePath, L"\\etc"sv);
   appData = bela::StringCat(basePath, L"\\appdata"sv);
   vfs = bela::StringCat(basePath, L"\\vfs"sv);

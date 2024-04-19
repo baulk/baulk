@@ -39,8 +39,11 @@ inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
       pkg.urls.emplace_back(jv.fetch("url"));
       pkg.hash = jv.fetch("hash");
     }
+    if (pkg.hash.empty()) {
+      pkg.hash = jv.fetch("url.hash");
+    }
   });
-  auto fnload = [&](baulk::json_view &jv_, const std::string_view arch) -> bool {
+  auto archLoad = [&](baulk::json_view &jv_, const std::string_view arch) -> bool {
     if (auto av = jv_.subview(arch); av) {
       pkg.urls.emplace_back(av->fetch("url"));
       pkg.hash = av->fetch("hash");
@@ -51,30 +54,26 @@ inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
     return false;
   };
   if (auto sv = jv.subview("architecture"); sv) {
-    if (fnload(*sv, host_architecture)) {
+    if (archLoad(*sv, host_architecture)) {
       return;
     }
     if constexpr (host_architecture != x64bit_architecture) {
-      if (fnload(*sv, x64bit_architecture)) {
+      if (archLoad(*sv, x64bit_architecture)) {
         return;
       }
     }
-    if (fnload(*sv, x32bit_architecture)) {
+    if (archLoad(*sv, x32bit_architecture)) {
       return;
     }
   }
   if constexpr (host_architecture == x64bit_architecture) {
     jv.fetch_strings_checked("url64", pkg.urls);
     pkg.hash = jv.fetch("url64.hash");
-    jv.fetch_paths_checked("links64", pkg.links);
-    jv.fetch_paths_checked("launchers64", pkg.launchers);
     return;
   }
   if constexpr (host_architecture == arm64_architecture) {
     jv.fetch_strings_checked("urlarm64", pkg.urls);
     pkg.hash = jv.fetch("urlarm64.hash");
-    jv.fetch_paths_checked("linksarm64", pkg.links);
-    jv.fetch_paths_checked("launchersarm64", pkg.launchers);
   }
 }
 

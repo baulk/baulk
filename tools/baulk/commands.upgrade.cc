@@ -62,7 +62,7 @@ int cmd_upgrade(const argv_t &argv) {
       }
       baulk::Package pkg;
       if (baulk::PackageUpdatableMeta(*localMeta, pkg)) {
-        baulk::package::PackageInstall(pkg);
+        baulk::package::Install(pkg);
         continue;
       }
     } while (finder.Next());

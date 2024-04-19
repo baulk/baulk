@@ -4,8 +4,8 @@
 #include "baulk.hpp"
 
 namespace baulk::package {
-bool PackageInstall(const baulk::Package &pkg);
-bool PackageForceDelete(std::wstring_view pkgname, bela::error_code &ec);
+bool Install(const baulk::Package &pkg);
+bool Drop(std::wstring_view pkgname, bela::error_code &ec);
 }; // namespace baulk::package
 
 #endif

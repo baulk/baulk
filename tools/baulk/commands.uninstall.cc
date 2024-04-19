@@ -17,11 +17,11 @@ int uninstall_package(std::wstring_view pkgName) {
     return 1;
   }
   if (baulk::IsForceDelete) {
-    if (!baulk::package::PackageForceDelete(pkgName, ec)) {
+    if (!baulk::package::Drop(pkgName, ec)) {
       bela::FPrintF(stderr, L"baulk uninstall '%s' force-delete: \x1b[31m%s\x1b[0m\n", pkgName, ec);
     }
   }
-  if (!baulk::RemovePackageLinks(pkgName, ec)) {
+  if (!baulk::DropLinks(pkgName, ec)) {
     bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgName, ec);
   }
   bela::fs::ForceDeleteFolders(metaLock, ec);

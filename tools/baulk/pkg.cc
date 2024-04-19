@@ -60,9 +60,9 @@ bool PackageLocalMetaWrite(const baulk::Package &pkg, bela::error_code &ec) {
   return false;
 }
 
-bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
-  auto pkglocal = baulk::PackageLocalMeta(pkgName, ec);
-  if (!pkglocal) {
+bool Drop(std::wstring_view pkgName, bela::error_code &ec) {
+  auto pkgLocal = baulk::PackageLocalMeta(pkgName, ec);
+  if (!pkgLocal) {
     return false;
   }
   bela::env::Simulator sim;
@@ -74,7 +74,7 @@ bool PackageForceDelete(std::wstring_view pkgName, bela::error_code &ec) {
   sim.SetEnv(L"BAULK_PACKAGE_VFS", pkgVFS);
   sim.SetEnv(L"BAULK_PKGROOT", pkgFolder);
   sim.SetEnv(L"BAULK_PACKAGE_FOLDER", pkgFolder);
-  for (const auto &p : pkglocal->forceDeletes) {
+  for (const auto &p : pkgLocal->forceDeletes) {
     auto realdir = sim.PathExpand(p);
     baulk::DbgPrint(L"force delete: %s@%s", pkgName, realdir);
     bela::error_code ec2;
@@ -101,7 +101,7 @@ std::optional<std::filesystem::path> PackageCached(const std::filesystem::path &
   return std::make_optional(std::move(archive_file));
 }
 
-bool PackageMakeLinks(const baulk::Package &pkg) {
+bool NewLinks(const baulk::Package &pkg) {
   if (!pkg.venv.mkdirs.empty()) {
     bela::env::Simulator sim;
     sim.InitializeEnv();
@@ -123,10 +123,10 @@ bool PackageMakeLinks(const baulk::Package &pkg) {
     }
   }
   bela::error_code ec;
-  baulk::RemovePackageLinks(pkg.name, ec);
+  baulk::DropLinks(pkg.name, ec);
   // check package is good installed
   // rebuild launcher and links
-  if (!baulk::MakePackageLinks(pkg, true, ec)) {
+  if (!baulk::MakeLinks(pkg, true, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name, ec);
     return false;
   }
@@ -173,10 +173,10 @@ bool expand_fallback_exe(const baulk::Package &pkg, const std::filesystem::path 
     return false;
   }
   std::filesystem::remove_all(oldPath, e);
-  return PackageMakeLinks(pkgCopy);
+  return NewLinks(pkgCopy);
 }
 
-bool PackageExpand(const baulk::Package &pkg, const std::filesystem::path &archive_file) {
+bool Expand(const baulk::Package &pkg, const std::filesystem::path &archive_file) {
   auto fn = baulk::resolve_extract_handle(pkg.extension);
   if (!fn) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
@@ -228,7 +228,7 @@ bool PackageExpand(const baulk::Package &pkg, const std::filesystem::path &archi
     bela::FPrintF(stderr, L"baulk write local meta error: %s\n", ec);
     return false;
   }
-  return PackageMakeLinks(pkg);
+  return NewLinks(pkg);
 }
 
 bool DependenciesExists(const std::vector<std::wstring_view> &dv) {
@@ -249,7 +249,7 @@ void DisplayDependencies(const baulk::Package &pkg) {
                 bela::StrJoin(pkg.venv.dependencies, L"\n    "));
 }
 
-bool PackageInstall(const baulk::Package &pkg) {
+bool Install(const baulk::Package &pkg) {
   bela::error_code ec;
   auto pkgLocal = baulk::PackageLocalMeta(pkg.name, ec);
   if (pkgLocal) {
@@ -264,7 +264,7 @@ bool PackageInstall(const baulk::Package &pkg) {
                       pkg.name, pkg.bucket, pkgLocal->version);
         return true;
       }
-      return PackageMakeLinks(pkg);
+      return NewLinks(pkg);
     }
     if (baulk::IsFrozenedPackage(pkg.name) && !baulk::IsForceMode) {
       // Since the metadata has been updated, we cannot rebuild the frozen
@@ -294,7 +294,7 @@ bool PackageInstall(const baulk::Package &pkg) {
   if (!pkg.hash.empty()) {
     DbgPrint(L"baulk '%s/%s' filename: '%s'\n", pkg.name, pkg.version, filename);
     if (auto archive_file = PackageCached(downloads, filename, pkg.hash); archive_file) {
-      return PackageExpand(pkg, *archive_file);
+      return Expand(pkg, *archive_file);
     }
   }
   if (!baulk::fs::MakeDirectories(downloads, ec)) {
@@ -331,7 +331,7 @@ bool PackageInstall(const baulk::Package &pkg) {
   if (!archive_file) {
     return false;
   }
-  if (!PackageExpand(pkg, *archive_file)) {
+  if (!Expand(pkg, *archive_file)) {
     return false;
   }
   if (!pkg.suggest.empty()) {

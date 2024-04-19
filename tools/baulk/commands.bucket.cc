@@ -70,8 +70,8 @@ bool BucketModifier::Apply() {
 
 bool BucketModifier::GetBucket(std::wstring_view bucketName, baulk::Bucket &bucket) {
   try {
-    const auto &bks = meta["bucket"];
-    for (const auto &b : bks) {
+    const auto &buckets = meta["bucket"];
+    for (const auto &b : buckets) {
       auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       if (!bela::EqualsIgnoreCase(bucketName, name)) {
         continue;
@@ -110,8 +110,8 @@ int BucketModifier::List(std::wstring_view bucketName) {
     return 0;
   }
   try {
-    const auto &bks = meta["bucket"];
-    for (const auto &b : bks) {
+    const auto &buckets = meta["bucket"];
+    for (const auto &b : buckets) {
       auto desc = bela::encode_into<char, wchar_t>(b["description"].get<std::string_view>());
       auto name = bela::encode_into<char, wchar_t>(b["name"].get<std::string_view>());
       auto url = bela::encode_into<char, wchar_t>(b["url"].get<std::string_view>());
@@ -140,78 +140,78 @@ int BucketModifier::List(std::wstring_view bucketName) {
 }
 
 int BucketModifier::Add(const baulk::Bucket &bucket, bool replace) {
-  baulk::Bucket nbk = bucket;
+  baulk::Bucket newBucket = bucket;
   // Force setting mode
   if (bucket.url.starts_with(L"git@") || bucket.url.starts_with(L"ssh://")) {
-    nbk.mode = baulk::BucketObserveMode::Git;
+    newBucket.mode = baulk::BucketObserveMode::Git;
   }
-  if (nbk.name.empty()) {
-    if (std::vector<std::wstring_view> uvv = bela::StrSplit(nbk.url, bela::ByAnyChar(L"\\/:"), bela::SkipEmpty());
+  if (newBucket.name.empty()) {
+    if (std::vector<std::wstring_view> uvv = bela::StrSplit(newBucket.url, bela::ByAnyChar(L"\\/:"), bela::SkipEmpty());
         uvv.size() > 2) {
-      nbk.name = uvv[uvv.size() - 2];
+      newBucket.name = uvv[uvv.size() - 2];
     }
   }
-  if (nbk.name.empty()) {
-    nbk.name = L"anonymous";
+  if (newBucket.name.empty()) {
+    newBucket.name = L"anonymous";
   }
-  baulk::DbgPrint(L"resolve bucket name %s", nbk.name);
-  baulk::Bucket obk;
-  if (GetBucket(nbk.name, obk)) {
+  baulk::DbgPrint(L"resolve bucket name %s", newBucket.name);
+  baulk::Bucket oldBucket;
+  if (GetBucket(newBucket.name, oldBucket)) {
     if (!replace) {
       bela::FPrintF(stderr,
                     L"baulk bucket: add bucket '\x1b[31m%s\x1b[0m' but it already exists\nYou can use the "
                     L"'\x1b[33m--replace\x1b[0m' parameter to replace it\n",
-                    nbk.name);
+                    newBucket.name);
       return 1;
     }
-    if (nbk.description.empty()) {
-      nbk.description = obk.description;
+    if (newBucket.description.empty()) {
+      newBucket.description = oldBucket.description;
     }
-    if (nbk.weights == 0) {
-      nbk.weights = obk.weights;
+    if (newBucket.weights == 0) {
+      newBucket.weights = oldBucket.weights;
     }
-    if (nbk.url.empty()) {
-      nbk.url = obk.url;
+    if (newBucket.url.empty()) {
+      newBucket.url = oldBucket.url;
     }
   }
   if (bucket.url.empty()) {
-    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' url is blank\n", nbk.name);
+    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' url is blank\n", newBucket.name);
     return 1;
   }
-  if (nbk.description.empty()) {
-    nbk.description = bela::StringCat(nbk.name, L" no description");
+  if (newBucket.description.empty()) {
+    newBucket.description = bela::StringCat(newBucket.name, L" no description");
   }
-  if (nbk.weights == 0) {
-    nbk.weights = 99;
+  if (newBucket.weights == 0) {
+    newBucket.weights = 99;
   }
-  displayBucket(nbk);
+  displayBucket(newBucket);
   try {
     auto buckets = nlohmann::json::array();
     if (auto it = meta.find("bucket"); it != meta.end()) {
       for (const auto &bk : it.value()) {
         auto name = bela::encode_into<char, wchar_t>(bk["name"].get<std::string_view>());
-        if (!bela::EqualsIgnoreCase(name, nbk.name)) {
+        if (!bela::EqualsIgnoreCase(name, newBucket.name)) {
           buckets.push_back(bk);
         }
       }
     }
-    nlohmann::json jbk;
-    jbk["description"] = bela::encode_into<wchar_t, char>(nbk.description);
-    jbk["name"] = bela::encode_into<wchar_t, char>(nbk.name);
-    jbk["url"] = bela::encode_into<wchar_t, char>(nbk.url);
-    jbk["mode"] = static_cast<int>(nbk.mode);
-    jbk["weights"] = nbk.weights;
-    jbk["variant"] = nbk.variant;
-    buckets.emplace_back(std::move(jbk));
+    nlohmann::json newJsonBucket;
+    newJsonBucket["description"] = bela::encode_into<wchar_t, char>(newBucket.description);
+    newJsonBucket["name"] = bela::encode_into<wchar_t, char>(newBucket.name);
+    newJsonBucket["url"] = bela::encode_into<wchar_t, char>(newBucket.url);
+    newJsonBucket["mode"] = static_cast<int>(newBucket.mode);
+    newJsonBucket["weights"] = newBucket.weights;
+    newJsonBucket["variant"] = newBucket.variant;
+    buckets.emplace_back(std::move(newJsonBucket));
     meta["bucket"] = buckets;
     if (!Apply()) {
-      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", nbk.name, ec);
+      bela::FPrintF(stderr, L"baulk bucket: add bucket %s apply error %s\n", newBucket.name, ec);
       return 1;
     }
   } catch (const std::exception &e) {
-    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' error %s\n", nbk.name, e.what());
+    bela::FPrintF(stderr, L"baulk bucket: add bucket '%s' error %s\n", newBucket.name, e.what());
   }
-  bela::FPrintF(stderr, L"baulk bucket '%s' added\n", nbk.name);
+  bela::FPrintF(stderr, L"baulk bucket '%s' added\n", newBucket.name);
   return 0;
 }
 
@@ -252,8 +252,9 @@ bool PruneBucket(const baulk::Bucket &bucket) {
     bela::FPrintF(stderr, L"unable update %s error: %s\n", lockfile, ec);
     return false;
   }
-  auto buckets = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
-  bela::fs::ForceDeleteFolders(buckets, ec);
+  auto bucketRoot = bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name);
+  std::error_code e;
+  std::filesystem::remove_all(bucketRoot, e);
   return true;
 }
 

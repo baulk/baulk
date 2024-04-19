@@ -26,20 +26,21 @@ bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela:
   if (auto jv = parse_json_file(linkMeta, ec); jv) {
     obj = std::move(jv->obj);
   }
+  ec.clear();
   try {
-    nlohmann::json newlinks;
+    nlohmann::json newLinks;
     if (auto it = obj.find("links"); it != obj.end()) {
       for (const auto &item : it.value().items()) {
         if (item.value().is_string()) {
-          newlinks[item.key()] = item.value().get<std::string>();
+          newLinks[item.key()] = item.value().get<std::string>();
         }
       }
     }
     for (const auto &lm : metas) {
       auto meta = bela::encode_into<wchar_t, char>(bela::StringCat(pkg.name, L"@", lm.path, L"@", pkg.version));
-      newlinks[bela::encode_into<wchar_t, char>(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
+      newLinks[bela::encode_into<wchar_t, char>(lm.alias)] = meta; // "7z.exe":"7z@7z.exe@19.01"
     }
-    obj["links"] = newlinks;
+    obj["links"] = newLinks;
     obj["updated"] = bela::FormatTime<char>(bela::Now());
     obj["app_packages_root"] = bela::encode_into<wchar_t, char>(vfs::AppPackages());
     DbgPrint(L"write link meta: %v", linkMeta);
@@ -53,13 +54,14 @@ bool LinkMetaStore(const std::vector<LinkMeta> &metas, const Package &pkg, bela:
   return true;
 }
 
-bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
+bool DropLinks(std::wstring_view pkgName, bela::error_code &ec) {
   auto linkMeta = bela::StringCat(vfs::AppLinks(), L"\\baulk.linkmeta.json");
   auto appLinks = vfs::AppLinks();
   nlohmann::json obj;
   if (auto jv = parse_json_file(linkMeta, ec); jv) {
     obj = std::move(jv->obj);
   }
+  ec.clear();
   std::string newjson;
   std::error_code e;
   try {
@@ -67,7 +69,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
     if (it == obj.end()) {
       return true;
     }
-    nlohmann::json newlinks;
+    nlohmann::json newLinks;
     auto links = it.value();
     for (auto link = links.begin(); link != links.end(); ++link) {
       auto raw = link.value().get<std::string>();
@@ -77,7 +79,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
         continue;
       }
       if (mv[0] != pkgName) {
-        newlinks[link.key()] = raw;
+        newLinks[link.key()] = raw;
         continue;
       }
       auto file = bela::StringCat(appLinks, L"\\", bela::encode_into<char, wchar_t>(link.key()));
@@ -87,7 +89,7 @@ bool RemovePackageLinks(std::wstring_view pkgName, bela::error_code &ec) {
       }
     }
     obj["updated"] = bela::FormatTime<char>(bela::Now());
-    obj["links"] = newlinks;
+    obj["links"] = newLinks;
     if (!bela::io::AtomicWriteText(linkMeta, bela::io::as_bytes<char>(obj.dump(4)), ec)) {
       return false;
     }
@@ -406,7 +408,7 @@ bool MakeSymlinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_co
   return true;
 }
 
-bool MakePackageLinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
+bool MakeLinks(const baulk::Package &pkg, bool forceoverwrite, bela::error_code &ec) {
   if (!pkg.links.empty()) {
     if (!MakeSymlinks(pkg, forceoverwrite, ec)) {
       return false;
