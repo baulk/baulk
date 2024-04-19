@@ -1,5 +1,5 @@
 # Copyright © 2024. Baulk contributors. All Rights Reserved.
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.27)
 project(Baulk)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)

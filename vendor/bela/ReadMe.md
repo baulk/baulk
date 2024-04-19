@@ -3,7 +3,7 @@
 [![license badge](https://img.shields.io/github/license/fcharlie/bela.svg)](LICENSE)
 [![Master Branch Status](https://github.com/fcharlie/bela/workflows/BelaCI/badge.svg)](https://github.com/fcharlie/bela/actions)
 
-Modern C++20 library collection, better development experience on Windows (10,11)
+Modern C++23 library collection, better development experience on Windows (10,11)
 
 A lot of the code supports wchar_t based on Abseil modifications, some of which come from Visual C++ STL.
 
