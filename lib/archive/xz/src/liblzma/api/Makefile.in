@@ -506,7 +506,8 @@ distdir-am: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(HEADERS)
+@COND_DOXYGEN_FALSE@all-local:
+all-am: Makefile $(HEADERS) all-local
 installdirs:
 	for dir in "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -541,9 +542,12 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@COND_DOXYGEN_FALSE@clean-local:
+@COND_DOXYGEN_FALSE@install-data-local:
+@COND_DOXYGEN_FALSE@uninstall-local:
 clean: clean-am
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -561,7 +565,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-nobase_includeHEADERS
+install-data-am: install-data-local install-nobase_includeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -605,26 +609,44 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-nobase_includeHEADERS
+uninstall-am: uninstall-local uninstall-nobase_includeHEADERS
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libtool cscopelist-am ctags ctags-am distclean \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man \
-	install-nobase_includeHEADERS install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-nobase_includeHEADERS
+.PHONY: CTAGS GTAGS TAGS all all-am all-local check check-am clean \
+	clean-generic clean-libtool clean-local cscopelist-am ctags \
+	ctags-am distclean distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am \
+	install-data-local install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-nobase_includeHEADERS \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-local \
+	uninstall-nobase_includeHEADERS
 
 .PRECIOUS: Makefile
 
+
+@COND_DOXYGEN_TRUE@$(top_builddir)/doc/api/index.html: $(top_srcdir)/doxygen/update-doxygen $(top_srcdir)/doxygen/Doxyfile $(nobase_include_HEADERS)
+@COND_DOXYGEN_TRUE@	$(MKDIR_P) "$(top_builddir)/doc"
+@COND_DOXYGEN_TRUE@	"$(top_srcdir)/doxygen/update-doxygen" api \
+@COND_DOXYGEN_TRUE@		"$(top_srcdir)" "$(top_builddir)/doc"
+
+@COND_DOXYGEN_TRUE@all-local: $(top_builddir)/doc/api/index.html
+
+@COND_DOXYGEN_TRUE@install-data-local:
+@COND_DOXYGEN_TRUE@	$(MKDIR_P) "$(DESTDIR)$(docdir)/api"
+@COND_DOXYGEN_TRUE@	$(INSTALL_DATA) "$(top_builddir)"/doc/api/* "$(DESTDIR)$(docdir)/api"
+
+@COND_DOXYGEN_TRUE@uninstall-local:
+@COND_DOXYGEN_TRUE@	rm -rf "$(DESTDIR)$(docdir)/api"
+
+@COND_DOXYGEN_TRUE@clean-local:
+@COND_DOXYGEN_TRUE@	rm -rf "$(top_builddir)/doc/api"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
