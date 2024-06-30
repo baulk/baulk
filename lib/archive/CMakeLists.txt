@@ -17,11 +17,109 @@ target_include_directories(brotli PRIVATE brotli/include)
 # ced
 add_subdirectory(ced)
 
-# zlib (chromium)
-add_subdirectory(zlib)
+# zlib: use zlib-ng
+
+list(
+  APPEND
+  SRC_ZLIB
+	"zlib/adler32.c"
+	"zlib/adler32_fold.c"
+	"zlib/chunkset.c"
+	"zlib/compare256.c"
+	"zlib/compress.c"
+	"zlib/cpu_features.c"
+	"zlib/crc32_braid.c"
+	"zlib/crc32_braid_comb.c"
+	"zlib/crc32_fold.c"
+	"zlib/deflate.c"
+	"zlib/deflate_fast.c"
+	"zlib/deflate_huff.c"
+	"zlib/deflate_quick.c"
+	"zlib/deflate_medium.c"
+	"zlib/deflate_rle.c"
+	"zlib/deflate_slow.c"
+	"zlib/deflate_stored.c"
+	"zlib/functable.c"
+	"zlib/infback.c"
+	"zlib/inflate.c"
+	"zlib/inftrees.c"
+	"zlib/insert_string.c"
+	"zlib/insert_string_roll.c"
+	"zlib/slide_hash.c"
+	"zlib/trees.c"
+	"zlib/uncompr.c"
+	"zlib/zutil.c"
+)
+
+if("${BAULK_ARCH_NAME}" STREQUAL "x86_64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "amd64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "x64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "x86")
+   list(
+    APPEND
+    SRC_ZLIB
+    "zlib/arch/x86/adler32_avx2.c"
+    "zlib/arch/x86/adler32_avx512.c"
+    "zlib/arch/x86/adler32_avx512_vnni.c"
+    "zlib/arch/x86/adler32_sse42.c"
+    "zlib/arch/x86/adler32_ssse3.c"
+    "zlib/arch/x86/chunkset_avx2.c"
+    "zlib/arch/x86/chunkset_sse2.c"
+    "zlib/arch/x86/chunkset_ssse3.c"
+    "zlib/arch/x86/compare256_avx2.c"
+    "zlib/arch/x86/compare256_sse2.c"
+    "zlib/arch/x86/crc32_pclmulqdq.c"
+    "zlib/arch/x86/insert_string_sse42.c"
+    "zlib/arch/x86/slide_hash_avx2.c"
+    "zlib/arch/x86/slide_hash_sse2.c"
+    "zlib/arch/x86/x86_features.c")
+elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
+  list(
+    APPEND
+    SRC_ZLIB
+    "zlib/arch/arm/crc32_acle.c"
+    "zlib/arch/arm/insert_string_acle.c"
+    "zlib/arch/arm/adler32_neon.c"
+    "zlib/arch/arm/chunkset_neon.c"
+    "zlib/arch/arm/compare256_neon.c"
+    "zlib/arch/arm/slide_hash_neon.c"
+    "zlib/arch/arm/arm_features.c")
+endif()
+
+add_library(zlib STATIC ${SRC_ZLIB})
+
+if("${BAULK_ARCH_NAME}" STREQUAL "x86_64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "amd64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "x64"
+   OR "${BAULK_ARCH_NAME}" STREQUAL "x86")
+  target_compile_definitions(
+    zlib
+    PRIVATE ZLIB_COMPAT
+            X86_FEATURES
+            X86_PCLMULQDQ_CRC
+            X86_SSE2
+            X86_SSE42
+            X86_SSSE3
+            X86_AVX2)
+elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
+  target_compile_definitions(
+    zlib
+    PRIVATE ZLIB_COMPAT
+           _ARM64_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1
+           ARM_NEON_HASLD4
+           ARM_FEATURES
+           ARM_ACLE
+           __ARM_NEON__=1
+           ARM_NEON
+           ARM_NOCHECK_NEON)
+endif()
+
+target_include_directories(zlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
 
 # deflate64
 add_library(deflate64 STATIC deflate64/infback9.c deflate64/inftree9.c)
+# ZLIB_COMPAT
+target_compile_definitions(deflate64 PRIVATE ZLIB_COMPAT)
 target_include_directories(deflate64 PRIVATE zlib)
 
 add_subdirectory(xz)

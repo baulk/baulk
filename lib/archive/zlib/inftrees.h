@@ -1,5 +1,8 @@
+#ifndef INFTREES_H_
+#define INFTREES_H_
+
 /* inftrees.h -- header to use inftrees.c
- * Copyright (C) 1995-2005, 2010 Mark Adler
+ * Copyright (C) 1995-2022 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -22,9 +25,9 @@
    of a literal, the base length or distance, or the offset from
    the current table to the next table.  Each entry is four bytes. */
 typedef struct {
-    unsigned char op;           /* operation, extra bits, table bits */
-    unsigned char bits;         /* bits in this part of the code */
-    unsigned short val;         /* offset in table or code value */
+    unsigned char op;         /* operation, extra bits, table bits */
+    unsigned char bits;       /* bits in this part of the code */
+    uint16_t val;             /* offset in table or code value */
 } code;
 
 /* op values as set by inflate_table():
@@ -38,10 +41,10 @@ typedef struct {
 /* Maximum size of the dynamic table.  The maximum number of code structures is
    1924, which is the sum of 1332 for literal/length codes and 592 for distance
    codes.  These values were found by exhaustive searches using the program
-   examples/enough.c found in the zlib distribution.  The arguments to that
+   examples/enough.c found in the zlib distributions.  The arguments to that
    program are the number of symbols, the initial root table size, and the
    maximum bit length of a code.  "enough 286 10 15" for literal/length codes
-   returns returns 1332, and "enough 30 9 15" for distance codes returns 592.
+   returns 1332, and "enough 30 9 15" for distance codes returns 592.
    The initial root table size (10 or 9) is found in the fifth argument of the
    inflate_table() calls in inflate.c and infback.c.  If the root table size is
    changed, then these maximum sizes would be need to be recalculated and
@@ -57,6 +60,7 @@ typedef enum {
     DISTS
 } codetype;
 
-int ZLIB_INTERNAL inflate_table(codetype type, unsigned short FAR *lens,
-                                unsigned codes, code FAR * FAR *table,
-                                unsigned FAR *bits, unsigned short FAR *work);
+int Z_INTERNAL zng_inflate_table (codetype type, uint16_t *lens, unsigned codes,
+                                  code * *table, unsigned *bits, uint16_t *work);
+
+#endif /* INFTREES_H_ */

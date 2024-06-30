@@ -56,6 +56,10 @@ typedef enum {
     DISTS
 } codetype;
 
+#ifndef FAR
+#define FAR
+#endif
+
 extern int inflate_table9(codetype type, unsigned short FAR *lens,
                           unsigned codes, code FAR * FAR *table,
                           unsigned FAR *bits, unsigned short FAR *work);

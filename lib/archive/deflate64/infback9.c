@@ -2,7 +2,9 @@
  * Copyright (C) 1995-2008 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
-
+#ifndef ZLIB_COMPAT
+#define ZLIB_COMPAT
+#endif
 #include "zutil.h"
 #include "infback9.h"
 #include "inftree9.h"
@@ -320,7 +322,7 @@ int ZEXPORT inflateBack9(z_stream FAR *strm, in_func in, void FAR *in_desc,
                 ROOM();
                 if (copy > have) copy = have;
                 if (copy > left) copy = left;
-                zmemcpy(put, next, copy);
+                memcpy(put, next, copy);
                 have -= copy;
                 next += copy;
                 left -= copy;

@@ -15,6 +15,7 @@
  * the third parameter of the "out" function actually means 65536UL.
  * zlib.h must be included before this header file.
  */
+#include <zlib.h>
 
 #ifdef __cplusplus
 extern "C" {

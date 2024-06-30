@@ -1,5 +1,7 @@
+#ifndef ZUTIL_H_
+#define ZUTIL_H_
 /* zutil.h -- internal interface and configuration of the compression library
- * Copyright (C) 1995-2022 Jean-loup Gailly, Mark Adler
+ * Copyright (C) 1995-2024 Jean-loup Gailly, Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -8,73 +10,23 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id$ */
-
-#ifndef ZUTIL_H
-#define ZUTIL_H
-
-#ifdef HAVE_HIDDEN
-#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+#include "zbuild.h"
+#ifdef ZLIB_COMPAT
+#  include "zlib.h"
 #else
-#  define ZLIB_INTERNAL
+#  include "zlib-ng.h"
 #endif
 
-#include "zlib.h"
+typedef unsigned char uch; /* Included for compatibility with external code only */
+typedef uint16_t ush;      /* Included for compatibility with external code only */
+typedef unsigned long ulg;
 
-#if defined(STDC) && !defined(Z_SOLO)
-#  if !(defined(_WIN32_WCE) && defined(_MSC_VER))
-#    include <stddef.h>
-#  endif
-#  include <string.h>
-#  include <stdlib.h>
-#endif
-#ifdef NO_ERRNO_H
-#   ifdef _WIN32_WCE
-      /* The Microsoft C Run-Time Library for Windows CE doesn't have
-       * errno.  We define it as a global variable to simplify porting.
-       * Its value is always 0 and should not be used.  We rename it to
-       * avoid conflict with other libraries that use the same workaround.
-       */
-#     define errno z_errno
-#   endif
-    extern int errno;
-#else
-#  ifndef _WIN32_WCE
-#    include <errno.h>
-#  endif
-#endif
-
-#ifndef local
-#  define local static
-#endif
-/* since "static" is used to mean two completely different things in C, we
-   define "local" for the non-static meaning of "static", for readability
-   (compile with -Dlocal if your debugger can't find static symbols) */
-
-typedef unsigned char  uch;
-typedef uch FAR uchf;
-typedef unsigned short ush;
-typedef ush FAR ushf;
-typedef unsigned long  ulg;
-
-#if !defined(Z_U8) && !defined(Z_SOLO) && defined(STDC)
-#  include <limits.h>
-#  if (ULONG_MAX == 0xffffffffffffffff)
-#    define Z_U8 unsigned long
-#  elif (ULLONG_MAX == 0xffffffffffffffff)
-#    define Z_U8 unsigned long long
-#  elif (UINT_MAX == 0xffffffffffffffff)
-#    define Z_U8 unsigned
-#  endif
-#endif
-
-extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
+extern z_const char * const PREFIX(z_errmsg)[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
-#define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
+#define ERR_MSG(err) PREFIX(z_errmsg)[(err) < -6 || (err) > 2 ? 9 : 2 - (err)]
 
-#define ERR_RETURN(strm,err) \
-  return (strm->msg = ERR_MSG(err), (err))
+#define ERR_RETURN(strm, err) return (strm->msg = ERR_MSG(err), (err))
 /* To be used only when the state is known to be valid */
 
         /* common constants */
@@ -83,6 +35,11 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  define DEF_WBITS MAX_WBITS
 #endif
 /* default windowBits for decompression. MAX_WBITS is for compression only */
+
+#define MAX_BITS 15
+/* all codes must not exceed MAX_BITS bits */
+#define MAX_DIST_EXTRA_BITS 13
+/* maximum number of extra distance bits */
 
 #if MAX_MEM_LEVEL >= 8
 #  define DEF_MEM_LEVEL 8
@@ -96,39 +53,36 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #define DYN_TREES    2
 /* The three kinds of block type */
 
-#define MIN_MATCH  3
-#define MAX_MATCH  258
-/* The minimum and maximum match lengths */
+#define STD_MIN_MATCH  3
+#define STD_MAX_MATCH  258
+/* The minimum and maximum match lengths mandated by the deflate standard */
+
+#define WANT_MIN_MATCH  4
+/* The minimum wanted match length, affects deflate_quick, deflate_fast, deflate_medium and deflate_slow  */
 
 #define PRESET_DICT 0x20 /* preset dictionary flag in zlib header */
 
-        /* target dependencies */
+#define ADLER32_INITIAL_VALUE 1 /* initial adler-32 hash value */
+#define CRC32_INITIAL_VALUE   0 /* initial crc-32 hash value */
 
-#if defined(MSDOS) || (defined(WINDOWS) && !defined(WIN32))
-#  define OS_CODE  0x00
-#  ifndef Z_SOLO
-#    if defined(__TURBOC__) || defined(__BORLANDC__)
-#      if (__STDC__ == 1) && (defined(__LARGE__) || defined(__COMPACT__))
-         /* Allow compilation with ANSI keywords only enabled */
-         void _Cdecl farfree( void *block );
-         void *_Cdecl farmalloc( unsigned long nbytes );
-#      else
-#        include <alloc.h>
-#      endif
-#    else /* MSC or DJGPP */
-#      include <malloc.h>
-#    endif
-#  endif
-#endif
+#define ZLIB_WRAPLEN 6      /* zlib format overhead */
+#define GZIP_WRAPLEN 18     /* gzip format overhead */
+
+#define DEFLATE_HEADER_BITS 3
+#define DEFLATE_EOBS_BITS   15
+#define DEFLATE_PAD_BITS    6
+#define DEFLATE_BLOCK_OVERHEAD ((DEFLATE_HEADER_BITS + DEFLATE_EOBS_BITS + DEFLATE_PAD_BITS) >> 3)
+/* deflate block overhead: 3 bits for block start + 15 bits for block end + padding to nearest byte */
+
+#define DEFLATE_QUICK_LIT_MAX_BITS 9
+#define DEFLATE_QUICK_OVERHEAD(x) ((x * (DEFLATE_QUICK_LIT_MAX_BITS - 8) + 7) >> 3)
+/* deflate_quick worst-case overhead: 9 bits per literal, round up to next byte (+7) */
+
+
+        /* target dependencies */
 
 #ifdef AMIGA
 #  define OS_CODE  1
-#endif
-
-#if defined(VAXC) || defined(VMS)
-#  define OS_CODE  2
-#  define F_OPEN(name, mode) \
-     fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
 #endif
 
 #ifdef __370__
@@ -147,9 +101,6 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 
 #ifdef OS2
 #  define OS_CODE  6
-#  if defined(M_I86) && !defined(Z_SOLO)
-#    include <malloc.h>
-#  endif
 #endif
 
 #if defined(MACOS)
@@ -160,116 +111,38 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  define OS_CODE 13
 #endif
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32) && !defined(__CYGWIN__)
 #  define OS_CODE  10
-#endif
-
-#ifdef _BEOS_
-#  define OS_CODE  16
-#endif
-
-#ifdef __TOS_OS400__
-#  define OS_CODE 18
 #endif
 
 #ifdef __APPLE__
 #  define OS_CODE 19
 #endif
 
-#if defined(__BORLANDC__) && !defined(MSDOS)
-  #pragma warn -8004
-  #pragma warn -8008
-  #pragma warn -8066
-#endif
-
-/* provide prototypes for these when building zlib without LFS */
-#if !defined(_WIN32) && \
-    (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
-    ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off_t);
-    ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off_t);
-    ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off_t);
-#endif
-
         /* common defaults */
 
 #ifndef OS_CODE
-#  define OS_CODE  3     /* assume Unix */
+#  define OS_CODE  3  /* assume Unix */
 #endif
 
-#ifndef F_OPEN
-#  define F_OPEN(name, mode) fopen((name), (mode))
-#endif
+         /* macros */
 
-         /* functions */
+#define CHECK_VER_STSIZE(_ver,_stsize) ((_ver) == NULL || (_ver)[0] != PREFIX2(VERSION)[0] || (_stsize) != (int32_t)sizeof(PREFIX3(stream)))
 
-#if defined(pyr) || defined(Z_SOLO)
-#  define NO_MEMCPY
-#endif
-#if defined(SMALL_MEDIUM) && !defined(_MSC_VER) && !defined(__SC__)
- /* Use our own functions for small and medium model with MSC <= 5.0.
-  * You may have to use the same strategy for Borland C (untested).
-  * The __SC__ check is for Symantec.
-  */
-#  define NO_MEMCPY
-#endif
-#if defined(STDC) && !defined(HAVE_MEMCPY) && !defined(NO_MEMCPY)
-#  define HAVE_MEMCPY
-#endif
-#ifdef HAVE_MEMCPY
-#  ifdef SMALL_MEDIUM /* MSDOS small or medium model */
-#    define zmemcpy _fmemcpy
-#    define zmemcmp _fmemcmp
-#    define zmemzero(dest, len) _fmemset(dest, 0, len)
-#  else
-#    define zmemcpy memcpy
-#    define zmemcmp memcmp
-#    define zmemzero(dest, len) memset(dest, 0, len)
-#  endif
-#else
-   void ZLIB_INTERNAL zmemcpy(Bytef* dest, const Bytef* source, uInt len);
-   int ZLIB_INTERNAL zmemcmp(const Bytef* s1, const Bytef* s2, uInt len);
-   void ZLIB_INTERNAL zmemzero(Bytef* dest, uInt len);
-#endif
+         /* memory allocation functions */
 
-/* Diagnostic functions */
-#ifdef ZLIB_DEBUG
-#  include <stdio.h>
-   extern int ZLIB_INTERNAL z_verbose;
-   extern void ZLIB_INTERNAL z_error(char *m);
-#  define Assert(cond,msg) {if(!(cond)) z_error(msg);}
-#  define Trace(x) {if (z_verbose>=0) fprintf x ;}
-#  define Tracev(x) {if (z_verbose>0) fprintf x ;}
-#  define Tracevv(x) {if (z_verbose>1) fprintf x ;}
-#  define Tracec(c,x) {if (z_verbose>0 && (c)) fprintf x ;}
-#  define Tracecv(c,x) {if (z_verbose>1 && (c)) fprintf x ;}
-#else
-#  define Assert(cond,msg)
-#  define Trace(x)
-#  define Tracev(x)
-#  define Tracevv(x)
-#  define Tracec(c,x)
-#  define Tracecv(c,x)
-#endif
+void Z_INTERNAL *PREFIX(zcalloc)(void *opaque, unsigned items, unsigned size);
+void Z_INTERNAL  PREFIX(zcfree)(void *opaque, void *ptr);
 
-#ifndef Z_SOLO
-   voidpf ZLIB_INTERNAL zcalloc(voidpf opaque, unsigned items,
-                                unsigned size);
-   void ZLIB_INTERNAL zcfree(voidpf opaque, voidpf ptr);
-#endif
+typedef void *zng_calloc_func(void *opaque, unsigned items, unsigned size);
+typedef void  zng_cfree_func(void *opaque, void *ptr);
 
-#define ZALLOC(strm, items, size) \
-           (*((strm)->zalloc))((strm)->opaque, (items), (size))
-#define ZFREE(strm, addr)  (*((strm)->zfree))((strm)->opaque, (voidpf)(addr))
-#define TRY_FREE(s, p) {if (p) ZFREE(s, p);}
+void Z_INTERNAL *PREFIX3(alloc_aligned)(zng_calloc_func zalloc, void *opaque, unsigned items, unsigned size, unsigned align);
+void Z_INTERNAL  PREFIX3(free_aligned)(zng_cfree_func zfree, void *opaque, void *ptr);
 
-/* Reverse the bytes in a 32-bit value */
-#define ZSWAP32(q) ((((q) >> 24) & 0xff) + (((q) >> 8) & 0xff00) + \
-                    (((q) & 0xff00) << 8) + (((q) & 0xff) << 24))
+#define ZALLOC(strm, items, size) PREFIX3(alloc_aligned)((strm)->zalloc, (strm)->opaque, (items), (size), 64)
+#define ZFREE(strm, addr)         PREFIX3(free_aligned)((strm)->zfree, (strm)->opaque, (void *)(addr))
 
-#ifdef _MSC_VER
-#define zalign(x) __declspec(align(x))
-#else
-#define zalign(x) __attribute__((aligned((x))))
-#endif
+#define TRY_FREE(s, p)            {if (p) ZFREE(s, p);}
 
-#endif /* ZUTIL_H */
+#endif /* ZUTIL_H_ */

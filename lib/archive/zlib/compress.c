@@ -3,10 +3,19 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id$ */
+#include "zbuild.h"
+#include "zutil.h"
 
-#define ZLIB_INTERNAL
-#include "zlib.h"
+/* ===========================================================================
+ *  Architecture-specific hooks.
+ */
+#ifdef S390_DFLTCC_DEFLATE
+#  include "arch/s390/dfltcc_common.h"
+#else
+/* Returns the upper bound on compressed data length based on uncompressed data length, assuming default settings.
+ * Zero means that arch-specific deflation code behaves identically to the regular zlib-ng algorithms. */
+#  define DEFLATE_BOUND_COMPLEN(source_len) 0
+#endif
 
 /* ===========================================================================
      Compresses the source buffer into the destination buffer. The level
@@ -19,67 +28,71 @@
    memory, Z_BUF_ERROR if there was not enough room in the output buffer,
    Z_STREAM_ERROR if the level parameter is invalid.
 */
-int ZEXPORT compress2(Bytef *dest, uLongf *destLen, const Bytef *source,
-                      uLong sourceLen, int level) {
-    z_stream stream;
+int Z_EXPORT PREFIX(compress2)(unsigned char *dest, z_uintmax_t *destLen, const unsigned char *source,
+                        z_uintmax_t sourceLen, int level) {
+    PREFIX3(stream) stream;
     int err;
-    const uInt max = (uInt)-1;
-    uLong left;
+    const unsigned int max = (unsigned int)-1;
+    z_size_t left;
 
     left = *destLen;
     *destLen = 0;
 
-    stream.zalloc = (alloc_func)0;
-    stream.zfree = (free_func)0;
-    stream.opaque = (voidpf)0;
+    stream.zalloc = NULL;
+    stream.zfree = NULL;
+    stream.opaque = NULL;
 
-    err = deflateInit(&stream, level);
-    if (err != Z_OK) return err;
+    err = PREFIX(deflateInit)(&stream, level);
+    if (err != Z_OK)
+        return err;
 
     stream.next_out = dest;
     stream.avail_out = 0;
-    stream.next_in = (z_const Bytef *)source;
+    stream.next_in = (z_const unsigned char *)source;
     stream.avail_in = 0;
 
     do {
         if (stream.avail_out == 0) {
-            stream.avail_out = left > (uLong)max ? max : (uInt)left;
+            stream.avail_out = left > (unsigned long)max ? max : (unsigned int)left;
             left -= stream.avail_out;
         }
         if (stream.avail_in == 0) {
-            stream.avail_in = sourceLen > (uLong)max ? max : (uInt)sourceLen;
+            stream.avail_in = sourceLen > (unsigned long)max ? max : (unsigned int)sourceLen;
             sourceLen -= stream.avail_in;
         }
-        err = deflate(&stream, sourceLen ? Z_NO_FLUSH : Z_FINISH);
+        err = PREFIX(deflate)(&stream, sourceLen ? Z_NO_FLUSH : Z_FINISH);
     } while (err == Z_OK);
 
     *destLen = stream.total_out;
-    deflateEnd(&stream);
+    PREFIX(deflateEnd)(&stream);
     return err == Z_STREAM_END ? Z_OK : err;
 }
 
 /* ===========================================================================
  */
-int ZEXPORT compress(Bytef *dest, uLongf *destLen, const Bytef *source,
-                     uLong sourceLen) {
-    return compress2(dest, destLen, source, sourceLen, Z_DEFAULT_COMPRESSION);
+int Z_EXPORT PREFIX(compress)(unsigned char *dest, z_uintmax_t *destLen, const unsigned char *source, z_uintmax_t sourceLen) {
+    return PREFIX(compress2)(dest, destLen, source, sourceLen, Z_DEFAULT_COMPRESSION);
 }
 
 /* ===========================================================================
-     If the default memLevel or windowBits for deflateInit() is changed, then
+   If the default memLevel or windowBits for deflateInit() is changed, then
    this function needs to be updated.
  */
-uLong ZEXPORT compressBound(uLong sourceLen) {
-    sourceLen = sourceLen + (sourceLen >> 12) + (sourceLen >> 14) +
-                (sourceLen >> 25) + 13;
-    /* FIXME(cavalcantii): usage of CRC32 Castagnoli as a hash function
-     * for the hash table of symbols used for compression has a side effect
-     * where for compression level [4, 5] it will increase the output buffer size
-     * by 0.1% (i.e. less than 1%) for a high entropy input (i.e. random data).
-     * To avoid a scenario where client code would fail, for safety we increase
-     * the expected output size by 0.8% (i.e. 8x more than the worst scenario).
-     * See: http://crbug.com/990489
-     */
-    sourceLen += sourceLen >> 7; // Equivalent to 1.0078125
-    return sourceLen;
+z_uintmax_t Z_EXPORT PREFIX(compressBound)(z_uintmax_t sourceLen) {
+    z_uintmax_t complen = DEFLATE_BOUND_COMPLEN(sourceLen);
+
+    if (complen > 0)
+        /* Architecture-specific code provided an upper bound. */
+        return complen + ZLIB_WRAPLEN;
+
+#ifndef NO_QUICK_STRATEGY
+    return sourceLen                       /* The source size itself */
+      + (sourceLen == 0 ? 1 : 0)           /* Always at least one byte for any input */
+      + (sourceLen < 9 ? 1 : 0)            /* One extra byte for lengths less than 9 */
+      + DEFLATE_QUICK_OVERHEAD(sourceLen)  /* Source encoding overhead, padded to next full byte */
+      + DEFLATE_BLOCK_OVERHEAD             /* Deflate block overhead bytes */
+      + ZLIB_WRAPLEN;                      /* zlib wrapper */
+#else
+    return sourceLen + (sourceLen >> 4) + 7 + ZLIB_WRAPLEN;
+#endif
 }
