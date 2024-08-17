@@ -271,9 +271,6 @@ bool MsiExtractor::Extract(bela::error_code &ec) {
 inline std::optional<std::wstring> lookup_sevenzip() {
   bela::error_code ec;
   baulk::vfs::InitializeFastPathFs(ec);
-  if (auto s7z = bela::StringCat(baulk::vfs::AppLinks(), L"\\baulk7z.exe"); bela::PathExists(s7z)) {
-    return std::make_optional(std::move(s7z));
-  }
   if (auto ps7z = baulk::archive::Find7z(L"7z.exe", ec); ps7z) {
     return std::make_optional(std::move(*ps7z));
   }
