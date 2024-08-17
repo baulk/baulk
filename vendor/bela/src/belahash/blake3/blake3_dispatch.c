@@ -4,9 +4,12 @@
 
 #include "blake3_impl.h"
 
-#if defined(IS_X86)
 #if defined(_MSC_VER)
 #include <Windows.h>
+#endif
+
+#if defined(IS_X86)
+#if defined(_MSC_VER)
 #include <intrin.h>
 #elif defined(__GNUC__)
 #include <immintrin.h>
@@ -32,9 +35,9 @@
 #define ATOMIC_LOAD(x) x
 #define ATOMIC_STORE(x, y) x = y
 #elif defined(_MSC_VER)
-#define ATOMIC_INT long
-#define ATOMIC_LOAD(x) _InterlockedOr(&x, 0)
-#define ATOMIC_STORE(x, y) _InterlockedExchange(&x, y)
+#define ATOMIC_INT LONG
+#define ATOMIC_LOAD(x) InterlockedOr(&x, 0)
+#define ATOMIC_STORE(x, y) InterlockedExchange(&x, y)
 #else
 #define ATOMIC_INT int
 #define ATOMIC_LOAD(x) x
