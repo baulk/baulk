@@ -6,12 +6,14 @@ param(
     [string]$RefName = ""
 )
 
+# https://jrsoftware.org/ishelp/index.php?topic=setup_architecturesallowed
 $ArchitecturesAlloweds = @{
-    "win64" = "x64";
+    "win64" = "x64compatible";
     "arm64" = "arm64";
 }
+# https://jrsoftware.org/ishelp/index.php?topic=setup_architecturesinstallin64bitmode
 $ArchitecturesInstallIn64BitModes = @{
-    "win64" = "x64";
+    "win64" = "x64compatible";
     "arm64" = "arm64";
 }
 

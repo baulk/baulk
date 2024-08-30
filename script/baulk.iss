@@ -22,6 +22,8 @@
 
 #if "" == ArchitecturesInstallIn64BitMode
   #define BaseNameSuffix "ia32"
+#elif "x64compatible" == ArchitecturesInstallIn64BitMode
+  #define BaseNameSuffix "x64"
 #else
   #define BaseNameSuffix ArchitecturesInstallIn64BitMode
 #endif
