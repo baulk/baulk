@@ -5054,6 +5054,14 @@ PUGI_IMPL_NS_BEGIN
 #if defined(PUGI_IMPL_MSVC_CRT_VERSION) || defined(__BORLANDC__) || (defined(__MINGW32__) && (!defined(__STRICT_ANSI__) || defined(__MINGW64_VERSION_MAJOR)))
 	PUGI_IMPL_FN FILE* open_file_wide(const wchar_t* path, const wchar_t* mode)
 	{
+#ifdef PUGIXML_NO_STL
+		// ensure these symbols are consistently referenced to avoid 'unreferenced function' warnings
+		// note that generally these functions are used in STL builds, but PUGIXML_NO_STL leaves the only usage in convert_path_heap
+		(void)&as_utf8_begin;
+		(void)&as_utf8_end;
+		(void)&strlength_wide;
+#endif
+
 #if defined(PUGI_IMPL_MSVC_CRT_VERSION) && PUGI_IMPL_MSVC_CRT_VERSION >= 1400
 		FILE* file = NULL;
 		return _wfopen_s(&file, path, mode) == 0 ? file : NULL;
@@ -7452,7 +7460,7 @@ namespace pugi
 	{
 		impl::xml_buffered_writer buffered_writer(writer, encoding);
 
-		if ((flags & format_write_bom) && encoding != encoding_latin1)
+		if ((flags & format_write_bom) && buffered_writer.encoding != encoding_latin1)
 		{
 			// BOM always represents the codepoint U+FEFF, so just write it in native encoding
 		#ifdef PUGIXML_WCHAR_MODE
@@ -7466,7 +7474,7 @@ namespace pugi
 		if (!(flags & format_no_declaration) && !impl::has_declaration(_root))
 		{
 			buffered_writer.write_string(PUGIXML_TEXT("<?xml version=\"1.0\""));
-			if (encoding == encoding_latin1) buffered_writer.write_string(PUGIXML_TEXT(" encoding=\"ISO-8859-1\""));
+			if (buffered_writer.encoding == encoding_latin1) buffered_writer.write_string(PUGIXML_TEXT(" encoding=\"ISO-8859-1\""));
 			buffered_writer.write('?', '>');
 			if (!(flags & format_raw)) buffered_writer.write('\n');
 		}
