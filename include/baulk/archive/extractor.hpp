@@ -84,7 +84,7 @@ private:
       ec = bela::make_error_code(bela::ErrGeneral, L"harmful path <s>: ", nativeLinkName);
       return false;
     }
-    return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    return baulk::archive::NewSymlink(_New_symlink, nativeLinkName, opts.overwrite_mode, ec);
   }
 
   bool extract_entry(const File &file, const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
@@ -199,7 +199,7 @@ private:
       ec = bela::make_error_code(bela::ErrGeneral, L"harmful path <s>: ", nativeLinkName);
       return false;
     }
-    return baulk::archive::NewSymlink(_New_symlink, linkPath, opts.overwrite_mode, ec);
+    return baulk::archive::NewSymlink(_New_symlink, nativeLinkName, opts.overwrite_mode, ec);
   }
   
   bool extract_entry(Reader &tr, const Header &fh, const Filter &filter, const OnProgress &progress,
