@@ -49,7 +49,7 @@ $BaseNameSuffix = $ArchitecturesInstallIn64BitMode
 if ($BaseNameSuffix.Length -eq 0) {
     $BaseNameSuffix = "ia32"
 }
-if ($ArchitecturesInstallIn64BitModes -eq "x64compatible") {
+if ($ArchitecturesInstallIn64BitMode -eq "x64compatible") {
     $BaseNameSuffix = "x64"
 }
 $BaulkSetupExe = "BaulkSetup-$BaseNameSuffix.exe"

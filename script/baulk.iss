@@ -116,7 +116,7 @@ Type: files; Name: {localappdata}\Microsoft\Windows Terminal\Fragments\Baulk\bau
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
-Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Icons]
 Name: "{group}\Baulk Terminal"; Filename: "{app}\baulk-terminal.exe"; Parameters: "--vs"; AppUserModelID: "{#AppUserId}"
