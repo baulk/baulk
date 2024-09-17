@@ -19,18 +19,29 @@ add_subdirectory(ced)
 
 # zlib: use zlib-ng
 
+file(
+  GLOB
+  ZLIB_GENERIC_SOURCES
+  zlib/arch/generic/*.c)
+
+file(
+  GLOB
+  ZLIB_X86_SOURCES
+  zlib/arch/x86/*.c)
+
+file(
+  GLOB
+  ZLIB_ARM_SOURCES
+  zlib/arch/arm/*.c)
+
 list(
   APPEND
   SRC_ZLIB
 	"zlib/adler32.c"
-	"zlib/adler32_fold.c"
-	"zlib/chunkset.c"
-	"zlib/compare256.c"
 	"zlib/compress.c"
 	"zlib/cpu_features.c"
-	"zlib/crc32_braid.c"
 	"zlib/crc32_braid_comb.c"
-	"zlib/crc32_fold.c"
+  "zlib/crc32.c"
 	"zlib/deflate.c"
 	"zlib/deflate_fast.c"
 	"zlib/deflate_huff.c"
@@ -45,45 +56,19 @@ list(
 	"zlib/inftrees.c"
 	"zlib/insert_string.c"
 	"zlib/insert_string_roll.c"
-	"zlib/slide_hash.c"
 	"zlib/trees.c"
 	"zlib/uncompr.c"
 	"zlib/zutil.c"
+  ${ZLIB_GENERIC_SOURCES}
 )
 
 if("${BAULK_ARCH_NAME}" STREQUAL "x86_64"
    OR "${BAULK_ARCH_NAME}" STREQUAL "amd64"
    OR "${BAULK_ARCH_NAME}" STREQUAL "x64"
    OR "${BAULK_ARCH_NAME}" STREQUAL "x86")
-   list(
-    APPEND
-    SRC_ZLIB
-    "zlib/arch/x86/adler32_avx2.c"
-    "zlib/arch/x86/adler32_avx512.c"
-    "zlib/arch/x86/adler32_avx512_vnni.c"
-    "zlib/arch/x86/adler32_sse42.c"
-    "zlib/arch/x86/adler32_ssse3.c"
-    "zlib/arch/x86/chunkset_avx2.c"
-    "zlib/arch/x86/chunkset_sse2.c"
-    "zlib/arch/x86/chunkset_ssse3.c"
-    "zlib/arch/x86/compare256_avx2.c"
-    "zlib/arch/x86/compare256_sse2.c"
-    "zlib/arch/x86/crc32_pclmulqdq.c"
-    "zlib/arch/x86/insert_string_sse42.c"
-    "zlib/arch/x86/slide_hash_avx2.c"
-    "zlib/arch/x86/slide_hash_sse2.c"
-    "zlib/arch/x86/x86_features.c")
+   list(APPEND SRC_ZLIB ${ZLIB_X86_SOURCES})
 elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
-  list(
-    APPEND
-    SRC_ZLIB
-    "zlib/arch/arm/crc32_acle.c"
-    "zlib/arch/arm/insert_string_acle.c"
-    "zlib/arch/arm/adler32_neon.c"
-    "zlib/arch/arm/chunkset_neon.c"
-    "zlib/arch/arm/compare256_neon.c"
-    "zlib/arch/arm/slide_hash_neon.c"
-    "zlib/arch/arm/arm_features.c")
+  list(APPEND SRC_ZLIB ${ZLIB_ARM_SOURCES})
 endif()
 
 add_library(zlib STATIC ${SRC_ZLIB})

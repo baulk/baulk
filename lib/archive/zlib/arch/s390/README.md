@@ -61,11 +61,11 @@ integrated with the rest of zlib-ng using hook macros.
 ## Hook macros
 
 DFLTCC takes as arguments a parameter block, an input buffer, an output
-buffer and a window. `ZALLOC_DEFLATE_STATE()`, `ZALLOC_INFLATE_STATE()`,
-`ZFREE_STATE()`, `ZCOPY_DEFLATE_STATE()`, `ZCOPY_INFLATE_STATE()`,
-`ZALLOC_WINDOW()`, `ZCOPY_WINDOW()` and `TRY_FREE_WINDOW()` macros encapsulate
-allocation  details for the parameter block (which is allocated alongside
-zlib-ng state) and the window (which must be page-aligned and large enough).
+buffer, and a window. Parameter blocks are stored alongside zlib states;
+buffers are forwarded from the caller; and window - which must be
+4k-aligned and is always 64k large, is managed using the `PAD_WINDOW()`,
+`WINDOW_PAD_SIZE`, `HINT_ALIGNED_WINDOW` and `DEFLATE_ADJUST_WINDOW_SIZE()`
+and `INFLATE_ADJUST_WINDOW_SIZE()` hooks.
 
 Software and hardware window formats do not match, therefore,
 `deflateSetDictionary()`, `deflateGetDictionary()`, `inflateSetDictionary()`
@@ -117,8 +117,7 @@ converted to calls to functions, which are implemented in
 `arch/s390/dfltcc_*` files. The functions can be grouped in three broad
 categories:
 
-* Base DFLTCC support, e.g. wrapping the machine instruction -
-  `dfltcc()` and allocating aligned memory - `dfltcc_alloc_state()`.
+* Base DFLTCC support, e.g. wrapping the machine instruction - `dfltcc()`.
 * Translating between software and hardware data formats, e.g.
   `dfltcc_deflate_set_dictionary()`.
 * Translating between software and hardware state machines, e.g.

@@ -1,7 +1,7 @@
 /* x86_features.h -- check for CPU features
-* Copyright (C) 2013 Intel Corporation Jim Kukunas
-* For conditions of distribution and use, see copyright notice in zlib.h
-*/
+ * Copyright (C) 2013 Intel Corporation Jim Kukunas
+ * For conditions of distribution and use, see copyright notice in zlib.h
+ */
 
 #ifndef X86_FEATURES_H_
 #define X86_FEATURES_H_
@@ -25,4 +25,4 @@ struct x86_cpu_features {
 
 void Z_INTERNAL x86_check_features(struct x86_cpu_features *features);
 
-#endif /* CPU_H_ */
+#endif /* X86_FEATURES_H_ */

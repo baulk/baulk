@@ -22,9 +22,9 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
     match_func longest_match;
 
     if (s->max_chain_length <= 1024)
-        longest_match = functable.longest_match;
+        longest_match = FUNCTABLE_FPTR(longest_match);
     else
-        longest_match = functable.longest_match_slow;
+        longest_match = FUNCTABLE_FPTR(longest_match_slow);
 
     /* Process the input block. */
     for (;;) {
@@ -78,7 +78,8 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
             unsigned int max_insert = s->strstart + s->lookahead - STD_MIN_MATCH;
             /* Do not insert strings in hash table beyond this. */
 
-            check_match(s, s->strstart-1, s->prev_match, s->prev_length);
+            Assert((s->strstart-1) <= UINT16_MAX, "strstart-1 should fit in uint16_t");
+            check_match(s, (Pos)(s->strstart - 1), s->prev_match, s->prev_length);
 
             bflush = zng_tr_tally_dist(s, s->strstart -1 - s->prev_match, s->prev_length - STD_MIN_MATCH);
 
@@ -129,7 +130,7 @@ Z_INTERNAL block_state deflate_slow(deflate_state *s, int flush) {
     }
     Assert(flush != Z_NO_FLUSH, "no flush?");
     if (UNLIKELY(s->match_available)) {
-        (void) zng_tr_tally_lit(s, s->window[s->strstart-1]);
+        Z_UNUSED(zng_tr_tally_lit(s, s->window[s->strstart-1]));
         s->match_available = 0;
     }
     s->insert = s->strstart < (STD_MIN_MATCH - 1) ? s->strstart : (STD_MIN_MATCH - 1);

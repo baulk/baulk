@@ -26,5 +26,7 @@ std::string url_decode(std::wstring_view url) {
   }
   return buf;
 }
+#ifdef __AVX__
+#endif
 
 } // namespace baulk::net
