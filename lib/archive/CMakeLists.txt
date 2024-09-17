@@ -41,7 +41,7 @@ list(
 	"zlib/compress.c"
 	"zlib/cpu_features.c"
 	"zlib/crc32_braid_comb.c"
-  "zlib/crc32.c"
+	"zlib/crc32.c"
 	"zlib/deflate.c"
 	"zlib/deflate_fast.c"
 	"zlib/deflate_huff.c"
