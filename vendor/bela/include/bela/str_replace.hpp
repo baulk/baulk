@@ -44,7 +44,7 @@ namespace bela {
 namespace strings_internal {
 
 template <typename C>
-requires bela::character<C>
+  requires bela::character<C>
 struct ViableSubstitution {
   using string_view_t = std::basic_string_view<C, std::char_traits<C>>;
   string_view_t old;
@@ -68,8 +68,9 @@ struct ViableSubstitution {
 // out that most callers have small enough a list of substitutions that the
 // overhead of such a queue isn't worth it.
 template <typename StrToStrMapping, typename C>
-requires bela::character<C> std::vector<ViableSubstitution<C>>
-FindSubstitutions(std::basic_string_view<C, std::char_traits<C>> s, const StrToStrMapping &replacements) {
+  requires bela::character<C>
+std::vector<ViableSubstitution<C>> FindSubstitutions(std::basic_string_view<C, std::char_traits<C>> s,
+                                                     const StrToStrMapping &replacements) {
   std::vector<ViableSubstitution<C>> subs;
   subs.reserve(replacements.size());
 
@@ -106,7 +107,8 @@ int ApplySubstitutions(std::string_view s, std::vector<ViableSubstitution<char>>
 } // namespace strings_internal
 
 template <typename StrToStrMapping, typename C>
-requires bela::character<C> std::basic_string<C, std::char_traits<C>, std::allocator<C>>
+  requires bela::character<C>
+std::basic_string<C, std::char_traits<C>, std::allocator<C>>
 StrReplaceAll(std::basic_string_view<C, std::char_traits<C>> s, const StrToStrMapping &replacements) {
   auto subs = strings_internal::FindSubstitutions<StrToStrMapping, C>(s, replacements);
   std::basic_string<C, std::char_traits<C>, std::allocator<C>> result;

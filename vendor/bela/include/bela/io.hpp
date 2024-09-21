@@ -9,7 +9,7 @@
 
 namespace bela::io {
 template <typename CharT = uint8_t>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline auto as_bytes(const std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   return std::span<const uint8_t>{reinterpret_cast<const uint8_t *>(sv.data()), sv.size() * sizeof(CharT)};
 }
@@ -54,10 +54,10 @@ inline bool Seek(HANDLE fd, int64_t pos, bela::error_code &ec, Whence whence = S
 
 // Avoid the uint8_t buffer from incorrectly matching the template function
 template <class T>
-concept vectorizable_derived = std::is_standard_layout_v<T> &&(!std::same_as<T, uint8_t>);
+concept vectorizable_derived = std::is_standard_layout_v<T> && (!std::same_as<T, uint8_t>);
 
 template <class T>
-concept exclude_buffer_derived = std::is_standard_layout_v<T> &&(!std::same_as<T, bela::Buffer>);
+concept exclude_buffer_derived = std::is_standard_layout_v<T> && (!std::same_as<T, bela::Buffer>);
 
 class FD {
 private:
@@ -110,7 +110,7 @@ public:
   // buffer.size()
   // Try to read bytes into the buffer
   template <typename T>
-  requires exclude_buffer_derived<T>
+    requires exclude_buffer_derived<T>
   bool ReadAt(T &t, int64_t pos, int64_t &outlen, bela::error_code &ec) const {
     return ReadAt({reinterpret_cast<uint8_t *>(&t), sizeof(T)}, pos, outlen, ec);
   }
@@ -118,7 +118,7 @@ public:
   // buffer.size()
   // Try to read bytes into the buffer
   template <typename T>
-  requires vectorizable_derived<T>
+    requires vectorizable_derived<T>
   bool ReadAt(std::vector<T> &tv, int64_t pos, int64_t &outlen, bela::error_code &ec) const {
     return ReadAt({reinterpret_cast<uint8_t *>(tv.data()), sizeof(T) * tv.size()}, pos, outlen, ec);
   }
@@ -150,26 +150,26 @@ public:
     return false;
   }
   template <typename T>
-  requires exclude_buffer_derived<T>
+    requires exclude_buffer_derived<T>
   bool ReadFull(T &t, bela::error_code &ec) const {
     return bela::io::ReadFull(fd, {reinterpret_cast<uint8_t *>(&t), sizeof(T)}, ec);
   }
   template <typename T>
-  requires vectorizable_derived<T>
+    requires vectorizable_derived<T>
   bool ReadFull(std::vector<T> &tv, bela::error_code &ec) const {
     return bela::io::ReadFull(fd, {reinterpret_cast<uint8_t *>(tv.data()), sizeof(T) * tv.size()}, ec);
   }
   // ReadAt reads sizeof T bytes into p starting at offset off in the underlying input source
   // Force a full buffer
   template <typename T>
-  requires exclude_buffer_derived<T>
+    requires exclude_buffer_derived<T>
   bool ReadAt(T &t, int64_t pos, bela::error_code &ec) const {
     return ReadAt({reinterpret_cast<uint8_t *>(&t), sizeof(T)}, pos, ec);
   }
   // ReadAt reads vector bytes into p starting at offset off in the underlying input source
   // Force a full buffer
   template <typename T>
-  requires vectorizable_derived<T>
+    requires vectorizable_derived<T>
   bool ReadAt(std::vector<T> &tv, int64_t pos, bela::error_code &ec) const {
     return ReadAt({reinterpret_cast<uint8_t *>(tv.data()), sizeof(T) * tv.size()}, pos, ec);
   }

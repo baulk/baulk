@@ -94,25 +94,29 @@ public:
   // Overloads that forward to either the int64_t or double overloads above.
   // Integer operands must be representable as int64_t.
   template <typename T>
-  requires bela::integral_superset<T> Duration &operator*=(T r) {
+    requires bela::integral_superset<T>
+  Duration &operator*=(T r) {
     int64_t x = r;
     return *this *= x;
   }
 
   template <typename T>
-  requires bela::integral_superset<T> Duration &operator/=(T r) {
+    requires bela::integral_superset<T>
+  Duration &operator/=(T r) {
     int64_t x = r;
     return *this /= x;
   }
 
   template <typename T>
-  requires std::floating_point<T> Duration &operator*=(T r) {
+    requires std::floating_point<T>
+  Duration &operator*=(T r) {
     double x = r;
     return *this *= x;
   }
 
   template <typename T>
-  requires std::floating_point<T> Duration &operator/=(T r) {
+    requires std::floating_point<T>
+  Duration &operator/=(T r) {
     double x = r;
     return *this /= x;
   }
@@ -302,23 +306,35 @@ constexpr Duration InfiniteDuration();
 //   bela::Duration a = bela::Seconds(60);
 //   bela::Duration b = bela::Minutes(1);  // b == a
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Nanoseconds(T n) { return time_internal::FromInt64(n, std::nano{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Nanoseconds(T n) {
+  return time_internal::FromInt64(n, std::nano{});
+}
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Microseconds(T n) { return time_internal::FromInt64(n, std::micro{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Microseconds(T n) {
+  return time_internal::FromInt64(n, std::micro{});
+}
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Milliseconds(T n) { return time_internal::FromInt64(n, std::milli{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Milliseconds(T n) {
+  return time_internal::FromInt64(n, std::milli{});
+}
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Seconds(T n) { return time_internal::FromInt64(n, std::ratio<1>{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Seconds(T n) {
+  return time_internal::FromInt64(n, std::ratio<1>{});
+}
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Minutes(T n) { return time_internal::FromInt64(n, std::ratio<60>{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Minutes(T n) {
+  return time_internal::FromInt64(n, std::ratio<60>{});
+}
 template <typename T>
-requires bela::integral_superset<T>
-constexpr Duration Hours(T n) { return time_internal::FromInt64(n, std::ratio<3600>{}); }
+  requires bela::integral_superset<T>
+constexpr Duration Hours(T n) {
+  return time_internal::FromInt64(n, std::ratio<3600>{});
+}
 
 // Factory overloads for constructing `Duration` values from a floating-point
 // number of the unit indicated by the factory function's name. These functions
@@ -330,13 +346,23 @@ constexpr Duration Hours(T n) { return time_internal::FromInt64(n, std::ratio<36
 //   auto a = bela::Seconds(1.5);        // OK
 //   auto b = bela::Milliseconds(1500);  // BETTER
 template <typename T>
-requires std::floating_point<T> Duration Nanoseconds(T n) { return n * Nanoseconds(1); }
+  requires std::floating_point<T>
+Duration Nanoseconds(T n) {
+  return n * Nanoseconds(1);
+}
 template <typename T>
-requires std::floating_point<T> Duration Microseconds(T n) { return n * Microseconds(1); }
+  requires std::floating_point<T>
+Duration Microseconds(T n) {
+  return n * Microseconds(1);
+}
 template <typename T>
-requires std::floating_point<T> Duration Milliseconds(T n) { return n * Milliseconds(1); }
+  requires std::floating_point<T>
+Duration Milliseconds(T n) {
+  return n * Milliseconds(1);
+}
 template <typename T>
-requires std::floating_point<T> Duration Seconds(T n) {
+  requires std::floating_point<T>
+Duration Seconds(T n) {
   if (n >= 0) { // Note: `NaN >= 0` is false.
     if (n >= static_cast<T>((std::numeric_limits<int64_t>::max)())) {
       return InfiniteDuration();
@@ -351,9 +377,15 @@ requires std::floating_point<T> Duration Seconds(T n) {
   }
 }
 template <typename T>
-requires std::floating_point<T> Duration Minutes(T n) { return n * Minutes(1); }
+  requires std::floating_point<T>
+Duration Minutes(T n) {
+  return n * Minutes(1);
+}
 template <typename T>
-requires std::floating_point<T> Duration Hours(T n) { return n * Hours(1); }
+  requires std::floating_point<T>
+Duration Hours(T n) {
+  return n * Hours(1);
+}
 
 // ToInt64Nanoseconds()
 // ToInt64Microseconds()

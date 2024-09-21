@@ -76,8 +76,10 @@ template <class T>
 concept strict_enum = std::is_enum_v<T> && !std::is_convertible_v<T, int>;
 
 template <typename E>
-requires std::is_enum_v<E>
-constexpr auto integral_cast(E e) { return static_cast<std::underlying_type_t<E>>(e); }
+  requires std::is_enum_v<E>
+constexpr auto integral_cast(E e) {
+  return static_cast<std::underlying_type_t<E>>(e);
+}
 
 template <class T> constexpr typename std::make_unsigned<T>::type unsigned_cast(T __x) noexcept {
   return static_cast<typename std::make_unsigned<T>::type>(__x);
@@ -85,13 +87,16 @@ template <class T> constexpr typename std::make_unsigned<T>::type unsigned_cast(
 
 // narrow_cast(): a searchable way to do narrowing casts of values
 template <class T, class U>
-requires(bela::fundamental<T> &&bela::fundamental<U>) constexpr T narrow_cast(U &&u) noexcept {
+  requires(bela::fundamental<T> && bela::fundamental<U>)
+constexpr T narrow_cast(U &&u) noexcept {
   return static_cast<T>(std::forward<U>(u));
 }
 
 template <typename T, typename K>
-requires integral_superset<T> && integral_superset<K>
-constexpr bool FlagIsTrue(T a, K b) { return (a & static_cast<T>(b)) != 0; }
+  requires integral_superset<T> && integral_superset<K>
+constexpr bool FlagIsTrue(T a, K b) {
+  return (a & static_cast<T>(b)) != 0;
+}
 
 constexpr int64_t SizeUnInitialized{-1};
 

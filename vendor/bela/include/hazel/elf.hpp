@@ -90,16 +90,16 @@ private:
   }
 
   template <typename I>
-  requires std::integral<I> I endian_cast(I t)
-  const {
+    requires std::integral<I>
+  I endian_cast(I t) const {
     if (en == std::endian::native) {
       return t;
     }
     return bela::bswap(t);
   }
   template <typename I>
-  requires std::integral<I> I cast_from(const void *p)
-  const {
+    requires std::integral<I>
+  I cast_from(const void *p) const {
     auto v = bela::unaligned_load<I>(p);
     if (en == std::endian::native) {
       return v;

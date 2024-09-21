@@ -82,7 +82,9 @@ struct is_nothrow_convertible<From, To,
     : std::true_type {};
 
 // GCC 4.8, 4.9 workaround for void_t to make the defining-type-id dependant
-template <typename...> struct void_t_helper { using type = void; };
+template <typename...> struct void_t_helper {
+  using type = void;
+};
 
 // void_t for c++11
 template <typename... Ts> using void_t = typename void_t_helper<Ts...>::type;
@@ -4354,8 +4356,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::assign(size_type count, va
 }
 
 template <std::size_t N, typename CharT, typename Traits>
-constexpr auto basic_static_string<N, CharT, Traits>::assign(const_pointer s, size_type count)
-    -> basic_static_string & {
+constexpr auto basic_static_string<N, CharT, Traits>::assign(const_pointer s,
+                                                             size_type count) -> basic_static_string & {
   if (count > max_size())
     detail::throw_exception<std::length_error>("count > max_size()");
   this->set_size(count);
@@ -4381,8 +4383,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::assign(InputIterator first
 }
 
 template <std::size_t N, typename CharT, typename Traits>
-constexpr auto basic_static_string<N, CharT, Traits>::insert(const_iterator pos, size_type count, value_type ch)
-    -> iterator {
+constexpr auto basic_static_string<N, CharT, Traits>::insert(const_iterator pos, size_type count,
+                                                             value_type ch) -> iterator {
   const auto curr_size = size();
   const auto curr_data = data();
   if (count > max_size() - curr_size)
@@ -4471,8 +4473,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::append(size_type count, va
 }
 
 template <std::size_t N, typename CharT, typename Traits>
-constexpr auto basic_static_string<N, CharT, Traits>::append(const_pointer s, size_type count)
-    -> basic_static_string & {
+constexpr auto basic_static_string<N, CharT, Traits>::append(const_pointer s,
+                                                             size_type count) -> basic_static_string & {
   const auto curr_size = size();
   if (count > max_size() - curr_size)
     detail::throw_exception<std::length_error>("count > max_size() - size()");
@@ -4601,8 +4603,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::replace(const_iterator i1,
 }
 
 template <std::size_t N, typename CharT, typename Traits>
-constexpr auto basic_static_string<N, CharT, Traits>::find(const_pointer s, size_type pos, size_type n) const noexcept
-    -> size_type {
+constexpr auto basic_static_string<N, CharT, Traits>::find(const_pointer s, size_type pos,
+                                                           size_type n) const noexcept -> size_type {
   const auto curr_size = size();
   if (pos > curr_size || n > curr_size - pos)
     return npos;
@@ -4613,8 +4615,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::find(const_pointer s, size
 }
 
 template <std::size_t N, typename CharT, typename Traits>
-constexpr auto basic_static_string<N, CharT, Traits>::rfind(const_pointer s, size_type pos, size_type n) const noexcept
-    -> size_type {
+constexpr auto basic_static_string<N, CharT, Traits>::rfind(const_pointer s, size_type pos,
+                                                            size_type n) const noexcept -> size_type {
   const auto curr_size = size();
   const auto curr_data = data();
   if (curr_size < n)
@@ -4698,8 +4700,8 @@ constexpr auto basic_static_string<N, CharT, Traits>::read_back(bool overwrite_n
 
 template <std::size_t N, typename CharT, typename Traits>
 constexpr auto basic_static_string<N, CharT, Traits>::replace_unchecked(const_iterator i1, const_iterator i2,
-                                                                        const_pointer s, size_type n2)
-    -> basic_static_string & {
+                                                                        const_pointer s,
+                                                                        size_type n2) -> basic_static_string & {
   const auto curr_data = data();
   const auto curr_size = size();
   const std::size_t pos = i1 - curr_data;

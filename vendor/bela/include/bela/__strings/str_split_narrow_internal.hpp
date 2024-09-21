@@ -168,7 +168,7 @@ template <typename T> struct HasEmplace<T, std::void_t<decltype(std::declval<T>(
 // details below in Splitter<> where this is used.
 std::false_type IsInitializerListDispatch(...); // default: No
 template <typename T> std::true_type IsInitializerListDispatch(std::initializer_list<T> *);
-template <typename T> struct IsInitializerList : decltype(IsInitializerListDispatch(static_cast<T *>(nullptr))) {};
+template <typename T> struct IsInitializerList : decltype(IsInitializerListDispatch(static_cast<T *>(nullptr))){};
 
 // A SplitterIsConvertibleTo<C>::type alias exists iff the specified condition
 // is true for type 'C'.

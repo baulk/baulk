@@ -221,7 +221,7 @@ bool File::parseFile(bela::error_code &ec) {
   }
   std::string_view dat{reinterpret_cast<const char *>(buffer.data()), fh.Cmdsz};
   loads.resize(fh.Ncmd);
-  for (auto & load : loads) {
+  for (auto &load : loads) {
     if (dat.size() < 8) {
       ec = bela::make_error_code(L"command block too small");
       return false;

@@ -41,7 +41,9 @@ template <typename... AV>
 
 // https://github.com/microsoft/wil/blob/master/include/wil/stl.h#L38
 template <typename T> struct secure_allocator : public std::allocator<T> {
-  template <typename Other> struct rebind { typedef secure_allocator<Other> other; };
+  template <typename Other> struct rebind {
+    typedef secure_allocator<Other> other;
+  };
 
   secure_allocator() : std::allocator<T>() {}
 

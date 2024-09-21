@@ -106,7 +106,7 @@ public:
   // RFC3339
 
   template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-  requires bela::character<CharT>
+    requires bela::character<CharT>
   [[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> Format(bool nano = false) const;
 
   bela::Time Time() const noexcept;
@@ -141,14 +141,14 @@ inline bela::DateTime LocalDateTime(bela::Time t) {
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> FormatTime(bela::Time t, bool nano = false) {
   auto dt = LocalDateTime(t);
   return dt.Format<CharT>(nano);
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator> FormatUniversalTime(bela::Time t,
                                                                                                bool nano = false) {
   return DateTime(t).Format<CharT>(nano);

@@ -218,13 +218,25 @@ namespace strings_internal {
 // This allows functions like bela::StrSplit() and bela::MaxSplits() to accept
 // string-like objects (e.g., ',') as delimiter arguments but they will be
 // treated as if a ByString delimiter was given.
-template <typename Delimiter> struct SelectDelimiter { using type = Delimiter; };
+template <typename Delimiter> struct SelectDelimiter {
+  using type = Delimiter;
+};
 
-template <> struct SelectDelimiter<wchar_t> { using type = ByChar; };
-template <> struct SelectDelimiter<wchar_t *> { using type = ByString; };
-template <> struct SelectDelimiter<const wchar_t *> { using type = ByString; };
-template <> struct SelectDelimiter<std::wstring_view> { using type = ByString; };
-template <> struct SelectDelimiter<std::wstring> { using type = ByString; };
+template <> struct SelectDelimiter<wchar_t> {
+  using type = ByChar;
+};
+template <> struct SelectDelimiter<wchar_t *> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<const wchar_t *> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<std::wstring_view> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<std::wstring> {
+  using type = ByString;
+};
 
 // Wraps another delimiter and sets a max number of matches for that delimiter.
 template <typename Delimiter> class MaxSplitsImpl {

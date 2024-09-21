@@ -61,7 +61,7 @@ inline bool BytesEqual(const void *b1, const void *b2, size_t size) { return mem
 
 #if BELA_HAVE_BUILTIN(__builtin_memcpy) || (defined(__GNUC__) && !defined(__clang__))
 template <typename T>
-requires bela::standard_layout<T>
+  requires bela::standard_layout<T>
 constexpr auto MemCopy(T *dest, const T *src, size_t n) noexcept {
   if (n != 0) {
     __builtin_memcpy(dest, src, sizeof(T) * n);
@@ -70,7 +70,7 @@ constexpr auto MemCopy(T *dest, const T *src, size_t n) noexcept {
 #else
 // MSVC no __builtin_memcpy
 template <typename T>
-requires bela::standard_layout<T>
+  requires bela::standard_layout<T>
 inline void MemCopy(T *dest, const T *src, size_t n) noexcept {
   if (n != 0) {
     memcpy(dest, src, sizeof(T) * n);

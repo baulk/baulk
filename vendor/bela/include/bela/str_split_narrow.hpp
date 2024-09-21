@@ -218,13 +218,25 @@ namespace strings_internal {
 // This allows functions like bela::StrSplit() and bela::MaxSplits() to accept
 // string-like objects (e.g., ',') as delimiter arguments but they will be
 // treated as if a ByString delimiter was given.
-template <typename Delimiter> struct SelectDelimiter { using type = Delimiter; };
+template <typename Delimiter> struct SelectDelimiter {
+  using type = Delimiter;
+};
 
-template <> struct SelectDelimiter<char> { using type = ByChar; };
-template <> struct SelectDelimiter<char *> { using type = ByString; };
-template <> struct SelectDelimiter<const char *> { using type = ByString; };
-template <> struct SelectDelimiter<std::string_view> { using type = ByString; };
-template <> struct SelectDelimiter<std::string> { using type = ByString; };
+template <> struct SelectDelimiter<char> {
+  using type = ByChar;
+};
+template <> struct SelectDelimiter<char *> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<const char *> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<std::string_view> {
+  using type = ByString;
+};
+template <> struct SelectDelimiter<std::string> {
+  using type = ByString;
+};
 
 // Wraps another delimiter and sets a max number of matches for that delimiter.
 template <typename Delimiter> class MaxSplitsImpl {
@@ -233,7 +245,7 @@ public:
   std::string_view Find(std::string_view text, size_t pos) {
     if (count_++ == limit_) {
       return std::string_view(text.data() + text.size(),
-                               0); // No more matches.
+                              0); // No more matches.
     }
     return delimiter_.Find(text, pos);
   }
@@ -466,7 +478,7 @@ strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>
 StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
   return strings_internal::Splitter<DelimiterType, AllowEmpty, std::string_view>(text.value(), DelimiterType(d),
-                                                                                  AllowEmpty());
+                                                                                 AllowEmpty());
 }
 
 template <typename Delimiter, typename StringType, EnableSplitIfString<StringType> = 0>
@@ -474,7 +486,7 @@ strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>
 StrSplit(StringType &&text, Delimiter d) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
   return strings_internal::Splitter<DelimiterType, AllowEmpty, std::string>(std::move(text), DelimiterType(d),
-                                                                             AllowEmpty());
+                                                                            AllowEmpty());
 }
 
 template <typename Delimiter, typename Predicate>
@@ -482,7 +494,7 @@ strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>
 StrSplit(strings_internal::ConvertibleToStringView text, Delimiter d, Predicate p) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
   return strings_internal::Splitter<DelimiterType, Predicate, std::string_view>(text.value(), DelimiterType(d),
-                                                                                 std::move(p));
+                                                                                std::move(p));
 }
 
 template <typename Delimiter, typename Predicate, typename StringType, EnableSplitIfString<StringType> = 0>
@@ -490,9 +502,9 @@ strings_internal::Splitter<typename strings_internal::SelectDelimiter<Delimiter>
 StrSplit(StringType &&text, Delimiter d, Predicate p) {
   using DelimiterType = typename strings_internal::SelectDelimiter<Delimiter>::type;
   return strings_internal::Splitter<DelimiterType, Predicate, std::string>(std::move(text), DelimiterType(d),
-                                                                            std::move(p));
+                                                                           std::move(p));
 }
 
-} // namespace bela
+} // namespace bela::narrow
 
 #endif

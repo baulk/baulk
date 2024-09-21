@@ -34,18 +34,20 @@ public:
 };
 
 template <typename CharT>
-requires bela::character<CharT>
-auto boolean_string_view(bool v) { return v ? Literal<CharT>::StringTrue : Literal<CharT>::StringFalse; }
+  requires bela::character<CharT>
+auto boolean_string_view(bool v) {
+  return v ? Literal<CharT>::StringTrue : Literal<CharT>::StringFalse;
+}
 
 template <typename CharT>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 auto make_string_view(const CharT *str) {
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
   return (str == nullptr) ? string_view_t() : string_view_t(str);
 }
 
 template <typename To>
-requires bela::u16_character<To>
+  requires bela::u16_character<To>
 auto u16string_view_cast(std::wstring_view sv) {
   using string_view_t = std::basic_string_view<To, std::char_traits<To>>;
   return string_view_t{reinterpret_cast<const To *>(sv.data()), sv.size()};
@@ -111,19 +113,19 @@ struct Hex {
   char fill;
 
   template <typename Int>
-  requires(sizeof(Int) == 1 && !std::is_pointer_v<Int>) constexpr explicit Hex(Int v, PadSpec spec = kNoPad)
-      : Hex(spec, static_cast<uint8_t>(v)) {}
+    requires(sizeof(Int) == 1 && !std::is_pointer_v<Int>)
+  constexpr explicit Hex(Int v, PadSpec spec = kNoPad) : Hex(spec, static_cast<uint8_t>(v)) {}
   template <typename Int>
-  requires(sizeof(Int) == 2 && !std::is_pointer_v<Int>) constexpr explicit Hex(Int v, PadSpec spec = kNoPad)
-      : Hex(spec, static_cast<uint16_t>(v)) {}
+    requires(sizeof(Int) == 2 && !std::is_pointer_v<Int>)
+  constexpr explicit Hex(Int v, PadSpec spec = kNoPad) : Hex(spec, static_cast<uint16_t>(v)) {}
   template <typename Int>
-  requires(sizeof(Int) == 4 && !std::is_pointer_v<Int>) constexpr explicit Hex(Int v, PadSpec spec = kNoPad)
-      : Hex(spec, static_cast<uint32_t>(v)) {}
+    requires(sizeof(Int) == 4 && !std::is_pointer_v<Int>)
+  constexpr explicit Hex(Int v, PadSpec spec = kNoPad) : Hex(spec, static_cast<uint32_t>(v)) {}
   template <typename Int>
-  requires(sizeof(Int) == 8 && !std::is_pointer_v<Int>) constexpr explicit Hex(Int v, PadSpec spec = kNoPad)
-      : Hex(spec, static_cast<uint64_t>(v)) {}
+    requires(sizeof(Int) == 8 && !std::is_pointer_v<Int>)
+  constexpr explicit Hex(Int v, PadSpec spec = kNoPad) : Hex(spec, static_cast<uint64_t>(v)) {}
   template <typename Pointer>
-  requires std::is_pointer_v<Pointer>
+    requires std::is_pointer_v<Pointer>
   explicit Hex(Pointer *v, PadSpec spec = kNoPad) : Hex(spec, reinterpret_cast<uintptr_t>(v)) {}
 
 private:
@@ -148,7 +150,7 @@ struct Dec {
   bool neg;
 
   template <typename Int>
-  requires std::integral<Int>
+    requires std::integral<Int>
   constexpr explicit Dec(Int v, PadSpec spec = kNoPad)
       : value(v >= 0 ? static_cast<uint64_t>(v) : uint64_t{0} - static_cast<uint64_t>(v)),
         width(spec == kNoPad       ? 1
@@ -171,24 +173,27 @@ template <typename CharT> class basic_alphanum {
 public:
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
   template <typename I>
-  requires bela::strict_integral<I> basic_alphanum(I x) : piece_(bela::to_chars_view(digits_, x)) {}
+    requires bela::strict_integral<I>
+  basic_alphanum(I x) : piece_(bela::to_chars_view(digits_, x)) {}
   template <typename F>
-  requires std::floating_point<F> basic_alphanum(F x)
-      : piece_(bela::to_chars_view(digits_, x, std::chars_format::general)) {}
+    requires std::floating_point<F>
+  basic_alphanum(F x) : piece_(bela::to_chars_view(digits_, x, std::chars_format::general)) {}
   template <typename From>
-  requires bela::compatible_character<From, CharT> basic_alphanum(const From *c_str)
+    requires bela::compatible_character<From, CharT>
+  basic_alphanum(const From *c_str)
       : piece_(strings_internal::make_string_view(reinterpret_cast<const CharT *>(c_str))) {}
   template <typename From>
-  requires bela::compatible_character<From, CharT>
+    requires bela::compatible_character<From, CharT>
   basic_alphanum(std::basic_string_view<From, std::char_traits<From>> pc)
       : piece_{reinterpret_cast<const CharT *>(pc.data()), pc.size()} {}
 
   template <typename From, typename Allocator>
-  requires bela::compatible_character<From, CharT>
+    requires bela::compatible_character<From, CharT>
   basic_alphanum(const std::basic_string<From, std::char_traits<From>, Allocator> &str)
       : piece_{reinterpret_cast<const CharT *>(str.data()), str.size()} {}
   template <typename From>
-  requires bela::compatible_character<From, CharT> basic_alphanum(From ch) : piece_(digits_, 1) {
+    requires bela::compatible_character<From, CharT>
+  basic_alphanum(From ch) : piece_(digits_, 1) {
     digits_[0] = static_cast<CharT>(ch);
   }
   basic_alphanum(bool b) : piece_{strings_internal::boolean_string_view<CharT>(b)} {}
@@ -203,23 +208,24 @@ public:
   // Extended type support
   // eg: std::filesystem::path
   template <typename E>
-  requires(has_u16_native<E> &&std::same_as<CharT, wchar_t>) basic_alphanum(const E &e) : piece_{e.native()} {}
+    requires(has_u16_native<E> && std::same_as<CharT, wchar_t>)
+  basic_alphanum(const E &e) : piece_{e.native()} {}
   template <typename E>
-  requires(has_u16_native<E> &&std::same_as<CharT, char16_t>) basic_alphanum(const E &e)
-      : piece_{strings_internal::u16string_view_cast<CharT>(e.native())} {}
+    requires(has_u16_native<E> && std::same_as<CharT, char16_t>)
+  basic_alphanum(const E &e) : piece_{strings_internal::u16string_view_cast<CharT>(e.native())} {}
 
   // Normal enums are already handled by the integer formatters.
   // This overload matches only scoped enums.
   template <typename T>
-  requires(std::is_enum_v<T> &&std::integral<std::underlying_type_t<T>>) basic_alphanum(T e)
-      : piece_(bela::to_chars_view(digits_, bela::integral_cast(e))) {}
+    requires(std::is_enum_v<T> && std::integral<std::underlying_type_t<T>>)
+  basic_alphanum(T e) : piece_(bela::to_chars_view(digits_, bela::integral_cast(e))) {}
 
   // vector<bool>::reference and const_reference require special help to
   // convert to `AlphaNum` because it requires two user defined conversions.
   template <typename T>
-  requires(std::is_class_v<T> && (std::is_same_v<T, std::vector<bool>::reference> ||
-                                  std::is_same_v<T, std::vector<bool>::const_reference>)) basic_alphanum(T e)
-      : basic_alphanum(static_cast<bool>(e)) {} // NOLINT(runtime/explicit)
+    requires(std::is_class_v<T> &&
+             (std::is_same_v<T, std::vector<bool>::reference> || std::is_same_v<T, std::vector<bool>::const_reference>))
+  basic_alphanum(T e) : basic_alphanum(static_cast<bool>(e)) {} // NOLINT(runtime/explicit)
 
   // template <typename T>
   // requires has_u16_native<T> basic_alphanum(const T &t) : piece_(t.native()) {}
@@ -238,7 +244,7 @@ using AlphaNumNarrow = basic_alphanum<char>;
 
 namespace strings_internal {
 template <typename CharT, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 auto string_cat_pieces(std::initializer_list<std::basic_string_view<CharT, std::char_traits<CharT>>> pieces) {
   std::basic_string<CharT, std::char_traits<CharT>, Allocator> result;
   size_t total_size = 0;
@@ -259,7 +265,7 @@ auto string_cat_pieces(std::initializer_list<std::basic_string_view<CharT, std::
 }
 
 template <typename CharT, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 void string_append_pieces(std::basic_string<CharT, std::char_traits<CharT>, Allocator> *dest,
                           std::initializer_list<std::basic_string_view<CharT, std::char_traits<CharT>>> pieces) {
   size_t old_size = dest->size();
@@ -280,7 +286,8 @@ void string_append_pieces(std::basic_string<CharT, std::char_traits<CharT>, Allo
 }
 
 template <typename CharT>
-requires bela::character<CharT> size_t buffer_unchecked_concat(CharT *out, const basic_alphanum<CharT> &a) {
+  requires bela::character<CharT>
+size_t buffer_unchecked_concat(CharT *out, const basic_alphanum<CharT> &a) {
   if (a.size() != 0) {
     memcpy(out, a.data(), a.size() * sizeof(CharT));
   }
@@ -289,20 +296,20 @@ requires bela::character<CharT> size_t buffer_unchecked_concat(CharT *out, const
 } // namespace strings_internal
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline std::basic_string<CharT, std::char_traits<CharT>, Allocator> string_cat() {
   return std::basic_string<CharT, std::char_traits<CharT>, Allocator>();
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline std::basic_string<CharT, std::char_traits<CharT>, Allocator>
 string_cat(const basic_alphanum<CharT> &a) {
   return std::basic_string<CharT, std::char_traits<CharT>, Allocator>(a.Piece());
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline std::basic_string<CharT, std::char_traits<CharT>, Allocator>
 string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b) {
   std::basic_string<CharT, std::char_traits<CharT>, Allocator> s;
@@ -314,7 +321,7 @@ string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b) {
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline std::basic_string<CharT, std::char_traits<CharT>, Allocator>
 string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b, const basic_alphanum<CharT> &c) {
   std::basic_string<CharT, std::char_traits<CharT>, Allocator> s;
@@ -327,7 +334,7 @@ string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b, const
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline std::basic_string<CharT, std::char_traits<CharT>, Allocator>
 string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b, const basic_alphanum<CharT> &c,
            const basic_alphanum<CharT> &d) {
@@ -342,7 +349,7 @@ string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b, const
 }
 
 template <typename CharT, typename Allocator, typename... AV>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline auto string_cat_with_allocator(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b,
                                                     const basic_alphanum<CharT> &c, const basic_alphanum<CharT> &d,
                                                     const basic_alphanum<CharT> &e, const AV &...args) {
@@ -352,7 +359,7 @@ requires bela::character<CharT>
 }
 
 template <typename CharT, typename... AV>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] inline auto string_cat(const basic_alphanum<CharT> &a, const basic_alphanum<CharT> &b,
                                      const basic_alphanum<CharT> &c, const basic_alphanum<CharT> &d,
                                      const basic_alphanum<CharT> &e, const AV &...args) {
@@ -361,13 +368,13 @@ requires bela::character<CharT>
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> *dest, const basic_alphanum<CharT> &a) {
   dest->append(a.Piece());
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> *dest, const basic_alphanum<CharT> &a,
                    const basic_alphanum<CharT> &b) {
   auto oldsize = dest->size();
@@ -378,7 +385,7 @@ void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> 
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> *dest, const basic_alphanum<CharT> &a,
                    const basic_alphanum<CharT> &b, const basic_alphanum<CharT> &c) {
   auto oldsize = dest->size();
@@ -390,7 +397,7 @@ void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> 
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 void string_append(std::basic_string<CharT, std::char_traits<CharT>, Allocator> *dest, const basic_alphanum<CharT> &a,
                    const basic_alphanum<CharT> &b, const basic_alphanum<CharT> &c, const basic_alphanum<CharT> &d) {
   auto oldsize = dest->size();

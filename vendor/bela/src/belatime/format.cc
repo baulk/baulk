@@ -58,7 +58,7 @@ template <typename T> std::basic_string_view<T> trimZero(std::basic_string_view<
 }
 
 template <typename CharT = wchar_t, typename Allocator = std::allocator<CharT>>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] std::basic_string<CharT, std::char_traits<CharT>, Allocator>
 FormatDateTimeInternal(std::int_fast64_t year, bela::Month month, std::int_least8_t day, std::int_least8_t hour,
                        std::int_least8_t minute, std::int_least8_t second, std::int_least32_t nsec,

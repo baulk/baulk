@@ -22,7 +22,7 @@ template <class I> constexpr wchar_t *__append1(wchar_t *__buffer, I __value) no
 }
 
 template <class I> constexpr wchar_t *__append2(wchar_t *__buffer, I __value) noexcept {
-  std::memcpy(__buffer, &__digits_base_10[(__value)*2], 2 * sizeof(wchar_t));
+  std::memcpy(__buffer, &__digits_base_10[(__value) * 2], 2 * sizeof(wchar_t));
   return __buffer + 2;
 }
 

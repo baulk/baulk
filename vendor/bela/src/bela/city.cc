@@ -78,7 +78,7 @@ using std::pair;
 #else
 
 // XXX(cavalcanti): building 'native_client' fails with this header.
-//#include <byteswap.h>
+// #include <byteswap.h>
 
 // Falling back to compiler builtins instead.
 #define bswap_32(x) __builtin_bswap32(x)
@@ -366,8 +366,8 @@ uint64 CityHash64(const char *s, size_t len) {
       return HashLen0to16(s, len);
     }
     return HashLen17to32(s, len);
-
-  } if (len <= 64) {
+  }
+  if (len <= 64) {
     return HashLen33to64(s, len);
   }
 

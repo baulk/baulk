@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.27)
 
 project(bela CXX C ASM)
 
+include(FeatureSummary)
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
   message(
     FATAL_ERROR

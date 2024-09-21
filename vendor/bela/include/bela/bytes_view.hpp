@@ -14,11 +14,11 @@ public:
   constexpr bytes_view() = default;
   constexpr bytes_view(const uint8_t *data, size_t size) : data_(data), size_(size) {}
   template <typename T>
-  requires bela::standard_layout<T> bytes_view(const T *d, size_t l)
-      : data_(reinterpret_cast<const uint8_t *>(d)), size_(l * sizeof(T)) {}
+    requires bela::standard_layout<T>
+  bytes_view(const T *d, size_t l) : data_(reinterpret_cast<const uint8_t *>(d)), size_(l * sizeof(T)) {}
   template <typename T>
-  requires bela::standard_layout<T> bytes_view(std::span<const T> d)
-      : data_(reinterpret_cast<const uint8_t *>(d.data())), size_(d.size() * sizeof(T)) {}
+    requires bela::standard_layout<T>
+  bytes_view(std::span<const T> d) : data_(reinterpret_cast<const uint8_t *>(d.data())), size_(d.size() * sizeof(T)) {}
   bytes_view(const bytes_view &other) {
     data_ = other.data_;
     size_ = other.size_;
@@ -29,7 +29,7 @@ public:
     return *this;
   }
   template <typename T, size_t ArrayLen>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   [[nodiscard]] bool starts_bytes_with(const T (&bv)[ArrayLen]) const {
     return ArrayLen <= size_ && (memcmp(data_, bv, ArrayLen * sizeof(T)) == 0);
   }
@@ -42,7 +42,7 @@ public:
   [[nodiscard]] bool starts_with(const void *p, size_t n) { return (n <= size_ && memcmp(data_, p, n) == 0); }
 
   template <typename T, size_t ArrayLen>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   [[nodiscard]] bool match_bytes_with(size_t pos, const T (&bv)[ArrayLen]) const {
     return ArrayLen * sizeof(T) + pos <= size_ && (memcmp(data_ + pos, bv, ArrayLen) == 0);
   }
@@ -88,7 +88,7 @@ public:
   }
   // make_string_view convert bytes_view to base_string_view<T> offset is byte offset
   template <typename T = char>
-  requires bela::character<T>
+    requires bela::character<T>
   [[nodiscard]] auto make_string_view(const size_t offset = 0) const {
     if (offset > size_) {
       return std::basic_string_view<T>();
@@ -104,7 +104,7 @@ public:
   [[nodiscard]] constexpr auto make_const_span() const { return std::span{data_, size_}; }
 
   template <typename T>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   [[nodiscard]] const T *unchecked_cast(size_t offset = 0) const {
     // offset and T unchecked
     return reinterpret_cast<const T *>(data_ + offset);
@@ -112,7 +112,7 @@ public:
 
   // checked_cast converts bytes_view to other types of pointers without alignment check
   template <typename T>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   [[nodiscard]] const T *checked_cast(size_t offset = 0) const {
     if (offset + sizeof(T) > size_) {
       return nullptr;
@@ -123,7 +123,7 @@ public:
   // representation of the returned To object is equal to the corresponding bit in the object representation of from.
   // The values of padding bits in the returned To object are unspecified.
   template <typename T>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   [[nodiscard]] const T *bit_cast(T *t, size_t offset = 0) const {
     if (offset + sizeof(T) > size_) {
       return nullptr;
@@ -131,7 +131,7 @@ public:
     return reinterpret_cast<T *>(memcpy(t, data_ + offset, sizeof(T)));
   }
   template <typename T>
-  requires std::integral<T>
+    requires std::integral<T>
   [[nodiscard]] T cast_fromle(size_t offset) const {
     if (offset + sizeof(T) > size_) {
       return 0;
@@ -139,7 +139,7 @@ public:
     return bela::cast_fromle<T>(data_ + offset);
   }
   template <typename T>
-  requires std::integral<T>
+    requires std::integral<T>
   [[nodiscard]] T cast_frombe(size_t offset) const {
     if (offset + sizeof(T) > size_) {
       return 0;

@@ -103,11 +103,21 @@ private:
 //
 // AlphaNumFormatterImpl is the default in the base template, followed by
 // specializations for other types.
-template <typename ValueType> struct DefaultFormatter { typedef AlphaNumFormatterImpl Type; };
-template <> struct DefaultFormatter<const wchar_t *> { typedef AlphaNumFormatterImpl Type; };
-template <> struct DefaultFormatter<wchar_t *> { typedef AlphaNumFormatterImpl Type; };
-template <> struct DefaultFormatter<std::wstring> { typedef NoFormatter Type; };
-template <> struct DefaultFormatter<std::wstring_view> { typedef NoFormatter Type; };
+template <typename ValueType> struct DefaultFormatter {
+  typedef AlphaNumFormatterImpl Type;
+};
+template <> struct DefaultFormatter<const wchar_t *> {
+  typedef AlphaNumFormatterImpl Type;
+};
+template <> struct DefaultFormatter<wchar_t *> {
+  typedef AlphaNumFormatterImpl Type;
+};
+template <> struct DefaultFormatter<std::wstring> {
+  typedef NoFormatter Type;
+};
+template <> struct DefaultFormatter<std::wstring_view> {
+  typedef NoFormatter Type;
+};
 template <typename ValueType> struct DefaultFormatter<ValueType *> {
   typedef DereferenceFormatterImpl<typename DefaultFormatter<ValueType>::Type> Type;
 };

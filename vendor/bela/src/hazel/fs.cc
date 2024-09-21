@@ -10,8 +10,7 @@ struct resparse_point_tagname_t {
   const wchar_t *tagName;
 };
 
-#define DEFINED_NAME_RESP(X)                                                                                           \
-  { static_cast<reparse_point_t>(X), L#X }
+#define DEFINED_NAME_RESP(X) {static_cast<reparse_point_t>(X), L#X}
 
 // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4
 

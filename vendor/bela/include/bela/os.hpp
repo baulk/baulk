@@ -28,7 +28,7 @@ enum FileMode : uint32_t {
 };
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 [[nodiscard]] constexpr FileMode
 operator<<(const FileMode _Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT, every static_cast is intentional
   using K = std::underlying_type_t<FileMode>;
@@ -36,7 +36,7 @@ operator<<(const FileMode _Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT
 }
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 [[nodiscard]] constexpr FileMode
 operator>>(const FileMode _Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT, every static_cast is intentional
   using K = std::underlying_type_t<FileMode>;
@@ -59,13 +59,13 @@ operator^(const FileMode _Left, const FileMode _Right) noexcept { // bitwise XOR
 }
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 constexpr FileMode &operator<<=(FileMode &_Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT
   return _Arg = _Arg << _Shift;
 }
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 constexpr FileMode &operator>>=(FileMode &_Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT
   return _Arg = _Arg >> _Shift;
 }

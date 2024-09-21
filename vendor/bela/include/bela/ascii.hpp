@@ -55,7 +55,7 @@ namespace bela {
 namespace ascii_internal {
 
 template <typename T, size_t N>
-requires bela::character<T>
+  requires bela::character<T>
 [[nodiscard]] constexpr bool character_contains(const T (&a)[N], T c) {
   for (const auto ch : a) {
     if (ch == c) {

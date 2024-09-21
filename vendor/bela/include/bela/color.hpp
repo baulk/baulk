@@ -145,7 +145,7 @@ struct color {
   constexpr bool operator!=(const bela::color &other) const { return !(*this == other); }
 
   template <typename T>
-  requires bela::character<T>
+    requires bela::character<T>
   constexpr int encode(T *buffer, size_t len, const bool omitAlpha = false) const {
     constexpr char hex[] = "0123456789ABCDEF";
     if (len < 7) {
@@ -167,7 +167,7 @@ struct color {
   }
 
   template <typename T = wchar_t, typename Allocator = std::allocator<T>>
-  requires bela::character<T>
+    requires bela::character<T>
   [[nodiscard]] std::basic_string<T, std::char_traits<T>, Allocator> encode(const bool omitAplha = false) const {
     using string_t = std::basic_string<T, std::char_traits<T>, Allocator>;
     string_t text;
@@ -179,7 +179,7 @@ struct color {
   static constexpr bela::color unresolved() { return bela::color(); }
   // decode color from text eg: #F5F5F5
   template <typename CharT = char8_t>
-  requires bela::character<CharT>
+    requires bela::character<CharT>
   static constexpr bela::color decode(std::basic_string_view<CharT> text, bela::color defaults = unresolved()) {
     if (text.size() < 7 || text.front() != '#') {
       return defaults;
@@ -199,7 +199,7 @@ struct color {
                        static_cast<uint8_t>(a));
   }
   template <typename CharT = char8_t, size_t N>
-  requires bela::character<CharT>
+    requires bela::character<CharT>
   [[nodiscard]] static constexpr bela::color decode(CharT (&str)[N], bela::color defaults = unresolved()) {
     return decode(std::basic_string_view(str, N), defaults);
   }

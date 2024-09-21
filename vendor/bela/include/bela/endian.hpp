@@ -59,12 +59,8 @@ constexpr uint64_t swap64(uint64_t value) {
 constexpr unsigned char bswap(unsigned char v) { return v; }
 constexpr signed char bswap(signed char v) { return v; }
 constexpr unsigned short bswap(unsigned short v) { return swap16(v); }
-constexpr signed short bswap(signed short v) {
-  return static_cast<signed short>(swap16(static_cast<uint16_t>(v)));
-}
-constexpr unsigned int bswap(unsigned int v) {
-  return static_cast<unsigned int>(swap32(static_cast<uint32_t>(v)));
-}
+constexpr signed short bswap(signed short v) { return static_cast<signed short>(swap16(static_cast<uint16_t>(v))); }
+constexpr unsigned int bswap(unsigned int v) { return static_cast<unsigned int>(swap32(static_cast<uint32_t>(v))); }
 constexpr signed int bswap(signed int v) { return static_cast<signed int>(swap32(static_cast<uint32_t>(v))); }
 
 constexpr unsigned long bswap(unsigned long v) {
@@ -102,7 +98,7 @@ constexpr double bswap(double v) {
 
 // SO Network order is BigEndian
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T htons(T v) {
   if constexpr (IsBigEndian()) {
     return v;
@@ -110,7 +106,7 @@ constexpr T htons(T v) {
   return bswap(v);
 }
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T ntohs(T v) {
   if constexpr (IsBigEndian()) {
     return v;
@@ -119,7 +115,7 @@ constexpr T ntohs(T v) {
 }
 
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T fromle(T i) {
   if constexpr (IsBigEndian()) {
     return bswap(i);
@@ -128,7 +124,7 @@ constexpr T fromle(T i) {
 }
 
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T frombe(T i) {
   if constexpr (IsBigEndian()) {
     return i;
@@ -137,7 +133,7 @@ constexpr T frombe(T i) {
 }
 
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T unaligned_load(const void *p) {
   T t;
   if (std::is_constant_evaluated()) {
@@ -153,7 +149,7 @@ constexpr T unaligned_load(const void *p) {
 }
 
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T cast_fromle(const void *p) {
   auto v = unaligned_load<T>(p);
   if constexpr (IsLittleEndian()) {
@@ -163,7 +159,7 @@ constexpr T cast_fromle(const void *p) {
 }
 
 template <typename T>
-requires std::integral<T>
+  requires std::integral<T>
 constexpr T cast_frombe(const void *p) {
   auto v = unaligned_load<T>(p);
   if constexpr (IsBigEndian()) {
@@ -177,7 +173,8 @@ template <std::endian E = std::endian::native> class Reader {
 public:
   Reader() = default;
   template <typename T, size_t N>
-  requires bela::standard_layout<T> Reader(T (&p)[N]) {
+    requires bela::standard_layout<T>
+  Reader(T (&p)[N]) {
     data = reinterpret_cast<const uint8_t *>(&p);
     size = N * sizeof(T);
   }
@@ -192,13 +189,14 @@ public:
     return *this;
   }
   template <typename T = uint8_t>
-  requires bela::standard_layout<T>
+    requires bela::standard_layout<T>
   void Reset(std::span<T> s) {
     data = reinterpret_cast<const uint8_t *>(s.data());
     size = s.size() * sizeof(T);
   }
   template <typename T>
-  requires std::integral<T> T Read() {
+    requires std::integral<T>
+  T Read() {
     auto v = bela::unaligned_load<T>(data);
     data += sizeof(T);
     size -= sizeof(T);
@@ -231,8 +229,10 @@ public:
   }
   size_t Size() const { return size; }
   template <typename T = char>
-  requires bela::standard_layout<T>
-  const T *Data() const { return reinterpret_cast<const T *>(data); }
+    requires bela::standard_layout<T>
+  const T *Data() const {
+    return reinterpret_cast<const T *>(data);
+  }
 
 private:
   const uint8_t *data{nullptr};

@@ -31,7 +31,7 @@ constexpr const size_t kMaxEncodedUTF8Size = 4;
 constexpr const size_t kMaxEncodedUTF16Size = 2;
 
 template <typename CharT = char8_t>
-requires bela::u8_character<CharT>
+  requires bela::u8_character<CharT>
 [[nodiscard]] constexpr size_t encode_into_unchecked(char32_t rune, CharT *dest) {
   if (rune <= 0x7F) {
     dest[0] = static_cast<CharT>(rune);
@@ -59,7 +59,7 @@ requires bela::u8_character<CharT>
 }
 
 template <typename CharT = char16_t>
-requires bela::u16_character<CharT>
+  requires bela::u16_character<CharT>
 [[nodiscard]] constexpr size_t encode_into_unchecked(char32_t rune, CharT *dest) {
   if (rune <= 0xFFFF) {
     dest[0] = rune_is_surrogate(rune) ? 0xFFFD : static_cast<CharT>(rune);
@@ -75,7 +75,7 @@ requires bela::u16_character<CharT>
 }
 
 template <typename CharT = char8_t>
-requires bela::u8_character<CharT>
+  requires bela::u8_character<CharT>
 [[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune, CharT *dest,
                                                                                            size_t len) {
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
@@ -114,7 +114,7 @@ requires bela::u8_character<CharT>
 }
 
 template <typename CharT = char16_t>
-requires bela::u16_character<CharT>
+  requires bela::u16_character<CharT>
 [[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune, CharT *dest,
                                                                                            size_t len) {
   using string_view_t = std::basic_string_view<CharT, std::char_traits<CharT>>;
@@ -138,7 +138,7 @@ requires bela::u16_character<CharT>
 }
 
 template <typename CharT = char8_t, size_t N>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] constexpr std::basic_string_view<CharT, std::char_traits<CharT>> encode_into(char32_t rune,
                                                                                            CharT (&dest)[N]) {
   return encode_into<CharT>(rune, dest, N);
@@ -202,7 +202,7 @@ constexpr char32_t decode_rune(const char8_t *it, int nbytes) {
 
 // Encode UTF8 to UTF16
 template <typename From, typename To, typename Allocator = std::allocator<To>>
-requires bela::u8_character<From> && bela::u16_character<To>
+  requires bela::u8_character<From> && bela::u16_character<To>
 [[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::basic_string_view<From> sv) {
   using string_t = std::basic_string<To, std::char_traits<To>, Allocator>;
   auto it = reinterpret_cast<const char8_t *>(sv.data());
@@ -238,7 +238,7 @@ requires bela::u8_character<From> && bela::u16_character<To>
 
 // Encode UTF16 to UTF8
 template <typename From, typename To, typename Allocator = std::allocator<To>>
-requires bela::u16_character<From> && bela::u8_character<To>
+  requires bela::u16_character<From> && bela::u8_character<To>
 [[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::basic_string_view<From> sv) {
   using string_t = std::basic_string<To, std::char_traits<To>, Allocator>;
   string_t s;
@@ -285,7 +285,7 @@ requires bela::u16_character<From> && bela::u8_character<To>
 }
 
 template <typename To, typename Allocator = std::allocator<To>>
-requires bela::u16_character<To>
+  requires bela::u16_character<To>
 [[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::u32string_view sv) {
   std::basic_string<To, std::char_traits<To>, Allocator> s;
   s.reserve(sv.size());
@@ -305,7 +305,7 @@ requires bela::u16_character<To>
 }
 
 template <typename To, typename Allocator = std::allocator<To>>
-requires bela::u8_character<To>
+  requires bela::u8_character<To>
 [[nodiscard]] std::basic_string<To, std::char_traits<To>, Allocator> encode_into(std::u32string_view sv) {
   std::basic_string<To, std::char_traits<To>, Allocator> s;
   s.reserve(sv.size());
@@ -337,7 +337,7 @@ requires bela::u8_character<To>
 }
 
 template <typename CharT = char8_t>
-requires bela::u16_character<CharT>
+  requires bela::u16_character<CharT>
 [[nodiscard]] constexpr size_t string_length(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t len = 0;
   auto it = sv.data();
@@ -358,7 +358,7 @@ requires bela::u16_character<CharT>
 }
 
 template <typename CharT = char8_t>
-requires bela::u8_character<CharT>
+  requires bela::u8_character<CharT>
 [[nodiscard]] constexpr size_t string_length(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t len = 0;
   auto it = sv.data();
@@ -375,7 +375,7 @@ requires bela::u8_character<CharT>
 }
 
 template <typename CharT = char8_t, size_t N>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] constexpr size_t string_length(CharT (&str)[N]) {
   // string_length
   return string_length<CharT>({str, N});
@@ -386,7 +386,8 @@ size_t rune_width(char32_t rune);
 
 // Calculate UTF16 string width under terminal (Monospace font)
 template <typename CharT = char16_t>
-requires bela::u16_character<CharT> size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
+  requires bela::u16_character<CharT>
+size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t width = 0;
   auto it = sv.data();
   auto end = it + sv.size();
@@ -410,7 +411,8 @@ requires bela::u16_character<CharT> size_t string_width(std::basic_string_view<C
 
 // Calculate UTF8 string width under terminal (Monospace font)
 template <typename CharT = char8_t>
-requires bela::u8_character<CharT> size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
+  requires bela::u8_character<CharT>
+size_t string_width(std::basic_string_view<CharT, std::char_traits<CharT>> sv) {
   size_t width = 0;
   auto it = reinterpret_cast<const char8_t *>(sv.data());
   auto end = it + sv.size();
@@ -426,7 +428,7 @@ requires bela::u8_character<CharT> size_t string_width(std::basic_string_view<Ch
 }
 
 template <typename CharT = char8_t, size_t N>
-requires bela::character<CharT>
+  requires bela::character<CharT>
 [[nodiscard]] constexpr size_t string_width(CharT (&str)[N]) {
   // string_length
   return string_width<CharT>({str, N});

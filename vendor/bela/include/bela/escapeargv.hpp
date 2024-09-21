@@ -36,7 +36,7 @@ public:
 
 // basic escape argv
 template <typename charT, typename Allocator = std::allocator<charT>>
-requires bela::character<charT>
+  requires bela::character<charT>
 class basic_escape_argv {
 public:
   using string_view_t = std::basic_string_view<charT>;
