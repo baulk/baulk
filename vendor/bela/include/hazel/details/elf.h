@@ -1190,7 +1190,6 @@ enum {
   STT_RELC = 8,       // Complex relocation expression.
   STT_SRELC = 9,      // Signed complex relocation expression.
   STT_GNU_IFUNC = 10, // Indirect code object.
-  STT_GNU_IFUNC = 10, // GNU indirect function
   STT_LOOS = 10,      // Lowest operating system-specific symbol type
   STT_HIOS = 12,      // Highest operating system-specific symbol type
   STT_LOPROC = 13,    // Lowest processor-specific symbol type
