@@ -167,11 +167,11 @@ private:
     PackageEnv pkgEnv{.name = std::wstring(pkgName)};
     auto jv = jo->view();
     if (auto sv = jv.subview("venv"); sv) {
-      sv->fetch_paths_checked("path", pkgEnv.paths);
-      sv->fetch_paths_checked("include", pkgEnv.includes);
-      sv->fetch_paths_checked("lib", pkgEnv.libs);
-      sv->fetch_strings_checked("env", pkgEnv.envs);
-      sv->fetch_strings_checked("dependencies", pkgEnv.dependencies);
+      sv->get_paths_checked("path", pkgEnv.paths);
+      sv->get_paths_checked("include", pkgEnv.includes);
+      sv->get_paths_checked("lib", pkgEnv.libs);
+      sv->get_strings_checked("env", pkgEnv.envs);
+      sv->get_strings_checked("dependencies", pkgEnv.dependencies);
     }
     if (loadPackageLocalEnv(pkgName, pkgEnv, ec)) {
       // TODO
@@ -186,13 +186,13 @@ private:
       return true;
     }
     auto jv = jo->view();
-    jv.fetch_paths_checked("path", pkgEnv.paths);
-    jv.fetch_paths_checked("include", pkgEnv.includes);
-    jv.fetch_paths_checked("lib", pkgEnv.libs);
-    jv.fetch_strings_checked("env", pkgEnv.envs);
+    jv.get_paths_checked("path", pkgEnv.paths);
+    jv.get_paths_checked("include", pkgEnv.includes);
+    jv.get_paths_checked("lib", pkgEnv.libs);
+    jv.get_strings_checked("env", pkgEnv.envs);
     std::vector<std::wstring> replaceDependencies;
     // local config can replace config
-    if (jv.fetch_strings_checked("replace", replaceDependencies)) {
+    if (jv.get_strings_checked("replace", replaceDependencies)) {
       ReplaceDependencies(pkgEnv, replaceDependencies);
       DbgPrint(L"venv: %s found replace --> ['%s']", pkgName, bela::StrJoin(replaceDependencies, L"', '"));
     }

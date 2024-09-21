@@ -50,13 +50,13 @@ inline std::optional<std::wstring> ResolveTarget(bela::error_code &ec) {
     ec = bela::make_error_code(bela::ErrGeneral, L"link metadata no links");
     return std::nullopt;
   }
-  auto linkTarget = sv->fetch(bela::encode_into<wchar_t, char>(command.native()));
+  auto linkTarget = sv->get(bela::encode_into<wchar_t, char>(command.native()));
   std::vector<std::wstring_view> tv = bela::StrSplit(linkTarget, bela::ByChar('@'), bela::SkipEmpty());
   if (tv.size() < 2) {
     ec = bela::make_error_code(bela::ErrGeneral, L"'", command, L"' not found. (", linkTarget, L") path:", *arg0);
     return std::nullopt;
   }
-  auto appPackagePath = jv.fetch("app_packages_root");
+  auto appPackagePath = jv.get("app_packages_root");
   return std::make_optional<>(bela::StringCat(appPackagePath, L"\\", tv[0], L"\\", tv[1]));
 }
 

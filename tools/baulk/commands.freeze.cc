@@ -49,7 +49,7 @@ int cmd_freeze(const argv_t &argv) {
   }
   auto jv = jo->view();
   std::vector<std::string> pkgs;
-  jv.fetch_strings_checked("freeze", pkgs);
+  jv.get_strings_checked("freeze", pkgs);
   auto freeze = [&](std::string_view pkgName) {
     for (const auto &p : pkgs) {
       if (bela::EqualsIgnoreCase(p, pkgName)) {
@@ -90,7 +90,7 @@ int cmd_unfreeze(const argv_t &argv) {
   }
   auto jv = jo->view();
   std::vector<std::string> pkgs;
-  jv.fetch_strings_checked("freeze", pkgs);
+  jv.get_strings_checked("freeze", pkgs);
   std::vector<std::string> newFrozened;
   // checkout
   auto contains = [&](std::wstring_view pkgName) -> bool {

@@ -296,11 +296,9 @@ void MainWindow::OnResize(UINT width, UINT height) {
 
 HRESULT MainWindow::InitializeControl() {
 #ifdef _M_X64
-  tables.archTarget = {L"x64", L"arm64", L"x86", L"arm"};
+  tables.archTarget = {L"x64", L"arm64"};
 #elif defined(_M_ARM64)
-  tables.archTarget = {L"arm64", L"x86", L"x64", L"arm"};
-#else
-  tables.archTarget = {L"x86", L"x64", L"arm64", L"arm"};
+  tables.archTarget = {L"arm64", L"x64"};
 #endif
   for (const auto &a : tables.archTarget) {
     ::SendMessageW(archTargetBox.hWnd, CB_ADDSTRING, 0, (LPARAM)a.data());

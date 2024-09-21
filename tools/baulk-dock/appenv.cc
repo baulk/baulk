@@ -71,11 +71,11 @@ bool LookupVirtualEnvironments(std::wstring_view lockfile, std::wstring_view pkg
     return false;
   }
   auto jv = jo->view();
-  auto version = jv.fetch("version");
+  auto version = jv.get("version");
   if (auto sv = jv.subview("venv"); sv) {
     node.Value = pkgName;
     node.Desc = pkgName;
-    if (auto category = sv->fetch("category"); !category.empty()) {
+    if (auto category = sv->get("category"); !category.empty()) {
       bela::StrAppend(&node.Desc, L" - ", version, L" [", category, L"]");
     }
     return true;
@@ -117,16 +117,16 @@ bool MainWindow::LoadPlacement(WINDOWPLACEMENT &placement) {
     return false;
   }
   auto jv = jo->view();
-  placement.flags = jv.fetch_as_integer("flags", 0u);
-  placement.ptMaxPosition.x = jv.fetch_as_integer("ptMaxPosition.X", 0l);
-  placement.ptMaxPosition.y = jv.fetch_as_integer("ptMaxPosition.Y", 0l);
-  placement.ptMinPosition.x = jv.fetch_as_integer("ptMinPosition.X", 0l);
-  placement.ptMinPosition.y = jv.fetch_as_integer("ptMinPosition.Y", 0l);
-  placement.showCmd = jv.fetch_as_integer("showCmd", 0u);
-  placement.rcNormalPosition.bottom = jv.fetch_as_integer("rcNormalPosition.bottom", 0l);
-  placement.rcNormalPosition.left = jv.fetch_as_integer("rcNormalPosition.left", 0l);
-  placement.rcNormalPosition.right = jv.fetch_as_integer("rcNormalPosition.right", 0l);
-  placement.rcNormalPosition.top = jv.fetch_as_integer("rcNormalPosition.top", 0l);
+  placement.flags = jv.get_as_integer("flags", 0u);
+  placement.ptMaxPosition.x = jv.get_as_integer("ptMaxPosition.X", 0l);
+  placement.ptMaxPosition.y = jv.get_as_integer("ptMaxPosition.Y", 0l);
+  placement.ptMinPosition.x = jv.get_as_integer("ptMinPosition.X", 0l);
+  placement.ptMinPosition.y = jv.get_as_integer("ptMinPosition.Y", 0l);
+  placement.showCmd = jv.get_as_integer("showCmd", 0u);
+  placement.rcNormalPosition.bottom = jv.get_as_integer("rcNormalPosition.bottom", 0l);
+  placement.rcNormalPosition.left = jv.get_as_integer("rcNormalPosition.left", 0l);
+  placement.rcNormalPosition.right = jv.get_as_integer("rcNormalPosition.right", 0l);
+  placement.rcNormalPosition.top = jv.get_as_integer("rcNormalPosition.top", 0l);
   return true;
 }
 void MainWindow::SavePlacement(const WINDOWPLACEMENT &placement) {

@@ -19,8 +19,6 @@ namespace baulk::env {
 // https://blogs.windows.com/windowsdeveloper/2022/05/24/create-next-generation-experiences-at-scale-with-windows/
 // https://developercommunity.visualstudio.com/t/Native-ARM-Support-for-Visual-Studio/1161018
 [[maybe_unused]] constexpr std::wstring_view HostArch = L"arm64"; // HostArm64 ARM64
-#else
-[[maybe_unused]] constexpr std::wstring_view HostArch = L"x86"; // Hostx86 x86
 #endif
 namespace env_internal {
 
@@ -228,9 +226,6 @@ inline bool vs_env_builder::initialize_vs_env(const baulk::vs::vs_instance_t &vs
 #elif defined(_M_ARM64)
       LR"(\MSBuild\Current\Bin\arm64)",
       LR"(\VC\Tools\Llvm\ARM64\bin)",
-#else
-      LR"(\MSBuild\Current\Bin)",
-      LR"(\VC\Tools\Llvm\bin)",
 #endif
       // LR"(\Common7\IDE\Extensions\Microsoft\IntelliCode\CLI)",
       LR"(\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools)",

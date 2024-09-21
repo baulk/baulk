@@ -159,13 +159,13 @@ std::optional<baulk::Package> PackageLocalMeta(std::wstring_view pkgName, bela::
   auto jv = pkj->view();
   Package pkg{
       .name = std::wstring(pkgName),
-      .version = jv.fetch("version"),
-      .bucket = jv.fetch("bucket"),
-      .mask = static_cast<PackageMask>(jv.fetch_as_integer("mask", bela::integral_cast(MaskNone))), // install mask
+      .version = jv.get("version"),
+      .bucket = jv.get("bucket"),
+      .mask = static_cast<PackageMask>(jv.get_as_integer("mask", bela::integral_cast(MaskNone))), // install mask
   };
-  jv.fetch_paths_checked("force_delete", pkg.forceDeletes);
+  jv.get_paths_checked("force_delete", pkg.forceDeletes);
   if (auto sv = jv.subview("venv"); sv) {
-    pkg.venv.category = sv->fetch("category");
+    pkg.venv.category = sv->get("category");
   }
   pkg.weights = baulk::BucketWeights(pkg.bucket);
   return std::make_optional(std::move(pkg));

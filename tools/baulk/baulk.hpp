@@ -132,13 +132,13 @@ operator^(const PackageMask _Left, const PackageMask _Right) noexcept { // bitwi
 }
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 constexpr PackageMask &operator<<=(PackageMask &_Arg, const I _Shift) noexcept { // bitwise LEFT SHIFT
   return _Arg = _Arg << _Shift;
 }
 
 template <class I>
-requires std::integral<I>
+  requires std::integral<I>
 constexpr PackageMask &operator>>=(PackageMask &_Arg, const I _Shift) noexcept { // bitwise RIGHT SHIFT
   return _Arg = _Arg >> _Shift;
 }

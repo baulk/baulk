@@ -7,7 +7,8 @@
 
 namespace baulk {
 template <typename T, typename Allocator = std::allocator<T>>
-requires bela::character<T> std::basic_string<T, std::char_traits<T>, Allocator>
+  requires bela::character<T>
+std::basic_string<T, std::char_traits<T>, Allocator>
 FromSlash(std::basic_string<T, std::char_traits<T>, Allocator> &&s) {
   for (auto &c : s) {
     if (c == '/') {
@@ -22,17 +23,17 @@ class json_view {
 public:
   json_view(const nlohmann::json &o) : obj(o) {}
   // fecth string value
-  std::wstring fetch(const std::string_view key, std::wstring_view dv = L"") {
+  std::wstring get(const std::string_view key, std::wstring_view dv = L"") {
     if (auto it = obj.find(key); it != obj.end() && it->is_string()) {
       return bela::encode_into<char, wchar_t>(it->get<std::string_view>());
     }
     return std::wstring(dv);
   }
-  // fetch string array value
+  // get string array value
   template <typename T, typename Allocator = std::allocator<T>>
-  requires bela::u16_character<T>
-  bool fetch_strings_checked(std::string_view name,
-                             std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
+    requires bela::u16_character<T>
+  bool get_strings_checked(std::string_view name,
+                           std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it->is_string()) {
         v.emplace_back(bela::encode_into<char, T>(it->get<std::string_view>()));
@@ -49,9 +50,9 @@ public:
   }
 
   template <typename T, typename Allocator = std::allocator<T>>
-  requires bela::u8_character<T>
-  bool fetch_strings_checked(std::string_view name,
-                             std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
+    requires bela::u8_character<T>
+  bool get_strings_checked(std::string_view name,
+                           std::vector<std::basic_string<T, std::char_traits<T>, Allocator>> &v) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it->is_string()) {
         v.emplace_back(it->get<std::string_view>());
@@ -67,10 +68,10 @@ public:
     return false;
   }
 
-  // fetch integer value return details key exists
+  // get integer value return details key exists
   template <typename T>
-  requires std::integral<T>
-  bool fetch_integer_checked(std::string_view name, T &v) {
+    requires std::integral<T>
+  bool get_integer_checked(std::string_view name, T &v) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       v = it->get<T>();
       return true;
@@ -78,16 +79,17 @@ public:
     return false;
   }
 
-  // fetch integer value
+  // get integer value
   template <typename T>
-  requires std::integral<T> T fetch_as_integer(std::string_view name, const T dv) {
+    requires std::integral<T>
+  T get_as_integer(std::string_view name, const T dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_number_integer()) {
       return it->get<T>();
     }
     return dv;
   }
-  // fetch path array
-  template <typename T> bool fetch_paths_checked(std::string_view name, std::vector<T> &paths) {
+  // get path array
+  template <typename T> bool get_paths_checked(std::string_view name, std::vector<T> &paths) {
     if (auto it = obj.find(name); it != obj.end()) {
       if (it.value().is_string()) {
         paths.emplace_back(FromSlash(bela::encode_into<char, wchar_t>(it->get<std::string_view>())));
@@ -103,7 +105,7 @@ public:
     return false;
   }
   // check flags
-  bool fetch_as_boolean(std::string_view name, bool dv) {
+  bool get_as_boolean(std::string_view name, bool dv) {
     if (auto it = obj.find(name); it != obj.end() && it->is_boolean()) {
       return it->get<bool>();
     }

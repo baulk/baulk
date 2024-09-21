@@ -84,13 +84,13 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
   }
 
   auto jv = jo->view();
-  localeName = jv.fetch("locale", localeName);
+  localeName = jv.get("locale", localeName);
   auto svs = jv.subviews("bucket");
   for (auto sv : svs) {
     buckets.emplace_back(
-        sv.fetch("description"), sv.fetch("name"), sv.fetch("url"), sv.fetch_as_integer("weights", 100),
-        static_cast<BucketObserveMode>(sv.fetch_as_integer("mode", static_cast<int>(BucketObserveMode::Github))),
-        static_cast<BucketVariant>(sv.fetch_as_integer("variant", static_cast<int>(BucketVariant::Native))));
+        sv.get("description"), sv.get("name"), sv.get("url"), sv.get_as_integer("weights", 100),
+        static_cast<BucketObserveMode>(sv.get_as_integer("mode", static_cast<int>(BucketObserveMode::Github))),
+        static_cast<BucketVariant>(sv.get_as_integer("variant", static_cast<int>(BucketVariant::Native))));
     if (IsDebugMode) {
       auto bk = buckets.back();
       DbgPrint(L"Add bucket '%s': %s", bk.name, bk.description);
@@ -99,7 +99,7 @@ bool Context::initializeInternal(const std::wstring &profile_, bela::error_code 
       DbgPrint(L"    variant:  %s", BucketVariantName(bk.variant));
     }
   }
-  if (jv.fetch_strings_checked("freeze", pkgs) && !pkgs.empty() && IsDebugMode) {
+  if (jv.get_strings_checked("freeze", pkgs) && !pkgs.empty() && IsDebugMode) {
     for (const auto &p : pkgs) {
       DbgPrint(L"Freeze package %s", p);
     }
