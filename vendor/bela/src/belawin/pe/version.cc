@@ -91,7 +91,7 @@ bool VersionLoader::getValue(const wchar_t *name, std::wstring &value) const {
                                  bela::Hex(lc.codePage, bela::kZeroPad4), L"\\", name);
     LPVOID valuePtr = nullptr;
     uint32_t size;
-    if (VerQueryValueW(buffer.data(), block.data(), reinterpret_cast<LPVOID *>(&valuePtr), &size) == TRUE &&
+    if (VerQueryValueW(buffer.data(), block.data(), (&valuePtr), &size) == TRUE &&
         valuePtr != nullptr && size > 0) {
       value.assign(cleanupString(valuePtr, size - 1));
     }

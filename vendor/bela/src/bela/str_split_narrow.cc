@@ -49,7 +49,7 @@ namespace bela::narrow {
 // AnyOf delimiter will use std::string_view::find_first_of().
 template <typename FindPolicy>
 std::string_view GenericFind(std::string_view text, std::string_view delimiter, size_t pos, FindPolicy find_policy) {
-  if (delimiter.empty() && text.length() > 0) {
+  if (delimiter.empty() && !text.empty()) {
     // Special case for empty std::string delimiters: always return a
     // zero-length std::string_view referring to the item at position 1 past
     // pos.

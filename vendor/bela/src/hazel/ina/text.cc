@@ -1,7 +1,6 @@
 ////////////////
 #include "hazelinc.hpp"
-#define UTF8_ACCEPT 0
-#define UTF8_REJECT 1
+enum { UTF8_ACCEPT = 0, UTF8_REJECT = 1 };
 
 namespace hazel::internal {
 // check text details

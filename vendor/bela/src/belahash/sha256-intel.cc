@@ -43,14 +43,16 @@ static const union {
 };
 
 // Initial hash value (see FIPS 180-4 5.3.3)
-#define H0 0x6a09e667
-#define H1 0xbb67ae85
-#define H2 0x3c6ef372
-#define H3 0xa54ff53a
-#define H4 0x510e527f
-#define H5 0x9b05688c
-#define H6 0x1f83d9ab
-#define H7 0x5be0cd19
+enum {
+  H0 = 0x6a09e667,
+  H1 = 0xbb67ae85,
+  H2 = 0x3c6ef372,
+  H3 = 0xa54ff53a,
+  H4 = 0x510e527f,
+  H5 = 0x9b05688c,
+  H6 = 0x1f83d9ab,
+  H7 = 0x5be0cd19
+};
 
 void SHA256H::Initialize() {
   h0145 = _mm_set_epi32(H0, H1, H4, H5);

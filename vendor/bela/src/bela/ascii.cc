@@ -171,7 +171,7 @@ void RemoveExtraAsciiWhitespace(std::wstring *str) {
 
   auto input_it = stripped.begin();
   auto input_end = stripped.end();
-  auto output_it = &(*str)[0];
+  auto output_it = str->data();
   bool is_ws = false;
 
   for (; input_it < input_end; ++input_it) {
@@ -189,7 +189,7 @@ void RemoveExtraAsciiWhitespace(std::wstring *str) {
     ++output_it;
   }
 
-  str->erase(output_it - &(*str)[0]);
+  str->erase(output_it - str->data());
 }
 
 void RemoveExtraAsciiWhitespace(std::string *str) {
@@ -202,7 +202,7 @@ void RemoveExtraAsciiWhitespace(std::string *str) {
 
   auto input_it = stripped.begin();
   auto input_end = stripped.end();
-  auto output_it = &(*str)[0];
+  auto output_it = str->data();
   bool is_ws = false;
 
   for (; input_it < input_end; ++input_it) {
@@ -220,7 +220,7 @@ void RemoveExtraAsciiWhitespace(std::string *str) {
     ++output_it;
   }
 
-  str->erase(output_it - &(*str)[0]);
+  str->erase(output_it - str->data());
 }
 
 } // namespace bela

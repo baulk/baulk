@@ -126,7 +126,7 @@ bool File::parseFile(bela::error_code &ec) {
     if (!fd.ReadAt(sign, signoff, ec)) {
       return false;
     }
-    if (!(sign[0] == 'P' && sign[1] == 'E' && sign[2] == 0 && sign[3] == 0)) {
+    if (sign[0] != 'P' || sign[1] != 'E' || sign[2] != 0 || sign[3] != 0) {
       ec = bela::make_error_code(ErrGeneral, L"Invalid PE COFF file signature of ['", int(sign[0]), L"','",
                                  int(sign[1]), L"','", int(sign[2]), L"','", int(sign[3]), L"']");
       return false;

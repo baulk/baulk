@@ -78,7 +78,7 @@ inline std::string cleanupName(const void *data, size_t N) {
 bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   bela::Buffer buffer(16 * 1024);
   int64_t directoryEndOffset = 0;
-  constexpr size_t offrange[] = {1024, 65 * 1024};
+  constexpr size_t offrange[] = {1024, 65 * 1024, 5 * 1024 * 1024};
   bela::endian::LittenEndian b;
   for (size_t i = 0; i < std::size(offrange); i++) {
     auto blen = offrange[i];
