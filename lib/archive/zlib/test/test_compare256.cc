@@ -12,6 +12,7 @@ extern "C" {
 #  include "zutil.h"
 #  include "arch_functions.h"
 #  include "test_cpu_features.h"
+#  include "arch/generic/compare256_p.h"
 }
 
 #include <gtest/gtest.h>
@@ -59,21 +60,19 @@ static inline void compare256_match_check(compare256_func compare256) {
         compare256_match_check(func); \
     }
 
-TEST_COMPARE256(c, compare256_c, 1)
-
 #ifdef DISABLE_RUNTIME_CPU_DETECTION
 TEST_COMPARE256(native, native_compare256, 1)
 #else
 
-#if defined(UNALIGNED_OK) && BYTE_ORDER == LITTLE_ENDIAN
-TEST_COMPARE256(unaligned_16, compare256_unaligned_16, 1)
-#ifdef HAVE_BUILTIN_CTZ
-TEST_COMPARE256(unaligned_32, compare256_unaligned_32, 1)
+TEST_COMPARE256(8, compare256_8, 1)
+TEST_COMPARE256(16, compare256_16, 1)
+#if defined(HAVE_BUILTIN_CTZ)
+TEST_COMPARE256(32, compare256_32, 1)
 #endif
-#if defined(UNALIGNED64_OK) && defined(HAVE_BUILTIN_CTZLL)
-TEST_COMPARE256(unaligned_64, compare256_unaligned_64, 1)
+#if defined(HAVE_BUILTIN_CTZLL)
+TEST_COMPARE256(64, compare256_64, 1)
 #endif
-#endif
+
 #if defined(X86_SSE2) && defined(HAVE_BUILTIN_CTZ)
 TEST_COMPARE256(sse2, compare256_sse2, test_cpu_features.x86.has_sse2)
 #endif

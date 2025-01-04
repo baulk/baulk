@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.5.1)
-
 macro(configure_test_executable target)
     target_include_directories(${target} PRIVATE ${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR})
     set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -107,7 +105,9 @@ endif()
 
 if(WITH_GTEST)
     # Google test requires at least C++11
-    set(CMAKE_CXX_STANDARD 11)
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD 11)
+    endif()
 
     # Google test requires MSAN instrumented LLVM C++ libraries
     if(WITH_SANITIZER STREQUAL "Memory")
@@ -202,10 +202,7 @@ if(WITH_GTEST)
         configure_test_executable(gtest_zlib)
 
         if(MSVC)
-            target_compile_options(gtest_zlib PRIVATE /wd4389)
-            if(BASEARCH_ARM_FOUND)
-                target_compile_options(gtest_zlib PRIVATE /EHsc)
-            endif()
+            target_compile_options(gtest_zlib PRIVATE /wd4389 /EHsc)
         endif()
 
         if(WITH_SANITIZER STREQUAL "Memory")
