@@ -4,6 +4,7 @@ set(mi_sources
     mimalloc/src/alloc-aligned.c
     mimalloc/src/alloc-posix.c
     mimalloc/src/arena.c
+    mimalloc/src/arena-meta.c
     mimalloc/src/bitmap.c
     mimalloc/src/heap.c
     mimalloc/src/init.c
@@ -11,11 +12,11 @@ set(mi_sources
     mimalloc/src/options.c
     mimalloc/src/os.c
     mimalloc/src/page.c
+    mimalloc/src/page-map.c
     mimalloc/src/random.c
-    mimalloc/src/segment.c
-    mimalloc/src/segment-map.c
     mimalloc/src/stats.c
     mimalloc/src/prim/prim.c)
+
 
 list(APPEND mi_defines MI_SECURE=4)
 set_source_files_properties(${mi_sources} PROPERTIES LANGUAGE CXX)
