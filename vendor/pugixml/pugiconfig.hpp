@@ -46,8 +46,11 @@
 // Uncomment this to switch to header-only version
 // #define PUGIXML_HEADER_ONLY
 
-// Uncomment this to enable long long support
+// Uncomment this to enable long long support (usually enabled automatically)
 // #define PUGIXML_HAS_LONG_LONG
+
+// Uncomment this to enable support for std::string_view (usually enabled automatically)
+// #define PUGIXML_HAS_STRING_VIEW
 
 #endif
 
