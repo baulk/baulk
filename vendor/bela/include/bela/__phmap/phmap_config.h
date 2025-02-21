@@ -34,9 +34,9 @@
 // limitations under the License.
 // ---------------------------------------------------------------------------
 
-#define PHMAP_VERSION_MAJOR 1
-#define PHMAP_VERSION_MINOR 4
-#define PHMAP_VERSION_PATCH 1
+#define PHMAP_VERSION_MAJOR 2
+#define PHMAP_VERSION_MINOR 0
+#define PHMAP_VERSION_PATCH 0
 
 // Included for the __GLIBC__ macro (or similar macros on other systems).
 #include <limits.h>
@@ -659,6 +659,17 @@
     #define PHMAP_BUILTIN_UNREACHABLE() __builtin_unreachable()
 #else
     #define PHMAP_BUILTIN_UNREACHABLE() (void)0
+#endif
+
+// ----------------------------------------------------------------------
+// RESTRICT
+// ----------------------------------------------------------------------
+#if (defined(__GNUC__) && (__GNUC__ > 3)) || defined(__clang__)
+    #define PHMAP_RESTRICT __restrict__
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
+    #define PHMAP_RESTRICT __restrict
+#else
+    #define PHMAP_RESTRICT
 #endif
 
 // ----------------------------------------------------------------------
