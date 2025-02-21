@@ -21,6 +21,7 @@ Usage: baulk [option] <command> [<args>]
   -T|--trace       Turn on trace mode. track baulk execution details.
   --https-proxy    Use this proxy. Equivalent to setting the environment variable 'HTTPS_PROXY'
   --force-delete   When uninstalling the package, forcefully delete the related directories
+  --github-proxy   Use github-proxy to download Github assets
 
 Command:
   version          Show version number and quit

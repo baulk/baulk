@@ -54,7 +54,8 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
       .Add(L"profile", bela::required_argument, 'P')
       .Add(L"user-agent", bela::required_argument, 'A')
       .Add(L"specified", bela::required_argument, 'S')
-      .Add(L"https-proxy", bela::required_argument, 1002);
+      .Add(L"https-proxy", bela::required_argument, 1002)
+      .Add(L"github-proxy", bela::required_argument, 1003);
 
   bela::error_code ec;
   auto result = pa.Execute(
@@ -90,6 +91,9 @@ bool Executor::ParseArgv(int argc, wchar_t **argv) {
           break;
         case 1002:
           HttpClient::DefaultClient().SetProxyURL(oa);
+          break;
+        case 1003:
+          HttpClient::DefaultClient().SetGhProxy(oa);
           break;
         default:
           return false;

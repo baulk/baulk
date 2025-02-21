@@ -8,25 +8,23 @@
 
 namespace baulk {
 
-inline auto PackageMetaJoinNative(const Bucket &bucket, std::wstring_view pkgName) {
-  return bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name, L"\\bucket\\", pkgName, L".json");
-}
 #if defined(_M_X64)
 constexpr std::string_view host_architecture = "64bit";
 constexpr std::wstring_view host_architecture_name = L"x64";
 #elif defined(_M_ARM64)
 constexpr std::string_view host_architecture = "arm64";
 constexpr std::wstring_view host_architecture_name = L"ARM64";
-#else
-constexpr std::string_view host_architecture = "32bit";
-constexpr std::wstring_view host_architecture_name = L"x86";
 #endif
 
 constexpr std::string_view arm64_architecture = "arm64";
 constexpr std::string_view x64bit_architecture = "64bit";
 constexpr std::string_view x32bit_architecture = "32bit";
 
-inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
+inline auto PackageMetaJoinNative(const Bucket &bucket, std::wstring_view pkgName) {
+  return bela::StringCat(vfs::AppBuckets(), L"\\", bucket.name, L"\\bucket\\", pkgName, L".json");
+}
+
+inline void resolveNativeURL(Package &pkg, baulk::json_view &jv) {
   using namespace std::string_view_literals;
   auto __ = bela::finally([&] {
     if (pkg.links.empty()) {
@@ -35,15 +33,8 @@ inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
     if (pkg.launchers.empty()) {
       jv.get_paths_checked("launchers", pkg.launchers);
     }
-    if (pkg.urls.empty()) {
-      pkg.urls.emplace_back(jv.get("url"));
-      pkg.hash = jv.get("hash");
-    }
-    if (pkg.hash.empty()) {
-      pkg.hash = jv.get("url.hash");
-    }
   });
-  auto archLoad = [&](baulk::json_view &jv_, const std::string_view arch) -> bool {
+  auto getArchURL = [&](baulk::json_view &jv_, const std::string_view arch) -> bool {
     if (auto av = jv_.subview(arch); av) {
       pkg.urls.emplace_back(av->get("url"));
       pkg.hash = av->get("hash");
@@ -54,26 +45,18 @@ inline void PackageResolveURL(Package &pkg, baulk::json_view &jv) {
     return false;
   };
   if (auto sv = jv.subview("architecture"); sv) {
-    if (archLoad(*sv, host_architecture)) {
+    if (getArchURL(*sv, host_architecture)) {
       return;
     }
-    if constexpr (host_architecture != x64bit_architecture) {
-      if (archLoad(*sv, x64bit_architecture)) {
+    if constexpr (host_architecture == arm64_architecture) {
+      // ARM64
+      if (getArchURL(*sv, x64bit_architecture)) {
         return;
       }
     }
-    if (archLoad(*sv, x32bit_architecture)) {
+    if (getArchURL(*sv, x32bit_architecture)) {
       return;
     }
-  }
-  if constexpr (host_architecture == x64bit_architecture) {
-    jv.get_strings_checked("url64", pkg.urls);
-    pkg.hash = jv.get("url64.hash");
-    return;
-  }
-  if constexpr (host_architecture == arm64_architecture) {
-    jv.get_strings_checked("urlarm64", pkg.urls);
-    pkg.hash = jv.get("urlarm64.hash");
   }
 }
 
@@ -96,7 +79,7 @@ std::optional<baulk::Package> PackageMetaNative(const Bucket &bucket, std::wstri
   };
   jv.get_strings_checked("suggest", pkg.suggest);
   jv.get_paths_checked("force_delete", pkg.forceDeletes);
-  PackageResolveURL(pkg, jv);
+  resolveNativeURL(pkg, jv);
   if (pkg.urls.empty()) {
     ec = bela::make_error_code(bela::ErrGeneral, pkgMeta, L" not yet port to ", host_architecture_name, L" platform.");
     return std::nullopt;
@@ -143,7 +126,12 @@ std::optional<baulk::Package> PackageMetaScoop(const Bucket &bucket, std::wstrin
   jv.get_paths_checked("bin", pkg.launchers);
 
   if (auto sv = jv.subview("architecture"); sv) {
-    if (auto av = sv->subview("64bit"); av) {
+    if (auto av = sv->subview(host_architecture); av) {
+      pkg.urls.emplace_back(av->get("url"));
+      pkg.hash = av->get("hash");
+      return std::make_optional(std::move(pkg));
+    }
+    if (auto av = sv->subview(x32bit_architecture); av) {
       pkg.urls.emplace_back(av->get("url"));
       pkg.hash = av->get("hash");
       return std::make_optional(std::move(pkg));

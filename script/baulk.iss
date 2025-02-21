@@ -54,7 +54,7 @@ ArchitecturesInstallIn64BitMode={#ArchitecturesInstallIn64BitMode}
 ; version info
 VersionInfoCompany=Baulk contributors
 VersionInfoVersion={#AppVersion}
-VersionInfoCopyright=Copyright © 2024. Baulk contributors
+VersionInfoCopyright=Copyright © 2025. Baulk contributors
 
 #if "user" == InstallTarget
 AppVerName=Baulk (User)

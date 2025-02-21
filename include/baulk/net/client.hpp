@@ -68,8 +68,14 @@ public:
   void SetDebugMode(bool m) { debugMode = m; }
   void SetNoCache(bool n) { noCache = n; }
   void SetProxyURL(std::wstring_view url) { proxyURL = url; }
+  void SetGhProxy(std::wstring_view url) {
+    ghProxy = url;
+    if (!ghProxy.ends_with(L"/")) {
+      ghProxy.append(L"/");
+    }
+  }
   bool InitializeProxyFromEnv();
-  
+
   static HttpClient &DefaultClient() {
     static HttpClient client;
     return client;
@@ -104,6 +110,7 @@ private:
   headers_t hkv;
   std::wstring userAgent{L"Wget/7.0 (Baulk)"};
   std::wstring proxyURL;
+  std::wstring ghProxy;
   std::vector<std::wstring> cookies;
   std::vector<std::wstring> noProxy;
   size_t max_body_size{128 * 1024 * 1024};

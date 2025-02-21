@@ -78,7 +78,12 @@ bool HttpClient::IsNoProxy(std::wstring_view host) const {
 }
 
 bool HttpClient::InitializeProxyFromEnv() {
-  if (auto noProxyURL = bela::GetEnv(L"NO_PROXY"); noProxyURL.empty()) {
+  if (ghProxy.empty()) {
+    if (auto githubProxy = bela::GetEnv(L"BAULK_GITHUB_PROXY"); !githubProxy.empty()) {
+      SetGhProxy(githubProxy);
+    }
+  }
+  if (auto noProxyURL = bela::GetEnv(L"NO_PROXY"); !noProxyURL.empty()) {
     noProxy = bela::StrSplit(noProxyURL, bela::ByChar(L','), bela::SkipEmpty());
   }
   if (proxyURL = bela::GetEnv(L"HTTPS_PROXY"); !proxyURL.empty()) {
@@ -100,6 +105,7 @@ std::optional<Response> HttpClient::WinRest(std::wstring_view method, std::wstri
   if (!u) {
     return std::nullopt;
   }
+
   auto session = native::make_session(userAgent, ec);
   if (!session) {
     return std::nullopt;
@@ -196,6 +202,14 @@ std::optional<std::filesystem::path> HttpClient::WinGet(std::wstring_view url, c
   auto u = native::crack_url(url, ec);
   if (!u) {
     return std::nullopt;
+  }
+  if (!ghProxy.empty() && bela::EqualsIgnoreCase(u->host, L"github.com")) {
+    auto newURL = bela::StringCat(ghProxy, url);
+    DbgPrint(L"github-proxy: %s", newURL);
+    u = native::crack_url(newURL, ec);
+    if (!u) {
+      return std::nullopt;
+    }
   }
   auto session = native::make_session(userAgent, ec);
   if (!session) {

@@ -41,6 +41,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       .Add(L"insecure", cli::no_argument, 'k')
       .Add(L"https-proxy", cli::required_argument, 1001) // option
       .Add(L"force-delete", cli::no_argument, 1002)
+      .Add(L"github-proxy", cli::required_argument, 1003)
       .Add(L"trace", cli::no_argument, 'T')
       .Add(L"bucket");
 
@@ -84,6 +85,8 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
           break;
         case 1002:
           IsForceDelete = true;
+        case 1003:
+          HttpClient::DefaultClient().SetGhProxy(oa);
           break;
         default:
           return false;
