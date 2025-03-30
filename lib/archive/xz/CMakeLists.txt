@@ -195,7 +195,6 @@ if(ENABLE_SMALL)
 else()
     target_sources(liblzma PRIVATE
         src/liblzma/check/crc32_fast.c
-        src/liblzma/check/crc32_table.c
         src/liblzma/check/crc32_table_be.h
         src/liblzma/check/crc32_table_le.h
     )
@@ -209,7 +208,6 @@ if("crc64" IN_LIST ADDITIONAL_CHECK_TYPES)
     else()
         target_sources(liblzma PRIVATE
             src/liblzma/check/crc64_fast.c
-            src/liblzma/check/crc64_table.c
             src/liblzma/check/crc64_table_be.h
             src/liblzma/check/crc64_table_le.h
         )
