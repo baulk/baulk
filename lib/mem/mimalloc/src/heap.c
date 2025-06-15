@@ -63,6 +63,9 @@ static bool mi_heap_page_is_valid(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_
 static bool mi_heap_is_valid(mi_heap_t* heap) {
   mi_assert_internal(heap!=NULL);
   mi_heap_visit_pages(heap, &mi_heap_page_is_valid, NULL, NULL);
+  for (size_t bin = 0; bin < MI_BIN_COUNT; bin++) {
+    mi_assert_internal(_mi_page_queue_is_valid(heap, &heap->pages[bin]));
+  }
   return true;
 }
 #endif
@@ -106,6 +109,7 @@ static bool mi_heap_page_collect(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_t
 static void mi_heap_collect_ex(mi_heap_t* heap, mi_collect_t collect)
 {
   if (heap==NULL || !mi_heap_is_initialized(heap)) return;
+  mi_assert_expensive(mi_heap_is_valid(heap));
 
   const bool force = (collect >= MI_FORCE);
   _mi_deferred_free(heap, force);
@@ -113,17 +117,20 @@ static void mi_heap_collect_ex(mi_heap_t* heap, mi_collect_t collect)
   // python/cpython#112532: we may be called from a thread that is not the owner of the heap
   // const bool is_main_thread = (_mi_is_main_thread() && heap->thread_id == _mi_thread_id());
 
+  // if (_mi_is_main_thread()) { mi_debug_show_arenas(true, false, false); }
+
   // collect retired pages
   _mi_heap_collect_retired(heap, force);
-  
-  // if (_mi_is_main_thread()) { mi_debug_show_arenas(true, false, false); }
-  
+
   // collect all pages owned by this thread
   mi_heap_visit_pages(heap, &mi_heap_page_collect, &collect, NULL);
 
-  // collect arenas (this is program wide so don't force purges on abandonment of threads)  
-  //mi_atomic_storei64_release(&heap->tld->subproc->purge_expire, 1); 
-  _mi_arenas_collect(collect == MI_FORCE /* force purge? */, true /* visit all? */, heap->tld);
+  // collect arenas (this is program wide so don't force purges on abandonment of threads)
+  //mi_atomic_storei64_release(&heap->tld->subproc->purge_expire, 1);
+  _mi_arenas_collect(collect == MI_FORCE /* force purge? */, collect >= MI_FORCE /* visit all? */, heap->tld);
+
+  // merge statistics
+  if (collect <= MI_FORCE) { _mi_stats_merge_thread(heap->tld); }
 }
 
 void _mi_heap_collect_abandon(mi_heap_t* heap) {
@@ -167,25 +174,26 @@ mi_heap_t* mi_heap_get_backing(void) {
 }
 
 // todo: make order of parameters consistent (but would that break compat with CPython?)
-void _mi_heap_init(mi_heap_t* heap, mi_arena_id_t arena_id, bool noreclaim, uint8_t heap_tag, mi_tld_t* tld)
+void _mi_heap_init(mi_heap_t* heap, mi_arena_id_t arena_id, bool allow_destroy, uint8_t heap_tag, mi_tld_t* tld)
 {
   mi_assert_internal(heap!=NULL);
   mi_memid_t memid = heap->memid;
   _mi_memcpy_aligned(heap, &_mi_heap_empty, sizeof(mi_heap_t));
   heap->memid = memid;
-  heap->tld        = tld;  // avoid reading the thread-local tld during initialization
+  heap->tld   = tld;  // avoid reading the thread-local tld during initialization
+  heap->tag   = heap_tag;
+  heap->numa_node = tld->numa_node;
   heap->exclusive_arena    = _mi_arena_from_id(arena_id);
-  heap->allow_page_reclaim = !noreclaim;
-  heap->allow_page_abandon = (!noreclaim && mi_option_get(mi_option_page_full_retain) >= 0);
-  heap->full_page_retain = mi_option_get_clamp(mi_option_page_full_retain, -1, 32);
-  heap->tag        = heap_tag;
+  heap->allow_page_reclaim = (!allow_destroy && mi_option_get(mi_option_page_reclaim_on_free) >= 0);
+  heap->allow_page_abandon = (!allow_destroy && mi_option_get(mi_option_page_full_retain) >= 0);
+  heap->page_full_retain = mi_option_get_clamp(mi_option_page_full_retain, -1, 32);
   if (heap->tld->is_in_threadpool) {
     // if we run as part of a thread pool it is better to not arbitrarily reclaim abandoned pages into our heap.
-    // (but abandoning is good in this case)
-    heap->allow_page_reclaim = false;
-    // and halve the full page retain (possibly to 0)
-    if (heap->full_page_retain >= 0) {
-      heap->full_page_retain = heap->full_page_retain / 4;
+    // this is checked in `free.c:mi_free_try_collect_mt`
+    // .. but abandoning is good in this case: halve the full page retain (possibly to 0)
+    // (so blocked threads do not hold on to too much memory)
+    if (heap->page_full_retain > 0) {
+      heap->page_full_retain = heap->page_full_retain / 4;
     }
   }
 
@@ -218,7 +226,7 @@ mi_heap_t* _mi_heap_create(int heap_tag, bool allow_destroy, mi_arena_id_t arena
   else {
     // heaps associated wita a specific arena are allocated in that arena
     // note: takes up at least one slice which is quite wasteful...
-    heap = (mi_heap_t*)_mi_arenas_alloc(_mi_subproc(), _mi_align_up(sizeof(mi_heap_t),MI_ARENA_MIN_OBJ_SIZE), true, true, _mi_arena_from_id(arena_id), tld->thread_seq, &memid);
+    heap = (mi_heap_t*)_mi_arenas_alloc(_mi_subproc(), _mi_align_up(sizeof(mi_heap_t),MI_ARENA_MIN_OBJ_SIZE), true, true, _mi_arena_from_id(arena_id), tld->thread_seq, tld->numa_node, &memid);
   }
   if (heap==NULL) {
     _mi_error_message(ENOMEM, "unable to allocate heap meta-data\n");
@@ -236,12 +244,12 @@ mi_decl_nodiscard mi_heap_t* mi_heap_new_ex(int heap_tag, bool allow_destroy, mi
 }
 
 mi_decl_nodiscard mi_heap_t* mi_heap_new_in_arena(mi_arena_id_t arena_id) {
-  return mi_heap_new_ex(0 /* default heap tag */, false /* don't allow `mi_heap_destroy` */, arena_id);
+  return mi_heap_new_ex(0 /* default heap tag */, false /* allow destroy? */, arena_id);
 }
 
 mi_decl_nodiscard mi_heap_t* mi_heap_new(void) {
   // don't reclaim abandoned memory or otherwise destroy is unsafe
-  return mi_heap_new_ex(0 /* default heap tag */, true /* no reclaim */, _mi_arena_id_none());
+  return mi_heap_new_ex(0 /* default heap tag */, true /* allow destroy? */, _mi_arena_id_none());
 }
 
 bool _mi_heap_memid_is_suitable(mi_heap_t* heap, mi_memid_t memid) {
@@ -250,6 +258,11 @@ bool _mi_heap_memid_is_suitable(mi_heap_t* heap, mi_memid_t memid) {
 
 uintptr_t _mi_heap_random_next(mi_heap_t* heap) {
   return _mi_random_next(&heap->random);
+}
+
+void mi_heap_set_numa_affinity(mi_heap_t* heap, int numa_node) {
+  if (heap == NULL) return;
+  heap->numa_node = (numa_node < 0 ? -1 : numa_node % _mi_os_numa_node_count());
 }
 
 // zero out the page queues
@@ -316,7 +329,6 @@ mi_heap_t* _mi_heap_by_tag(mi_heap_t* heap, uint8_t tag) {
 static bool _mi_heap_page_destroy(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_t* page, void* arg1, void* arg2) {
   MI_UNUSED(arg1);
   MI_UNUSED(arg2);
-  MI_UNUSED(heap);
   MI_UNUSED(pq);
 
   // ensure no more thread_delayed_free will be added
@@ -325,18 +337,18 @@ static bool _mi_heap_page_destroy(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_
   // stats
   const size_t bsize = mi_page_block_size(page);
   if (bsize > MI_LARGE_MAX_OBJ_SIZE) {
-    mi_heap_stat_decrease(heap, huge, bsize);
+    mi_heap_stat_decrease(heap, malloc_huge, bsize);
   }
-  #if (MI_STAT)
+  #if (MI_STAT>0)
   _mi_page_free_collect(page, false);  // update used count
   const size_t inuse = page->used;
   if (bsize <= MI_LARGE_MAX_OBJ_SIZE) {
-    mi_heap_stat_decrease(heap, normal, bsize * inuse);
+    mi_heap_stat_decrease(heap, malloc_normal, bsize * inuse);
     #if (MI_STAT>1)
-    mi_heap_stat_decrease(heap, normal_bins[_mi_bin(bsize)], inuse);
+    mi_heap_stat_decrease(heap, malloc_bins[_mi_bin(bsize)], inuse);
     #endif
   }
-  mi_heap_stat_decrease(heap, malloc, bsize * inuse);  // todo: off for aligned blocks...
+  // mi_heap_stat_decrease(heap, malloc_requested, bsize * inuse);  // todo: off for aligned blocks...
   #endif
 
   /// pretend it is all free now
@@ -348,7 +360,7 @@ static bool _mi_heap_page_destroy(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_
   page->next = NULL;
   page->prev = NULL;
   mi_page_set_heap(page, NULL);
-  _mi_arenas_page_free(page);
+  _mi_arenas_page_free(page, heap->tld);
 
   return true; // keep going
 }
@@ -588,7 +600,7 @@ void _mi_heap_area_init(mi_heap_area_t* area, mi_page_t* page) {
 
 static void mi_get_fast_divisor(size_t divisor, uint64_t* magic, size_t* shift) {
   mi_assert_internal(divisor > 0 && divisor <= UINT32_MAX);
-  *shift = MI_INTPTR_BITS - mi_clz(divisor - 1);
+  *shift = MI_SIZE_BITS - mi_clz(divisor - 1);
   *magic = ((((uint64_t)1 << 32) * (((uint64_t)1 << *shift) - divisor)) / divisor + 1);
 }
 

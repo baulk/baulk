@@ -19,8 +19,10 @@ terms of the MIT license. A copy of the license can be found in the file
 // --------------------------------------------------------------------------
 
 
+#include <mimalloc-stats.h>
 #include <stddef.h>   // ptrdiff_t
 #include <stdint.h>   // uintptr_t, uint16_t, etc
+#include <limits.h>   // SIZE_MAX etc.
 #include <errno.h>    // error codes
 #include "bits.h"     // size defines (MI_INTPTR_SIZE etc), bit operations
 #include "atomic.h"   // _Atomic primitives
@@ -48,7 +50,7 @@ terms of the MIT license. A copy of the license can be found in the file
 
 // Define MI_SECURE to enable security mitigations. Level 1 has minimal performance impact,
 // but protects most metadata with guard pages:
-//   #define MI_SECURE 1  // guard page around metadata
+//   #define MI_SECURE 1  // guard page around metadata; check pointer validity on free
 //
 // Level 2 has more performance impact but protect well against various buffer overflows
 // by surrounding all mimalloc pages with guard pages:
@@ -67,10 +69,19 @@ terms of the MIT license. A copy of the license can be found in the file
 // #define MI_DEBUG 2  // + internal assertion checks
 // #define MI_DEBUG 3  // + extensive internal invariant checking (cmake -DMI_DEBUG_FULL=ON)
 #if !defined(MI_DEBUG)
-#if !defined(NDEBUG) || defined(_DEBUG)
-#define MI_DEBUG 2
-#else
+#if defined(MI_BUILD_RELEASE) || defined(NDEBUG)
 #define MI_DEBUG 0
+#else
+#define MI_DEBUG 2
+#endif
+#endif
+
+// Statistics (0=only essential, 1=normal, 2=more fine-grained (expensive) tracking)
+#ifndef MI_STAT
+#if (MI_DEBUG>0)
+#define MI_STAT 2
+#else
+#define MI_STAT 0
 #endif
 #endif
 
@@ -99,7 +110,8 @@ terms of the MIT license. A copy of the license can be found in the file
 #define MI_ENCODE_FREELIST  1
 #endif
 
-// Enable large pages for objects between 128KiB and 512KiB. Disabled by default.
+// Enable large pages for objects between 64KiB and 512KiB.
+// Disabled by default as for many workloads the block sizes above 64 KiB are quite random which can lead to too many partially used large pages.
 #ifndef MI_ENABLE_LARGE_PAGES
 #define MI_ENABLE_LARGE_PAGES  0
 #endif
@@ -109,27 +121,41 @@ terms of the MIT license. A copy of the license can be found in the file
 // (comments specify sizes on 64-bit, usually 32-bit is halved)
 // --------------------------------------------------------------
 
-// Sizes are for 64-bit
+// Main size parameter; determines max arena sizes and max arena object sizes etc.
 #ifndef MI_ARENA_SLICE_SHIFT
-#ifdef  MI_SMALL_PAGE_SHIFT   // backward compatibility
-#define MI_ARENA_SLICE_SHIFT              MI_SMALL_PAGE_SHIFT
-#else
-#define MI_ARENA_SLICE_SHIFT              (13 + MI_SIZE_SHIFT)        // 64 KiB (32 KiB on 32-bit)
+  #ifdef  MI_SMALL_PAGE_SHIFT   // backward compatibility
+  #define MI_ARENA_SLICE_SHIFT              MI_SMALL_PAGE_SHIFT
+  #else
+  #define MI_ARENA_SLICE_SHIFT              (13 + MI_SIZE_SHIFT)        // 64 KiB (32 KiB on 32-bit)
+  #endif
 #endif
+#if MI_ARENA_SLICE_SHIFT < 12
+#error Arena slices should be at least 4KiB
 #endif
+
 #ifndef MI_BCHUNK_BITS_SHIFT
-#define MI_BCHUNK_BITS_SHIFT              (6 + MI_SIZE_SHIFT)         // optimized for 512 bits per chunk (avx512)
+  #if MI_ARENA_SLICE_SHIFT <= 13    // <= 8KiB
+  #define MI_BCHUNK_BITS_SHIFT              (7)   // 128 bits
+  #elif MI_ARENA_SLICE_SHIFT < 16   // <= 32KiB
+  #define MI_BCHUNK_BITS_SHIFT              (8)   // 256 bits
+  #else 
+  #define MI_BCHUNK_BITS_SHIFT              (6 + MI_SIZE_SHIFT)       // 512 bits (or 256 on 32-bit)
+  #endif
 #endif
 
 #define MI_BCHUNK_BITS                    (1 << MI_BCHUNK_BITS_SHIFT)         // sub-bitmaps are "bchunks" of 512 bits
 #define MI_ARENA_SLICE_SIZE               (MI_ZU(1) << MI_ARENA_SLICE_SHIFT)  // arena's allocate in slices of 64 KiB
 #define MI_ARENA_SLICE_ALIGN              (MI_ARENA_SLICE_SIZE)
 
-#define MI_ARENA_MIN_OBJ_SLICES           (1)                         
+#define MI_ARENA_MIN_OBJ_SLICES           (1)
 #define MI_ARENA_MAX_OBJ_SLICES           (MI_BCHUNK_BITS)            // 32 MiB (for now, cannot cross chunk boundaries)
 
 #define MI_ARENA_MIN_OBJ_SIZE             (MI_ARENA_MIN_OBJ_SLICES * MI_ARENA_SLICE_SIZE)
 #define MI_ARENA_MAX_OBJ_SIZE             (MI_ARENA_MAX_OBJ_SLICES * MI_ARENA_SLICE_SIZE)
+
+#if MI_ARENA_MAX_OBJ_SIZE < MI_SIZE_SIZE*1024
+#error maximum object size may be too small to hold local thread data  
+#endif
 
 #define MI_SMALL_PAGE_SIZE                MI_ARENA_MIN_OBJ_SIZE                    // 64 KiB
 #define MI_MEDIUM_PAGE_SIZE               (8*MI_SMALL_PAGE_SIZE)                   // 512 KiB  (=byte in the bchunk bitmap)
@@ -137,16 +163,18 @@ terms of the MIT license. A copy of the license can be found in the file
 
 
 // Maximum number of size classes. (spaced exponentially in 12.5% increments)
-#define MI_BIN_HUGE  (73U)
+#if MI_BIN_HUGE != 73U
+#error "mimalloc internal: expecting 73 bins"
+#endif
 #define MI_BIN_FULL  (MI_BIN_HUGE+1)
 #define MI_BIN_COUNT (MI_BIN_FULL+1)
-
 
 // We never allocate more than PTRDIFF_MAX (see also <https://sourceware.org/ml/libc-announce/2019/msg00001.html>)
 #define MI_MAX_ALLOC_SIZE        PTRDIFF_MAX
 
 // Minimal commit for a page on-demand commit (should be >= OS page size)
-#define MI_PAGE_MIN_COMMIT_SIZE  MI_ARENA_SLICE_SIZE // (4*MI_KiB) 
+#define MI_PAGE_MIN_COMMIT_SIZE  MI_ARENA_SLICE_SIZE // (4*MI_KiB)
+
 
 // ------------------------------------------------------
 // Arena's are large reserved areas of memory allocated from
@@ -155,8 +183,8 @@ terms of the MIT license. A copy of the license can be found in the file
 // mimalloc pages.
 // ------------------------------------------------------
 
-// A large memory arena where pages are allocated in.
-typedef struct mi_arena_s mi_arena_t;     // defined in `arena.c`
+// A large memory arena where pages are allocated in. 
+typedef struct mi_arena_s mi_arena_t;     // defined below
 
 
 // ---------------------------------------------------------------
@@ -224,6 +252,11 @@ static inline bool mi_memid_needs_no_free(mi_memid_t memid) {
   return mi_memkind_needs_no_free(memid.memkind);
 }
 
+static inline mi_arena_t* mi_memid_arena(mi_memid_t memid) {
+  return (memid.memkind == MI_MEM_ARENA ? memid.mem.arena.arena : NULL);
+}
+
+
 // ------------------------------------------------------
 // Mimalloc pages contain allocated blocks
 // ------------------------------------------------------
@@ -241,16 +274,18 @@ typedef struct mi_block_s {
 } mi_block_t;
 
 
-// The page flags are put in the bottom 3 bits of the thread_id (for a fast test in `mi_free`)
+// The page flags are put in the bottom 2 bits of the thread_id (for a fast test in `mi_free`)
 // `has_aligned` is true if the page has pointers at an offset in a block (so we unalign before free-ing)
 // `in_full_queue` is true if the page is full and resides in the full queue (so we move it to a regular queue on free-ing)
-// `is_abandoned_mapped` is true if the page is abandoned (thread_id==0) and it is in an arena so can be quickly found for reuse ("mapped")
 #define MI_PAGE_IN_FULL_QUEUE         MI_ZU(0x01)
 #define MI_PAGE_HAS_ALIGNED           MI_ZU(0x02)
-#define MI_PAGE_IS_ABANDONED_MAPPED   MI_ZU(0x04)
-#define MI_PAGE_FLAG_MASK             MI_ZU(0x07)
+#define MI_PAGE_FLAG_MASK             MI_ZU(0x03)
 typedef size_t mi_page_flags_t;
 
+// There are two special threadid's: 0 for abandoned threads, and 4 for abandoned & mapped threads --
+// abandoned-mapped pages are abandoned but also mapped in an arena so can be quickly found for reuse.
+#define MI_THREADID_ABANDONED         MI_ZU(0)
+#define MI_THREADID_ABANDONED_MAPPED  (MI_PAGE_FLAG_MASK + 1)
 
 // Thread free list.
 // Points to a list of blocks that are freed by other threads.
@@ -270,16 +305,19 @@ typedef uint8_t mi_heaptag_t;
 // The `local_free` and `thread_free` lists are migrated to the `free` list
 // when it is exhausted. The separate `local_free` list is necessary to
 // implement a monotonic heartbeat. The `thread_free` list is needed for
-// avoiding atomic operations in the common case.
+// avoiding atomic operations when allocating from the owning thread.
 //
 // `used - |thread_free|` == actual blocks that are in use (alive)
 // `used - |thread_free| + |free| + |local_free| == capacity`
 //
-// We don't count `freed` (as |free|) but use `used` to reduce
+// We don't count "freed" (as |free|) but use only the `used` field to reduce
 // the number of memory accesses in the `mi_page_all_free` function(s).
+// Use `_mi_page_free_collect` to collect the thread_free list and update the `used` count.
 //
 // Notes:
-// - Non-atomic fields can only be accessed if having ownership (low bit of `xthread_free`).
+// - Non-atomic fields can only be accessed if having _ownership_ (low bit of `xthread_free` is 1).
+//   Combining the `thread_free` list with an ownership bit allows a concurrent `free` to atomically
+//   free an object and (re)claim ownership if the page was abandoned.
 // - If a page is not part of a heap it is called "abandoned"  (`heap==NULL`) -- in
 //   that case the `xthreadid` is 0 or 4 (4 is for abandoned pages that
 //   are in the abandoned page lists of an arena, these are called "mapped" abandoned pages).
@@ -288,17 +326,17 @@ typedef uint8_t mi_heaptag_t;
 // - Using `uint16_t` does not seem to slow things down
 
 typedef struct mi_page_s {
-  _Atomic(mi_threadid_t)    xthread_id;        // thread this page belongs to. (= heap->thread_id (or 0 if abandoned) | page_flags)
+  _Atomic(mi_threadid_t)    xthread_id;        // thread this page belongs to. (= `heap->thread_id (or 0 or 4 if abandoned) | page_flags`)
 
   mi_block_t*               free;              // list of available free blocks (`malloc` allocates from this list)
   uint16_t                  used;              // number of blocks in use (including blocks in `thread_free`)
-  uint16_t                  capacity;          // number of blocks committed (must be the first field for proper zero-initialisation)
+  uint16_t                  capacity;          // number of blocks committed
   uint16_t                  reserved;          // number of blocks reserved in memory
   uint8_t                   block_size_shift;  // if not zero, then `(1 << block_size_shift) == block_size` (only used for fast path in `free.c:_mi_page_ptr_unalign`)
   uint8_t                   retire_expire;     // expiration count for retired blocks
 
   mi_block_t*               local_free;        // list of deferred free blocks by this thread (migrates to `free`)
-  _Atomic(mi_thread_free_t) xthread_free;      // list of deferred free blocks freed by other threads
+  _Atomic(mi_thread_free_t) xthread_free;      // list of deferred free blocks freed by other threads (= `mi_block_t* | (1 if owned)`)
 
   size_t                    block_size;        // size available in each block (always `>0`)
   uint8_t*                  page_start;        // start of the blocks
@@ -333,12 +371,15 @@ typedef struct mi_page_s {
 #endif
 
 // The max object size are checked to not waste more than 12.5% internally over the page sizes.
-// (Except for large pages since huge objects are allocated in 4MiB chunks)
-#define MI_SMALL_MAX_OBJ_SIZE             ((MI_SMALL_PAGE_SIZE-MI_PAGE_INFO_SIZE)/8)   // < 8 KiB
-#define MI_MEDIUM_MAX_OBJ_SIZE            ((MI_MEDIUM_PAGE_SIZE-MI_PAGE_INFO_SIZE)/8)  // < 64 KiB
-#define MI_LARGE_MAX_OBJ_SIZE             (MI_LARGE_PAGE_SIZE/4)    // <= 512 KiB // note: this must be a nice power of 2 or we get rounding issues with `_mi_bin`
+#define MI_SMALL_MAX_OBJ_SIZE             ((MI_SMALL_PAGE_SIZE-MI_PAGE_INFO_SIZE)/8)   // < ~8 KiB
+#if MI_ENABLE_LARGE_PAGES
+#define MI_MEDIUM_MAX_OBJ_SIZE            ((MI_MEDIUM_PAGE_SIZE-MI_PAGE_INFO_SIZE)/8)  // < ~64 KiB
+#define MI_LARGE_MAX_OBJ_SIZE             (MI_LARGE_PAGE_SIZE/8)    // <= 512KiB // note: this must be a nice power of 2 or we get rounding issues with `_mi_bin`
+#else
+#define MI_MEDIUM_MAX_OBJ_SIZE            (MI_MEDIUM_PAGE_SIZE/8)   // <= 64 KiB
+#define MI_LARGE_MAX_OBJ_SIZE             MI_MEDIUM_MAX_OBJ_SIZE    // note: this must be a nice power of 2 or we get rounding issues with `_mi_bin`
+#endif
 #define MI_LARGE_MAX_OBJ_WSIZE            (MI_LARGE_MAX_OBJ_SIZE/MI_SIZE_SIZE)
-
 
 #if (MI_LARGE_MAX_OBJ_WSIZE >= 655360)
 #error "mimalloc internal: define more bins"
@@ -352,7 +393,7 @@ typedef struct mi_page_s {
 typedef enum mi_page_kind_e {
   MI_PAGE_SMALL,    // small blocks go into 64KiB pages
   MI_PAGE_MEDIUM,   // medium blocks go into 512KiB pages
-  MI_PAGE_LARGE,    // larger blocks go into 4MiB pages
+  MI_PAGE_LARGE,    // larger blocks go into 4MiB pages (if `MI_ENABLE_LARGE_PAGES==1`)
   MI_PAGE_SINGLETON // page containing a single block.
                     // used for blocks `> MI_LARGE_MAX_OBJ_SIZE` or an aligment `> MI_PAGE_MAX_OVERALLOC_ALIGN`.
 } mi_page_kind_t;
@@ -374,12 +415,13 @@ typedef enum mi_page_kind_e {
 // ------------------------------------------------------
 
 // Thread local data
-typedef struct mi_tld_s mi_tld_t;
+typedef struct mi_tld_s mi_tld_t;   // defined below
 
 // Pages of a certain block size are held in a queue.
 typedef struct mi_page_queue_s {
   mi_page_t* first;
   mi_page_t* last;
+  size_t     count;
   size_t     block_size;
 } mi_page_queue_t;
 
@@ -412,14 +454,16 @@ typedef struct mi_padding_s {
 struct mi_heap_s {
   mi_tld_t*             tld;                                 // thread-local data
   mi_arena_t*           exclusive_arena;                     // if the heap should only allocate from a specific arena (or NULL)
+  int                   numa_node;                           // preferred numa node (or -1 for no preference)
   uintptr_t             cookie;                              // random cookie to verify pointers (see `_mi_ptr_cookie`)
   mi_random_ctx_t       random;                              // random number context used for secure allocation
   size_t                page_count;                          // total number of pages in the `pages` queues.
   size_t                page_retired_min;                    // smallest retired index (retired pages are fully free, but still in the page queues)
   size_t                page_retired_max;                    // largest retired index into the `pages` array.
-  size_t                generic_count;                       // how often is mimalloc_generic invoked?
+  long                  generic_count;                       // how often is `_mi_malloc_generic` called?
+  long                  generic_collect_count;               // how often is `_mi_malloc_generic` called without collecting?
   mi_heap_t*            next;                                // list of heaps per thread
-  long                  full_page_retain;                    // how many full pages can be retained per queue (before abondoning them)
+  long                  page_full_retain;                    // how many full pages can be retained per queue (before abondoning them)
   bool                  allow_page_reclaim;                  // `true` if this heap should not reclaim abandoned pages
   bool                  allow_page_abandon;                  // `true` if this heap can abandon pages to reduce memory footprint
   uint8_t               tag;                                 // custom tag, can be used for separating heaps based on the object types
@@ -427,7 +471,6 @@ struct mi_heap_s {
   size_t                guarded_size_min;                    // minimal size for guarded objects
   size_t                guarded_size_max;                    // maximal size for guarded objects
   size_t                guarded_sample_rate;                 // sample rate (set to 0 to disable guarded pages)
-  size_t                guarded_sample_seed;                 // starting sample count
   size_t                guarded_sample_count;                // current sample count (counting down to 0)
   #endif
   mi_page_t*            pages_free_direct[MI_PAGES_DIRECT];  // optimize: array where every entry points a page with possibly free blocks in the corresponding queue for that size.
@@ -437,123 +480,11 @@ struct mi_heap_s {
 
 
 // ------------------------------------------------------
-// Statistics
-// ------------------------------------------------------
-
-#ifndef MI_STAT
-#if (MI_DEBUG>0)
-#define MI_STAT 2
-#else
-#define MI_STAT 0
-#endif
-#endif
-
-typedef struct mi_stat_count_s {
-  int64_t allocated;
-  int64_t freed;
-  int64_t peak;
-  int64_t current;
-} mi_stat_count_t;
-
-typedef struct mi_stat_counter_s {
-  int64_t total;
-  int64_t count;
-} mi_stat_counter_t;
-
-typedef struct mi_stats_s {
-  mi_stat_count_t   pages;
-  mi_stat_count_t   reserved;
-  mi_stat_count_t   committed;
-  mi_stat_count_t   reset;
-  mi_stat_count_t   purged;
-  mi_stat_count_t   page_committed;
-  mi_stat_count_t   pages_abandoned;
-  mi_stat_count_t   threads;
-  mi_stat_count_t   normal;
-  mi_stat_count_t   huge;
-  mi_stat_count_t   giant;
-  mi_stat_count_t   malloc;
-  mi_stat_counter_t pages_extended;
-  mi_stat_counter_t pages_reclaim_on_alloc;
-  mi_stat_counter_t pages_reclaim_on_free;
-  mi_stat_counter_t pages_reabandon_full;
-  mi_stat_counter_t pages_unabandon_busy_wait;
-  mi_stat_counter_t mmap_calls;
-  mi_stat_counter_t commit_calls;
-  mi_stat_counter_t reset_calls;
-  mi_stat_counter_t purge_calls;
-  mi_stat_counter_t arena_purges;
-  mi_stat_counter_t page_no_retire;
-  mi_stat_counter_t searches;
-  mi_stat_counter_t normal_count;
-  mi_stat_counter_t huge_count;
-  mi_stat_counter_t arena_count;
-  mi_stat_counter_t guarded_alloc_count;
-#if MI_STAT>1
-  mi_stat_count_t normal_bins[MI_BIN_COUNT];
-#endif
-} mi_stats_t;
-
-
-// add to stat keeping track of the peak
-void __mi_stat_increase(mi_stat_count_t* stat, size_t amount);
-void __mi_stat_decrease(mi_stat_count_t* stat, size_t amount);
-void __mi_stat_increase_mt(mi_stat_count_t* stat, size_t amount);
-void __mi_stat_decrease_mt(mi_stat_count_t* stat, size_t amount);
-// adjust stat in special cases to compensate for double counting
-void __mi_stat_adjust_increase(mi_stat_count_t* stat, size_t amount, bool on_alloc);
-void __mi_stat_adjust_decrease(mi_stat_count_t* stat, size_t amount, bool on_free);
-void __mi_stat_adjust_increase_mt(mi_stat_count_t* stat, size_t amount, bool on_alloc);
-void __mi_stat_adjust_decrease_mt(mi_stat_count_t* stat, size_t amount, bool on_free);
-// counters can just be increased
-void __mi_stat_counter_increase(mi_stat_counter_t* stat, size_t amount);
-void __mi_stat_counter_increase_mt(mi_stat_counter_t* stat, size_t amount);
-
-#if (MI_STAT)
-#define mi_debug_stat_increase(stat,amount)                     __mi_stat_increase( &(stat), amount)
-#define mi_debug_stat_decrease(stat,amount)                     __mi_stat_decrease( &(stat), amount)
-#define mi_debug_stat_counter_increase(stat,amount)             __mi_stat_counter_increase( &(stat), amount)
-#define mi_debug_stat_increase_mt(stat,amount)                  __mi_stat_increase_mt( &(stat), amount)
-#define mi_debug_stat_decrease_mt(stat,amount)                  __mi_stat_decrease_mt( &(stat), amount)
-#define mi_debug_stat_counter_increase_mt(stat,amount)          __mi_stat_counter_increase_mt( &(stat), amount)
-#define mi_debug_stat_adjust_increase_mt(stat,amnt,b)           __mi_stat_adjust_increase_mt( &(stat), amnt, b)
-#define mi_debug_stat_adjust_decrease_mt(stat,amnt,b)           __mi_stat_adjust_decrease_mt( &(stat), amnt, b)
-#else
-#define mi_debug_stat_increase(stat,amount)                     ((void)0)
-#define mi_debug_stat_decrease(stat,amount)                     ((void)0)
-#define mi_debug_stat_counter_increase(stat,amount)             ((void)0)
-#define mi_debug_stat_increase_mt(stat,amount)                  ((void)0)
-#define mi_debug_stat_decrease_mt(stat,amount)                  ((void)0)
-#define mi_debug_stat_counter_increase_mt(stat,amount)          ((void)0)
-#define mi_debug_stat_adjust_increase(stat,amnt,b)              ((void)0)
-#define mi_debug_stat_adjust_decrease(stat,amnt,b)              ((void)0)
-#endif
-
-#define mi_subproc_stat_counter_increase(subproc,stat,amount)   __mi_stat_counter_increase_mt( &(subproc)->stats.stat, amount)
-#define mi_subproc_stat_increase(subproc,stat,amount)           __mi_stat_increase_mt( &(subproc)->stats.stat, amount)
-#define mi_subproc_stat_decrease(subproc,stat,amount)           __mi_stat_decrease_mt( &(subproc)->stats.stat, amount)
-#define mi_subproc_stat_adjust_increase(subproc,stat,amnt,b)    __mi_stat_adjust_increase_mt( &(subproc)->stats.stat, amnt, b)
-#define mi_subproc_stat_adjust_decrease(subproc,stat,amnt,b)    __mi_stat_adjust_decrease_mt( &(subproc)->stats.stat, amnt, b)
-
-#define mi_os_stat_counter_increase(stat,amount)                mi_subproc_stat_counter_increase(_mi_subproc(),stat,amount)
-#define mi_os_stat_increase(stat,amount)                        mi_subproc_stat_increase(_mi_subproc(),stat,amount)
-#define mi_os_stat_decrease(stat,amount)                        mi_subproc_stat_decrease(_mi_subproc(),stat,amount)
-
-#define mi_heap_stat_counter_increase(heap,stat,amount)         __mi_stat_counter_increase( &(heap)->tld->stats.stat, amount)
-#define mi_heap_stat_increase(heap,stat,amount)                 __mi_stat_increase( &(heap)->tld->stats.stat, amount)
-#define mi_heap_stat_decrease(heap,stat,amount)                 __mi_stat_decrease( &(heap)->tld->stats.stat, amount)
-
-#define mi_debug_heap_stat_counter_increase(heap,stat,amount)   mi_debug_stat_counter_increase( (heap)->tld->stats.stat, amount)
-#define mi_debug_heap_stat_increase(heap,stat,amount)           mi_debug_stat_increase( (heap)->tld->stats.stat, amount)
-#define mi_debug_heap_stat_decrease(heap,stat,amount)           mi_debug_stat_decrease( (heap)->tld->stats.stat, amount)
-
-
-// ------------------------------------------------------
-// Sub processes use separate arena's and no heaps/pages/blocks
-// are shared between sub processes.
-// The subprocess structure contains essentially all static variables (except per subprocess :-))
-//
-// Each thread should belong to one sub-process only
+// Sub processes do not reclaim or visit pages from other sub processes. 
+// These are essentially the static variables of a process, and
+// usually there is only one subprocess. This can be used for example
+// by CPython to have seperate interpreters within one process.
+// Each thread can only belong to one subprocess.
 // ------------------------------------------------------
 
 #define MI_MAX_ARENAS   (160)   // Limited for now (and takes up .bss).. but arena's scale up exponentially (see `mi_arena_reserve`)
@@ -574,6 +505,7 @@ typedef struct mi_subproc_s {
 } mi_subproc_t;
 
 
+
 // ------------------------------------------------------
 // Thread Local data
 // ------------------------------------------------------
@@ -585,6 +517,7 @@ typedef int64_t  mi_msecs_t;
 struct mi_tld_s {
   mi_threadid_t         thread_id;            // thread id of this thread
   size_t                thread_seq;           // thread sequence id (linear count of created threads)
+  int                   numa_node;            // thread preferred numa node
   mi_subproc_t*         subproc;              // sub-process this thread belongs to.
   mi_heap_t*            heap_backing;         // backing heap of this thread (cannot be deleted)
   mi_heap_t*            heaps;                // list of heaps in this thread (so we can abandon all when the thread terminates)
@@ -594,6 +527,50 @@ struct mi_tld_s {
   mi_stats_t            stats;                // statistics
   mi_memid_t            memid;                // provenance of the tld memory itself (meta or OS)
 };
+
+
+/* ----------------------------------------------------------------------------
+  Arenas are fixed area's of OS memory from which we can allocate
+  large blocks (>= MI_ARENA_MIN_BLOCK_SIZE).
+  In contrast to the rest of mimalloc, the arenas are shared between
+  threads and need to be accessed using atomic operations (using atomic `mi_bitmap_t`'s).
+
+  Arenas are also used to for huge OS page (1GiB) reservations or for reserving
+  OS memory upfront which can be improve performance or is sometimes needed
+  on embedded devices. We can also employ this with WASI or `sbrk` systems
+  to reserve large arenas upfront and be able to reuse the memory more effectively.
+-----------------------------------------------------------------------------*/
+
+#define MI_ARENA_BIN_COUNT      (MI_BIN_COUNT)
+#define MI_ARENA_MIN_SIZE       (MI_BCHUNK_BITS * MI_ARENA_SLICE_SIZE)           // 32 MiB (or 8 MiB on 32-bit)
+#define MI_ARENA_MAX_SIZE       (MI_BITMAP_MAX_BIT_COUNT * MI_ARENA_SLICE_SIZE)
+
+typedef struct mi_bitmap_s  mi_bitmap_t;    // atomic bitmap  (defined in `src/bitmap.h`)
+typedef struct mi_bbitmap_s mi_bbitmap_t;   // atomic binned bitmap (defined in `src/bitmap.h`)
+
+// A memory arena
+typedef struct mi_arena_s {
+  mi_memid_t          memid;                // provenance of the memory area
+  mi_subproc_t*       subproc;              // subprocess this arena belongs to (`this 'element-of' this->subproc->arenas`)
+
+  size_t              slice_count;          // total size of the area in arena slices (of `MI_ARENA_SLICE_SIZE`)
+  size_t              info_slices;          // initial slices reserved for the arena bitmaps
+  int                 numa_node;            // associated NUMA node
+  bool                is_exclusive;         // only allow allocations if specifically for this arena
+  _Atomic(mi_msecs_t) purge_expire;         // expiration time when slices can be purged from `slices_purge`.
+  mi_commit_fun_t*    commit_fun;           // custom commit/decommit memory
+  void*               commit_fun_arg;       // user argument for a custom commit function
+
+  mi_bbitmap_t*       slices_free;          // is the slice free? (a binned bitmap with size classes)
+  mi_bitmap_t*        slices_committed;     // is the slice committed? (i.e. accessible)
+  mi_bitmap_t*        slices_dirty;         // is the slice potentially non-zero?
+  mi_bitmap_t*        slices_purge;         // slices that can be purged
+  mi_bitmap_t*        pages;                // all registered pages (abandoned and owned)
+  mi_bitmap_t*        pages_abandoned[MI_ARENA_BIN_COUNT];  // abandoned pages per size bin (a set bit means the start of the page)
+                                            // the full queue contains abandoned full pages
+  // followed by the bitmaps (whose sizes depend on the arena size)
+  // note: when adding bitmaps revise `mi_arena_info_slices_needed`
+} mi_arena_t;
 
 
 /* -----------------------------------------------------------
@@ -619,17 +596,17 @@ struct mi_tld_s {
 #define EOVERFLOW (75)
 #endif
 
-// ------------------------------------------------------
-// Debug
-// ------------------------------------------------------
+/* -----------------------------------------------------------
+  Debug constants
+----------------------------------------------------------- */
 
-#ifndef MI_DEBUG_UNINIT
+#if !defined(MI_DEBUG_UNINIT)
 #define MI_DEBUG_UNINIT     (0xD0)
 #endif
-#ifndef MI_DEBUG_FREED
+#if !defined(MI_DEBUG_FREED)
 #define MI_DEBUG_FREED      (0xDF)
 #endif
-#ifndef MI_DEBUG_PADDING
+#if !defined(MI_DEBUG_PADDING)
 #define MI_DEBUG_PADDING    (0xDE)
 #endif
 

@@ -22,14 +22,14 @@ terms of the MIT license. A copy of the license can be found in the file
 
 // OS memory configuration
 typedef struct mi_os_mem_config_s {
-  size_t  page_size;            // default to 4KiB
-  size_t  large_page_size;      // 0 if not supported, usually 2MiB (4MiB on Windows)
-  size_t  alloc_granularity;    // smallest allocation size (usually 4KiB, on Windows 64KiB)
-  size_t  physical_memory;      // physical memory size
-  size_t  virtual_address_bits; // usually 48 or 56 bits on 64-bit systems. (used to determine secure randomization)
-  bool    has_overcommit;       // can we reserve more memory than can be actually committed?
-  bool    has_partial_free;     // can allocated blocks be freed partially? (true for mmap, false for VirtualAlloc)
-  bool    has_virtual_reserve;  // supports virtual address space reservation? (if true we can reserve virtual address space without using commit or physical memory)
+  size_t  page_size;              // default to 4KiB
+  size_t  large_page_size;        // 0 if not supported, usually 2MiB (4MiB on Windows)
+  size_t  alloc_granularity;      // smallest allocation size (usually 4KiB, on Windows 64KiB)
+  size_t  physical_memory_in_kib; // physical memory size in KiB
+  size_t  virtual_address_bits;   // usually 48 or 56 bits on 64-bit systems. (used to determine secure randomization)
+  bool    has_overcommit;         // can we reserve more memory than can be actually committed?
+  bool    has_partial_free;       // can allocated blocks be freed partially? (true for mmap, false for VirtualAlloc)
+  bool    has_virtual_reserve;    // supports virtual address space reservation? (if true we can reserve virtual address space without using commit or physical memory)
 } mi_os_mem_config_t;
 
 // Initialize
@@ -59,9 +59,14 @@ int _mi_prim_commit(void* addr, size_t size, bool* is_zero);
 // pre: needs_recommit != NULL
 int _mi_prim_decommit(void* addr, size_t size, bool* needs_recommit);
 
-// Reset memory. The range keeps being accessible but the content might be reset.
+// Reset memory. The range keeps being accessible but the content might be reset to zero at any moment.
 // Returns error code or 0 on success.
 int _mi_prim_reset(void* addr, size_t size);
+
+// Reuse memory. This is called for memory that is already committed but
+// may have been reset (`_mi_prim_reset`) or decommitted (`_mi_prim_decommit`) where `needs_recommit` was false.
+// Returns error code or 0 on success. On most platforms this is a no-op.
+int _mi_prim_reuse(void* addr, size_t size);
 
 // Protect memory. Returns error code or 0 on success.
 int _mi_prim_protect(void* addr, size_t size, bool protect);
@@ -121,11 +126,10 @@ void _mi_prim_thread_associate_default_heap(mi_heap_t* heap);
 bool _mi_prim_thread_is_in_threadpool(void);
 
 
-
 //-------------------------------------------------------------------
 // Access to TLS (thread local storage) slots.
 // We need fast access to both a unique thread id (in `free.c:mi_free`) and
-// to a thread-local heap pointer (in `alloc.c:mi_malloc`). 
+// to a thread-local heap pointer (in `alloc.c:mi_malloc`).
 // To achieve this we use specialized code for various platforms.
 //-------------------------------------------------------------------
 
@@ -209,19 +213,19 @@ static inline void mi_prim_tls_slot_set(size_t slot, void* value) mi_attr_noexce
 #elif _WIN32 && MI_WIN_USE_FIXED_TLS && !defined(MI_WIN_USE_FLS)
 
 // On windows we can store the thread-local heap at a fixed TLS slot to avoid
-// thread-local initialization checks in the fast path. This uses a fixed location
-// in the TCB though (last user-reserved slot by default) which may clash with other applications.
+// thread-local initialization checks in the fast path.
+// We allocate a user TLS slot at process initialization (see `windows/prim.c`)
+// and store the offset `_mi_win_tls_offset`.
+#define MI_HAS_TLS_SLOT  1              // 2 = we can reliably initialize the slot (saving a test on each malloc)
 
-#define MI_HAS_TLS_SLOT      2              // 2 = we can reliably initialize the slot (saving a test on each malloc)
+extern mi_decl_hidden size_t _mi_win_tls_offset;
 
 #if MI_WIN_USE_FIXED_TLS > 1
 #define MI_TLS_SLOT     (MI_WIN_USE_FIXED_TLS)
 #elif MI_SIZE_SIZE == 4
-#define MI_TLS_SLOT     (0x710)             // Last user-reserved slot <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
-// #define MI_TLS_SLOT  (0xF0C)             // Last TlsSlot (might clash with other app reserved slot)
+#define MI_TLS_SLOT     (0x0E10 + _mi_win_tls_offset)  // User TLS slots <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
 #else
-#define MI_TLS_SLOT     (0x888)             // Last user-reserved slot <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
-// #define MI_TLS_SLOT  (0x1678)            // Last TlsSlot (might clash with other app reserved slot)
+#define MI_TLS_SLOT     (0x1480 + _mi_win_tls_offset)  // User TLS slots <https://en.wikipedia.org/wiki/Win32_Thread_Information_Block>
 #endif
 
 static inline void* mi_prim_tls_slot(size_t slot) mi_attr_noexcept {
@@ -406,7 +410,7 @@ static inline mi_heap_t* mi_prim_get_default_heap(void) {
 
 #elif defined(MI_TLS_PTHREAD)
 
-extern pthread_key_t _mi_heap_default_key;
+extern mi_decl_hidden pthread_key_t _mi_heap_default_key;
 static inline mi_heap_t* mi_prim_get_default_heap(void) {
   mi_heap_t* heap = (mi_unlikely(_mi_heap_default_key == (pthread_key_t)(-1)) ? _mi_heap_main_get() : (mi_heap_t*)pthread_getspecific(_mi_heap_default_key));
   return (mi_unlikely(heap == NULL) ? (mi_heap_t*)&_mi_heap_empty : heap);

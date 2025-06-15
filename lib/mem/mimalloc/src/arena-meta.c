@@ -25,10 +25,15 @@ terms of the MIT license. A copy of the license can be found in the file
 #define MI_META_PAGE_SIZE         MI_ARENA_SLICE_SIZE
 #define MI_META_PAGE_ALIGN        MI_ARENA_SLICE_ALIGN
 
-#define MI_META_BLOCK_SIZE        (128)                       // large enough such that META_MAX_SIZE > 4k (even on 32-bit)
+// large enough such that META_MAX_SIZE > 4k (even on 32-bit)
+#define MI_META_BLOCK_SIZE        (1 << (16 - MI_BCHUNK_BITS_SHIFT))        // 128 on 64-bit
 #define MI_META_BLOCK_ALIGN       MI_META_BLOCK_SIZE
-#define MI_META_BLOCKS_PER_PAGE   (MI_ARENA_SLICE_SIZE / MI_META_BLOCK_SIZE)  // 1024
+#define MI_META_BLOCKS_PER_PAGE   (MI_META_PAGE_SIZE / MI_META_BLOCK_SIZE)  // 512
 #define MI_META_MAX_SIZE          (MI_BCHUNK_SIZE * MI_META_BLOCK_SIZE)
+
+#if MI_META_MAX_SIZE <= 4096
+#error "max meta object size should be at least 4KiB"
+#endif
 
 typedef struct mi_meta_page_s  {
   _Atomic(struct mi_meta_page_s*)  next;    // a linked list of meta-data pages (never released)
@@ -64,11 +69,11 @@ static void* mi_meta_block_start( mi_meta_page_t* mpage, size_t block_idx ) {
 // allocate a fresh meta page and add it to the global list.
 static mi_meta_page_t* mi_meta_page_zalloc(void) {
   // allocate a fresh arena slice
-  // note: careful with _mi_subproc as it may recurse into mi_tld and meta_page_zalloc again..
+  // note: careful with _mi_subproc as it may recurse into mi_tld and meta_page_zalloc again.. (same with _mi_os_numa_node()...)
   mi_memid_t memid;
   uint8_t* base = (uint8_t*)_mi_arenas_alloc_aligned(_mi_subproc(), MI_META_PAGE_SIZE, MI_META_PAGE_ALIGN, 0,
                                                                     true /* commit*/, (MI_SECURE==0) /* allow large? */,
-                                                                    NULL /* req arena */, 0 /* thread_seq */, &memid);
+                                                                    NULL /* req arena */, 0 /* thread_seq */, -1 /* numa node */, &memid);
   if (base == NULL) return NULL;
   mi_assert_internal(_mi_is_aligned(base,MI_META_PAGE_ALIGN));
   if (!memid.initially_zero) {
@@ -77,8 +82,8 @@ static mi_meta_page_t* mi_meta_page_zalloc(void) {
 
   // guard pages
   #if MI_SECURE >= 1
-  _mi_os_secure_guard_page_set_at(base, memid.is_pinned);
-  _mi_os_secure_guard_page_set_before(base + MI_META_PAGE_SIZE, memid.is_pinned);
+  _mi_os_secure_guard_page_set_at(base, memid);
+  _mi_os_secure_guard_page_set_before(base + MI_META_PAGE_SIZE, memid);
   #endif
   
   // initialize the page and free block bitmap
@@ -150,7 +155,7 @@ mi_decl_noinline void _mi_meta_free(void* p, size_t size, mi_memid_t memid) {
     const size_t block_idx   = memid.mem.meta.block_index;
     mi_meta_page_t* mpage = (mi_meta_page_t*)memid.mem.meta.meta_page; 
     mi_assert_internal(mi_meta_page_of_ptr(p,NULL) == mpage);
-    mi_assert_internal(block_idx + block_count < MI_META_BLOCKS_PER_PAGE);
+    mi_assert_internal(block_idx + block_count <= MI_META_BLOCKS_PER_PAGE);
     mi_assert_internal(mi_bbitmap_is_clearN(&mpage->blocks_free, block_idx, block_count));
     // we zero on free (and on the initial page allocation) so we don't need a "dirty" map
     _mi_memzero_aligned(mi_meta_block_start(mpage, block_idx), block_count*MI_META_BLOCK_SIZE);
