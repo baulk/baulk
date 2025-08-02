@@ -37,12 +37,19 @@ Write-Host "$baseName`n$hashtext"
 Copy-Item -Force $item.FullName -Destination $Destination
 
 Write-Host "build $BaulkSetup.exe arch: $ArchitecturesAllowed install mode: $ArchitecturesInstallIn64BitMode"
-$InnoCli = Get-Command -ErrorAction SilentlyContinue -CommandType Application "iscc.exe"
-if ($null -ne $InnoCli) {
-    $InnoSetup = $InnoCli.Path
+
+
+
+$InnoCmd = Get-Command -ErrorAction SilentlyContinue -CommandType Application "iscc.exe"
+if ($null -ne $InnoCmd) {
+    $InnoSetup = $InnoCmd.Path
 }
 else {
     $InnoSetup = Join-Path ${env:PROGRAMFILES(X86)} -ChildPath 'Inno Setup 6\iscc.exe'
+    if (!(Test-Path $InnoSetup)) {
+        Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "D:\\is.exe"
+        Start-Process -FilePath "D:\\is.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+    }
 }
 
 $BaseNameSuffix = $ArchitecturesInstallIn64BitMode
