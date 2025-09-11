@@ -96,7 +96,6 @@ if(WITH_GTEST OR WITH_BENCHMARKS)
         set(WITH_BENCHMARKS OFF)
         set(WITH_BENCHMARKS OFF PARENT_SCOPE)
     endif()
-    enable_language(CXX)
 endif()
 
 if(WITH_BENCHMARKS)
@@ -203,6 +202,10 @@ if(WITH_GTEST)
 
         if(MSVC)
             target_compile_options(gtest_zlib PRIVATE /wd4389 /EHsc)
+        endif()
+
+        if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+            target_compile_options(gtest_zlib PRIVATE -D_XOPEN_SOURCE=700)
         endif()
 
         if(WITH_SANITIZER STREQUAL "Memory")
