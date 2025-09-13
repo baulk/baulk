@@ -218,7 +218,7 @@ wchar_t *FastIntToBuffer(uint64_t i, wchar_t *buffer) {
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
-  u32 = static_cast<uint32_t>(i - top_1to11 * 1000000000);
+  u32 = static_cast<uint32_t>(i - (top_1to11 * 1000000000));
   auto top_1to11_32 = static_cast<uint32_t>(top_1to11);
 
   if (top_1to11_32 == top_1to11) {
@@ -226,7 +226,7 @@ wchar_t *FastIntToBuffer(uint64_t i, wchar_t *buffer) {
   } else {
     // top_1to11 has more than 32 bits too; print it in two steps.
     auto top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
-    auto mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
+    auto mid_2 = static_cast<uint32_t>(top_1to11 - (top_8to9 * 100));
     buffer = FastIntToBuffer(top_8to9, buffer);
     PutTwoDigits(mid_2, buffer);
     buffer += 2;
@@ -360,7 +360,7 @@ char *FastIntToBuffer(uint64_t i, char *buffer) {
 
   // Here we know i has at least 10 decimal digits.
   uint64_t top_1to11 = i / 1000000000;
-  u32 = static_cast<uint32_t>(i - top_1to11 * 1000000000);
+  u32 = static_cast<uint32_t>(i - (top_1to11 * 1000000000));
   auto top_1to11_32 = static_cast<uint32_t>(top_1to11);
 
   if (top_1to11_32 == top_1to11) {
@@ -368,7 +368,7 @@ char *FastIntToBuffer(uint64_t i, char *buffer) {
   } else {
     // top_1to11 has more than 32 bits too; print it in two steps.
     auto top_8to9 = static_cast<uint32_t>(top_1to11 / 100);
-    auto mid_2 = static_cast<uint32_t>(top_1to11 - top_8to9 * 100);
+    auto mid_2 = static_cast<uint32_t>(top_1to11 - (top_8to9 * 100));
     buffer = FastIntToBuffer(top_8to9, buffer);
     PutTwoDigits(mid_2, buffer);
     buffer += 2;
@@ -622,7 +622,7 @@ inline ExpDigits SplitToSix(const double value) {
       // Compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa
       // Since we're tossing powers of two, 2 * dddddd + 1 is the
       // same as dddddd + 0.5
-      edge = PowFive(2 * dddddd + 1, exp - 5);
+      edge = PowFive((2 * dddddd) + 1, exp - 5);
 
       val.first = mantissa;
       val.second = 0;
@@ -630,7 +630,7 @@ inline ExpDigits SplitToSix(const double value) {
       // We can't compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa as we did
       // above because (exp - 5) is negative.  So we compare (dddddd + 0.5) to
       // mantissa * 5 ^ (5 - exp)
-      edge = PowFive(2 * dddddd + 1, 0);
+      edge = PowFive((2 * dddddd) + 1, 0);
 
       val = PowFive(mantissa, 5 - exp);
     }
@@ -806,7 +806,7 @@ inline ExpDigitsA SplitToSixA(const double value) {
       // Compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa
       // Since we're tossing powers of two, 2 * dddddd + 1 is the
       // same as dddddd + 0.5
-      edge = PowFive(2 * dddddd + 1, exp - 5);
+      edge = PowFive((2 * dddddd) + 1, exp - 5);
 
       val.first = mantissa;
       val.second = 0;
@@ -814,7 +814,7 @@ inline ExpDigitsA SplitToSixA(const double value) {
       // We can't compare (dddddd + 0.5) * 5 ^ (exp - 5) to mantissa as we did
       // above because (exp - 5) is negative.  So we compare (dddddd + 0.5) to
       // mantissa * 5 ^ (5 - exp)
-      edge = PowFive(2 * dddddd + 1, 0);
+      edge = PowFive((2 * dddddd) + 1, 0);
 
       val = PowFive(mantissa, 5 - exp);
     }

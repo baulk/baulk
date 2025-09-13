@@ -179,7 +179,6 @@ ssize_t StrFormatInternal(wchar_t *buf, size_t N, const wchar_t *fmt, const Form
 
 ssize_t StrFormat(wchar_t *buf, size_t N, const wchar_t *fmt) {
   format_internal::buffer_view buffer_(buf, N);
-  std::wstring s;
   const wchar_t *src = fmt;
   for (; *src != 0; ++src) {
     buffer_.push_back(*src);

@@ -1,5 +1,6 @@
 //
 #include <hazel/elf.hpp>
+#include <utility>
 
 namespace hazel::elf {
 bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec) const {
@@ -26,7 +27,7 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
       auto t = cast_from<uint32_t>(dv.data());
       auto v = cast_from<uint32_t>(dv.data() + 4);
       dv.remove_prefix(8);
-      if (static_cast<int>(t) == tag) {
+      if (std::cmp_equal(t, tag)) {
         if (auto s = bsv.make_cstring_view(v); !s.empty()) {
           sv.emplace_back(s);
         }
@@ -38,7 +39,7 @@ bool File::DynString(int tag, std::vector<std::string> &sv, bela::error_code &ec
     auto t = cast_from<uint64_t>(dv.data());
     auto v = cast_from<uint64_t>(dv.data() + 8);
     dv.remove_prefix(16);
-    if (static_cast<int>(t) == tag) {
+    if (std::cmp_equal(t, tag)) {
       if (auto s = bsv.make_cstring_view(static_cast<size_t>(v)); !s.empty()) {
         sv.emplace_back(s);
       }

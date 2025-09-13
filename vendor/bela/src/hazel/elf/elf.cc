@@ -21,7 +21,7 @@ bool File::NewFile(HANDLE fd_, int64_t sz, bela::error_code &ec) {
 
 bool File::parseFile(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    if (size = fd.Size(ec); size == bela::SizeUnInitialized) {
       return false;
     }
   }
@@ -141,7 +141,7 @@ bool File::parseFile(bela::error_code &ec) {
   }
   progs.resize(phnum);
   for (auto i = 0; i < phnum; i++) {
-    auto off = phoff + i * phentsize;
+    auto off = phoff + (i * phentsize);
     auto p = &progs[i];
     if (fh.Class == ELFCLASS32) {
       Elf32_Phdr ph;
@@ -185,7 +185,7 @@ bool File::parseFile(bela::error_code &ec) {
   sections.resize(shnum);
   std::vector<int> names;
   for (auto i = 0; i < shnum; i++) {
-    auto off = shoff + i * shentsize;
+    auto off = shoff + (i * shentsize);
     auto p = &sections[i];
     if (fh.Class == ELFCLASS32) {
       Elf32_Shdr sh;

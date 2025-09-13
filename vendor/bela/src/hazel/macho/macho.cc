@@ -206,7 +206,7 @@ bool File::pushSection(hazel::macho::Section *sh, bela::error_code &ec) {
 
 bool File::parseFile(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    if (size = fd.Size(ec); size == bela::SizeUnInitialized) {
       return false;
     }
   }

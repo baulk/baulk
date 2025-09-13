@@ -1,4 +1,5 @@
 //
+#include <algorithm>
 #include <cstdio>
 #include <io.h>
 #include <bela/str_cat.hpp>
@@ -49,7 +50,7 @@ bool IsCygwinTerminal(HANDLE fd) {
   constexpr std::wstring_view pipeto = L"to";
   constexpr std::wstring_view pipefrom = L"from";
   constexpr std::wstring_view master = L"master";
-  if (std::find(std::begin(cyglikeprefix), std::end(cyglikeprefix), pvv[0]) == std::end(cyglikeprefix)) {
+  if (std::ranges::find(cyglikeprefix, pvv[0]) == std::end(cyglikeprefix)) {
     return false;
   }
   if (pvv[1].empty()) {
@@ -114,7 +115,7 @@ bela::ssize_t WriteSameFile(HANDLE fd, std::string_view data) {
   return static_cast<ssize_t>(dwWrite);
 }
 
-enum class TerminalMode {
+enum class TerminalMode : std::uint8_t {
   File, //
   ConPTY,
   Cygwin

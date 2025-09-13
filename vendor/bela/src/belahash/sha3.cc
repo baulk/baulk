@@ -57,7 +57,7 @@ static constexpr uint64_t keccak_round_constants[NumberOfRounds] = {
 void Hasher::Initialize(HashBits hb_) {
   hb = hb_;
   /* NB: The Keccak capacity parameter = bits * 2 */
-  uint32_t rate = 1600 - static_cast<int>(hb) * 2;
+  uint32_t rate = 1600 - (static_cast<int>(hb) * 2);
   memset(message, 0, sizeof(message));
   memset(hash, 0, sizeof(hash));
   rest = 0;
@@ -271,7 +271,7 @@ void Hasher::Update(const void *input, size_t input_len) {
   }
 }
 void Hasher::Finalize(uint8_t *out, size_t out_len) {
-  size_t digest_length = 100 - block_size / 2;
+  size_t digest_length = 100 - (block_size / 2);
   if ((rest & SHA3_FINALIZED) == 0U) {
     /* clear the rest of the data queue */
     memset((char *)message + rest, 0, block_size - rest);

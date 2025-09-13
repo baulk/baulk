@@ -100,11 +100,11 @@ inline size_t FastHexToBufferZeroPad16(uint64_t val, char *out) {
   for (int i = 0; i < 8; ++i) {
     auto byte = (val >> (56 - 8 * i)) & 0xFF;
     auto *hex = &strings_internal::kHexTable<char>[byte * 2];
-    std::memcpy(out + 2 * i, hex, 2);
+    std::memcpy(out + (2 * i), hex, 2);
   }
 #endif
   // | 0x1 so that even 0 has 1 digit.
-  return 16 - std::countl_zero(val | 0x1) / 4;
+  return 16 - (std::countl_zero(val | 0x1) / 4);
 }
 
 inline size_t FastHexToBufferZeroPad16(uint64_t val, char8_t *out) {
@@ -115,10 +115,10 @@ inline size_t FastHexToBufferZeroPad16(uint64_t val, wchar_t *out) {
   for (size_t i = 0; i < 8; ++i) {
     auto byte = (val >> (56 - 8 * i)) & 0xFF;
     auto *hex = &strings_internal::kHexTable<wchar_t>[byte * 2];
-    std::memcpy(out + 2 * i, hex, 2 * sizeof(wchar_t));
+    std::memcpy(out + (2 * i), hex, 2 * sizeof(wchar_t));
   }
   // | 0x1 so that even 0 has 1 digit.
-  return 16 - std::countl_zero(val | 0x1) / 4;
+  return 16 - (std::countl_zero(val | 0x1) / 4);
 }
 inline size_t FastHexToBufferZeroPad16(uint64_t val, char16_t *out) {
   return FastHexToBufferZeroPad16(val, reinterpret_cast<wchar_t *>(out));

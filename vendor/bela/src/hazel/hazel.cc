@@ -33,7 +33,7 @@ bool LookupBytes(const bela::bytes_view &bv, hazel_result &hr, bela::error_code 
 }
 
 bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, int64_t offset) {
-  if ((hr.size_ = fd.Size(ec)) == bela::SizeUnInitialized) {
+  if (hr.size_ = fd.Size(ec); hr.size_ == bela::SizeUnInitialized) {
     return false;
   }
   if (offset < 0 || hr.size_ < offset) {

@@ -9,123 +9,129 @@ struct mime_value_t {
 // https://mediatemple.net/community/products/dv/204403964/mime-types
 const wchar_t *LookupMIME(types::hazel_types_t t) {
   constexpr mime_value_t mimes[] = {
-      {types::ascii, L"text/plain"},
-      {types::utf7, L"text/plain;charset=UTF-7"},
-      {types::utf8, L"text/plain;charset=UTF-8"},
-      {types::utf8bom, L"text/plain;charset=UTF-8"},
-      {types::utf16le, L"text/plain;charset=UTF-16LE"},
-      {types::utf16be, L"text/plain;charset=UTF-16BE"},
-      {types::utf32le, L"text/plain;charset=UTF-32LE"},
-      {types::utf32be, L"text/plain;charset=UTF-32BE"},
+      {.t = types::ascii, .mime = L"text/plain"},
+      {.t = types::utf7, .mime = L"text/plain;charset=UTF-7"},
+      {.t = types::utf8, .mime = L"text/plain;charset=UTF-8"},
+      {.t = types::utf8bom, .mime = L"text/plain;charset=UTF-8"},
+      {.t = types::utf16le, .mime = L"text/plain;charset=UTF-16LE"},
+      {.t = types::utf16be, .mime = L"text/plain;charset=UTF-16BE"},
+      {.t = types::utf32le, .mime = L"text/plain;charset=UTF-32LE"},
+      {.t = types::utf32be, .mime = L"text/plain;charset=UTF-32BE"},
       // text index end
       // binary
-      {types::bitcode, L"application/octet-stream"},           ///< Bitcode file
-      {types::archive, L"application/x-unix-archive"},         ///< ar style archive file
-      {types::elf, L"application/x-elf"},                      ///< ELF Unknown type
-      {types::elf_relocatable, L"application/x-relocatable"},  ///< ELF Relocatable object file
-      {types::elf_executable, L"application/x-executable"},    ///< ELF Executable image
-      {types::elf_shared_object, L"application/x-sharedlib"},  ///< ELF dynamically linked shared lib
-      {types::elf_core, L"application/x-coredump"},            ///< ELF core image
-      {types::macho_object, L"application/x-mach-binary"},     ///< Mach-O Object file
-      {types::macho_executable, L"application/x-mach-binary"}, ///< Mach-O Executable
-      {types::macho_fixed_virtual_memory_shared_lib, L"application/x-mach-binary"},    ///< Mach-O Shared Lib, FVM
-      {types::macho_core, L"application/x-mach-binary"},                               ///< Mach-O Core File
-      {types::macho_preload_executable, L"application/x-mach-binary"},                 ///< Mach-O Preloaded Executable
-      {types::macho_dynamically_linked_shared_lib, L"application/x-mach-binary"},      ///< Mach-O dynlinked shared lib
-      {types::macho_dynamic_linker, L"application/x-mach-binary"},                     ///< The Mach-O dynamic linker
-      {types::macho_bundle, L"application/x-mach-binary"},                             ///< Mach-O Bundle file
-      {types::macho_dynamically_linked_shared_lib_stub, L"application/x-mach-binary"}, ///< Mach-O Shared lib stub
-      {types::macho_dsym_companion, L"application/x-mach-binary"},                     ///< Mach-O dSYM companion file
-      {types::macho_kext_bundle, L"application/x-mach-binary"},                        ///< Mach-O kext bundle file
-      {types::macho_universal_binary, L"application/x-mach-binary"},                   ///< Mach-O universal binary
-      {types::coff_cl_gl_object, L"application/vnd.microsoft.coff"},   ///< Microsoft cl.exe's intermediate code file
-      {types::coff_object, L"application/vnd.microsoft.coff"},         ///< COFF object file
-      {types::coff_import_library, L"application/vnd.microsoft.coff"}, ///< COFF import library
-      {types::pecoff_executable, L"application/vnd.microsoft.portable-executable"}, ///< PECOFF executable file
-      {types::windows_resource, L"application/vnd.microsoft.resource"}, ///< Windows compiled resource file (.res)
-      {types::wasm_object, L"application/wasm"},                        ///< WebAssembly Object file
-      {types::pdb, L"application/octet-stream"},                        ///< Windows PDB debug info file
+      {.t = types::bitcode, .mime = L"application/octet-stream"},           ///< Bitcode file
+      {.t = types::archive, .mime = L"application/x-unix-archive"},         ///< ar style archive file
+      {.t = types::elf, .mime = L"application/x-elf"},                      ///< ELF Unknown type
+      {.t = types::elf_relocatable, .mime = L"application/x-relocatable"},  ///< ELF Relocatable object file
+      {.t = types::elf_executable, .mime = L"application/x-executable"},    ///< ELF Executable image
+      {.t = types::elf_shared_object, .mime = L"application/x-sharedlib"},  ///< ELF dynamically linked shared lib
+      {.t = types::elf_core, .mime = L"application/x-coredump"},            ///< ELF core image
+      {.t = types::macho_object, .mime = L"application/x-mach-binary"},     ///< Mach-O Object file
+      {.t = types::macho_executable, .mime = L"application/x-mach-binary"}, ///< Mach-O Executable
+      {.t = types::macho_fixed_virtual_memory_shared_lib,
+       .mime = L"application/x-mach-binary"},                                       ///< Mach-O Shared Lib, FVM
+      {.t = types::macho_core, .mime = L"application/x-mach-binary"},               ///< Mach-O Core File
+      {.t = types::macho_preload_executable, .mime = L"application/x-mach-binary"}, ///< Mach-O Preloaded Executable
+      {.t = types::macho_dynamically_linked_shared_lib,
+       .mime = L"application/x-mach-binary"},                                   ///< Mach-O dynlinked shared lib
+      {.t = types::macho_dynamic_linker, .mime = L"application/x-mach-binary"}, ///< The Mach-O dynamic linker
+      {.t = types::macho_bundle, .mime = L"application/x-mach-binary"},         ///< Mach-O Bundle file
+      {.t = types::macho_dynamically_linked_shared_lib_stub,
+       .mime = L"application/x-mach-binary"},                                     ///< Mach-O Shared lib stub
+      {.t = types::macho_dsym_companion, .mime = L"application/x-mach-binary"},   ///< Mach-O dSYM companion file
+      {.t = types::macho_kext_bundle, .mime = L"application/x-mach-binary"},      ///< Mach-O kext bundle file
+      {.t = types::macho_universal_binary, .mime = L"application/x-mach-binary"}, ///< Mach-O universal binary
+      {.t = types::coff_cl_gl_object,
+       .mime = L"application/vnd.microsoft.coff"}, ///< Microsoft cl.exe's intermediate code file
+      {.t = types::coff_object, .mime = L"application/vnd.microsoft.coff"},         ///< COFF object file
+      {.t = types::coff_import_library, .mime = L"application/vnd.microsoft.coff"}, ///< COFF import library
+      {.t = types::pecoff_executable,
+       .mime = L"application/vnd.microsoft.portable-executable"}, ///< PECOFF executable file
+      {.t = types::windows_resource,
+       .mime = L"application/vnd.microsoft.resource"},        ///< Windows compiled resource file (.res)
+      {.t = types::wasm_object, .mime = L"application/wasm"}, ///< WebAssembly Object file
+      {.t = types::pdb, .mime = L"application/octet-stream"}, ///< Windows PDB debug info file
       /// archive
-      {types::epub, L"application/epub"},
-      {types::zip, L"application/zip"},
-      {types::tar, L"application/x-tar"},
-      {types::rar, L"application/vnd.rar"},
-      {types::gz, L"application/gzip"},
-      {types::bz2, L"application/x-bzip2"},
-      {types::zstd, L"application/x-zstd"},
-      {types::p7z, L"application/x-7z-compressed"},
-      {types::xz, L"application/x-xz"},
-      {types::pdf, L"application/pdf"},
-      {types::swf, L"application/x-shockwave-flash"},
-      {types::rtf, L"application/rtf"},
-      {types::eot, L"application/octet-stream"},
-      {types::ps, L"application/postscript"},
-      {types::sqlite, L"application/vnd.sqlite3"},
-      {types::nes, L"application/x-nes-rom"},
-      {types::crx, L"application/x-google-chrome-extension"},
-      {types::deb, L"application/vnd.debian.binary-package"},
-      {types::lz, L"application/x-lzip"},
-      {types::rpm, L"application/x-rpm"},
-      {types::cab, L"application/vnd.ms-cab-compressed"},
-      {types::msi, L"application/x-msi"},
-      {types::dmg, L"application/x-apple-diskimage"},
-      {types::xar, L"application/x-xar"},
-      {types::wim, L"application/x-ms-wim"},
-      {types::z, L"application/x-compress"},
-      {types::nsis, L"application/x-nsis"},
+      {.t = types::epub, .mime = L"application/epub"},
+      {.t = types::zip, .mime = L"application/zip"},
+      {.t = types::tar, .mime = L"application/x-tar"},
+      {.t = types::rar, .mime = L"application/vnd.rar"},
+      {.t = types::gz, .mime = L"application/gzip"},
+      {.t = types::bz2, .mime = L"application/x-bzip2"},
+      {.t = types::zstd, .mime = L"application/x-zstd"},
+      {.t = types::p7z, .mime = L"application/x-7z-compressed"},
+      {.t = types::xz, .mime = L"application/x-xz"},
+      {.t = types::pdf, .mime = L"application/pdf"},
+      {.t = types::swf, .mime = L"application/x-shockwave-flash"},
+      {.t = types::rtf, .mime = L"application/rtf"},
+      {.t = types::eot, .mime = L"application/octet-stream"},
+      {.t = types::ps, .mime = L"application/postscript"},
+      {.t = types::sqlite, .mime = L"application/vnd.sqlite3"},
+      {.t = types::nes, .mime = L"application/x-nes-rom"},
+      {.t = types::crx, .mime = L"application/x-google-chrome-extension"},
+      {.t = types::deb, .mime = L"application/vnd.debian.binary-package"},
+      {.t = types::lz, .mime = L"application/x-lzip"},
+      {.t = types::rpm, .mime = L"application/x-rpm"},
+      {.t = types::cab, .mime = L"application/vnd.ms-cab-compressed"},
+      {.t = types::msi, .mime = L"application/x-msi"},
+      {.t = types::dmg, .mime = L"application/x-apple-diskimage"},
+      {.t = types::xar, .mime = L"application/x-xar"},
+      {.t = types::wim, .mime = L"application/x-ms-wim"},
+      {.t = types::z, .mime = L"application/x-compress"},
+      {.t = types::nsis, .mime = L"application/x-nsis"},
       // image
-      {types::jpg, L"image/jpeg"},
-      {types::jp2, L"image/jp2"},
-      {types::png, L"image/png"},
-      {types::gif, L"image/gif"},
-      {types::webp, L"image/webp"},
-      {types::cr2, L"image/x-canon-cr2"},
-      {types::tif, L"image/tiff"},
-      {types::bmp, L"image/bmp"},
-      {types::jxr, L"image/vnd.ms-photo"},
-      {types::psd, L"image/vnd.adobe.photoshop"},
-      {types::ico, L"image/vnd.microsoft.icon"}, // image/x-icon
-      {types::qoi, L"image/qoi"},
+      {.t = types::jpg, .mime = L"image/jpeg"},
+      {.t = types::jp2, .mime = L"image/jp2"},
+      {.t = types::png, .mime = L"image/png"},
+      {.t = types::gif, .mime = L"image/gif"},
+      {.t = types::webp, .mime = L"image/webp"},
+      {.t = types::cr2, .mime = L"image/x-canon-cr2"},
+      {.t = types::tif, .mime = L"image/tiff"},
+      {.t = types::bmp, .mime = L"image/bmp"},
+      {.t = types::jxr, .mime = L"image/vnd.ms-photo"},
+      {.t = types::psd, .mime = L"image/vnd.adobe.photoshop"},
+      {.t = types::ico, .mime = L"image/vnd.microsoft.icon"}, // image/x-icon
+      {.t = types::qoi, .mime = L"image/qoi"},
       // docs
-      {types::doc, L"application/msword"},
-      {types::docx, L"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
-      {types::xls, L"application/vnd.ms-excel"},
-      {types::xlsx, L"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-      {types::ppt, L"application/vnd.ms-powerpoint"},
-      {types::pptx, L"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+      {.t = types::doc, .mime = L"application/msword"},
+      {.t = types::docx, .mime = L"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+      {.t = types::xls, .mime = L"application/vnd.ms-excel"},
+      {.t = types::xlsx, .mime = L"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+      {.t = types::ppt, .mime = L"application/vnd.ms-powerpoint"},
+      {.t = types::pptx, .mime = L"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
       //
-      {types::ofd, L"application/ofd"}, // Open Fixed layout Document
+      {.t = types::ofd, .mime = L"application/ofd"}, // Open Fixed layout Document
       // font
-      {types::woff, L"application/font-woff"},
-      {types::woff2, L"application/font-woff"},
-      {types::ttf, L"application/font-sfnt"},
-      {types::otf, L"application/font-sfnt"},
+      {.t = types::woff, .mime = L"application/font-woff"},
+      {.t = types::woff2, .mime = L"application/font-woff"},
+      {.t = types::ttf, .mime = L"application/font-sfnt"},
+      {.t = types::otf, .mime = L"application/font-sfnt"},
       // Media
-      {types::midi, L"audio/x-midi"},
-      {types::mp3, L"audio/mpeg"},
-      {types::m4a, L"audio/m4a"},
-      {types::ogg, L"audio/ogg"},
-      {types::flac, L"audio/flac"},
-      {types::wav, L"audio/wave"},
-      {types::amr, L"audio/3gpp"},
-      {types::aac, L"application/vnd.americandynamics.acc"},
-      {types::mp4, L"video/mp4"},
-      {types::m4v, L"video/x-m4v"},
-      {types::mkv, L"video/x-matroska"},
-      {types::webm, L"video/webm"},
-      {types::mov, L"video/quicktime"},
-      {types::avi, L"video/x-msvideo"},
-      {types::wmv, L"video/x-ms-wmv"},
-      {types::mpeg, L"video/mpeg"},
-      {types::flv, L"video/x-flv"},
+      {.t = types::midi, .mime = L"audio/x-midi"},
+      {.t = types::mp3, .mime = L"audio/mpeg"},
+      {.t = types::m4a, .mime = L"audio/m4a"},
+      {.t = types::ogg, .mime = L"audio/ogg"},
+      {.t = types::flac, .mime = L"audio/flac"},
+      {.t = types::wav, .mime = L"audio/wave"},
+      {.t = types::amr, .mime = L"audio/3gpp"},
+      {.t = types::aac, .mime = L"application/vnd.americandynamics.acc"},
+      {.t = types::mp4, .mime = L"video/mp4"},
+      {.t = types::m4v, .mime = L"video/x-m4v"},
+      {.t = types::mkv, .mime = L"video/x-matroska"},
+      {.t = types::webm, .mime = L"video/webm"},
+      {.t = types::mov, .mime = L"video/quicktime"},
+      {.t = types::avi, .mime = L"video/x-msvideo"},
+      {.t = types::wmv, .mime = L"video/x-ms-wmv"},
+      {.t = types::mpeg, .mime = L"video/mpeg"},
+      {.t = types::flv, .mime = L"video/x-flv"},
       // support git
-      {types::gitpack, L"application/x-git-pack"},
-      {types::gitpkindex, L"application/x-git-pack-index"},
-      {types::gitmidx, L"application/x-git-pack-multi-index"},
-      {types::lnk, L"application/x-ms-shortcut"}, // .lnk application/x-ms-shortcut
-      {types::iso, L"application/x-iso9660-image"},
-      {types::ifc, L"application/vnd.microsoft.ifc"},
-      {types::goff_object, L"application/x-goff-object"}};
+      {.t = types::gitpack, .mime = L"application/x-git-pack"},
+      {.t = types::gitpkindex, .mime = L"application/x-git-pack-index"},
+      {.t = types::gitmidx, .mime = L"application/x-git-pack-multi-index"},
+      {.t = types::lnk, .mime = L"application/x-ms-shortcut"}, // .lnk application/x-ms-shortcut
+      {.t = types::iso, .mime = L"application/x-iso9660-image"},
+      {.t = types::ifc, .mime = L"application/vnd.microsoft.ifc"},
+      {.t = types::goff_object, .mime = L"application/x-goff-object"}};
   //
   for (const auto &m : mimes) {
     if (m.t == t) {

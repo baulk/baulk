@@ -69,7 +69,7 @@ bool File::LookupImports(FunctionTable::symbols_map_t &sm, bela::error_code &ec)
                                bv.cast_fromle<uint16_t>(static_cast<size_t>(va - ds->VirtualAddress)));
       }
     }
-    std::sort(functions.begin(), functions.end(), [](const bela::pe::Function &a, const bela::pe::Function &b) -> bool {
+    std::ranges::sort(functions, [](const bela::pe::Function &a, const bela::pe::Function &b) -> bool {
       return a.GetIndex() < b.GetIndex();
     });
     sm.emplace(dllName, std::move(functions));

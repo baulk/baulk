@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <bela/charconv.hpp>
+#include <utility>
 #include "ryu.hpp"
 
 namespace bela {
@@ -168,7 +169,7 @@ struct Big_integer_flt {
       return Myused < Rhs.Myused;
     }
 
-    for (uint32_t Ix = Myused - 1; Ix != static_cast<uint32_t>(-1); --Ix) {
+    for (uint32_t Ix = Myused - 1; std::cmp_not_equal(Ix, -1); --Ix) {
       if (Mydata[Ix] != Rhs.Mydata[Ix]) {
         return Mydata[Ix] < Rhs.Mydata[Ix];
       }
@@ -209,7 +210,7 @@ struct Big_integer_flt {
 
   _BitScanReverse(&Index, Xval.Mydata[Bx]); // assumes Xval.Mydata[Bx] != 0
 
-  return Index + 1 + Bx * Big_integer_flt::Element_bits;
+  return Index + 1 + (Bx * Big_integer_flt::Element_bits);
 }
 
 // Shifts the high-precision integer Xval by Nx bits to the left. Returns true if the left shift was successful;
@@ -313,7 +314,7 @@ struct Big_integer_flt {
 
 [[nodiscard]] inline uint32_t Add_multiply_carry(uint32_t &U_add, const uint32_t U_mul_1, const uint32_t U_mul_2,
                                                  const uint32_t U_carry) noexcept {
-  const uint64_t Uu_res = static_cast<uint64_t>(U_mul_1) * U_mul_2 + U_add + U_carry;
+  const uint64_t Uu_res = (static_cast<uint64_t>(U_mul_1) * U_mul_2) + U_add + U_carry;
   U_add = static_cast<uint32_t>(Uu_res);
   return static_cast<uint32_t>(Uu_res >> 32);
 }
@@ -322,7 +323,7 @@ struct Big_integer_flt {
                                             const uint32_t Multiplier) noexcept {
   uint32_t Carry = 0;
   for (uint32_t Ix = 0; Ix != Multiplicand_count; ++Ix) {
-    const uint64_t result = static_cast<uint64_t>(Multiplicand[Ix]) * Multiplier + Carry;
+    const uint64_t result = (static_cast<uint64_t>(Multiplicand[Ix]) * Multiplier) + Carry;
     Multiplicand[Ix] = static_cast<uint32_t>(result);
     Carry = static_cast<uint32_t>(result >> 32);
   }
@@ -521,12 +522,25 @@ struct Big_integer_flt {
   };
 
   static constexpr Unpack_index Large_power_indices[] = {
-      {0, 0, 2},     {2, 0, 3},     {5, 0, 4},    {9, 1, 4},     {13, 1, 5},    {18, 1, 6},    {24, 2, 6},
-      {30, 2, 7},    {37, 2, 8},    {45, 3, 8},   {53, 3, 9},    {62, 3, 10},   {72, 4, 10},   {82, 4, 11},
-      {93, 4, 12},   {105, 5, 12},  {117, 5, 13}, {130, 5, 14},  {144, 5, 15},  {159, 6, 15},  {174, 6, 16},
-      {190, 6, 17},  {207, 7, 17},  {224, 7, 18}, {242, 7, 19},  {261, 8, 19},  {280, 8, 21},  {301, 8, 22},
-      {323, 9, 22},  {345, 9, 23},  {368, 9, 24}, {392, 10, 24}, {416, 10, 25}, {441, 10, 26}, {467, 10, 27},
-      {494, 11, 27}, {521, 11, 28}, {549, 11, 29}};
+      {.Offset = 0, .Zeroes = 0, .Size = 2},     {.Offset = 2, .Zeroes = 0, .Size = 3},
+      {.Offset = 5, .Zeroes = 0, .Size = 4},     {.Offset = 9, .Zeroes = 1, .Size = 4},
+      {.Offset = 13, .Zeroes = 1, .Size = 5},    {.Offset = 18, .Zeroes = 1, .Size = 6},
+      {.Offset = 24, .Zeroes = 2, .Size = 6},    {.Offset = 30, .Zeroes = 2, .Size = 7},
+      {.Offset = 37, .Zeroes = 2, .Size = 8},    {.Offset = 45, .Zeroes = 3, .Size = 8},
+      {.Offset = 53, .Zeroes = 3, .Size = 9},    {.Offset = 62, .Zeroes = 3, .Size = 10},
+      {.Offset = 72, .Zeroes = 4, .Size = 10},   {.Offset = 82, .Zeroes = 4, .Size = 11},
+      {.Offset = 93, .Zeroes = 4, .Size = 12},   {.Offset = 105, .Zeroes = 5, .Size = 12},
+      {.Offset = 117, .Zeroes = 5, .Size = 13},  {.Offset = 130, .Zeroes = 5, .Size = 14},
+      {.Offset = 144, .Zeroes = 5, .Size = 15},  {.Offset = 159, .Zeroes = 6, .Size = 15},
+      {.Offset = 174, .Zeroes = 6, .Size = 16},  {.Offset = 190, .Zeroes = 6, .Size = 17},
+      {.Offset = 207, .Zeroes = 7, .Size = 17},  {.Offset = 224, .Zeroes = 7, .Size = 18},
+      {.Offset = 242, .Zeroes = 7, .Size = 19},  {.Offset = 261, .Zeroes = 8, .Size = 19},
+      {.Offset = 280, .Zeroes = 8, .Size = 21},  {.Offset = 301, .Zeroes = 8, .Size = 22},
+      {.Offset = 323, .Zeroes = 9, .Size = 22},  {.Offset = 345, .Zeroes = 9, .Size = 23},
+      {.Offset = 368, .Zeroes = 9, .Size = 24},  {.Offset = 392, .Zeroes = 10, .Size = 24},
+      {.Offset = 416, .Zeroes = 10, .Size = 25}, {.Offset = 441, .Zeroes = 10, .Size = 26},
+      {.Offset = 467, .Zeroes = 10, .Size = 27}, {.Offset = 494, .Zeroes = 11, .Size = 27},
+      {.Offset = 521, .Zeroes = 11, .Size = 28}, {.Offset = 549, .Zeroes = 11, .Size = 29}};
 
   for (uint32_t Large_power = Power / 10; Large_power != 0;) {
     const uint32_t Current_power = (std::min)(Large_power, static_cast<uint32_t>(std::size(Large_power_indices)));
@@ -611,7 +625,7 @@ struct Big_integer_flt {
     uint64_t Quotient = 0;
 
     uint64_t Uu = 0;
-    for (uint32_t Iv = Max_numerator_element_index; Iv != static_cast<uint32_t>(-1); --Iv) {
+    for (uint32_t Iv = Max_numerator_element_index; std::cmp_not_equal(Iv, -1); --Iv) {
       Uu = (Uu << 32) | Numerator.Mydata[Iv];
       Quotient = (Quotient << 32) + static_cast<uint32_t>(Uu / Small_denominator);
       Uu %= Small_denominator;
@@ -1075,7 +1089,7 @@ template <class FloatingType>
 
   // Pretty fast case: If the top 64 bits occupy only two elements, we can just combine those two elements:
   if (Top_element_bits == 0) {
-    const auto Exponent = static_cast<int32_t>(Base_exponent + Bottom_element_index * 32);
+    const auto Exponent = static_cast<int32_t>(Base_exponent + (Bottom_element_index * 32));
 
     const uint64_t Mantissa = Integer_value.Mydata[Bottom_element_index] +
                               (static_cast<uint64_t>(Integer_value.Mydata[Middle_element_index]) << 32);
@@ -1098,7 +1112,7 @@ template <class FloatingType>
   const uint32_t Bottom_element_mask = ~Top_element_mask;
   const uint32_t Bottom_element_shift = 32 - Bottom_element_bits; // Right
 
-  const auto Exponent = static_cast<int32_t>(Base_exponent + Bottom_element_index * 32 + Top_element_bits);
+  const auto Exponent = static_cast<int32_t>(Base_exponent + (Bottom_element_index * 32) + Top_element_bits);
 
   const uint64_t Mantissa =
       (static_cast<uint64_t>(Integer_value.Mydata[Top_element_index] & Top_element_mask) << Top_element_shift) +
@@ -1406,7 +1420,7 @@ template <class Floating>
   for (; next != last; ++next) {
     const unsigned char Digit_value = Digit_from_char(*next);
 
-    if (Digit_value >= base) {
+    if (std::cmp_greater_equal(Digit_value, base)) {
       break;
     }
 
@@ -1450,7 +1464,7 @@ template <class Floating>
   for (; next != last; ++next) {
     const unsigned char Digit_value = Digit_from_char(*next);
 
-    if (Digit_value >= base) {
+    if (std::cmp_greater_equal(Digit_value, base)) {
       break;
     }
 
@@ -1464,7 +1478,7 @@ template <class Floating>
 
   // We must have at least 1 digit/hexit
   if (Whole_begin == Whole_end && Dot_end == Frac_end) {
-    return {first, errc::invalid_argument};
+    return {.ptr = first, .ec = errc::invalid_argument};
   }
 
   const wchar_t Exponent_prefix{Is_hexadecimal ? L'p' : L'e'};
@@ -1515,7 +1529,7 @@ template <class Floating>
       Frac_end == Exponent_end) { // N4713 23.20.3 [charconv.from.chars]/7.2
                                   // "if fmt has chars_format::scientific set but not chars_format::fixed,
                                   // the otherwise optional exponent part shall appear"
-    return {first, errc::invalid_argument};
+    return {.ptr = first, .ec = errc::invalid_argument};
   }
 
   // Remove trailing zeroes from mantissa:
@@ -1530,19 +1544,19 @@ template <class Floating>
   if (Mantissa_it == Mantissa_first) {
     assert(Has_zero_tail);
     Assemble_floating_point_zero(Fp_string.Myis_negative, value);
-    return {next, errc{}};
+    return {.ptr = next, .ec = errc{}};
   }
 
   // Before we adjust the exponent, handle the case where we detected a wildly
   // out of range exponent during parsing and clamped the value:
   if (Exponent > Maximum_temporary_decimal_exponent) {
     Assemble_floating_point_infinity(Fp_string.Myis_negative, value);
-    return {next, errc::result_out_of_range}; // Overflow example: "1e+9999"
+    return {.ptr = next, .ec = errc::result_out_of_range}; // Overflow example: "1e+9999"
   }
 
   if (Exponent < Minimum_temporary_decimal_exponent) {
     Assemble_floating_point_zero(Fp_string.Myis_negative, value);
-    return {next, errc::result_out_of_range}; // Underflow example: "1e-9999"
+    return {.ptr = next, .ec = errc::result_out_of_range}; // Underflow example: "1e-9999"
   }
 
   // In hexadecimal floating constants, the exponent is a base 2 exponent. The exponent adjustment computed during
@@ -1556,12 +1570,12 @@ template <class Floating>
   // in any supported floating-point format).
   if (Exponent > Maximum_temporary_decimal_exponent) {
     Assemble_floating_point_infinity(Fp_string.Myis_negative, value);
-    return {next, errc::result_out_of_range}; // Overflow example: "10e+5199"
+    return {.ptr = next, .ec = errc::result_out_of_range}; // Overflow example: "10e+5199"
   }
 
   if (Exponent < Minimum_temporary_decimal_exponent) {
     Assemble_floating_point_zero(Fp_string.Myis_negative, value);
-    return {next, errc::result_out_of_range}; // Underflow example: "0.001e-5199"
+    return {.ptr = next, .ec = errc::result_out_of_range}; // Underflow example: "0.001e-5199"
   }
 
   Fp_string.Myexponent = Exponent;
@@ -1569,10 +1583,10 @@ template <class Floating>
 
   if (Is_hexadecimal) {
     const errc ec = Convert_hexadecimal_string_to_floating_type(Fp_string, value, Has_zero_tail);
-    return {next, ec};
+    return {.ptr = next, .ec = ec};
   }
   const errc ec = Convert_decimal_string_to_floating_type(Fp_string, value, Has_zero_tail);
-  return {next, ec};
+  return {.ptr = next, .ec = ec};
 }
 
 [[nodiscard]] inline bool Starts_with_case_insensitive(const wchar_t *first, const wchar_t *const last,
@@ -1593,7 +1607,7 @@ template <class Floating>
                                                     const wchar_t *next) noexcept {
   // pre: next points at 'i' (case-insensitively)
   if (!Starts_with_case_insensitive(next + 1, last, L"nf")) { // definitely invalid
-    return {first, errc::invalid_argument};
+    return {.ptr = first, .ec = errc::invalid_argument};
   }
 
   // definitely inf
@@ -1605,7 +1619,7 @@ template <class Floating>
 
   Assemble_floating_point_infinity(Minus_sign, value);
 
-  return {next, errc{}};
+  return {.ptr = next, .ec = errc{}};
 }
 
 template <class Floating>
@@ -1613,7 +1627,7 @@ template <class Floating>
                                                bool Minus_sign, const wchar_t *next) noexcept {
   // pre: next points at 'n' (case-insensitively)
   if (!Starts_with_case_insensitive(next + 1, last, L"an")) { // definitely invalid
-    return {first, errc::invalid_argument};
+    return {.ptr = first, .ec = errc::invalid_argument};
   }
 
   // definitely nan
@@ -1669,7 +1683,7 @@ template <class Floating>
 
   value = std::bit_cast<Floating>(Uint_value);
 
-  return {next, errc{}};
+  return {.ptr = next, .ec = errc{}};
 }
 
 template <class Floating>
@@ -1685,7 +1699,7 @@ template <class Floating>
   const wchar_t *next = first;
 
   if (next == last) {
-    return {first, errc::invalid_argument};
+    return {.ptr = first, .ec = errc::invalid_argument};
   }
 
   if (*next == '-') {
@@ -1693,7 +1707,7 @@ template <class Floating>
     ++next;
 
     if (next == last) {
-      return {first, errc::invalid_argument};
+      return {.ptr = first, .ec = errc::invalid_argument};
     }
   }
 
@@ -1718,7 +1732,7 @@ template <class Floating>
     return Nan_from_chars(first, last, value, Minus_sign, next);
   }
   // definitely invalid
-  return {first, errc::invalid_argument};
+  return {.ptr = first, .ec = errc::invalid_argument};
 }
 
 from_chars_result from_chars(const wchar_t *const first, const wchar_t *const last, float &value,
@@ -1832,7 +1846,7 @@ template <class Floating>
     ptrdiff_t Buffer_size = last - first;
 
     if (Buffer_size < precision) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     Buffer_size -= precision;
@@ -1844,7 +1858,7 @@ template <class Floating>
                                                + Exponent_length; // exponent
 
     if (Buffer_size < Length_excluding_precision) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
   }
 
@@ -1992,12 +2006,12 @@ template <class Floating>
     const size_t Len = 4;
 
     if (last - first < static_cast<ptrdiff_t>(Len)) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     memcpy(first, Str, Len * sizeof(wchar_t));
 
-    return {first + Len, errc{}};
+    return {.ptr = first + Len, .ec = errc{}};
   }
 
   const Uint_type Ieee_mantissa = Uint_value & Traits::Denormal_mantissa_mask;
@@ -2017,7 +2031,7 @@ template <class Floating>
   // Performance note: Consider avoiding per-character bounds checking when there's plenty of space.
 
   if (first == last) {
-    return {last, errc::value_too_large};
+    return {.ptr = last, .ec = errc::value_too_large};
   }
 
   *first++ = Leading_hexit;
@@ -2026,7 +2040,7 @@ template <class Floating>
     // The fraction bits are all 0. Trim them away, including the decimal point.
   } else {
     if (first == last) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     *first++ = '.';
@@ -2060,7 +2074,7 @@ template <class Floating>
       const wchar_t Hexit = Charconv_digits[Nibble];
 
       if (first == last) {
-        return {last, errc::value_too_large};
+        return {.ptr = last, .ec = errc::value_too_large};
       }
 
       *first++ = Hexit;
@@ -2080,7 +2094,7 @@ template <class Floating>
   // double: Unbiased_exponent is within [-1022, 1023].
 
   if (last - first < 2) {
-    return {last, errc::value_too_large};
+    return {.ptr = last, .ec = errc::value_too_large};
   }
 
   *first++ = 'p';
@@ -2299,12 +2313,12 @@ template <class Floating>
 
   if (Uint_value == 0) { // zero detected; write "0" and return; precision is irrelevant due to zero-trimming
     if (first == last) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     *first++ = '0';
 
-    return {first, errc{}};
+    return {.ptr = first, .ec = errc{}};
   }
 
   // C11 7.21.6.1 "The fprintf function"/5:
@@ -2422,7 +2436,7 @@ template <class Floating>
   // Copy the significand to the output range.
   const ptrdiff_t Significand_distance = Significand_last - Significand_first;
   if (last - first < Significand_distance) {
-    return {last, errc::value_too_large};
+    return {.ptr = last, .ec = errc::value_too_large};
   }
   memcpy(first, Significand_first, static_cast<size_t>(Significand_distance) * sizeof(wchar_t));
   first += Significand_distance;
@@ -2431,13 +2445,13 @@ template <class Floating>
   if (!Use_fixed_notation) {
     const ptrdiff_t Exponent_distance = Exponent_last - Exponent_first;
     if (last - first < Exponent_distance) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
     memcpy(first, Exponent_first, static_cast<size_t>(Exponent_distance) * sizeof(wchar_t));
     first += Exponent_distance;
   }
 
-  return {first, errc{}};
+  return {.ptr = first, .ec = errc{}};
 }
 
 enum class Floating_to_chars_overload { Plain, Format_only, Format_precision };
@@ -2463,7 +2477,7 @@ template <Floating_to_chars_overload Overload, class Floating>
 
   if (Was_negative) { // sign bit detected; write minus sign and clear sign bit
     if (first == last) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     *first++ = '-';
@@ -2496,12 +2510,12 @@ template <Floating_to_chars_overload Overload, class Floating>
     }
 
     if (last - first < static_cast<ptrdiff_t>(Len)) {
-      return {last, errc::value_too_large};
+      return {.ptr = last, .ec = errc::value_too_large};
     }
 
     memcpy(first, Str, Len * sizeof(wchar_t));
 
-    return {first + Len, errc{}};
+    return {.ptr = first + Len, .ec = errc{}};
   }
 
   if constexpr (Overload == Floating_to_chars_overload::Plain) {

@@ -1,5 +1,6 @@
 ///
 #include <hazel/elf.hpp>
+#include <utility>
 
 namespace hazel::elf {
 bool File::gnuVersionInit(std::span<const uint8_t> str) {
@@ -70,7 +71,7 @@ bool File::DynamicSymbols(std::vector<Symbol> &syms, bela::error_code &ec) {
     return false;
   }
   if (gnuVersionInit(strdata.make_const_span())) {
-    for (int i = 0; i < static_cast<int>(syms.size()); i++) {
+    for (int i = 0; std::cmp_less(i, syms.size()); i++) {
       gnuVersion(i, syms[i].Library, syms[i].Version);
     }
   }
@@ -87,7 +88,7 @@ bool File::ImportedSymbols(std::vector<ImportedSymbol> &symbols, bela::error_cod
   }
   gnuVersionInit(strdata.make_const_span());
   symbols.reserve(syms.size());
-  for (int i = 0; i < static_cast<int>(syms.size()); i++) {
+  for (int i = 0; std::cmp_less(i, syms.size()); i++) {
     const auto &s = syms[i];
     if (SymBind(s.Info) == STB_GLOBAL && s.SectionIndex == SHN_UNDEF) {
       ImportedSymbol is;

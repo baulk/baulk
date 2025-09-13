@@ -1,4 +1,5 @@
 ////
+#include <algorithm>
 #include <vector>
 #include <bela/path.hpp>
 #include <bela/strip.hpp>
@@ -45,8 +46,7 @@ bool IsReservedName(std::wstring_view name) {
   constexpr std::wstring_view reserved_names[] = {
       L"CON",  L"PRN",  L"AUX",  L"NUL",  L"COM1", L"COM2", L"COM3", L"COM4", L"COM5", L"COM6", L"COM7",
       L"COM8", L"COM9", L"LPT1", L"LPT2", L"LPT3", L"LPT4", L"LPT5", L"LPT6", L"LPT7", L"LPT8", L"LPT9"};
-  return std::find(std::begin(reserved_names), std::end(reserved_names), bela::AsciiStrToUpper(name)) ==
-         std::end(reserved_names);
+  return std::ranges::find(reserved_names, bela::AsciiStrToUpper(name)) == std::end(reserved_names);
 }
 
 inline std::wstring FullPathInternal(std::wstring_view p) {

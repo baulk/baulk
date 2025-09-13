@@ -4,6 +4,7 @@
 #include <bela/bufio.hpp>
 #include <bitset>
 #include <bela/terminal.hpp>
+#include <utility>
 #include "zipinternal.hpp"
 
 namespace hazel::zip {
@@ -82,7 +83,7 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
   bela::endian::LittenEndian b;
   for (size_t i = 0; i < std::size(offrange); i++) {
     auto blen = offrange[i];
-    if (static_cast<int64_t>(blen) > size) {
+    if (std::cmp_greater(blen, size)) {
       blen = static_cast<size_t>(size);
     }
     buffer.grow(blen);
@@ -94,7 +95,7 @@ bool Reader::readDirectoryEnd(directoryEnd &d, bela::error_code &ec) {
       directoryEndOffset = size - blen + p;
       break;
     }
-    if (i == 1 || static_cast<int64_t>(blen) == size) {
+    if (i == 1 || std::cmp_equal(blen, size)) {
       ec = bela::make_error_code(L"zip: not a valid zip file");
       return false;
     }
@@ -358,7 +359,7 @@ bool readDirectoryHeader(bufioReader &br, bela::Buffer &buffer, File &file, bela
 
 bool Reader::Initialize(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    if (size = fd.Size(ec); size == bela::SizeUnInitialized) {
       return false;
     }
   }
@@ -418,28 +419,28 @@ std::wstring Method(uint16_t m) {
     const wchar_t *name;
   };
   constexpr const method_kv_t methods[] = {
-      {zip_method_t::ZIP_STORE, L"store"},
-      {zip_method_t::ZIP_SHRINK, L"shrunk"},
-      {zip_method_t::ZIP_REDUCE_1, L"ZIP_REDUCE_1"},
-      {zip_method_t::ZIP_REDUCE_2, L"ZIP_REDUCE_2"},
-      {zip_method_t::ZIP_REDUCE_3, L"ZIP_REDUCE_3"},
-      {zip_method_t::ZIP_REDUCE_4, L"ZIP_REDUCE_4"},
-      {zip_method_t::ZIP_IMPLODE, L"IMPLODE"},
-      {zip_method_t::ZIP_DEFLATE, L"deflate"},
-      {zip_method_t::ZIP_DEFLATE64, L"deflate64"},
-      {zip_method_t::ZIP_PKWARE_IMPLODE, L"ZIP_PKWARE_IMPLODE"},
-      {zip_method_t::ZIP_BZIP2, L"bzip2"},
-      {zip_method_t::ZIP_LZMA, L"lzma"},
-      {zip_method_t::ZIP_TERSE, L"IBM TERSE"},
-      {zip_method_t::ZIP_LZ77, L"LZ77"},
-      {zip_method_t::ZIP_LZMA2, L"lzma2"},
-      {zip_method_t::ZIP_ZSTD, L"zstd"},
-      {zip_method_t::ZIP_XZ, L"xz"},
-      {zip_method_t::ZIP_JPEG, L"Jpeg"},
-      {zip_method_t::ZIP_WAVPACK, L"WavPack"},
-      {zip_method_t::ZIP_PPMD, L"PPMd"},
-      {zip_method_t::ZIP_AES, L"AES"},
-      {zip_method_t::ZIP_BROTLI, L"brotli"},
+      {.m = zip_method_t::ZIP_STORE, .name = L"store"},
+      {.m = zip_method_t::ZIP_SHRINK, .name = L"shrunk"},
+      {.m = zip_method_t::ZIP_REDUCE_1, .name = L"ZIP_REDUCE_1"},
+      {.m = zip_method_t::ZIP_REDUCE_2, .name = L"ZIP_REDUCE_2"},
+      {.m = zip_method_t::ZIP_REDUCE_3, .name = L"ZIP_REDUCE_3"},
+      {.m = zip_method_t::ZIP_REDUCE_4, .name = L"ZIP_REDUCE_4"},
+      {.m = zip_method_t::ZIP_IMPLODE, .name = L"IMPLODE"},
+      {.m = zip_method_t::ZIP_DEFLATE, .name = L"deflate"},
+      {.m = zip_method_t::ZIP_DEFLATE64, .name = L"deflate64"},
+      {.m = zip_method_t::ZIP_PKWARE_IMPLODE, .name = L"ZIP_PKWARE_IMPLODE"},
+      {.m = zip_method_t::ZIP_BZIP2, .name = L"bzip2"},
+      {.m = zip_method_t::ZIP_LZMA, .name = L"lzma"},
+      {.m = zip_method_t::ZIP_TERSE, .name = L"IBM TERSE"},
+      {.m = zip_method_t::ZIP_LZ77, .name = L"LZ77"},
+      {.m = zip_method_t::ZIP_LZMA2, .name = L"lzma2"},
+      {.m = zip_method_t::ZIP_ZSTD, .name = L"zstd"},
+      {.m = zip_method_t::ZIP_XZ, .name = L"xz"},
+      {.m = zip_method_t::ZIP_JPEG, .name = L"Jpeg"},
+      {.m = zip_method_t::ZIP_WAVPACK, .name = L"WavPack"},
+      {.m = zip_method_t::ZIP_PPMD, .name = L"PPMd"},
+      {.m = zip_method_t::ZIP_AES, .name = L"AES"},
+      {.m = zip_method_t::ZIP_BROTLI, .name = L"brotli"},
   };
   for (const auto &i : methods) {
     if (static_cast<uint16_t>(i.m) == m) {

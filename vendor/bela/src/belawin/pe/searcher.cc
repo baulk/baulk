@@ -1,6 +1,7 @@
 ///
 #include <bela/path.hpp>
 #include <bela/env.hpp>
+#include <utility>
 #include "internal.hpp"
 
 namespace bela::pe {
@@ -65,7 +66,7 @@ std::optional<std::string> SymbolSearcher::LoadOrdinalFunctionName(std::string_v
           return std::nullopt;
         }
         for (auto &e : it.first->second) {
-          if (e.Ordinal == ordinal) {
+          if (std::cmp_equal(e.Ordinal, ordinal)) {
             return std::make_optional(e.Name);
           }
         }
@@ -80,7 +81,7 @@ std::optional<std::string> SymbolSearcher::LookupOrdinalFunctionName(std::string
                                                                      bela::error_code &ec) {
   if (auto it = table.find(dllname); it != table.end()) {
     for (auto &s : it->second) {
-      if (s.Ordinal == ordinal) {
+      if (std::cmp_equal(s.Ordinal, ordinal)) {
         return std::make_optional(s.Name);
       }
     }

@@ -1,14 +1,12 @@
 /**
  * pugixml parser - version 1.15
  * --------------------------------------------------------
- * Copyright (C) 2006-2025, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
  * Report bugs and download new versions at https://pugixml.org/
  *
- * This library is distributed under the MIT License. See notice at the end
- * of this file.
+ * SPDX-FileCopyrightText: Copyright (C) 2006-2025, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
+ * SPDX-License-Identifier: MIT
  *
- * This work is based on the pugxml parser, which is:
- * Copyright (C) 2003, by Kristen Wegner (kristen@tima.net)
+ * See LICENSE.md or notice at the end of this file.
  */
 
 #ifndef SOURCE_PUGIXML_CPP
@@ -4475,7 +4473,10 @@ PUGI_IMPL_NS_BEGIN
 				source_header |= xml_memory_page_contents_shared_mask;
 			}
 			else
-				strcpy_insitu(dest, header, header_mask, source, strlength(source));
+			{
+				// if strcpy_insitu fails (out of memory) we just leave the destination name/value empty
+				(void)strcpy_insitu(dest, header, header_mask, source, strlength(source));
+			}
 		}
 	}
 
@@ -4787,7 +4788,6 @@ PUGI_IMPL_NS_BEGIN
 		char_t* buffer = NULL;
 		size_t length = 0;
 
-		// coverity[var_deref_model]
 		if (!impl::convert_buffer(buffer, length, buffer_encoding, contents, size, is_mutable)) return impl::make_parse_result(status_out_of_memory);
 
 		// after this we either deallocate contents (below) or hold on to it via doc->buffer, so we don't need to guard it
@@ -9226,8 +9226,6 @@ PUGI_IMPL_NS_BEGIN
 		char_t name[1];
 	};
 
-	static const xpath_node_set dummy_node_set;
-
 	PUGI_IMPL_FN PUGI_IMPL_UNSIGNED_OVERFLOW unsigned int hash_string(const char_t* str)
 	{
 		// Jenkins one-at-a-time hash (http://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time)
@@ -9519,10 +9517,10 @@ PUGI_IMPL_NS_BEGIN
 				size_t hash_size = 1;
 				while (hash_size < size_ + size_ / 2) hash_size *= 2;
 
-				const void** hash_data = static_cast<const void**>(alloc->allocate(hash_size * sizeof(void**)));
+				const void** hash_data = static_cast<const void**>(alloc->allocate(hash_size * sizeof(void*)));
 				if (!hash_data) return;
 
-				memset(hash_data, 0, hash_size * sizeof(const void**));
+				memset(hash_data, 0, hash_size * sizeof(void*));
 
 				xpath_node* write = _begin;
 
@@ -11120,13 +11118,7 @@ PUGI_IMPL_NS_BEGIN
 				return eval_boolean(c, stack) ? 1 : 0;
 
 			case xpath_type_string:
-			{
-				xpath_allocator_capture cr(stack.result);
-
-				return convert_string_to_number(eval_string(c, stack).c_str());
-			}
-
-			case xpath_type_node_set:
+			case xpath_type_node_set: // implicit conversion to string
 			{
 				xpath_allocator_capture cr(stack.result);
 
@@ -12973,7 +12965,10 @@ namespace pugi
 
 	PUGI_IMPL_FN const xpath_node_set& xpath_variable::get_node_set() const
 	{
-		return (_type == xpath_type_node_set) ? static_cast<const impl::xpath_variable_node_set*>(this)->value : impl::dummy_node_set;
+		if (_type == xpath_type_node_set)
+			return static_cast<const impl::xpath_variable_node_set*>(this)->value;
+		static const xpath_node_set dummy_node_set;
+		return dummy_node_set;
 	}
 
 	PUGI_IMPL_FN bool xpath_variable::set(bool value)
@@ -13103,8 +13098,11 @@ namespace pugi
 
 		// look for existing variable
 		for (xpath_variable* var = _data[hash]; var; var = var->_next)
-			if (impl::strequal(var->name(), name))
+		{
+			const char_t* vn = var->name();
+			if (vn && impl::strequal(vn, name))
 				return var;
+		}
 
 		return NULL;
 	}
@@ -13155,8 +13153,11 @@ namespace pugi
 
 		// look for existing variable
 		for (xpath_variable* var = _data[hash]; var; var = var->_next)
-			if (impl::strequal(var->name(), name))
+		{
+			const char_t* vn = var->name();
+			if (vn && impl::strequal(vn, name))
 				return var->type() == type ? var : NULL;
+		}
 
 		// add new variable
 		xpath_variable* result = impl::new_xpath_variable(type, name);

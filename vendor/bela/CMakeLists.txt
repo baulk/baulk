@@ -1,7 +1,7 @@
 # bela sources
 cmake_minimum_required(VERSION 3.27)
 
-project(bela CXX C ASM)
+project(bela)
 
 include(FeatureSummary)
 

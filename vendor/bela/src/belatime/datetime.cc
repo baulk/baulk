@@ -1,6 +1,7 @@
 ///
 #include <bela/datetime.hpp>
 #include <bela/fmt.hpp>
+#include <utility>
 
 namespace bela {
 
@@ -51,7 +52,7 @@ std::wstring_view MonthName(Month mon, bool shortname) noexcept {
 namespace time_internal {
 
 /* 2000-03-01 (mod 400 year, immediately after feb29 */
-constexpr auto LeapEpoch = (946684800LL + 86400 * (31 + 29));
+constexpr auto LeapEpoch = (946684800LL + (86400 * (31 + 29)));
 // https://en.cppreference.com/w/c/chrono/tm
 bool MakeDateTime(int64_t second, DateTime &dt) {
   static constexpr const uint8_t days_in_month[] = {31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, 29};
@@ -101,9 +102,9 @@ bool MakeDateTime(int64_t second, DateTime &dt) {
   if (yday >= 365 + (leap ? 1 : 0)) {
     yday -= 365 + (leap ? 1 : 0);
   }
-  auto years = remyears + 4 * qcycles + 100 * ccycles + 400LL * qccycles;
+  auto years = remyears + (4 * qcycles) + (100 * ccycles) + (400LL * qccycles);
   int months = 0;
-  for (; days_in_month[months] <= remdays; months++) {
+  for (; std::cmp_less_equal(days_in_month[months] , remdays); months++) {
     remdays -= days_in_month[months];
   }
 
@@ -143,7 +144,7 @@ bela::Time DateTime::Time() const noexcept {
     return bela::UnixEpoch();
   }
 
-  auto rep_hi = time_internal::DaysSinceEpoch(year, month, day) * secondsPerDay + hour * 3600 + minute * 60 + second;
+  auto rep_hi = (time_internal::DaysSinceEpoch(year, month, day) * secondsPerDay) + (hour * 3600) + (minute * 60) + second;
   rep_hi += tzoffset;
 
   const auto d = time_internal::MakeDuration(rep_hi, nsec * time_internal::kTicksPerNanosecond);

@@ -13,33 +13,32 @@ struct link_value_flags_t {
 
 inline void FlagsToArray(uint32_t flag, std::vector<std::wstring> &av) {
   static const link_value_flags_t lfv[] = {
-      {HasLinkTargetIDList, L"HasLinkTargetIDList"},
-      {HasLinkInfo, L"HasLinkInfo"},
-      {HasName, L"HasName"},
-      {HasRelativePath, L"HasRelativePath"},
-      {HasWorkingDir, L"HasWorkingDir"},
-      {HasArguments, L"HasArguments"},
-      {HasIconLocation, L"HasIconLocation"},
-      {IsUnicode, L"IsUnicode"},
-      {ForceNoLinkInfo, L"ForceNoLinkInfo"},
-      {HasExpString, L"HasExpString"},
-      {RunInSeparateProcess, L"RunInSeparateProcess"},
-      {HasDrawinID, L"HasDrawinID"},
-      {RunAsUser, L"RunAsUser"},
-      {HasExpIcon, L"HasExpIcon"},
-      {NoPidlAlias, L"NoPidlAlias"},
-      {RunWithShimLayer, L"RunWithShimLayer"},
-      {ForceNoLinkTrack, L"ForceNoLinkTrack"},
-      {EnableTargetMetadata, L"EnableTargetMetadata"},
-      {DisableLinkPathTarcking, L"DisableLinkPathTarcking"},
-      {DisableKnownFolderTarcking, L"DisableKnownFolderTarcking"},
-      {DisableKnownFolderAlia, L"DisableKnownFolderAlia"},
-      {AllowLinkToLink, L"AllowLinkToLink"},
-      {UnaliasOnSave, L"UnaliasOnSave"},
-      {PreferEnvironmentPath, L"PreferEnvironmentPath"},
-      {KeepLocalIDListForUNCTarget, L"KeepLocalIDListForUNCTarget"},
-      {PersistVolumeIDRelative, L"PersistVolumeIDRelative"}
-      //
+      {.v = HasLinkTargetIDList, .n = L"HasLinkTargetIDList"},
+      {.v = HasLinkInfo, .n = L"HasLinkInfo"},
+      {.v = HasName, .n = L"HasName"},
+      {.v = HasRelativePath, .n = L"HasRelativePath"},
+      {.v = HasWorkingDir, .n = L"HasWorkingDir"},
+      {.v = HasArguments, .n = L"HasArguments"},
+      {.v = HasIconLocation, .n = L"HasIconLocation"},
+      {.v = IsUnicode, .n = L"IsUnicode"},
+      {.v = ForceNoLinkInfo, .n = L"ForceNoLinkInfo"},
+      {.v = HasExpString, .n = L"HasExpString"},
+      {.v = RunInSeparateProcess, .n = L"RunInSeparateProcess"},
+      {.v = HasDrawinID, .n = L"HasDrawinID"},
+      {.v = RunAsUser, .n = L"RunAsUser"},
+      {.v = HasExpIcon, .n = L"HasExpIcon"},
+      {.v = NoPidlAlias, .n = L"NoPidlAlias"},
+      {.v = RunWithShimLayer, .n = L"RunWithShimLayer"},
+      {.v = ForceNoLinkTrack, .n = L"ForceNoLinkTrack"},
+      {.v = EnableTargetMetadata, .n = L"EnableTargetMetadata"},
+      {.v = DisableLinkPathTarcking, .n = L"DisableLinkPathTarcking"},
+      {.v = DisableKnownFolderTarcking, .n = L"DisableKnownFolderTarcking"},
+      {.v = DisableKnownFolderAlia, .n = L"DisableKnownFolderAlia"},
+      {.v = AllowLinkToLink, .n = L"AllowLinkToLink"},
+      {.v = UnaliasOnSave, .n = L"UnaliasOnSave"},
+      {.v = PreferEnvironmentPath, .n = L"PreferEnvironmentPath"},
+      {.v = KeepLocalIDListForUNCTarget, .n = L"KeepLocalIDListForUNCTarget"},
+      {.v = PersistVolumeIDRelative, .n = L"PersistVolumeIDRelative"} //
   };
   for (const auto &v : lfv) {
     if ((v.v & flag) != 0) {
@@ -146,7 +145,7 @@ public:
       return false;
     }
     auto it = (const wchar_t *)(data_ + pos);
-    auto end = it + (size_ - pos) / 2;
+    auto end = it + ((size_ - pos) / 2);
     for (; it != end; it++) {
       if (*it == 0) {
         return true;
@@ -278,12 +277,11 @@ status_t LookupShellLink(const bela::bytes_view &bv, hazel_result &hr) {
   }
   // StringData https://msdn.microsoft.com/en-us/library/dd871306.aspx
   static const shl::link_value_flags_t sdv[] = {
-      {shl::HasName, L"Name"},
-      {shl::HasRelativePath, L"RelativePath"},
-      {shl::HasWorkingDir, L"WorkingDir"},
-      {shl::HasArguments, L"Arguments"},
-      {shl::HasIconLocation, L"IconLocation"}
-      /// --->
+      {.v = shl::HasName, .n = L"Name"},
+      {.v = shl::HasRelativePath, .n = L"RelativePath"},
+      {.v = shl::HasWorkingDir, .n = L"WorkingDir"},
+      {.v = shl::HasArguments, .n = L"Arguments"},
+      {.v = shl::HasIconLocation, .n = L"IconLocation"} /// --->
   };
 
   for (const auto &i : sdv) {

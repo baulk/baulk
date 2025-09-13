@@ -78,21 +78,20 @@ std::wstring_view cleanupString(void *valuePtr, size_t n) {
 bool VersionLoader::getValue(const wchar_t *name, std::wstring &value) const {
   const struct LanguageAndCodePage langCodepages[] = {
       // Use the language and codepage from the DLL.
-      {language, codePage},
+      {.language = language, .codePage = codePage},
       // Use the default language and codepage from the DLL.
-      {defaultLangage, codePage},
+      {.language = defaultLangage, .codePage = codePage},
       // Use the language from the DLL and Latin codepage (most common).
-      {language, 1252},
+      {.language = language, .codePage = 1252},
       // Use the default language and Latin codepage (most common).
-      {defaultLangage, 1252},
+      {.language = defaultLangage, .codePage = 1252},
   };
   for (const auto &lc : langCodepages) {
     auto block = bela::StringCat(L"\\StringFileInfo\\", bela::Hex(lc.language, bela::kZeroPad4),
                                  bela::Hex(lc.codePage, bela::kZeroPad4), L"\\", name);
     LPVOID valuePtr = nullptr;
     uint32_t size;
-    if (VerQueryValueW(buffer.data(), block.data(), (&valuePtr), &size) == TRUE &&
-        valuePtr != nullptr && size > 0) {
+    if (VerQueryValueW(buffer.data(), block.data(), (&valuePtr), &size) == TRUE && valuePtr != nullptr && size > 0) {
       value.assign(cleanupString(valuePtr, size - 1));
     }
   }

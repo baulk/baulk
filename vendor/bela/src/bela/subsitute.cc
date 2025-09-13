@@ -30,25 +30,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ---------------------------------------------------------------------------
+#include <algorithm>
 #include <bela/subsitute.hpp>
+#include <utility>
+#include <ranges>
 
 namespace bela::substitute_internal {
 
 void SubstituteAndAppendArray(std::string *output, std::string_view format, const std::string_view *args_array,
                               size_t num_args) {
   size_t size = 0;
-  auto fmtsize = format.size();
-  for (size_t i = 0; i < fmtsize; i++) {
+  auto fsize = format.size();
+  for (size_t i = 0; i < fsize; i++) {
     if (format[i] != '$') {
       size++;
       continue;
     }
-    if (i + 1 > fmtsize) {
+    if (i + 1 > fsize) {
       return;
     }
     if (ascii_isdigit(static_cast<char8_t>(format[i + 1]))) {
       int index = format[i + 1] - L'0';
-      if (static_cast<size_t>(index) >= num_args) {
+      if (std::cmp_greater_equal(index, num_args)) {
         return;
       }
       size += args_array[index].size();
@@ -69,14 +72,16 @@ void SubstituteAndAppendArray(std::string *output, std::string_view format, cons
   size_t original_size = output->size();
   output->resize(original_size + size);
   char *target = &(*output)[original_size];
-  for (size_t i = 0; i < fmtsize; i++) {
+  for (size_t i = 0; i < fsize; i++) {
     if (format[i] != '$') {
       *target++ = format[i];
       continue;
     }
     if (ascii_isdigit(static_cast<char8_t>(format[i + 1]))) {
       const std::string_view src = args_array[format[i + 1] - '0'];
-      target = std::copy(src.begin(), src.end(), target);
+      memcpy(target, src.data(), src.size());
+      target += src.size();
+      // target = std::copy(src.begin(), src.end(), target);
       ++i; // Skip next char.
       continue;
     }
@@ -90,18 +95,18 @@ void SubstituteAndAppendArray(std::string *output, std::string_view format, cons
 void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format, const std::wstring_view *args_array,
                               size_t num_args) {
   size_t size = 0;
-  auto fmtsize = format.size();
-  for (size_t i = 0; i < fmtsize; i++) {
+  auto fsize = format.size();
+  for (size_t i = 0; i < fsize; i++) {
     if (format[i] != '$') {
       size++;
       continue;
     }
-    if (i + 1 > fmtsize) {
+    if (i + 1 > fsize) {
       return;
     }
     if (ascii_isdigit(format[i + 1])) {
       int index = format[i + 1] - L'0';
-      if (static_cast<size_t>(index) >= num_args) {
+      if (std::cmp_greater_equal(index, num_args)) {
         return;
       }
       size += args_array[index].size();
@@ -122,14 +127,16 @@ void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format, co
   size_t original_size = output->size();
   output->resize(original_size + size);
   wchar_t *target = &(*output)[original_size];
-  for (size_t i = 0; i < fmtsize; i++) {
+  for (size_t i = 0; i < fsize; i++) {
     if (format[i] != '$') {
       *target++ = format[i];
       continue;
     }
     if (ascii_isdigit(format[i + 1])) {
       const std::wstring_view src = args_array[format[i + 1] - '0'];
-      target = std::copy(src.begin(), src.end(), target);
+      wmemcpy(target, src.data(), src.size());
+      target += src.size();
+      // target = std::copy(src.begin(), src.end(), target);
       ++i; // Skip next char.
       continue;
     }

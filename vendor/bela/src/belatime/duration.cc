@@ -124,7 +124,7 @@ inline Duration MakeDurationFromU128(uint128 u128, bool is_neg) {
   if (h64 == 0) { // fastpath
     const uint64_t hi = l64 / kTicksPerSecond;
     rep_hi = static_cast<int64_t>(hi);
-    rep_lo = static_cast<uint32_t>(l64 - hi * kTicksPerSecond);
+    rep_lo = static_cast<uint32_t>(l64 - (hi * kTicksPerSecond));
   } else {
     // kMaxRepHi64 is the high 64 bits of (2^63 * kTicksPerSecond).
     // Any positive tick count whose high 64 bits are >= kMaxRepHi64
@@ -466,8 +466,8 @@ double FDivDuration(Duration num, Duration den) {
     return 0.0;
   }
 
-  double a = static_cast<double>(time_internal::GetRepHi(num)) * kTicksPerSecond + time_internal::GetRepLo(num);
-  double b = static_cast<double>(time_internal::GetRepHi(den)) * kTicksPerSecond + time_internal::GetRepLo(den);
+  double a = (static_cast<double>(time_internal::GetRepHi(num)) * kTicksPerSecond) + time_internal::GetRepLo(num);
+  double b = (static_cast<double>(time_internal::GetRepHi(den)) * kTicksPerSecond) + time_internal::GetRepLo(den);
   return a / b;
 }
 
@@ -675,12 +675,12 @@ struct DisplayUnit {
   int prec;
   double pow10;
 };
-BELA_CONST_INIT const DisplayUnit kDisplayNano = {L"ns", 2, 1e2};
-BELA_CONST_INIT const DisplayUnit kDisplayMicro = {L"us", 5, 1e5};
-BELA_CONST_INIT const DisplayUnit kDisplayMilli = {L"ms", 8, 1e8};
-BELA_CONST_INIT const DisplayUnit kDisplaySec = {L"s", 11, 1e11};
-BELA_CONST_INIT const DisplayUnit kDisplayMin = {L"m", -1, 0.0};  // prec ignored
-BELA_CONST_INIT const DisplayUnit kDisplayHour = {L"h", -1, 0.0}; // prec ignored
+BELA_CONST_INIT const DisplayUnit kDisplayNano = {.abbr=L"ns", .prec=2, .pow10=1e2};
+BELA_CONST_INIT const DisplayUnit kDisplayMicro = {.abbr=L"us", .prec=5, .pow10=1e5};
+BELA_CONST_INIT const DisplayUnit kDisplayMilli = {.abbr=L"ms", .prec=8, .pow10=1e8};
+BELA_CONST_INIT const DisplayUnit kDisplaySec = {.abbr=L"s", .prec=11, .pow10=1e11};
+BELA_CONST_INIT const DisplayUnit kDisplayMin = {.abbr=L"m", .prec=-1, .pow10=0.0};  // prec ignored
+BELA_CONST_INIT const DisplayUnit kDisplayHour = {.abbr=L"h", .prec=-1, .pow10=0.0}; // prec ignored
 
 void AppendNumberUnit(std::wstring *out, int64_t n, DisplayUnit unit) {
   constexpr auto kBufferSize = sizeof("2562047788015216");

@@ -110,8 +110,7 @@ private:
 
 bool UniversalExtractor::tar_extract(baulk::archive::tar::FileReader &fr, baulk::archive::tar::ExtractReader *reader,
                                      bela::error_code &ec) {
-  auto size = fd.Size(ec);
-  if (size == bela::SizeUnInitialized) {
+  if (auto size = fd.Size(ec); size == bela::SizeUnInitialized) {
     return false;
   }
   baulk::archive::tar::Extractor extractor(reader, opts);

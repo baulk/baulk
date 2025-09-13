@@ -1,4 +1,6 @@
 ///
+#include <utility>
+
 #include "internal.hpp"
 
 namespace bela::pe {
@@ -8,8 +10,8 @@ bool File::readStringTable(bela::error_code &ec) {
     // table nullptr
     return true;
   }
-  auto offset = fh.PointerToSymbolTable + COFFSymbolSize * fh.NumberOfSymbols;
-  if (static_cast<int64_t>(offset + 4) >= size) {
+  auto offset = fh.PointerToSymbolTable + (COFFSymbolSize * fh.NumberOfSymbols);
+  if (std::cmp_greater_equal(offset + 4, size)) {
     return true;
   }
   uint32_t l = 0;
@@ -17,7 +19,7 @@ bool File::readStringTable(bela::error_code &ec) {
     return false;
   }
   l = bela::fromle(l);
-  if (l <= 4 || static_cast<int64_t>(l + offset) > size) {
+  if (l <= 4 || std::cmp_greater(l + offset, size)) {
     return true;
   }
   l -= 4;

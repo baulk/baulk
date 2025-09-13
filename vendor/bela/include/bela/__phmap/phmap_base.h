@@ -47,6 +47,7 @@
 #include <utility>
 #include <memory>
 #include <mutex> // for std::lock
+#include <cstdlib>
 
 #include "phmap_config.h"
 
@@ -1233,22 +1234,22 @@ using ExtractOrT = typename ExtractOr<Extract, Obj, Default, void>::type;
 
 // Extractors for the features of allocators.
 template <typename T>
-using GetPointer = typename T::pointer;
+using GetPointer = typename std::allocator_traits<T>::pointer;
 
 template <typename T>
-using GetConstPointer = typename T::const_pointer;
+using GetConstPointer = typename std::allocator_traits<T>::const_pointer;
 
 template <typename T>
-using GetVoidPointer = typename T::void_pointer;
+using GetVoidPointer = typename std::allocator_traits<T>::void_pointer;
 
 template <typename T>
-using GetConstVoidPointer = typename T::const_void_pointer;
+using GetConstVoidPointer = typename std::allocator_traits<T>::const_void_pointer;
 
 template <typename T>
-using GetDifferenceType = typename T::difference_type;
+using GetDifferenceType = typename std::allocator_traits<T>::difference_type;
 
 template <typename T>
-using GetSizeType = typename T::size_type;
+using GetSizeType = typename std::allocator_traits<T>::size_type;
 
 template <typename T>
 using GetPropagateOnContainerCopyAssignment =
@@ -5007,10 +5008,10 @@ public:
     {
         void lock()            ABSL_EXCLUSIVE_LOCK_FUNCTION()        { this->Lock(); }
         void unlock()          ABSL_UNLOCK_FUNCTION()                { this->Unlock(); }
-        void try_lock()        ABSL_EXCLUSIVE_TRYLOCK_FUNCTION(true) { this->TryLock(); }
+        bool try_lock()        ABSL_EXCLUSIVE_TRYLOCK_FUNCTION(true) { return this->TryLock(); }
         void lock_shared()     ABSL_SHARED_LOCK_FUNCTION()           { this->ReaderLock(); }
         void unlock_shared()   ABSL_UNLOCK_FUNCTION()                { this->ReaderUnlock(); }
-        void try_lock_shared() ABSL_SHARED_TRYLOCK_FUNCTION(true)    { this->ReaderTryLock(); }
+        bool try_lock_shared() ABSL_SHARED_TRYLOCK_FUNCTION(true)    { return this->ReaderTryLock(); }
     };
     
     template <>

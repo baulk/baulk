@@ -331,7 +331,7 @@ void Simulator::PathOrganize() {
 }
 
 bool Simulator::ExpandEnv(std::wstring_view raw, std::wstring &w) const {
-  w.reserve(w.size() + raw.size() * 2);
+  w.reserve(w.size() + (raw.size() * 2));
   size_t i = 0;
   for (size_t j = 0; j < raw.size(); j++) {
     if (raw[j] == '$' && j + 1 < raw.size()) {

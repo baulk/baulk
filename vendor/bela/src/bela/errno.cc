@@ -1,6 +1,7 @@
 // Windows ERROR
 #include <bela/base.hpp>
 #include <bela/str_cat.hpp>
+#include <utility>
 /*
 from: C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\errno.h
 #define EPERM           1
@@ -232,7 +233,7 @@ bela::error_code make_error_code_from_errno(errno_t eno, std::wstring_view prefi
     return bela::error_code{bela::StringCat(prefix, errno_internal::_sys_posix_errlist[eno - EADDRINUSE]), eno};
   }
   constexpr auto n = std::size(errno_internal::errorlist);
-  auto msg = (static_cast<std::size_t>(eno) >= n) ? errno_internal::errorlist[n - 1] : errno_internal::errorlist[eno];
+  auto msg = (std::cmp_greater_equal(eno, n)) ? errno_internal::errorlist[n - 1] : errno_internal::errorlist[eno];
   return bela::error_code{bela::StringCat(prefix, msg), eno};
 }
 

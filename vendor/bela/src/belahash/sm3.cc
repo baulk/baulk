@@ -2,6 +2,7 @@
 // Thanks NEWPLAN(newplan001@163.com)
 // https://github.com/NEWPLAN/SMx/blob/master/SM3/Windows/SM3/src/sm3.c
 #include <bela/hash.hpp>
+#include <utility>
 #include "hashinternal.hpp"
 
 #if IS_BIG_ENDIAN
@@ -99,7 +100,7 @@ static void sm3_process_block(Hasher *ctx, const uint8_t data[64]) {
 #define GG0(x, y, z) ((x) ^ (y) ^ (z))
 #define GG1(x, y, z) (((x) & (y)) | ((~(x)) & (z)))
 
-#define SHL(x, n) (((x)&0xFFFFFFFF) << (n))
+#define SHL(x, n) (((x) & 0xFFFFFFFF) << (n))
 #define ROTL(x, n) (SHL((x), n) | ((x) >> (32 - (n))))
 
 #define P0(x) ((x) ^ ROTL((x), 9) ^ ROTL((x), 17))
@@ -185,7 +186,7 @@ void Hasher::Update(const void *input, size_t input_len) {
     Nh++;
   }
 
-  if ((left != 0U) && static_cast<int32_t>(input_len) >= fill) {
+  if ((left != 0U) && std::cmp_greater_equal(input_len, fill)) {
     memcpy(block + left, input, fill);
     sm3_process_block(this, block);
     data += fill;

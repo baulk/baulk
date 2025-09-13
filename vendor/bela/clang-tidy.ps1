@@ -59,6 +59,8 @@ $checks = $(
     "-readability-magic-numbers",
     "-readability-qualified-auto",
     "-readability-function-cognitive-complexity",
+    "-readability-identifier-length",
+    #"-readability-math-missing-parentheses",
     "modernize-*",
     "-modernize-use-trailing-return-type",
     "-modernize-avoid-c-arrays",

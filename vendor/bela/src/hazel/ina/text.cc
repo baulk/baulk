@@ -70,7 +70,7 @@ static const uint8_t utf8d_transition[] = {
 
 static inline uint32_t updatestate(uint32_t *state, uint32_t byte) {
   uint32_t type = utf8d[byte];
-  *state = utf8d_transition[16 * *state + type];
+  *state = utf8d_transition[(16 * *state) + type];
   return *state;
 }
 

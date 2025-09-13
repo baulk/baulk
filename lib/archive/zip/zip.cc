@@ -375,7 +375,7 @@ bool readDirectoryHeader(bufioReader &br, Buffer &buffer, File &file, bela::erro
 
 bool Reader::Initialize(bela::error_code &ec) {
   if (size == bela::SizeUnInitialized) {
-    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    if (size = fd.Size(ec); size == bela::SizeUnInitialized) {
       return false;
     }
   }

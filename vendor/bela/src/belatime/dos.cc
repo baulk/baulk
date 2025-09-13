@@ -4,7 +4,7 @@
 
 namespace bela {
 
-constexpr int WindowsEpochDays = (1601 - 1) * 365 + (1601 - 1) / 4 - (1601 - 1) / 100 + (1601 - 1) / 400;
+constexpr int WindowsEpochDays = ((1601 - 1) * 365) + ((1601 - 1) / 4) - ((1601 - 1) / 100) + ((1601 - 1) / 400);
 constexpr int64_t UnixEpochStart = 11644473600LL;
 
 constexpr uint64_t Win_ticks_per_second = 10000000ULL;
@@ -13,7 +13,7 @@ constexpr uint64_t Win_ticks_from_epoch = ((1970 - 1601) * 365 + 3 * 24 + 17) * 
 constexpr bool IsLeapYear(int Y) { return Y % 4 == 0 && (Y % 100 != 0 || Y % 400 == 0); }
 constexpr int sinceWindowsEpochDays(int Y) {
   Y--;
-  return Y * 365 + Y / 4 - Y / 100 + Y / 400 - WindowsEpochDays;
+  return (Y * 365) + (Y / 4) - (Y / 100) + (Y / 400) - WindowsEpochDays;
 }
 // FromDosDateTime dos time to bela::Time
 // https://msdn.microsoft.com/en-us/library/ms724247(v=VS.85).aspx
@@ -41,6 +41,6 @@ bela::Time FromDosDateTime(uint16_t dosDate, uint16_t dosTime) {
     days++;
   }
   days += day - 1;
-  return bela::FromUnixSeconds(days * secondsPerDay + hour * 3600 + minute * 60 + sec - UnixEpochStart);
+  return bela::FromUnixSeconds((days * secondsPerDay) + (hour * 3600) + (minute * 60) + sec - UnixEpochStart);
 }
 } // namespace bela

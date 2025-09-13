@@ -1,7 +1,8 @@
 //
+#include <algorithm>
 #include <bela/io.hpp>
 #include "internal.hpp"
-#include <algorithm>
+#include <utility>
 
 // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format
 // https://docs.microsoft.com/zh-cn/windows/win32/debug/pe-format
@@ -110,7 +111,7 @@ inline void fromle(SectionHeader32 &sh) {
 
 bool File::parseFile(bela::error_code &ec) {
   if (size == SizeUnInitialized) {
-    if ((size = fd.Size(ec)) == bela::SizeUnInitialized) {
+    if (size = fd.Size(ec); size == bela::SizeUnInitialized) {
       return false;
     }
   }
@@ -159,7 +160,7 @@ bool File::parseFile(bela::error_code &ec) {
     fromle(&oh, &oh32);
   }
   sections.resize(fh.NumberOfSections);
-  for (int i = 0; i < fh.NumberOfSections; i++) {
+  for (int i = 0; std::cmp_less(i, fh.NumberOfSections); i++) {
     SectionHeader32 sh;
     if (!fd.ReadFull(sh, ec)) {
       return false;
@@ -176,9 +177,7 @@ bool File::parseFile(bela::error_code &ec) {
     sec->NumberOfRelocations = sh.NumberOfRelocations;
     sec->NumberOfLineNumbers = sh.NumberOfLineNumbers;
     sec->Characteristics = sh.Characteristics;
-    if (auto sectionEnd = static_cast<int64_t>(sec->Offset + sec->Size); sectionEnd > overlayOffset) {
-      overlayOffset = sectionEnd;
-    }
+    overlayOffset = (std::max)(static_cast<int64_t>(sec->Offset + sec->Size), overlayOffset);
   }
   for (auto &sec : sections) {
     readRelocs(sec);

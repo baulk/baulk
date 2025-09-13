@@ -96,8 +96,8 @@ static bool DecodeMountPoint(const REPARSE_DATA_BUFFER *p, FileReparsePoint &frp
   /* actually understand such a path when returned by uv_readlink(). */
   /* UNC paths are never valid for junctions so we don't care about them. */
   if (wlen < 6 || wstr[0] != L'\\' || wstr[1] != L'?' || wstr[2] != L'?' || wstr[3] != L'\\' ||
-        ((wstr[4] < L'A' || wstr[4] > L'Z') && (wstr[4] < L'a' || wstr[4] > L'z')) || wstr[5] != L':' ||
-        (wlen != 6 && wstr[6] != L'\\')) {
+      ((wstr[4] < L'A' || wstr[4] > L'Z') && (wstr[4] < L'a' || wstr[4] > L'z')) || wstr[5] != L':' ||
+      (wlen != 6 && wstr[6] != L'\\')) {
     ec = bela::make_error_code(bela::ErrGeneral, L"Unresolved reparse point MountPoint'");
     return false;
   }
