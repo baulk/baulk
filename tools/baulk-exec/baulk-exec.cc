@@ -233,7 +233,7 @@ bool Executor::ParseArgv(int argc, wchar_t **cargv) {
 class dotcom_global_initializer {
 public:
   dotcom_global_initializer() {
-    auto hr = CoInitialize(NULL);
+    auto hr = CoInitialize(nullptr);
     if (FAILED(hr)) {
       auto ec = bela::make_system_error_code();
       MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);

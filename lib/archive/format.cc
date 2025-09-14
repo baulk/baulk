@@ -2,6 +2,7 @@
 #include <bela/io.hpp>
 #include <bela/pe.hpp>
 #include <baulk/archive.hpp>
+#include <utility>
 #include "tar/tarinternal.hpp"
 
 namespace baulk::archive {
@@ -40,26 +41,26 @@ const wchar_t *FormatToMIME(file_format_t t) {
   };
   constexpr name_table tables[] = {
       /// archive
-      {file_format_t::epub, L"application/epub"}, //
-      {file_format_t::zip, L"application/zip"},
-      {file_format_t::tar, L"application/x-tar"},
-      {file_format_t::rar, L"application/vnd.rar"},
-      {file_format_t::gz, L"application/gzip"},
-      {file_format_t::bz2, L"application/x-bzip2"},
-      {file_format_t::zstd, L"application/x-zstd"},
-      {file_format_t::_7z, L"application/x-7z-compressed"},
-      {file_format_t::xz, L"application/x-xz"},
-      {file_format_t::eot, L"application/octet-stream"},
-      {file_format_t::crx, L"application/x-google-chrome-extension"},
-      {file_format_t::deb, L"application/vnd.debian.binary-package"},
-      {file_format_t::lz, L"application/x-lzip"},
-      {file_format_t::rpm, L"application/x-rpm"},
-      {file_format_t::cab, L"application/vnd.ms-cab-compressed"},
-      {file_format_t::msi, L"application/x-msi"},
-      {file_format_t::dmg, L"application/x-apple-diskimage"},
-      {file_format_t::xar, L"application/x-xar"},
-      {file_format_t::wim, L"application/x-ms-wim"},
-      {file_format_t::z, L"application/x-compress"}, //
+      {.t = file_format_t::epub, .name = L"application/epub"}, //
+      {.t = file_format_t::zip, .name = L"application/zip"},
+      {.t = file_format_t::tar, .name = L"application/x-tar"},
+      {.t = file_format_t::rar, .name = L"application/vnd.rar"},
+      {.t = file_format_t::gz, .name = L"application/gzip"},
+      {.t = file_format_t::bz2, .name = L"application/x-bzip2"},
+      {.t = file_format_t::zstd, .name = L"application/x-zstd"},
+      {.t = file_format_t::_7z, .name = L"application/x-7z-compressed"},
+      {.t = file_format_t::xz, .name = L"application/x-xz"},
+      {.t = file_format_t::eot, .name = L"application/octet-stream"},
+      {.t = file_format_t::crx, .name = L"application/x-google-chrome-extension"},
+      {.t = file_format_t::deb, .name = L"application/vnd.debian.binary-package"},
+      {.t = file_format_t::lz, .name = L"application/x-lzip"},
+      {.t = file_format_t::rpm, .name = L"application/x-rpm"},
+      {.t = file_format_t::cab, .name = L"application/vnd.ms-cab-compressed"},
+      {.t = file_format_t::msi, .name = L"application/x-msi"},
+      {.t = file_format_t::dmg, .name = L"application/x-apple-diskimage"},
+      {.t = file_format_t::xar, .name = L"application/x-xar"},
+      {.t = file_format_t::wim, .name = L"application/x-ms-wim"},
+      {.t = file_format_t::z, .name = L"application/x-compress"}, //
   };
 
   for (const auto &m : tables) {
@@ -85,8 +86,8 @@ constexpr const uint8_t debMagic[] = {0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 
                                       0x69, 0x61, 0x6E, 0x2D, 0x62, 0x69, 0x6E, 0x61, 0x72, 0x79};
 // https://github.com/file/file/blob/6fc66d12c0ca172f4681adb63c6f662ac33cbc7c/magic/Magdir/compress
 // https://github.com/facebook/zstd/blob/dev/doc/zstd_compression_format.md
-//# Zstandard/LZ4 skippable frames
-//# https://github.com/facebook/zstd/blob/dev/zstd_compression_format.md
+// # Zstandard/LZ4 skippable frames
+// # https://github.com/facebook/zstd/blob/dev/zstd_compression_format.md
 // 0         lelong&0xFFFFFFF0  0x184D2A50
 constexpr const uint8_t xzMagic[] = {0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00};
 constexpr const uint8_t gzMagic[] = {0x1F, 0x8B, 0x8};
@@ -100,7 +101,7 @@ constexpr bool is_zip_magic(const uint8_t *buf, size_t size) {
           (buf[3] == 0x4 || buf[3] == 0x6 || buf[3] == 0x8));
 }
 
-bool is_msi_archive(bela::bytes_view bv) {
+bool is_msi_archive(const bela::bytes_view &bv) {
   constexpr const uint8_t msoleMagic[] = {0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1};
   constexpr const auto olesize = sizeof(oleheader_t);
   if (!bv.starts_bytes_with(msoleMagic) || bv.size() < 520) {
@@ -121,7 +122,7 @@ bool is_msi_archive(bela::bytes_view bv) {
   return true;
 }
 
-file_format_t analyze_format_internal(bela::bytes_view bv) {
+file_format_t analyze_format_internal(const bela::bytes_view &bv) {
   if (is_zip_magic(bv.data(), bv.size())) {
     return file_format_t::zip;
   }
@@ -194,7 +195,7 @@ bool CheckFormat(bela::io::FD &fd, file_format_t &afmt, int64_t &offset, bela::e
   if (!pefile.NewFile(fd.NativeFD(), bela::SizeUnInitialized, ec)) {
     return false;
   }
-  if (pefile.OverlayLength() < magic_size) {
+  if (std::cmp_less(pefile.OverlayLength(), magic_size)) {
     // EXE
     return true;
   }

@@ -14,41 +14,43 @@ uint32_t codePageSearch(Encoding e) {
     Encoding e;
     uint32_t codePage;
   } codePages[] = {
-      {CHINESE_GB, 936},   // ANSI/OEM Simplified Chinese (PRC, Singapore); Chinese Simplified (GB2312)
-      {CHINESE_BIG5, 950}, // ANSI/OEM Traditional Chinese (Taiwan; Hong Kong SAR, PRC); Chinese Traditional (Big5)
-      {CHINESE_BIG5_CP950, 950}, //
-      {GBK, 936},                // GBK use 936?
-      {CHINESE_EUC_DEC, 51936},  // EUC Simplified Chinese; Chinese Simplified (EUC)
-      {GB18030, 54936},    // Windows XP and later: GB18030 Simplified Chinese (4 byte); Chinese Simplified (GB18030)
-      {HZ_GB_2312, 52936}, // HZ-GB2312 Simplified Chinese; Chinese Simplified (HZ)
-      {JAPANESE_EUC_JP, 20932},  // Japanese (JIS 0208-1990 and 0212-1990)
-      {JAPANESE_SHIFT_JIS, 932}, // ANSI/OEM Japanese; Japanese (Shift-JIS)
-      {JAPANESE_CP932, 932},     //
-      {KOREAN_EUC_KR, 51949},    //	EUC Korean
-      {ISO_8859_1, 28591},       // ISO 8859-1 Latin 1; Western European (ISO)
-      {ISO_8859_2, 28592},       //	ISO 8859-2 Central European; Central European (ISO)
-      {ISO_8859_3, 28593},       // in BasisTech but not in Teragram
-      {ISO_8859_4, 28594},       // Teragram Latin4
-      {ISO_8859_5, 28595},       // Teragram ISO-8859-5
-      {ISO_8859_6, 28596},       // Teragram Arabic
-      {ISO_8859_7, 28597},       // Teragram Greek
-      {ISO_8859_8, 28598},       // Teragram Hebrew
-      {ISO_8859_9, 28599},       // in BasisTech but not in Teragram
-      {RUSSIAN_CP1251, 1251},    //
-      {MSFT_CP1252, 1252},       //
-      {RUSSIAN_KOI8_R, 20866},   // Russian (KOI8-R); Cyrillic (KOI8-R)
-      {ISO_8859_15, 28605},      // ISO 8859-15 Latin 9
-      {MSFT_CP1254, 1254},       //
-      {MSFT_CP1257, 1257},       //
-      {MSFT_CP874, 847},         //
-      {MSFT_CP1256, 1256},       //
-      {MSFT_CP1255, 1255},       //
-      {ISO_8859_8_I, 38598},     // ISO 8859-8 Hebrew; Hebrew (ISO-Logical)
-      {HEBREW_VISUAL, 28598},    // ISO 8859-8 Hebrew; Hebrew (ISO-Visual)
-      {CZECH_CP852, 852},        //
-      {ISO_8859_13, 28603},      // ISO 8859-13 Estonian
-      {ISO_2022_KR, 50225},      // ISO 2022 Korean
-      {ISO_2022_CN, 50227}       // ISO 2022 Simplified Chinese; Chinese Simplified (ISO 2022)
+      {.e = CHINESE_GB, .codePage = 936}, // ANSI/OEM Simplified Chinese (PRC, Singapore); Chinese Simplified (GB2312)
+      {.e = CHINESE_BIG5,
+       .codePage = 950}, // ANSI/OEM Traditional Chinese (Taiwan; Hong Kong SAR, PRC); Chinese Traditional (Big5)
+      {.e = CHINESE_BIG5_CP950, .codePage = 950}, //
+      {.e = GBK, .codePage = 936},                // GBK use 936?
+      {.e = CHINESE_EUC_DEC, .codePage = 51936},  // EUC Simplified Chinese; Chinese Simplified (EUC)
+      {.e = GB18030,
+       .codePage = 54936}, // Windows XP and later: GB18030 Simplified Chinese (4 byte); Chinese Simplified (GB18030)
+      {.e = HZ_GB_2312, .codePage = 52936},       // HZ-GB2312 Simplified Chinese; Chinese Simplified (HZ)
+      {.e = JAPANESE_EUC_JP, .codePage = 20932},  // Japanese (JIS 0208-1990 and 0212-1990)
+      {.e = JAPANESE_SHIFT_JIS, .codePage = 932}, // ANSI/OEM Japanese; Japanese (Shift-JIS)
+      {.e = JAPANESE_CP932, .codePage = 932},     //
+      {.e = KOREAN_EUC_KR, .codePage = 51949},    //	EUC Korean
+      {.e = ISO_8859_1, .codePage = 28591},       // ISO 8859-1 Latin 1; Western European (ISO)
+      {.e = ISO_8859_2, .codePage = 28592},       //	ISO 8859-2 Central European; Central European (ISO)
+      {.e = ISO_8859_3, .codePage = 28593},       // in BasisTech but not in Teragram
+      {.e = ISO_8859_4, .codePage = 28594},       // Teragram Latin4
+      {.e = ISO_8859_5, .codePage = 28595},       // Teragram ISO-8859-5
+      {.e = ISO_8859_6, .codePage = 28596},       // Teragram Arabic
+      {.e = ISO_8859_7, .codePage = 28597},       // Teragram Greek
+      {.e = ISO_8859_8, .codePage = 28598},       // Teragram Hebrew
+      {.e = ISO_8859_9, .codePage = 28599},       // in BasisTech but not in Teragram
+      {.e = RUSSIAN_CP1251, .codePage = 1251},    //
+      {.e = MSFT_CP1252, .codePage = 1252},       //
+      {.e = RUSSIAN_KOI8_R, .codePage = 20866},   // Russian (KOI8-R); Cyrillic (KOI8-R)
+      {.e = ISO_8859_15, .codePage = 28605},      // ISO 8859-15 Latin 9
+      {.e = MSFT_CP1254, .codePage = 1254},       //
+      {.e = MSFT_CP1257, .codePage = 1257},       //
+      {.e = MSFT_CP874, .codePage = 847},         //
+      {.e = MSFT_CP1256, .codePage = 1256},       //
+      {.e = MSFT_CP1255, .codePage = 1255},       //
+      {.e = ISO_8859_8_I, .codePage = 38598},     // ISO 8859-8 Hebrew; Hebrew (ISO-Logical)
+      {.e = HEBREW_VISUAL, .codePage = 28598},    // ISO 8859-8 Hebrew; Hebrew (ISO-Visual)
+      {.e = CZECH_CP852, .codePage = 852},        //
+      {.e = ISO_8859_13, .codePage = 28603},      // ISO 8859-13 Estonian
+      {.e = ISO_2022_KR, .codePage = 50225},      // ISO 2022 Korean
+      {.e = ISO_2022_CN, .codePage = 50227}       // ISO 2022 Simplified Chinese; Chinese Simplified (ISO 2022)
   };
   for (const auto c : codePages) {
     if (c.e == e) {

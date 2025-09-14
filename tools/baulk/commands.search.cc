@@ -32,12 +32,7 @@ int cmd_search(const argv_t &argv) {
     pattern.emplace_back(bela::AsciiStrToLower(a));
   }
   auto isMatched = [&](std::wstring_view pkgName) -> bool {
-    for (const auto &a : pattern) {
-      if (bela::FnMatch(a, pkgName)) {
-        return true;
-      }
-    }
-    return false;
+    return std::ranges::any_of(pattern, [&](std::wstring_view a) { return bela::FnMatch(a, pkgName); });
   };
   // lldb/kali-rolling 1:9.0-49.1 amd64
   //   Next generation, high-performance debugger

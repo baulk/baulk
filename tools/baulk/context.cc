@@ -1,4 +1,5 @@
 // baulk context
+#include <algorithm>
 #include <version.hpp>
 #include <bela/io.hpp>
 #include <baulk/vfs.hpp>
@@ -38,9 +39,7 @@ public:
   }
   bool Initialize(std::wstring_view profile_, bela::error_code &ec);
   bool InitializeExecutor(bela::error_code &ec);
-  bool IsFrozenedPackage(std::wstring_view pkgName) const {
-    return std::find(pkgs.begin(), pkgs.end(), pkgName) != pkgs.end();
-  }
+  bool IsFrozenedPackage(std::wstring_view pkgName) const { return std::ranges::find(pkgs, pkgName) != pkgs.end(); }
   std::wstring_view LocaleName() const { return localeName; }
   std::wstring_view Profile() const { return profile; }
   auto &LoadedBuckets() { return buckets; }

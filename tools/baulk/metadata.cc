@@ -26,7 +26,7 @@ inline auto PackageMetaJoinNative(const Bucket &bucket, std::wstring_view pkgNam
 
 inline void resolveNativeURL(Package &pkg, baulk::json_view &jv) {
   using namespace std::string_view_literals;
-  auto __ = bela::finally([&] {
+  auto _ = bela::finally([&] {
     if (pkg.links.empty()) {
       jv.get_paths_checked("links", pkg.links);
     }

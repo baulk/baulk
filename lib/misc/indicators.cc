@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bela/base.hpp>
 #include <bela/terminal.hpp>
 #include <bela/str_split.hpp>
@@ -67,9 +68,7 @@ bool CygwinTerminalSize(bela::terminal::terminal_size &termsz) {
   if (!bela::SimpleAtoi(ss[1], &termsz.columns)) {
     return false;
   }
-  if (termsz.columns < 80) {
-    termsz.columns = 80;
-  }
+  termsz.columns = std::max<uint32_t>(termsz.columns, 80);
   return true;
 }
 
@@ -88,9 +87,7 @@ void ProgressBar::Loop() {
 void ProgressBar::Draw() {
   if (!cygwinterminal) {
     bela::terminal::TerminalSize(stderr, termsz);
-    if (termsz.columns < 80) {
-      termsz.columns = 80;
-    }
+    termsz.columns = std::max<uint32_t>(termsz.columns, 80);
   }
 
   // file.tar.gz 17%[###############>      ] 1024.00K 1024.00K/s

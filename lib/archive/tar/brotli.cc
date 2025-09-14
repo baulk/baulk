@@ -16,7 +16,7 @@ bool Reader::Initialize(bela::error_code &ec) {
     ec = bela::make_error_code(ErrExtractGeneral, L"BrotliDecoderCreateInstance failed");
     return false;
   }
-  BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1u);
+  BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1U);
   out.grow(outsize);
   in.grow(insize);
   return true;

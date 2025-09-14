@@ -1,4 +1,5 @@
 ///
+#include <utility>
 #include <version.hpp>
 #include <bela/process.hpp>
 #include <bela/str_split_narrow.hpp>
@@ -46,9 +47,10 @@ inline void progress_show(bela::terminal::terminal_size &termsz, const std::wstr
 
 class ZipExtractor {
 public:
-  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
-               const std::filesystem::path &destination_, const baulk::archive::ExtractorOptions &opts)
-      : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_), destination(destination_) {}
+  ZipExtractor(bela::io::FD &&fd_, std::filesystem::path archive_file_, std::filesystem::path destination_,
+               const baulk::archive::ExtractorOptions &opts)
+      : fd(std::move(fd_)), extractor(opts), archive_file(std::move(archive_file_)),
+        destination(std::move(destination_)) {}
   bool Extract(bela::error_code &ec);
   bool Initialize(int64_t size, int64_t offset, bela::error_code &ec) {
     return extractor.OpenReader(fd, destination, size, offset, ec);
@@ -219,10 +221,7 @@ inline bool replace_baulk_update(const std::filesystem::path &location, const st
   auto baulkUpdateDiscard = location / L"bin/baulk-update.del";
   auto baulkUpdate = location / L"bin/baulk-update.exe";
   auto baulkUpdateSource = source / L"bin/baulk-update.exe";
-  if (rename_file(baulkUpdate, baulkUpdateDiscard) && rename_file(baulkUpdateSource, baulkUpdate)) {
-    return true;
-  }
-  return false;
+  return rename_file(baulkUpdate, baulkUpdateDiscard) && rename_file(baulkUpdateSource, baulkUpdate);
 }
 
 bool Executor::replace_baulk_files() {

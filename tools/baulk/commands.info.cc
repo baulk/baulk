@@ -1,4 +1,5 @@
 //
+#include <algorithm>
 #include <bela/terminal.hpp>
 #include <baulk/indicators.hpp>
 #include <baulk/fsmutex.hpp>
@@ -36,7 +37,7 @@ void displayURLs(const std::vector<std::wstring> &urls) {
     return;
   }
   size_t maxlen = 0;
-  std::for_each(urls.begin(), urls.end(), [&](const std::wstring &u) { maxlen = (std::max)(maxlen, u.size()); });
+  std::ranges::for_each(urls, [&](const std::wstring &u) { maxlen = (std::max)(maxlen, u.size()); });
   bela::terminal::terminal_size termsz;
   if ([](bela::terminal::terminal_size &termsz) -> bool {
         if (bela::terminal::IsSameTerminal(stderr)) {

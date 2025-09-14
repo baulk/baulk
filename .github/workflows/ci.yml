@@ -22,21 +22,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [baulk-win64,baulk-arm64]
-        include:
-          - target: baulk-win64
-            short_target: win64
-          - target: baulk-arm64
-            short_target: arm64
+        target: [win64, arm64]
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 1
       - name: compile-baulk
-        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/build.ps1" -Target "${{ matrix.short_target }}"
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/build.ps1" -Target "${{ matrix.target }}"
       - name: Package Release
         if: startsWith(github.ref, 'refs/tags/')
-        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/package.ps1" -Target "${{ matrix.short_target }}"
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./script/package.ps1" -Target "${{ matrix.target }}"
       - name: Load PFX File from GitHub Secrets
         if: startsWith(github.ref, 'refs/tags/')
         id: savepfx
@@ -52,10 +47,10 @@ jobs:
           Get-Item $certificatePath
       - name: Make Appx
         if: startsWith(github.ref, 'refs/tags/')
-        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeAppx.ps1" -Target "${{ matrix.short_target }}"
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeAppx.ps1" -Target "${{ matrix.target }}"
       - name: Make Unscrew Extractor Appx
         if: startsWith(github.ref, 'refs/tags/')
-        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeUnscrewAppx.ps1" -Target "${{ matrix.short_target }}"
+        run: pwsh -NoProfile -NoLogo -ExecutionPolicy unrestricted -File "./msix/makeUnscrewAppx.ps1" -Target "${{ matrix.target }}"
       - name: Publish Artifacts
         uses: svenstaro/upload-release-action@v2
         if: startsWith(github.ref, 'refs/tags/')

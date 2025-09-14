@@ -64,9 +64,9 @@ inline bool isZeroBlock(const ustar_header &th) {
 
 // blockPadding computes the number of bytes needed to pad offset up to the
 // nearest block edge where 0 <= n < blockSize.
-inline constexpr int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
+constexpr int64_t blockPadding(int64_t offset) { return -offset & (blockSize - 1); }
 
-inline constexpr bool isHeaderOnlyType(char flag) {
+constexpr bool isHeaderOnlyType(char flag) {
   return (flag == TypeLink || flag == TypeSymlink || flag == TypeChar || flag == TypeBlock || flag == TypeDir ||
           flag == TypeFifo);
 }
@@ -247,7 +247,7 @@ bool readGNUSparseMap0x1(pax_records_t &paxrs, sparseDatas &spd, bela::error_cod
   for (int64_t i = 0; i < numEntries; i++) {
     // 0,0,1 1,2,3 2,4,5 3,6,7 4,8,9
     if (!bela::SimpleAtoi(sparseMap[2 * i], &spd[i].Offset) ||
-        !bela::SimpleAtoi(sparseMap[2 * i + 1], &spd[i].Length)) {
+        !bela::SimpleAtoi(sparseMap[(2 * i) + 1], &spd[i].Length)) {
       ec = bela::make_error_code(ErrExtractGeneral, L"tar: pax sparse invalid sparse offset or length");
       return false;
     }

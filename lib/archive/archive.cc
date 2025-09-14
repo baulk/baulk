@@ -35,20 +35,20 @@ inline bool discard_fd(HANDLE &fd) {
   //     DWORD Flags;
   // } FILE_DISPOSITION_INFO_EX, *PFILE_DISPOSITION_INFO_EX;
 
-  struct _File_disposition_info_ex {
-    DWORD _Flags;
+  struct File_disposition_info_ex {
+    DWORD Flags;
   };
-  _File_disposition_info_ex _Info_ex{0x3};
+  File_disposition_info_ex Info_ex{0x3};
 
   // FileDispositionInfoEx isn't documented in MSDN at the time of this writing, but is present
   // in minwinbase.h as of at least 10.0.16299.0
-  constexpr auto _FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
-  if (SetFileInformationByHandle(fd, _FileDispositionInfoExClass, &_Info_ex, sizeof(_Info_ex)) == TRUE) {
+  constexpr auto FileDispositionInfoExClass = static_cast<FILE_INFO_BY_HANDLE_CLASS>(21);
+  if (SetFileInformationByHandle(fd, FileDispositionInfoExClass, &Info_ex, sizeof(Info_ex)) == TRUE) {
     close_file(fd);
     return true;
   }
-  FILE_DISPOSITION_INFO _Info{/* .Delete= */ TRUE};
-  if (SetFileInformationByHandle(fd, FileDispositionInfo, &_Info, sizeof(_Info)) == TRUE) {
+  FILE_DISPOSITION_INFO Info{/* .Delete= */ TRUE};
+  if (SetFileInformationByHandle(fd, FileDispositionInfo, &Info, sizeof(Info)) == TRUE) {
     close_file(fd);
     return true;
   }

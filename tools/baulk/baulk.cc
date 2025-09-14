@@ -109,32 +109,34 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
   }
 
   constexpr command_map_t cmdmaps[] = {
-      {L"help", baulk::commands::cmd_help, false},
-      {L"h", baulk::commands::cmd_help, false}, // help alias
-      {L"version", baulk::commands::cmd_version, true},
-      {L"info", baulk::commands::cmd_info, true},             // info
-      {L"install", baulk::commands::cmd_install, true},       // install
-      {L"i", baulk::commands::cmd_install, true},             // install
-      {L"list", baulk::commands::cmd_list, true},             // list installed
-      {L"l", baulk::commands::cmd_list, true},                // list installed alias
-      {L"search", baulk::commands::cmd_search, true},         // search from bucket
-      {L"s", baulk::commands::cmd_search, true},              // search alias
-      {L"uninstall", baulk::commands::cmd_uninstall, true},   // uninstall
-      {L"r", baulk::commands::cmd_uninstall, true},           // uninstall
-      {L"update", baulk::commands::cmd_update, true},         // update bucket
-      {L"upgrade", baulk::commands::cmd_upgrade, true},       // upgrade
-      {L"u", baulk::commands::cmd_update_and_upgrade, true},  // update and upgrade
-      {L"freeze", baulk::commands::cmd_freeze, true},         // freeze
-      {L"unfreeze", baulk::commands::cmd_unfreeze, true},     // unfreeze
-      {L"cleancache", baulk::commands::cmd_cleancache, true}, // cleancache
-      {L"bucket", baulk::commands::cmd_bucket, true},         // bucket command
-      {L"b3sum", baulk::commands::cmd_b3sum, false},          // b3sum
-      {L"sha256sum", baulk::commands::cmd_sha256sum, false},  // sha256sum
-      {L"untar", baulk::commands::cmd_untar, false},          // untar
-      {L"unzip", baulk::commands::cmd_unzip, false},          // unzip
-      {L"extract", baulk::commands::cmd_extract, false},      // extract
-      {L"e", baulk::commands::cmd_extract, false},            // extract command
-      {L"brand", baulk::commands::cmd_brand, false},          // brand
+      {.name = L"help", .cmd_entry = baulk::commands::cmd_help, .require_context = false},
+      {.name = L"h", .cmd_entry = baulk::commands::cmd_help, .require_context = false}, // help alias
+      {.name = L"version", .cmd_entry = baulk::commands::cmd_version, .require_context = true},
+      {.name = L"info", .cmd_entry = baulk::commands::cmd_info, .require_context = true},       // info
+      {.name = L"install", .cmd_entry = baulk::commands::cmd_install, .require_context = true}, // install
+      {.name = L"i", .cmd_entry = baulk::commands::cmd_install, .require_context = true},       // install
+      {.name = L"list", .cmd_entry = baulk::commands::cmd_list, .require_context = true},       // list installed
+      {.name = L"l", .cmd_entry = baulk::commands::cmd_list, .require_context = true},          // list installed alias
+      {.name = L"search", .cmd_entry = baulk::commands::cmd_search, .require_context = true},   // search from bucket
+      {.name = L"s", .cmd_entry = baulk::commands::cmd_search, .require_context = true},        // search alias
+      {.name = L"uninstall", .cmd_entry = baulk::commands::cmd_uninstall, .require_context = true}, // uninstall
+      {.name = L"r", .cmd_entry = baulk::commands::cmd_uninstall, .require_context = true},         // uninstall
+      {.name = L"update", .cmd_entry = baulk::commands::cmd_update, .require_context = true},       // update bucket
+      {.name = L"upgrade", .cmd_entry = baulk::commands::cmd_upgrade, .require_context = true},     // upgrade
+      {.name = L"u",
+       .cmd_entry = baulk::commands::cmd_update_and_upgrade,
+       .require_context = true},                                                                  // update and upgrade
+      {.name = L"freeze", .cmd_entry = baulk::commands::cmd_freeze, .require_context = true},     // freeze
+      {.name = L"unfreeze", .cmd_entry = baulk::commands::cmd_unfreeze, .require_context = true}, // unfreeze
+      {.name = L"cleancache", .cmd_entry = baulk::commands::cmd_cleancache, .require_context = true}, // cleancache
+      {.name = L"bucket", .cmd_entry = baulk::commands::cmd_bucket, .require_context = true},         // bucket command
+      {.name = L"b3sum", .cmd_entry = baulk::commands::cmd_b3sum, .require_context = false},          // b3sum
+      {.name = L"sha256sum", .cmd_entry = baulk::commands::cmd_sha256sum, .require_context = false},  // sha256sum
+      {.name = L"untar", .cmd_entry = baulk::commands::cmd_untar, .require_context = false},          // untar
+      {.name = L"unzip", .cmd_entry = baulk::commands::cmd_unzip, .require_context = false},          // unzip
+      {.name = L"extract", .cmd_entry = baulk::commands::cmd_extract, .require_context = false},      // extract
+      {.name = L"e", .cmd_entry = baulk::commands::cmd_extract, .require_context = false},            // extract command
+      {.name = L"brand", .cmd_entry = baulk::commands::cmd_brand, .require_context = false},          // brand
   };
   auto subcmd = pa.Argv().front();
   for (const auto &c : cmdmaps) {
@@ -161,7 +163,7 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
 class dotcom_global_initializer {
 public:
   dotcom_global_initializer() {
-    auto hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
       auto ec = bela::make_system_error_code();
       MessageBoxW(nullptr, ec.data(), L"CoInitialize", IDOK);

@@ -178,7 +178,7 @@ bool expand_fallback_exe(const baulk::Package &pkg, const std::filesystem::path 
 
 bool Expand(const baulk::Package &pkg, const std::filesystem::path &archive_file) {
   auto fn = baulk::resolve_extract_handle(pkg.extension);
-  if (!fn) {
+  if (fn == nullptr) {
     bela::FPrintF(stderr, L"baulk unsupport package extension: %s\n", pkg.extension);
     return false;
   }

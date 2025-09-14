@@ -22,7 +22,7 @@ public:
   ~Conn() { Close(); }
   void Close();
   ssize_t WriteTimeout(const void *data, uint32_t len, int timeout);
-  ssize_t ReadTimeout(char *buf, size_t len, int timeout);
+  ssize_t ReadTimeout(char *buf, size_t len, int timeout) const;
   BAULKSOCK FD() const { return sock; }
 
 private:

@@ -13,7 +13,7 @@ bool Reader::decompressBrotli(const File &file, const Writer &w, bela::error_cod
     return false;
   }
   auto closer = bela::finally([&] { BrotliDecoderDestroyInstance(state); });
-  BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1u);
+  BrotliDecoderSetParameter(state, BROTLI_DECODER_PARAM_LARGE_WINDOW, 1U);
   Buffer out(outsize);
   Buffer in(insize);
   auto csize = file.compressed_size;

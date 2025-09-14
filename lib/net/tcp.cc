@@ -34,7 +34,7 @@ private:
   std::atomic_bool initialized{false};
 };
 
-inline constexpr bool InProgress(int rv) { return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS; }
+constexpr bool InProgress(int rv) { return rv == WSAEWOULDBLOCK || rv == WSAEINPROGRESS; }
 
 inline bela::error_code make_wsa_error_code(int code, std::wstring_view prefix = L"") {
   bela::error_code ec;
@@ -43,11 +43,12 @@ inline bela::error_code make_wsa_error_code(int code, std::wstring_view prefix =
   return ec;
 }
 
-typedef struct _QueryContext {
+using QUERY_CONTEXT = struct _QueryContext {
   OVERLAPPED QueryOverlapped;
   PADDRINFOEXW QueryResults{nullptr};
   HANDLE CompleteEvent{nullptr};
-} QUERY_CONTEXT, *PQUERY_CONTEXT;
+};
+using PQUERY_CONTEXT = QUERY_CONTEXT *;
 
 void WINAPI QueryCompleteCallback(_In_ DWORD Error, _In_ DWORD Bytes, _In_ LPOVERLAPPED Overlapped) {
   PQUERY_CONTEXT QueryContext = nullptr;
@@ -131,7 +132,7 @@ ssize_t Conn::WriteTimeout(const void *data, uint32_t len, int timeout) {
   }
   return -1;
 }
-ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) {
+ssize_t Conn::ReadTimeout(char *buf, size_t len, int timeout) const {
   WSABUF wsabuf{static_cast<ULONG>(len), buf};
   DWORD dwbytes = 0;
   DWORD flags = 0;

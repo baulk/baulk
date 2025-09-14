@@ -22,7 +22,7 @@ private:
   bool extract_file(const std::filesystem::path &archive_file);
   bool apply_baulk_files();
   bool replace_baulk_files();
-  void cleanup();
+  static void cleanup();
   std::wstring specified;
   std::wstring download_url;
   std::filesystem::path destination;

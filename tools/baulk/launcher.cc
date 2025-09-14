@@ -256,7 +256,7 @@ std::optional<std::wstring> path_reachable_cat(const std::filesystem::path &pack
   auto make_reachable_path = [&](const std::span<std::filesystem::path> pv) -> std::filesystem::path {
     std::filesystem::path path(packageRoot);
     newRelativePath.clear();
-    for (auto p : pv) {
+    for (const auto &p : pv) {
       path /= p;
       if (!newRelativePath.empty()) {
         newRelativePath.append(L"\\");

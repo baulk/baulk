@@ -40,7 +40,7 @@ Command:
   bucket           Add, delete or list buckets
   untar            Extract files in a tar archive. support: tar.xz tar.bz2 tar.gz tar.zstd
   unzip            Extract compressed files in a ZIP archive
-  extract           Extract files according to the detected archive format
+  extract          Extract files according to the detected archive format
   brand            Display os device details
 
 Alias:
@@ -78,26 +78,26 @@ int cmd_help(const baulk::commands::argv_t &argv) {
     return 0;
   }
   constexpr command_usage_map_t usages[] = {
-      {L"install", baulk::commands::usage_install},       // install
-      {L"i", baulk::commands::usage_install},             // install
-      {L"list", baulk::commands::usage_list},             // list installed
-      {L"search", baulk::commands::usage_search},         // search from bucket
-      {L"uninstall", baulk::commands::usage_uninstall},   // uninstall
-      {L"r", baulk::commands::usage_uninstall},           // uninstall
-      {L"update", baulk::commands::usage_update},         // update bucket
-      {L"upgrade", baulk::commands::usage_upgrade},       // upgrade
-      {L"u", baulk::commands::usage_update_and_upgrade},  // update and upgrade
-      {L"freeze", baulk::commands::usage_freeze},         // freeze
-      {L"unfreeze", baulk::commands::usage_unfreeze},     // unfreeze
-      {L"b3sum", baulk::commands::usage_b3sum},           // b3sum
-      {L"sha256sum", baulk::commands::usage_sha256sum},   // sha256sum
-      {L"cleancache", baulk::commands::usage_cleancache}, // cleancache
-      {L"bucket", baulk::commands::usage_bucket},         // bucket command
-      {L"untar", baulk::commands::usage_untar},           // untar
-      {L"unzip", baulk::commands::usage_unzip},           // unzip
-      {L"extract", baulk::commands::usage_extract},       // extract
-      {L"e", baulk::commands::usage_extract},             // extract
-      {L"brand", baulk::commands::usage_brand},           // brand
+      {.name = L"install", .usage = baulk::commands::usage_install},       // install
+      {.name = L"i", .usage = baulk::commands::usage_install},             // install
+      {.name = L"list", .usage = baulk::commands::usage_list},             // list installed
+      {.name = L"search", .usage = baulk::commands::usage_search},         // search from bucket
+      {.name = L"uninstall", .usage = baulk::commands::usage_uninstall},   // uninstall
+      {.name = L"r", .usage = baulk::commands::usage_uninstall},           // uninstall
+      {.name = L"update", .usage = baulk::commands::usage_update},         // update bucket
+      {.name = L"upgrade", .usage = baulk::commands::usage_upgrade},       // upgrade
+      {.name = L"u", .usage = baulk::commands::usage_update_and_upgrade},  // update and upgrade
+      {.name = L"freeze", .usage = baulk::commands::usage_freeze},         // freeze
+      {.name = L"unfreeze", .usage = baulk::commands::usage_unfreeze},     // unfreeze
+      {.name = L"b3sum", .usage = baulk::commands::usage_b3sum},           // b3sum
+      {.name = L"sha256sum", .usage = baulk::commands::usage_sha256sum},   // sha256sum
+      {.name = L"cleancache", .usage = baulk::commands::usage_cleancache}, // cleancache
+      {.name = L"bucket", .usage = baulk::commands::usage_bucket},         // bucket command
+      {.name = L"untar", .usage = baulk::commands::usage_untar},           // untar
+      {.name = L"unzip", .usage = baulk::commands::usage_unzip},           // unzip
+      {.name = L"extract", .usage = baulk::commands::usage_extract},       // extract
+      {.name = L"e", .usage = baulk::commands::usage_extract},             // extract
+      {.name = L"brand", .usage = baulk::commands::usage_brand},           // brand
   };
   auto subcmd = argv[0];
   for (const auto &u : usages) {

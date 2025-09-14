@@ -1,5 +1,6 @@
 ///
 #include <charconv>
+#include <utility>
 #include "tarinternal.hpp"
 
 namespace baulk::archive::tar {
@@ -58,14 +59,15 @@ tar_format_t getFormat(const ustar_header &hdr) {
 int64_t parseNumeric256(const char *_p, size_t char_cnt) {
   uint64_t l;
   auto *p = reinterpret_cast<const unsigned char *>(_p);
-  unsigned char c{0}, neg{0};
+  unsigned char c{0};
+  unsigned char neg{0};
 
   /* Extend 7-bit 2s-comp to 8-bit 2s-comp, decide sign. */
   c = *p;
-  if (c & 0x40) {
+  if ((c & 0x40) != 0) {
     neg = 0xff;
     c |= 0x80;
-    l = ~0ull;
+    l = ~0ULL;
   } else {
     neg = 0;
     c &= 0x7f;
@@ -76,14 +78,15 @@ int64_t parseNumeric256(const char *_p, size_t char_cnt) {
    * high-order bits without overflow. */
   while (char_cnt > sizeof(int64_t)) {
     --char_cnt;
-    if (c != neg)
-      return neg ? INT64_MIN : INT64_MAX;
+    if (c != neg) {
+      return (neg != 0u) ? INT64_MIN : INT64_MAX;
+    }
     c = *++p;
   }
 
   /* c is first byte that fits; if sign mismatch, return overflow */
-  if ((c ^ neg) & 0x80) {
-    return neg ? INT64_MIN : INT64_MAX;
+  if (((c ^ neg) & 0x80) != 0) {
+    return (neg != 0u) ? INT64_MIN : INT64_MAX;
   }
 
   /* Accumulate remaining bytes. */
@@ -215,7 +218,7 @@ bool parsePAXRecord(std::string_view *sv, std::string_view *k, std::string_view 
                                bela::encode_into<char, wchar_t>(sv->substr(0, pos)), L"'");
     return false;
   }
-  if (pos >= n) {
+  if (std::cmp_greater_equal(pos, n)) {
     ec = bela::make_error_code(ErrExtractGeneral, L"invalid pax record");
     return false;
   }

@@ -53,7 +53,7 @@ bool BucketUpdater::Initialize() {
       auto latest = a["latest"].get<std::string_view>();
       auto time = a["time"].get<std::string_view>();
       status.emplace(bela::encode_into<char, wchar_t>(name),
-                     bucket_metadata{bela::encode_into<char, wchar_t>(latest), std::string(time)});
+                     bucket_metadata{.latest = bela::encode_into<char, wchar_t>(latest), .updated = std::string(time)});
     }
   } catch (const std::exception &e) {
     bela::FPrintF(stderr, L"baulk update: decode metadata. error: %s\n", e.what());
@@ -106,7 +106,7 @@ bool BucketUpdater::Update(const baulk::Bucket &bucket) {
     return false;
   }
   bela::FPrintF(stderr, L"\x1b[32m'%s' is up to date: %s\x1b[0m\n", bucket.name, *latest);
-  status[bucket.name] = bucket_metadata{*latest, bela::FormatTime<char>(bela::Now())};
+  status[bucket.name] = bucket_metadata{.latest = *latest, .updated = bela::FormatTime<char>(bela::Now())};
   updated = true;
   return true;
 }

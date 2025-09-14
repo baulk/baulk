@@ -103,16 +103,16 @@ struct HashPrefix {
   hash_t method;
 };
 constexpr HashPrefix hnmaps[] = {
-    {L"BLAKE3", hash_t::BLAKE3},     // BLAKE3
-    {L"SHA224", hash_t::SHA224},     // SHA224
-    {L"SHA256", hash_t::SHA256},     // SHA256
-    {L"SHA384", hash_t::SHA384},     // SHA384
-    {L"SHA512", hash_t::SHA512},     // SHA512
-    {L"SHA3-224", hash_t::SHA3_224}, // SHA3-224
-    {L"SHA3-256", hash_t::SHA3_256}, // SHA3-256
-    {L"SHA3-384", hash_t::SHA3_384}, // SHA3-384
-    {L"SHA3-512", hash_t::SHA3_512}, // SHA3-512
-    {L"SHA3", hash_t::SHA3},         // SHA3 alias for SHA3-256
+    {.prefix = L"BLAKE3", .method = hash_t::BLAKE3},     // BLAKE3
+    {.prefix = L"SHA224", .method = hash_t::SHA224},     // SHA224
+    {.prefix = L"SHA256", .method = hash_t::SHA256},     // SHA256
+    {.prefix = L"SHA384", .method = hash_t::SHA384},     // SHA384
+    {.prefix = L"SHA512", .method = hash_t::SHA512},     // SHA512
+    {.prefix = L"SHA3-224", .method = hash_t::SHA3_224}, // SHA3-224
+    {.prefix = L"SHA3-256", .method = hash_t::SHA3_256}, // SHA3-256
+    {.prefix = L"SHA3-384", .method = hash_t::SHA3_384}, // SHA3-384
+    {.prefix = L"SHA3-512", .method = hash_t::SHA3_512}, // SHA3-512
+    {.prefix = L"SHA3", .method = hash_t::SHA3},         // SHA3 alias for SHA3-256
 };
 bool HashEqual(const std::filesystem::path &file, std::wstring_view hash_value, bela::error_code &ec) {
   std::wstring_view value = hash_value;

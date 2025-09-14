@@ -83,7 +83,7 @@ private:
       ec = bela::make_system_error_code(L"ReadFile: ");
       return false;
     }
-    rlen = static_cast<ssize_t>(len);
+    rlen = len;
     offset += len;
     return true;
   }
@@ -141,11 +141,11 @@ bool Reader::decompressPpmd(const File &file, const Writer &w, bela::error_code 
     ec = bela::make_error_code(L"PPMd compressed data corrupted");
     return false;
   }
-  if (!Ppmd8_Alloc(&_ppmd, mem << 20, &g_BigAlloc)) {
+  if (Ppmd8_Alloc(&_ppmd, mem << 20, &g_BigAlloc) == 0) {
     ec = bela::make_error_code(L"Allocate Memory Failed");
     return false;
   }
-  if (!Ppmd8_Init_RangeDec(&_ppmd)) {
+  if (Ppmd8_Init_RangeDec(&_ppmd) == 0) {
     ec = bela::make_error_code(L"Ppmd8_RangeDec_Init");
     return false;
   }

@@ -61,7 +61,7 @@ inline std::optional<std::filesystem::path> flattened_recursive(std::filesystem:
       return std::make_optional(current);
     }
     entries++;
-    if (entries) {
+    if (entries != 0) {
       folder0 = entry.path();
     }
   }

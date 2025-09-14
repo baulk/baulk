@@ -9,15 +9,15 @@ void usage_brand() {
 }
 
 int cmd_brand(const argv_t & /*unused*/) {
-  auto result = CoInitializeSecurity(NULL,
+  auto result = CoInitializeSecurity(nullptr,
                                      -1,                          // COM authentication
-                                     NULL,                        // Authentication services
-                                     NULL,                        // Reserved
+                                     nullptr,                     // Authentication services
+                                     nullptr,                     // Reserved
                                      RPC_C_AUTHN_LEVEL_DEFAULT,   // Default authentication
                                      RPC_C_IMP_LEVEL_IMPERSONATE, // Default Impersonation
-                                     NULL,                        // Authentication info
+                                     nullptr,                     // Authentication info
                                      EOAC_NONE,                   // Additional capabilities
-                                     NULL                         // Reserved
+                                     nullptr                      // Reserved
   );
   if (FAILED(result)) {
     auto ec = bela::make_system_error_code();

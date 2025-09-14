@@ -14,6 +14,7 @@
 #include <baulk/archive/7zfinder.hpp>
 #include <baulk/indicators.hpp>
 #include <baulk/debug.hpp>
+#include <utility>
 #include "baulk.hpp"
 
 namespace baulk {
@@ -49,10 +50,11 @@ inline void progress_show(bela::terminal::terminal_size &termsz, const std::wstr
 
 class ZipExtractor final : public Extractor {
 public:
-  ZipExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
-               const std::filesystem::path &destination_, const ExtractorOptions &opts)
-      : fd(std::move(fd_)), extractor(opts), archive_file(archive_file_), destination(destination_) {}
-  bool Extract(bela::error_code &ec);
+  ZipExtractor(bela::io::FD &&fd_, std::filesystem::path archive_file_, std::filesystem::path destination_,
+               const ExtractorOptions &opts)
+      : fd(std::move(fd_)), extractor(opts), archive_file(std::move(archive_file_)),
+        destination(std::move(destination_)) {}
+  bool Extract(bela::error_code &ec) override;
   bool Initialize(int64_t size, int64_t offset, bela::error_code &ec) {
     return extractor.OpenReader(fd, destination, size, offset, ec);
   }
@@ -88,12 +90,11 @@ bool ZipExtractor::Extract(bela::error_code &ec) {
 // tar or gz and other archive
 class UniversalExtractor final : public Extractor {
 public:
-  UniversalExtractor(bela::io::FD &&fd_, const std::filesystem::path &archive_file_,
-                     const std::filesystem::path &destination_, const ExtractorOptions &opts_, int64_t offset_,
-                     baulk::archive::file_format_t afmt_)
-      : fd(std::move(fd_)), archive_file(archive_file_), destination(destination_), opts(opts_), offset(offset_),
-        afmt(afmt_) {}
-  bool Extract(bela::error_code &ec);
+  UniversalExtractor(bela::io::FD &&fd_, std::filesystem::path archive_file_, std::filesystem::path destination_,
+                     const ExtractorOptions &opts_, int64_t offset_, baulk::archive::file_format_t afmt_)
+      : fd(std::move(fd_)), archive_file(std::move(archive_file_)), destination(std::move(destination_)), opts(opts_),
+        offset(offset_), afmt(afmt_) {}
+  bool Extract(bela::error_code &ec) override;
 
 private:
   bool single_file_extract(bela::error_code &ec);
@@ -201,9 +202,9 @@ bool UniversalExtractor::Extract(bela::error_code &ec) {
 
 class MsiExtractor final : public Extractor {
 public:
-  MsiExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_)
-      : archive_file(archive_file_), destination(destination_) {}
-  bool Extract(bela::error_code &ec);
+  MsiExtractor(std::filesystem::path archive_file_, std::filesystem::path destination_)
+      : archive_file(std::move(archive_file_)), destination(std::move(destination_)) {}
+  bool Extract(bela::error_code &ec) override;
 
 private:
   std::filesystem::path archive_file;
@@ -285,10 +286,10 @@ inline std::optional<std::wstring> lookup_sevenzip() {
 
 class _7zExtractor final : public Extractor {
 public:
-  _7zExtractor(const std::filesystem::path &archive_file_, const std::filesystem::path &destination_,
+  _7zExtractor(std::filesystem::path archive_file_, std::filesystem::path destination_,
                baulk::archive::file_format_t afmt_)
-      : archive_file(archive_file_), destination(destination_), afmt(afmt_) {}
-  bool Extract(bela::error_code &ec) {
+      : archive_file(std::move(archive_file_)), destination(std::move(destination_)), afmt(afmt_) {}
+  bool Extract(bela::error_code &ec) override {
     bela::FPrintF(stderr, L"Extracting \x1b[36m%v\x1b[0m ...\n", archive_file.filename());
     auto _7z = lookup_sevenzip();
     if (!_7z) {

@@ -34,7 +34,7 @@ enum tar_format_t : int {
 // Type '0' indicates a regular file.
 constexpr char TypeReg = '0';
 // Deprecated: Use TypeReg instead.
-constexpr char TypeRegA = '\x00'; 
+constexpr char TypeRegA = '\x00';
 
 // Type '1' to '6' are header-only flags and may not have a data body.
 constexpr char TypeLink = '1';    // Hard link
@@ -299,7 +299,7 @@ private:
   bool readHeader(Header &h, bela::error_code &ec);
   bool parsePAX(int64_t paxSize, pax_records_t &paxHdrs, bela::error_code &ec);
   bool handleSparseFile(Header &h, const gnutar_header *th, bela::error_code &ec);
-  bool readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec);
+  static bool readOldGNUSparseMap(Header &h, sparseDatas &spd, const gnutar_header *th, bela::error_code &ec);
   bool readGNUSparsePAXHeaders(Header &h, sparseDatas &spd, bela::error_code &ec);
   bool readGNUSparseMap1x0(sparseDatas &spd, bela::error_code &ec);
   ExtractReader *r{nullptr};
