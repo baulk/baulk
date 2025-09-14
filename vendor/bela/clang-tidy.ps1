@@ -5,34 +5,59 @@ param(
     [string]$Out
 )
 
-# C:\Program Files\Microsoft Visual Studio\2022
-$VS2022Root = "$env:ProgramFiles\Microsoft Visual Studio\2022"
 
-$clangtidy = $null
-$clangtidyLocal = $(
-    # x64
-    "$VS2022Root\Preview\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
-    "$VS2022Root\Community\VC\Tools\Llvm\x64\bin\clang-tidy.exe", 
-    "$VS2022Root\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    "$VS2022Root\Enterprise\VC\Tools\Llvm\x64\bin\clang-tidy.exe",
-    
-    "$env:ProgramFiles\llvm\bin\clang-tidy.exe"
-)
-foreach ($c in $clangtidyLocal) {
-    if (Test-Path $c) {
-        $clangtidy = $c
-        break
-    }
+$llvmArchTable = @{
+    "win-x64"   = "x64";
+    "win-arm64" = "arm64";
 }
 
-if ($null -eq $clangtidy) {
-    $clangtidyobj = Get-Command -CommandType Application "clang-tidy" -ErrorAction SilentlyContinue
-    if ($null -eq $clangtidyobj) {
-        Write-Host -ForegroundColor Red "No clang-tidy to be found"
-        return 
+$RID = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
+# win-x64 win-arm64
+
+$llvmArch = $llvmArchTable[$RID]
+
+function Get-VSWhere {
+    $app = Get-Command -CommandType Application "vswhere" -ErrorAction SilentlyContinue
+    if ($null -ne $app) {
+        return  $app[0].Source
     }
-    $clangtidy = $clangtidyobj[0].Source
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} -ChildPath "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        return $vswhere
+    }
+    return $null
 }
+
+
+function Get-ClangTidy {
+    $app = Get-Command -CommandType Application "clang-tidy" -ErrorAction SilentlyContinue
+    if ($null -ne $app) {
+        return  $app[0].Source
+    }
+    $clangTidy = Join-Path $env:ProgramFiles -ChildPath "llvm\bin\clang-tidy.exe"
+    if (Test-Path $clangTidy) {
+        return $clangTidy
+    }
+    # vswhere.exe -prerelease -latest -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+    $vswhere = Get-VSWhere
+    if ($null -eq $vswhere) {
+        return $null
+    }
+    $InstallDir = &$vswhere -prerelease -latest -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -property installationPath
+    if ([string]::IsNullOrEmpty($InstallDir)) {
+        return $null
+    }
+    $clangTidy = Join-Path $InstallDir -ChildPath "VC\Tools\Llvm\${llvmArch}\bin\clang-tidy.exe"
+    return $clangTidy
+}
+
+$clangTidyExe = Get-ClangTidy
+if ($null -eq $clangTidyExe) {
+    Write-Host -ForegroundColor Red "clang-tidy not found"
+    exit 1
+}
+
+# vswhere -latest -prerelease -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 
 $SOURCE_DIRS = $(
     "$PSScriptRoot\src\bela",
@@ -77,7 +102,7 @@ $inputArgs = $(
     "-m64",
     "-x", 
     "c++" , 
-    "-std=c++20",
+    "-std=c++23",
     "-ferror-limit=1000",
     "-D_WIN64",
     "-DNDEBUG",
@@ -94,7 +119,7 @@ $inputArgs = $(
 
 $inputArgsPrefix = [string]::Join(" ", $inputArgs)
 
-Write-Host "Use $clangtidy`n$inputArgsPrefix"
+Write-Host "Use $clangTidyExe`n$inputArgsPrefix"
 
 $extensions = (".cc", ".cxx", ".cpp", ".c++");
 
@@ -104,7 +129,7 @@ foreach ($d in $SOURCE_DIRS) {
         if ($extensions.Contains($_.Extension)) {
             $FileName = $_.FullName
             Write-Host -ForegroundColor Magenta "check $FileName"
-            $exitCode = Start-Process -FilePath $clangtidy -ArgumentList "`"$FileName`" $inputArgsPrefix" -Wait -PassThru -NoNewWindow -WorkingDirectory $PSScriptRoot
+            $exitCode = Start-Process -FilePath $clangTidyExe -ArgumentList "`"$FileName`" $inputArgsPrefix" -Wait -PassThru -NoNewWindow -WorkingDirectory $PSScriptRoot
             $exitCode | Out-Null
         }
     }

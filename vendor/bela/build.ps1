@@ -1,16 +1,20 @@
 #!/usr/bin/env pwsh
 param(
-    [ValidateSet("win64", "win32", "arm64")]
+    [ValidateSet("win64", "arm64")]
     [string]$Target = "win64"
 )
 
-$TargetWithHost64s = @{
-    "win64" = "amd64";
-    "win32" = "amd64_x86";
-    "arm64" = "amd64_arm64";
+function Get-VSWhere {
+    $app = Get-Command -CommandType Application "vswhere" -ErrorAction SilentlyContinue
+    if ($null -ne $app) {
+        return  $app[0].Source
+    }
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} -ChildPath "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        return $vswhere
+    }
+    return $null
 }
-
-$TargetWithHost = $TargetWithHost64s[$Target]
 
 Function Invoke-BatchFile {
     param(
@@ -64,29 +68,50 @@ Function Execute {
     return $Process.ExitCode
 }
 
-
-$VisualCxxBatchFiles = $(
-    "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat",
-    "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsall.bat",
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
-)
-
-$VisualCxxBatchFile = $null
-foreach ($file in $VisualCxxBatchFiles) {
-    if (Test-Path $file) {
-        $VisualCxxBatchFile = $file
-        break
-    }
+# code  begin
+$targetTables = @{
+    "win-x64@win64"   = "amd64";
+    "win-x64@arm64"   = "amd64_arm64";
+    "win-arm64@arm64" = "arm64";
+    "win-arm64@win64" = "arm64_amd64";
 }
-if ($null -eq $VisualCxxBatchFile) {
-    Write-Host -ForegroundColor Red "visual c++ vcvarsall.bat not found"
+
+$RID = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier # win-x64 win-arm64
+$vscomponent = "Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+if ($Target -eq "arm64") {
+    $vscomponent = "Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+}
+
+$vsarch = $targetTables["$RID@$Target"]
+
+$vswhere = Get-VSWhere
+if ($null -eq $vswhere) {
+    Write-Host -ForegroundColor Red "No vswhere installation found"
     exit 1
 }
 
+# vswhere -latest -prerelease -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+$vsInstallDir = &$vswhere -latest  -products * -requires $vscomponent -property installationPath
+if ([string]::IsNullOrEmpty($vsInstallDir)) {
+    $vsInstallDir = &$vswhere -latest -prerelease -products * -requires $vscomponent -property installationPath
+}
+if ([string]::IsNullOrEmpty($vsInstallDir)) {
+    Write-Host -ForegroundColor Red "No Visual Studio installation found."
+    exit 1
+}
 
-Write-Host "call `"$VisualCxxBatchFile`" $TargetWithHost"
+$VisualCxxBatchFile = Join-Path $vsInstallDir -ChildPath "VC\Auxiliary\Build\vcvarsall.bat"
 
-Invoke-BatchFile -Path $VisualCxxBatchFile -Arguments $TargetWithHost
+Write-Host "call `"$VisualCxxBatchFile`" $vsarch"
+
+Invoke-BatchFile -Path $VisualCxxBatchFile -Arguments $vsarch
+
+$cmake = Get-Command -CommandType Application "cmake" -ErrorAction SilentlyContinue
+if ($null -ne $cmake) {
+    $cmakeExe = $cmake[0].Source
+    Write-Host "Use cmake $cmakeExe"
+}
+
 $WD = Join-Path -Path $PWD -ChildPath "build"
 try {
     New-Item -ItemType Directory -Force -Path $WD
