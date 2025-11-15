@@ -10,7 +10,7 @@ $ArchitecturesAlloweds = @{
 
 $microsoftSDKs = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0'
 if (!(Test-Path $microsoftSDKs)) {
-    $microsoftSDKs = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0' 
+    $microsoftSDKs = 'HKLM:\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0' 
 }
 
 $sdkObject = Get-ItemProperty -Path $microsoftSDKs -ErrorAction SilentlyContinue
