@@ -92,7 +92,7 @@ BENCHMARK_ADLER32_BASELINE_COPY(native, native_adler32, 1);
 
 #ifdef ARM_NEON
 /* If we inline this copy for neon, the function would go here */
-//BENCHMARK_ADLER32_COPY(neon, adler32_neon, test_cpu_features.arm.has_neon);
+BENCHMARK_ADLER32_COPY(neon, adler32_fold_copy_neon, test_cpu_features.arm.has_neon);
 BENCHMARK_ADLER32_BASELINE_COPY(neon_copy_baseline, adler32_neon, test_cpu_features.arm.has_neon);
 #endif
 
@@ -125,6 +125,15 @@ BENCHMARK_ADLER32_COPY(avx512, adler32_fold_copy_avx512, test_cpu_features.x86.h
 #ifdef X86_AVX512VNNI
 BENCHMARK_ADLER32_BASELINE_COPY(avx512_vnni_baseline, adler32_avx512_vnni, test_cpu_features.x86.has_avx512vnni);
 BENCHMARK_ADLER32_COPY(avx512_vnni, adler32_fold_copy_avx512_vnni, test_cpu_features.x86.has_avx512vnni);
+#endif
+
+#ifdef LOONGARCH_LSX
+BENCHMARK_ADLER32_BASELINE_COPY(lsx_baseline, adler32_lsx, test_cpu_features.loongarch.has_lsx);
+BENCHMARK_ADLER32_COPY(lsx, adler32_fold_copy_lsx, test_cpu_features.loongarch.has_lsx);
+#endif
+#ifdef LOONGARCH_LASX
+BENCHMARK_ADLER32_BASELINE_COPY(lasx_baseline, adler32_lasx, test_cpu_features.loongarch.has_lasx);
+BENCHMARK_ADLER32_COPY(lasx, adler32_fold_copy_lasx, test_cpu_features.loongarch.has_lasx);
 #endif
 
 #endif

@@ -7,21 +7,21 @@ macro(configure_test_executable target)
     endif()
 endmacro()
 
-if(ZLIBNG_ENABLE_TESTS)
-    add_definitions(-DZLIBNG_ENABLE_TESTS)
+if(TEST_STOCK_ZLIB)
+    add_definitions(-DTEST_STOCK_ZLIB)
 endif()
 
 add_executable(example example.c)
 configure_test_executable(example)
-target_link_libraries(example zlib)
+target_link_libraries(example zlib-ng)
 add_test(NAME example COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:example>)
 
 add_executable(minigzip minigzip.c)
 configure_test_executable(minigzip)
 if(NOT DEFINED BUILD_SHARED_LIBS)
-    target_link_libraries(minigzip zlibstatic)
+    target_link_libraries(minigzip zlib-ng-static)
 else()
-    target_link_libraries(minigzip zlib)
+    target_link_libraries(minigzip zlib-ng)
 endif()
 if(BASEARCH_S360_FOUND)
     if(WITH_DFLTCC_DEFLATE OR WITH_DFLTCC_INFLATE)
@@ -32,7 +32,7 @@ set(MINIGZIP_COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:minigzip>)
 
 add_executable(minideflate minideflate.c)
 configure_test_executable(minideflate)
-target_link_libraries(minideflate zlib)
+target_link_libraries(minideflate zlib-ng)
 set(MINIDEFLATE_COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:minideflate>)
 
 if(INSTALL_UTILS)
@@ -44,19 +44,16 @@ endif()
 
 add_executable(switchlevels switchlevels.c)
 configure_test_executable(switchlevels)
-target_link_libraries(switchlevels zlib)
+target_link_libraries(switchlevels zlib-ng)
 set(SWITCHLEVELS_COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:switchlevels>)
 
 add_executable(infcover infcover.c)
 configure_test_executable(infcover)
-target_link_libraries(infcover zlib)
+target_link_libraries(infcover zlib-ng)
 if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
     target_sources(infcover PRIVATE ${PROJECT_SOURCE_DIR}/inftrees.c)
 endif()
-# infcover references zng_inflate_table() and struct inflate_state, which are internal to zlib-ng.
-if(ZLIBNG_ENABLE_TESTS)
-    add_test(NAME infcover COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:infcover>)
-endif()
+add_test(NAME infcover COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:infcover>)
 
 add_executable(makefixed ${PROJECT_SOURCE_DIR}/tools/makefixed.c ${PROJECT_SOURCE_DIR}/inftrees.c)
 configure_test_executable(makefixed)
@@ -88,14 +85,6 @@ endif()
 
 if(WITH_FUZZERS)
     add_subdirectory(fuzz)
-endif()
-
-if(WITH_GTEST OR WITH_BENCHMARKS)
-    if(CMAKE_VERSION VERSION_LESS 3.12)
-        message(WARNING "Minimum cmake version of 3.12 not met for Google benchmark!")
-        set(WITH_BENCHMARKS OFF)
-        set(WITH_BENCHMARKS OFF PARENT_SCOPE)
-    endif()
 endif()
 
 if(WITH_BENCHMARKS)
@@ -185,12 +174,13 @@ if(WITH_GTEST)
             list(APPEND TEST_SRCS test_gzio.cc)
         endif()
 
-        if(ZLIBNG_ENABLE_TESTS)
+        if(NOT TEST_STOCK_ZLIB)
             list(APPEND TEST_SRCS
                 test_adler32.cc             # adler32_neon(), etc
                 test_compare256.cc          # compare256_neon(), etc
                 test_compare256_rle.cc      # compare256_rle(), etc
-                test_crc32.cc               # crc32_acle(), etc
+                test_crc32.cc               # crc32_armv8(), etc
+                test_crc32_fold_copy.cc     # crc32_fold_copy implementations
                 test_inflate_sync.cc        # expects a certain compressed block layout
                 test_main.cc                # cpu_check_features()
                 test_version.cc             # expects a fixed version string
@@ -239,9 +229,9 @@ if(WITH_GTEST)
 
         if(NOT DEFINED BUILD_SHARED_LIBS)
             # Link statically in order to test internal zlib-ng functions.
-            target_link_libraries(gtest_zlib zlibstatic)
+            target_link_libraries(gtest_zlib zlib-ng-static)
         else()
-            target_link_libraries(gtest_zlib zlib)
+            target_link_libraries(gtest_zlib zlib-ng)
         endif()
 
         if(BUILD_SHARED_LIBS)

@@ -120,6 +120,7 @@ if(NOT DEFINED ZLIB_ROOT)
     find_package(Zlib REQUIRED)
 endif()
 
+set(ZLIB_ALIASES ON)
 set(ZLIB_COMPAT ON)
 set(ZLIB_ENABLE_TESTS OFF)
 
