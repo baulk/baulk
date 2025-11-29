@@ -5,17 +5,17 @@ namespace baulk::archive::tar::gzip {
 
 Reader::~Reader() {
   if (zs != nullptr) {
-    inflateEnd(zs);
+    zng_inflateEnd(zs);
     baulk::mem::deallocate(zs);
   }
 }
 bool Reader::Initialize(bela::error_code &ec) {
-  zs = baulk::mem::allocate<z_stream>();
-  memset(zs, 0, sizeof(z_stream));
+  zs = baulk::mem::allocate<zng_stream>();
+  memset(zs, 0, sizeof(zng_stream));
   zs->zalloc = baulk::mem::allocate_zlib;
   zs->zfree = baulk::mem::deallocate_simple;
-  if (auto zerr = inflateInit2(zs, MAX_WBITS + 16); zerr != Z_OK) {
-    ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
+  if (auto zerr = zng_inflateInit2(zs, MAX_WBITS + 16); zerr != Z_OK) {
+    ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zng_zError(zerr)));
     return false;
   }
   out.grow(outsize);
@@ -36,7 +36,7 @@ bool Reader::decompress(bela::error_code &ec) {
     }
     zs->avail_out = static_cast<int>(outsize);
     zs->next_out = out.data();
-    auto ret = ::inflate(zs, Z_NO_FLUSH);
+    auto ret = ::zng_inflate(zs, Z_NO_FLUSH);
     switch (ret) {
     case Z_NEED_DICT:
       ret = Z_DATA_ERROR;
@@ -44,7 +44,7 @@ bool Reader::decompress(bela::error_code &ec) {
     case Z_DATA_ERROR:
       [[fallthrough]];
     case Z_MEM_ERROR:
-      ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zError(ret)));
+      ec = bela::make_error_code(ErrExtractGeneral, bela::encode_into<char, wchar_t>(zng_zError(ret)));
       return false;
     default:
       break;

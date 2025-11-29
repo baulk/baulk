@@ -1,7 +1,7 @@
 ///
 // https://github.com/madler/sunzip/blob/master/sunzip.c
 #include "zipinternal.hpp"
-#include <zlib.h>
+#include <zlib-ng.h>
 // deflate64
 #include "../deflate64/infback9.h"
 
@@ -33,7 +33,7 @@ struct inflate64Reader {
   int64_t size{0};
 };
 
-unsigned get(void *in_desc, unsigned char **buf) {
+unsigned get(void *in_desc, const uint8_t **buf) {
   auto r = reinterpret_cast<inflate64Reader *>(in_desc);
   auto next = r->buf;
   if (buf != nullptr) {
@@ -64,7 +64,7 @@ unsigned get(void *in_desc, unsigned char **buf) {
 bool Reader::decompressDeflate64(const File &file, const Writer &w, bela::error_code &ec) const {
   Buffer window(65536);
   Buffer chunk(CHUNK);
-  z_stream zs;
+  zng_stream zs;
   memset(&zs, 0, sizeof(zs));
   zs.zalloc = baulk::mem::allocate_zlib;
   zs.zfree = baulk::mem::deallocate_simple;

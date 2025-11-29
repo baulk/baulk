@@ -1,20 +1,20 @@
 ///
 #include "zipinternal.hpp"
-#include <zlib.h>
+#include <zlib-ng.h>
 
 namespace baulk::archive::zip {
 // DEFLATE
 // https://github.com/madler/zlib/blob/master/examples/zpipe.c#L92
 bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_code &ec) const {
-  z_stream zs;
+  zng_stream zs;
   zs.zalloc = baulk::mem::allocate_zlib;
   zs.zfree = baulk::mem::deallocate_simple;
   memset(&zs, 0, sizeof(zs));
-  if (auto zerr = inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
-    ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zError(zerr)));
+  if (auto zerr = zng_inflateInit2(&zs, -MAX_WBITS); zerr != Z_OK) {
+    ec = bela::make_error_code(ErrGeneral, bela::encode_into<char, wchar_t>(zng_zError(zerr)));
     return false;
   }
-  auto closer = bela::finally([&] { inflateEnd(&zs); });
+  auto closer = bela::finally([&] { zng_inflateEnd(&zs); });
   Buffer out(outsize);
   Buffer in(insize);
   int64_t uncsize = 0;
@@ -34,7 +34,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
     do {
       zs.avail_out = static_cast<int>(outsize);
       zs.next_out = out.data();
-      ret = ::inflate(&zs, Z_NO_FLUSH);
+      ret = ::zng_inflate(&zs, Z_NO_FLUSH);
       switch (ret) {
       case Z_NEED_DICT:
         ret = Z_DATA_ERROR;
@@ -42,7 +42,7 @@ bool Reader::decompressDeflate(const File &file, const Writer &w, bela::error_co
       case Z_DATA_ERROR:
         [[fallthrough]];
       case Z_MEM_ERROR:
-        ec = bela::make_error_code(ret, bela::encode_into<char, wchar_t>(zError(ret)));
+        ec = bela::make_error_code(ret, bela::encode_into<char, wchar_t>(zng_zError(ret)));
         return false;
       default:
         break;

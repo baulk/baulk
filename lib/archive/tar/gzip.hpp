@@ -2,7 +2,7 @@
 #ifndef BAULK_ARCHIVE_TAR_GZIP_HPP
 #define BAULK_ARCHIVE_TAR_GZIP_HPP
 #include "tarinternal.hpp"
-#include "zlib.h"
+#include <zlib-ng.h>
 
 namespace baulk::archive::tar::gzip {
 class Reader : public ExtractReader {
@@ -19,7 +19,7 @@ public:
 private:
   bool decompress(bela::error_code &ec);
   ExtractReader *r{nullptr};
-  z_stream *zs{nullptr};
+  zng_stream *zs{nullptr};
   Buffer out;
   Buffer in;
   int64_t pickBytes{0};

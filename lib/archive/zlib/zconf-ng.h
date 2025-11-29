@@ -1,12 +1,12 @@
-/* zconf.h -- configuration of the zlib compression library
+/* zconf-ng.h -- configuration of the zlib-ng compression library
  * Copyright (C) 1995-2024 Jean-loup Gailly, Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#ifndef ZCONF_H
-#define ZCONF_H
+#ifndef ZCONFNG_H
+#define ZCONFNG_H
 
-#include "zlib_name_mangling.h"
+#include "zlib_name_mangling-ng.h"
 
 #if !defined(_WIN32) && defined(__WIN32__)
 #  define _WIN32
@@ -19,11 +19,8 @@
 #  define __has_declspec_attribute(x) 0
 #endif
 
-#if defined(ZLIB_CONST) && !defined(z_const)
-#  define z_const const
-#else
-#  define z_const
-#endif
+/* Always define z_const as const */
+#define z_const const
 
 /* Maximum value for memLevel in deflateInit2 */
 #ifndef MAX_MEM_LEVEL
@@ -57,11 +54,6 @@
 
 /* Type declarations */
 
-
-#ifndef OF /* function prototypes */
-#  define OF(args)  args
-#endif
-
 #ifdef ZLIB_INTERNAL
 #  define Z_INTERNAL ZLIB_INTERNAL
 #endif
@@ -82,9 +74,6 @@
  * Caution: the standard ZLIB1.DLL is NOT compiled using ZLIB_WINAPI.
  */
 #if defined(ZLIB_WINAPI) && defined(_WIN32)
-#  ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#  endif
 #  include <windows.h>
    /* No need for _export, use ZLIB.DEF instead. */
    /* For complete Windows compatibility, use WINAPI, not __stdcall. */
@@ -103,24 +92,9 @@
 #endif
 
 /* Conditional exports */
-#define ZNG_CONDEXPORT Z_INTERNAL
+#define ZNG_CONDEXPORT Z_EXPORT
 
-/* For backwards compatibility */
-
-#ifndef ZEXTERN
-#  define ZEXTERN Z_EXTERN
-#endif
-#ifndef ZEXPORT
-#  define ZEXPORT Z_EXPORT
-#endif
-#ifndef ZEXPORTVA
-#  define ZEXPORTVA Z_EXPORTVA
-#endif
-#ifndef FAR
-#  define FAR
-#endif
-
-/* Legacy zlib typedefs for backwards compatibility. Don't assume stdint.h is defined. */
+/* Fallback for something that includes us. */
 typedef unsigned char Byte;
 typedef Byte Bytef;
 
@@ -135,8 +109,6 @@ typedef uLong uLongf;
 typedef void const *voidpc;
 typedef void       *voidpf;
 typedef void       *voidp;
-
-typedef unsigned int z_crc_t;
 
 #if 0    /* was set to #if 0 by configure/cmake/etc */
 #  define Z_HAVE_UNISTD_H
@@ -179,7 +151,7 @@ typedef PTRDIFF_TYPE ptrdiff_t;
 #  define Z_WANT64
 #endif
 
-#if !defined(SEEK_SET)
+#if !defined(SEEK_SET) && defined(WITH_GZFILEOP)
 #  define SEEK_SET        0       /* Seek from beginning of file.  */
 #  define SEEK_CUR        1       /* Seek from current position.  */
 #  define SEEK_END        2       /* Set file pointer to EOF plus "offset" */
@@ -201,6 +173,4 @@ typedef PTRDIFF_TYPE ptrdiff_t;
 #  endif
 #endif
 
-typedef size_t z_size_t;
-
-#endif /* ZCONF_H */
+#endif /* ZCONFNG_H */

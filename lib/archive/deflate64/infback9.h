@@ -15,23 +15,15 @@
  * the third parameter of the "out" function actually means 65536UL.
  * zlib.h must be included before this header file.
  */
-#include <zlib.h>
+#include <zlib-ng.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-ZEXTERN int ZEXPORT inflateBack9(z_stream FAR *strm,
-                                 in_func in, void FAR *in_desc,
-                                 out_func out, void FAR *out_desc);
-ZEXTERN int ZEXPORT inflateBack9End(z_stream FAR *strm);
-ZEXTERN int ZEXPORT inflateBack9Init_(z_stream FAR *strm,
-                                      unsigned char FAR *window,
-                                      const char *version,
-                                      int stream_size);
-#define inflateBack9Init(strm, window) \
-        inflateBack9Init_((strm), (window), \
-        ZLIB_VERSION, sizeof(z_stream))
+int inflateBack9(zng_stream *strm, in_func in, void *in_desc, out_func out, void *out_desc);
+int inflateBack9End(zng_stream *strm);
+int inflateBack9Init(zng_stream *strm, unsigned char *window);
 
 #ifdef __cplusplus
 }
