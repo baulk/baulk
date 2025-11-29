@@ -3,6 +3,12 @@
 # bzip2 support
 file(GLOB BZIP2_SOURCES bzip2/*.c)
 add_library(bzip2 STATIC ${BZIP2_SOURCES})
+target_compile_definitions(
+  bzip2
+  PRIVATE
+    _CRT_NONSTDC_NO_DEPRECATE
+    _CRT_SECURE_NO_DEPRECATE
+)
 
 # brotli
 file(
@@ -17,7 +23,7 @@ target_include_directories(brotli PRIVATE brotli/include)
 # ced
 add_subdirectory(ced)
 
-# zlib: use zlib-ng
+# zlib-ng
 
 file(
   GLOB
@@ -115,9 +121,9 @@ elseif("${BAULK_ARCH_NAME}" STREQUAL "arm64")
             ARM_CRC32_INTRIN
             ARM_FEATURES
             ARM_NEON
-            RM_NEON_HASLD4
+            ARM_NEON_HASLD4
             _ARM64_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1
-             __ARM_NEON__=1)
+            __ARM_NEON__=1)
 endif()
 
 target_include_directories(zlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
