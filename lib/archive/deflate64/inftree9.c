@@ -252,7 +252,7 @@ int inflate_table9(codetype type, unsigned short *lens, unsigned codes, code **t
         drop = root;
 
       /* increment past last table */
-      next += 1U << curr;
+      next += (ptrdiff_t)(1U << curr);
 
       /* determine length of next table */
       curr = len - drop;
