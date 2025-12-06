@@ -79,11 +79,11 @@ Copy-Item -Recurse "$WD\bin\wind.exe" -Destination "$AppxBuildRoot\bin"
 Copy-Item -Recurse "$SourceRoot\LICENSE" -Destination "$AppxBuildRoot\share"
 Copy-Item -Recurse "$SourceRoot\res\screw-driver.ico" -Destination "$AppxBuildRoot\share\baulk"
 
-Copy-Item -Recurse "$SourceRoot\script\Fragments.ps1" -Destination "$AppxBuildRoot\script"
-Copy-Item -Recurse "$SourceRoot\script\Fragments.bat" -Destination "$AppxBuildRoot\script"
-Copy-Item -Recurse "$SourceRoot\script\FragmentsARM64.ps1" -Destination "$AppxBuildRoot\script"
-Copy-Item -Recurse "$SourceRoot\script\FragmentsARM64.bat" -Destination "$AppxBuildRoot\script"
-Copy-Item -Recurse "$SourceRoot\script\FragmentsDel.bat" -Destination "$AppxBuildRoot\script"
+Copy-Item -Recurse "$SourceRoot\script\fragments.ps1" -Destination "$AppxBuildRoot\script"
+Copy-Item -Recurse "$SourceRoot\script\fragments.bat" -Destination "$AppxBuildRoot\script"
+Copy-Item -Recurse "$SourceRoot\script\fragments-arm64.ps1" -Destination "$AppxBuildRoot\script"
+Copy-Item -Recurse "$SourceRoot\script\fragments-arm64.bat" -Destination "$AppxBuildRoot\script"
+Copy-Item -Recurse "$SourceRoot\script\fragments-delete.bat" -Destination "$AppxBuildRoot\script"
 
 Copy-Item -Recurse "$PSScriptRoot\baulk\Assets" -Destination "$AppxBuildRoot"
 
