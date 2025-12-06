@@ -1,6 +1,6 @@
 -Wall
 -Wextra
 -pedantic
--std=c++20
+-std=c++23
 -Iinclude
 -Ivendor/bela/include

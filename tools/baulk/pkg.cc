@@ -126,7 +126,7 @@ bool NewLinks(const baulk::Package &pkg) {
   baulk::DropLinks(pkg.name, ec);
   // check package is good installed
   // rebuild launcher and links
-  if (!baulk::MakeLinks(pkg, true, ec)) {
+  if (!baulk::NewLinks(pkg, true, ec)) {
     bela::FPrintF(stderr, L"baulk unable make %s links: %s\n", pkg.name, ec);
     return false;
   }
@@ -270,7 +270,7 @@ bool Install(const baulk::Package &pkg) {
       // Since the metadata has been updated, we cannot rebuild the frozen
       // package launcher
       bela::FPrintF(stderr,
-                    L"baulk \x1b[31mskip upgrade\x1b[0m "
+                    L"\x1b[31mSkip upgrade\x1b[0m "
                     L"\x1b[35m%s\x1b[0m(\x1b[31mfrozen\x1b[0m) from "
                     L"\x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
                     L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m.\n",
@@ -278,7 +278,7 @@ bool Install(const baulk::Package &pkg) {
       return true;
     }
     bela::FPrintF(stderr,
-                  L"baulk will upgrade \x1b[35m%s\x1b[0m from "
+                  L"Upgrade \x1b[35m%s\x1b[0m from "
                   L"\x1b[33m%s\x1b[0m@\x1b[34m%s\x1b[0m to "
                   L"\x1b[32m%s\x1b[0m@\x1b[34m%s\x1b[0m\n",
                   pkg.name, pkgLocal->version, pkgLocal->bucket, pkg.version, pkg.bucket);
@@ -301,11 +301,11 @@ bool Install(const baulk::Package &pkg) {
     bela::FPrintF(stderr, L"baulk: unable make %s error: %s\n", downloads, ec);
     return false;
   }
-  bela::FPrintF(stderr, L"baulk: download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", filename, url);
+  bela::FPrintF(stderr, L"Download '\x1b[36m%s\x1b[0m' \nurl: \x1b[36m%s\x1b[0m\n", filename, url);
   std::optional<std::filesystem::path> archive_file;
   for (int i = 0; i < 4; i++) {
     if (i != 0) {
-      bela::FPrintF(stderr, L"baulk: download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", filename, i);
+      bela::FPrintF(stderr, L"Download '\x1b[33m%s\x1b[0m' retries: \x1b[33m%d\x1b[0m\n", filename, i);
     }
     //  downloads, pkg.hash, true
     if (archive_file = baulk::net::WinGet(url,
@@ -316,7 +316,7 @@ bool Install(const baulk::Package &pkg) {
                                           },
                                           ec);
         !archive_file) {
-      bela::FPrintF(stderr, L"baulk: download '%s' error: \x1b[31m%s\x1b[0m\n", filename, ec);
+      bela::FPrintF(stderr, L"Download '%s' error: \x1b[31m%s\x1b[0m\n", filename, ec);
       continue;
     }
     // hash not check
