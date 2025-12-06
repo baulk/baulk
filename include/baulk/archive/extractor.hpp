@@ -50,7 +50,7 @@ public:
   bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
     if (fs::create_directories(destination, e); e) {
-      ec = bela::make_error_code_from_std(e, L"fs::create_directories() ");
+      ec = bela::make_error_code_from_std(e, bela::StringCat(L"fs::create_directories() '", destination, L"' "));
       return false;
     }
     for (const auto &file : reader.Files()) {
@@ -147,7 +147,7 @@ public:
   bool Extract(const Filter &filter, const OnProgress &progress, bela::error_code &ec) {
     std::error_code e;
     if (fs::create_directories(destination, e); e) {
-      ec = bela::make_error_code_from_std(e, L"fs::create_directories() ");
+      ec = bela::make_error_code_from_std(e, bela::StringCat(L"fs::create_directories() '", destination, L"' "));
       return false;
     }
     auto tr = std::make_shared<baulk::archive::tar::Reader>(reader);
@@ -201,7 +201,7 @@ private:
     }
     return baulk::archive::NewSymlink(_New_symlink, nativeLinkName, opts.overwrite_mode, ec);
   }
-  
+
   bool extract_entry(Reader &tr, const Header &fh, const Filter &filter, const OnProgress &progress,
                      bela::error_code &ec) {
     std::wstring encoded_path;

@@ -2,6 +2,7 @@
 #include <bela/path.hpp>
 #include <bela/str_split_narrow.hpp>
 #include <bela/str_split.hpp>
+#include <bela/str_replace.hpp>
 #include <baulk/archive.hpp>
 #include <compact_enc_det/compact_enc_det.h>
 #include <filesystem>
@@ -141,6 +142,23 @@ std::optional<std::filesystem::path> JoinSanitizeFsPath(const std::filesystem::p
     return std::nullopt;
   }
   encoded_path = encode_into_native(child_path, always_utf8);
+  constexpr std::wstring_view excludeChars = L"\r\n<>:\"|*?";
+  if (encoded_path.find_first_of(excludeChars) != std::wstring::npos) {
+    bela::StrReplaceAll(
+        {
+            // replace --> < --> _
+            {L"\r", L"-"},
+            {L"\n", L"_"},
+            {L"<", L"_"},
+            {L">", L"_"},
+            {L":", L"_"},
+            {L"\"", L"_"},
+            {L"|", L"_"},
+            {L"|", L"_"},
+            {L"?", L"_"} //
+        },
+        &encoded_path);
+  }
   return std::make_optional(root / encoded_path);
 }
 
