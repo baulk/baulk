@@ -2,10 +2,6 @@
 
 add_library(unscrew-extension SHARED shellext.cc shellext.def shellext.rc)
 
-if(BAULK_ENABLE_LTO)
-  set_property(TARGET unscrew-extension PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 target_link_libraries(
   unscrew-extension
   runtimeobject.lib

@@ -1,5 +1,5 @@
 ///
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 #include <bela/path.hpp>
 #include <bela/io.hpp>
 #include <bela/strip.hpp>
@@ -22,7 +22,7 @@ struct bucket_metadata {
 class BucketUpdater {
 public:
   using bucket_status_t =
-      bela::flat_hash_map<std::wstring, bucket_metadata, net::net_internal::StringCaseInsensitiveHash,
+      gtl::flat_hash_map<std::wstring, bucket_metadata, net::net_internal::StringCaseInsensitiveHash,
                           net::net_internal::StringCaseInsensitiveEq>;
   BucketUpdater() = default;
   BucketUpdater(const BucketUpdater &) = delete;

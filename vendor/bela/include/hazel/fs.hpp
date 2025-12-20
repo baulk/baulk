@@ -2,7 +2,7 @@
 #ifndef HAZEL_FS_HPP
 #define HAZEL_FS_HPP
 #include <bela/base.hpp>
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 
 namespace hazel::fs {
 typedef enum reparse_point_e : unsigned long {
@@ -61,7 +61,7 @@ typedef enum reparse_point_e : unsigned long {
 } reparse_point_t;
 
 struct FileReparsePoint {
-  bela::flat_hash_map<std::wstring, std::wstring> attributes;
+  gtl::flat_hash_map<std::wstring, std::wstring> attributes;
   reparse_point_t type;
 };
 

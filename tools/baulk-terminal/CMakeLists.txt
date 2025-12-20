@@ -9,8 +9,4 @@ add_executable(
 
 target_link_libraries(baulk-terminal belashl belatime Shell32)
 
-if(BAULK_ENABLE_LTO)
-  set_property(TARGET baulk-terminal PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 install(TARGETS baulk-terminal DESTINATION ".")

@@ -27,6 +27,3 @@ add_library(
 
 target_link_libraries(hazel bela belawin)
 
-if(BELA_ENABLE_LTO)
-  set_property(TARGET hazel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()

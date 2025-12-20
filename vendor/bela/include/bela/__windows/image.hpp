@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <bela/base.hpp>
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 
 namespace bela::pe {
 constexpr long ErrNoOverlay = 0xFF01;
@@ -301,13 +301,13 @@ struct Function {
 };
 
 struct FunctionTable {
-  using symbols_map_t = bela::flat_hash_map<std::string, std::vector<Function>>;
+  using symbols_map_t = gtl::flat_hash_map<std::string, std::vector<Function>>;
   symbols_map_t imports;
   symbols_map_t delayimprots;
   std::vector<ExportedSymbol> exports;
 };
 
-using symbols_map_t = bela::flat_hash_map<std::string, std::vector<Function>>;
+using symbols_map_t = gtl::flat_hash_map<std::string, std::vector<Function>>;
 
 struct Version {
   std::wstring CompanyName;

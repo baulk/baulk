@@ -79,7 +79,7 @@ void SubstituteAndAppendArray(std::string *output, std::string_view format, cons
     }
     if (ascii_isdigit(static_cast<char8_t>(format[i + 1]))) {
       const std::string_view src = args_array[format[i + 1] - '0'];
-      memcpy(target, src.data(), src.size());
+      std::ranges::copy(src, target);
       target += src.size();
       // target = std::copy(src.begin(), src.end(), target);
       ++i; // Skip next char.
@@ -134,7 +134,7 @@ void SubstituteAndAppendArray(std::wstring *output, std::wstring_view format, co
     }
     if (ascii_isdigit(format[i + 1])) {
       const std::wstring_view src = args_array[format[i + 1] - '0'];
-      wmemcpy(target, src.data(), src.size());
+      std::ranges::copy(src, target);
       target += src.size();
       // target = std::copy(src.begin(), src.end(), target);
       ++i; // Skip next char.

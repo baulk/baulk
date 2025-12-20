@@ -113,7 +113,7 @@ private:
 
 class SymbolSearcher {
 private:
-  using SymbolTable = bela::flat_hash_map<std::string, std::vector<bela::pe::ExportedSymbol>>;
+  using SymbolTable = gtl::flat_hash_map<std::string, std::vector<bela::pe::ExportedSymbol>>;
   SymbolTable table;
   std::vector<std::wstring> Paths;
   std::optional<std::string> LoadOrdinalFunctionName(std::string_view dllname, int ordinal, bela::error_code &ec);

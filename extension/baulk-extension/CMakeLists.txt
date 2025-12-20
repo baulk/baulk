@@ -2,10 +2,6 @@
 
 add_library(baulk-extension SHARED shellext.cc shellext.def shellext.rc)
 
-if(BAULK_ENABLE_LTO)
-  set_property(TARGET baulk-extension PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 target_link_libraries(
   baulk-extension
   runtimeobject.lib

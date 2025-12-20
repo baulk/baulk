@@ -4,7 +4,7 @@
 #include <bela/base.hpp>
 #include <bela/match.hpp>
 #include <bela/ascii.hpp>
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 #include <bela/path.hpp>
 #include <memory>
 
@@ -114,7 +114,7 @@ template <typename T, typename U, size_t N> constexpr bool bytes_equal(const T (
   return std::equal(a, a + N, b);
 }
 
-using headers_t = bela::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
+using headers_t = gtl::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
                                       net_internal::StringCaseInsensitiveEq>;
 
 enum class protocol_version { HTTP11, HTTP2, HTTP3 };

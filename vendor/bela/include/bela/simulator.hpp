@@ -39,7 +39,7 @@ struct StringCaseInsensitiveEq {
 std::wstring ExpandEnv(std::wstring_view raw);
 std::wstring PathExpand(std::wstring_view raw);
 
-using envmap_t = bela::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
+using envmap_t = gtl::flat_hash_map<std::wstring, std::wstring, StringCaseInsensitiveHash, StringCaseInsensitiveEq>;
 class Simulator {
 public:
   Simulator() = default;

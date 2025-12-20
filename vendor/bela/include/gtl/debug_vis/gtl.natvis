@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>  
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <!-- bit_vector  -->
+  <Type            Name="gtl::bitv::vec&lt;*&gt;">  
+      <DisplayString Condition="_sz &gt; 14757395258967641291"> sz=unset {_s}</DisplayString>
+      <DisplayString>sz={_sz,d} {_s}</DisplayString>
+  </Type>  
+
+  <!-- bit_vector storage -->
+  <Type Name="gtl::bitv::storage&lt;*&gt;">  
+          <Intrinsic Name="s" Expression="_s" />
+          <Intrinsic Name="sz" Expression="_s.size()" />  
+          <Intrinsic Name="ptr" Expression="_s._Mypair._Myval2._Myfirst" />  
+          <DisplayString Condition="sz() &gt; 4" Optional="false"> ... {_s._Mypair._Myval2._Myfirst+3,nax} {_s._Mypair._Myval2._Myfirst+2,nax} {_s._Mypair._Myval2._Myfirst+1,nax} {_s._Mypair._Myval2._Myfirst+0,nax}</DisplayString>
+          <DisplayString Condition="sz() &gt; 3" Optional="false">{_s._Mypair._Myval2._Myfirst+3,nax} {_s._Mypair._Myval2._Myfirst+2,nax} {_s._Mypair._Myval2._Myfirst+1,nax} {_s._Mypair._Myval2._Myfirst+0,nax}</DisplayString>
+          <DisplayString Condition="sz() &gt; 2" Optional="false">{_s._Mypair._Myval2._Myfirst+2,nax} {_s._Mypair._Myval2._Myfirst+1,nax} {_s._Mypair._Myval2._Myfirst+0,nax}</DisplayString>
+          <DisplayString Condition="sz() &gt; 1" Optional="false">{_s._Mypair._Myval2._Myfirst+1,nax} {_s._Mypair._Myval2._Myfirst+0,nax}</DisplayString>
+          <DisplayString Condition="sz() &gt; 0" Optional="false">{_s._Mypair._Myval2._Myfirst+0,nax}</DisplayString>
+          <Expand/>
+  </Type>      
+ 
+
+
+  <!-- flat map/set  -->
+  <Type            Name="gtl::flat_hash_set&lt;*,*,*,*&gt;">  
+  <AlternativeType Name="gtl::flat_hash_map&lt;*,*,*,*,*&gt;" />  
+      <DisplayString>{{size = {size_}}}</DisplayString>  
+      <Expand>  
+        <CustomListItems MaxItemsPerView="1000" ExcludeView="Test">  
+          <Variable Name="ctrl" InitialValue="ctrl_" />  
+          <Variable Name="slot" InitialValue="slots_" />  
+          <Variable Name="ctrl_end" InitialValue="ctrl_ + capacity_" />  
+          <Variable Name="slot_end" InitialValue="slots_ + capacity_" />  
+    
+          <Size>size_</Size>  
+          <Loop>  
+              <Break Condition="slot == slot_end" />  
+              <If Condition="*ctrl >= -1">
+                <Item>*slot,na</Item>  
+              </If>  
+              <Exec>++slot</Exec>  
+              <Exec>++ctrl</Exec>  
+          </Loop>
+        </CustomListItems>  
+      </Expand>  
+  </Type>  
+
+  <!-- node map/set - only difference is the **slot instead of *slot -->
+  <Type            Name="gtl::node_hash_set&lt;*,*,*,*&gt;">  
+  <AlternativeType Name="gtl::node_hash_map&lt;*,*,*,*,*&gt;" />  
+      <DisplayString>{{size = {size_}}}</DisplayString>  
+      <Expand>  
+        <CustomListItems MaxItemsPerView="1000" ExcludeView="Test">  
+          <Variable Name="ctrl" InitialValue="ctrl_" />  
+          <Variable Name="slot" InitialValue="slots_" />  
+          <Variable Name="ctrl_end" InitialValue="ctrl_ + capacity_" />  
+          <Variable Name="slot_end" InitialValue="slots_ + capacity_" />  
+    
+          <Size>size_</Size>  
+          <Loop>  
+              <Break Condition="slot == slot_end" />  
+              <If Condition="*ctrl >= -1">
+                <Item>**slot,na</Item>  
+              </If>  
+              <Exec>++slot</Exec>  
+              <Exec>++ctrl</Exec>  
+          </Loop>
+        </CustomListItems>  
+      </Expand>  
+  </Type>  
+    
+  <Type Name="gtl::priv::map_slot_type&lt;*,*&gt;">
+    <DisplayString>{value}</DisplayString>
+  </Type>
+
+  <!-- flat map iterators -->
+  <Type Name="gtl::priv::raw_hash_set&lt;*,*,*,*&gt;::iterator">
+       <DisplayString Condition="ctrl_ == 0">unset</DisplayString>
+       <DisplayString Condition="!(*ctrl_ >= 0)">end()</DisplayString>
+       <DisplayString>{*slot_,na}</DisplayString>
+  </Type>
+
+  <!-- node map iterators  - only difference is the **slot_ instead of * -->
+  <Type Name="gtl::priv::raw_hash_set&lt;gtl::priv::NodeHashSetPolicy&lt;*&gt;,*,*,*&gt;::iterator">
+       <DisplayString Condition="ctrl_ == 0">unset</DisplayString>
+       <DisplayString Condition="!(*ctrl_ >= 0)">end()</DisplayString>
+       <DisplayString>{**slot_,na}</DisplayString>
+  </Type>
+
+  <!-- parallel flat/node set -->
+  <Type            Name="gtl::parallel_flat_hash_set&lt;*,*,*,*,*,*&gt;">  
+  <AlternativeType Name="gtl::parallel_node_hash_set&lt;*,*,*,*,*,*&gt;" />  
+      <DisplayString>{{size = ?}}</DisplayString>  
+      <Expand>  
+        <CustomListItems MaxItemsPerView="1000" ExcludeView="Test">  
+          <Variable Name="idx" InitialValue="0" />  
+          <Variable Name="maxidx" InitialValue="$T5" />  
+          <Variable Name="ctrl" InitialValue="sets_._Elems[0].set_.ctrl_" />  
+          <Variable Name="slot" InitialValue="sets_._Elems[0].set_.slots_" />  
+          <Variable Name="ctrl_end" InitialValue="sets_._Elems[0].set_.ctrl_" />  
+          <Variable Name="slot_end" InitialValue="sets_._Elems[0].set_.slots_" />  
+          <Exec>maxidx = 2 &lt;&lt; maxidx</Exec>
+          <Loop>  
+                <Break Condition="idx == maxidx" />  
+                <Exec>ctrl = sets_._Elems[idx].set_.ctrl_</Exec>  
+                <Exec>slot = sets_._Elems[idx].set_.slots_</Exec>  
+                <Exec>ctrl_end = sets_._Elems[idx].set_.ctrl_ + sets_._Elems[idx].set_.capacity_</Exec>  
+                <Exec>slot_end = sets_._Elems[idx].set_.slots_ + sets_._Elems[idx].set_.capacity_</Exec>  
+                <Loop>  
+                    <Break Condition="slot == slot_end" />  
+                    <If Condition="*ctrl >= -1">
+                      <Item>*slot,na</Item>  
+                    </If>  
+                    <Exec>++slot</Exec>  
+                    <Exec>++ctrl</Exec>  
+                </Loop>
+                <Exec>++idx</Exec>  
+          </Loop>
+        </CustomListItems>  
+      </Expand>  
+  </Type>  
+
+  <!-- parallel flat/node map - only difference is $T6 instead of $T5 -->
+  <Type            Name="gtl::parallel_flat_hash_map&lt;*,*,*,*,*,*,*&gt;">  
+  <AlternativeType Name="gtl::parallel_node_hash_map&lt;*,*,*,*,*,*,*&gt;" /> 
+      <DisplayString>{{size = ?}}</DisplayString>  
+      <Expand>  
+        <CustomListItems MaxItemsPerView="1000" ExcludeView="Test">  
+          <Variable Name="idx" InitialValue="0" />  
+          <Variable Name="maxidx" InitialValue="$T6" />  
+          <Variable Name="ctrl" InitialValue="sets_._Elems[0].set_.ctrl_" />  
+          <Variable Name="slot" InitialValue="sets_._Elems[0].set_.slots_" />  
+          <Variable Name="ctrl_end" InitialValue="sets_._Elems[0].set_.ctrl_" />  
+          <Variable Name="slot_end" InitialValue="sets_._Elems[0].set_.slots_" />  
+          <Exec>maxidx = 2 &lt;&lt; maxidx</Exec>
+          <Loop>  
+                <Break Condition="idx == maxidx" />  
+                <Exec>ctrl = sets_._Elems[idx].set_.ctrl_</Exec>  
+                <Exec>slot = sets_._Elems[idx].set_.slots_</Exec>  
+                <Exec>ctrl_end = sets_._Elems[idx].set_.ctrl_ + sets_._Elems[idx].set_.capacity_</Exec>  
+                <Exec>slot_end = sets_._Elems[idx].set_.slots_ + sets_._Elems[idx].set_.capacity_</Exec>  
+                <Loop>  
+                    <Break Condition="slot == slot_end" />  
+                    <If Condition="*ctrl >= -1">
+                      <Item>*slot,na</Item>  
+                    </If>  
+                    <Exec>++slot</Exec>  
+                    <Exec>++ctrl</Exec>  
+                </Loop>
+                <Exec>++idx</Exec>  
+          </Loop>
+        </CustomListItems>  
+      </Expand>  
+  </Type>  
+
+  <Type Name="gtl::priv::parallel_hash_set&lt;*,*,*,*,*,*,*&gt;::iterator">
+       <DisplayString>{it_,na}</DisplayString>
+  </Type>
+
+</AutoVisualizer>  
+

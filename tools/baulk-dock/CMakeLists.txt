@@ -8,10 +8,6 @@ add_executable(
   baulk-dock.rc
   baulk-dock.manifest)
 
-if(BAULK_ENABLE_LTO)
-  set_property(TARGET baulk-dock PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 target_link_libraries(
   baulk-dock
   baulk.vfs

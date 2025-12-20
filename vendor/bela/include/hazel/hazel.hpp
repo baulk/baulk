@@ -3,7 +3,7 @@
 #define HAZEL_HAZEL_HPP
 #include <variant>
 #include <bela/base.hpp>
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 #include <bela/buffer.hpp>
 #include <bela/time.hpp>
 #include <bela/io.hpp>
@@ -110,7 +110,7 @@ private:
   friend bool LookupBytes(const bela::bytes_view &bv, hazel_result &hr, bela::error_code &ec);
   friend bool LookupFile(const bela::io::FD &fd, hazel_result &hr, bela::error_code &ec, int64_t offset);
   std::wstring description_;
-  bela::flat_hash_map<std::wstring, hazel_value_t> values_;
+  gtl::flat_hash_map<std::wstring, hazel_value_t> values_;
   int64_t size_{bela::SizeUnInitialized};
   size_t align_len_{sizeof("description") - 1};
   types::hazel_types_t t{types::none};

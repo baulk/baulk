@@ -452,7 +452,7 @@ std::wstring Method(uint16_t m) {
 
 bool Reader::ContainsSlow(std::span<std::string_view> paths, std::size_t limit) const {
   size_t found = 0;
-  bela::flat_hash_map<std::string_view, bool> pms;
+  gtl::flat_hash_map<std::string_view, bool> pms;
   for (const auto p : paths) {
     pms.emplace(p, false);
   }

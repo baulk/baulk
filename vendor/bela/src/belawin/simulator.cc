@@ -316,7 +316,7 @@ bool Simulator::LookPath(std::wstring_view cmd, std::wstring &exe, bool absPath)
 
 void Simulator::PathOrganize() {
   cachedEnv.clear();
-  bela::flat_hash_set<std::wstring, bela::env::StringCaseInsensitiveHash, bela::env::StringCaseInsensitiveEq> sets;
+  gtl::flat_hash_set<std::wstring, bela::env::StringCaseInsensitiveHash, bela::env::StringCaseInsensitiveEq> sets;
   std::vector<std::wstring> newpaths;
   sets.reserve(paths.size());
   for (auto &p : paths) {

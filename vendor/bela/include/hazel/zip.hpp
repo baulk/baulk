@@ -6,7 +6,7 @@
 #include <bela/buffer.hpp>
 #include <bela/str_cat.hpp>
 #include <bela/time.hpp>
-#include <bela/phmap.hpp>
+#include <gtl/phmap.hpp>
 #include <bela/os.hpp>
 #include <bela/io.hpp>
 

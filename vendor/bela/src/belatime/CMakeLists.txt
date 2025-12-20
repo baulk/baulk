@@ -14,6 +14,3 @@ add_library(
 
 target_link_libraries(belatime bela)
 
-if(BELA_ENABLE_LTO)
-  set_property(TARGET belatime PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()

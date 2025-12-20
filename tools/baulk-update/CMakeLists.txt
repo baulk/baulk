@@ -19,9 +19,5 @@ target_link_libraries(
   winhttp
   ws2_32)
 
-if(BAULK_ENABLE_LTO)
-  set_property(TARGET baulk-update PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 target_include_directories(baulk-update PRIVATE ../../lib/archive)
 install(TARGETS baulk-update DESTINATION bin)

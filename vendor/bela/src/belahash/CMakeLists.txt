@@ -164,7 +164,3 @@ else()
 endif()
 
 target_link_libraries(belahash bela)
-
-if(BELA_ENABLE_LTO)
-  set_property(TARGET belahash PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()

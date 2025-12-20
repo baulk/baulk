@@ -20,6 +20,3 @@ add_library(
   __fnmatch/fnmatch.cc
   __format/fmt.cc)
 
-if(BELA_ENABLE_LTO)
-  set_property(TARGET bela PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()

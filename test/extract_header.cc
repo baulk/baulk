@@ -85,7 +85,7 @@ std::string url_decode(std::wstring_view url) {
   return buf;
 }
 
-using headers_t = bela::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
+using headers_t = gtl::flat_hash_map<std::wstring, std::wstring, net_internal::StringCaseInsensitiveHash,
                                       net_internal::StringCaseInsensitiveEq>;
 
 inline std::optional<std::wstring> resolve_filename(std::wstring_view es) {

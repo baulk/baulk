@@ -57,7 +57,7 @@ bool FatFile::parseFile(bela::error_code &ec) {
     ec = bela::make_error_code(L"file contains no images");
     return false;
   }
-  bela::flat_hash_map<uint64_t, bool> seenArches;
+  gtl::flat_hash_map<uint64_t, bool> seenArches;
   arches.resize(narch);
   for (uint32_t i = 0; i < narch; i++) {
     auto p = &arches[i];
