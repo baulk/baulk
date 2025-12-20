@@ -1,5 +1,5 @@
 // Thanks Apple.inc
-// https://github.com/apple/darwin-xnu/blob/main/osfmk/mach/machine.h
+// https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/machine.h
 // https://opensource.apple.com/source/xnu/xnu-7195.81.3/osfmk/mach/machine.h.auto.html
 /*
  * Copyright (c) 2007-2016 Apple, Inc. All rights reserved.
@@ -88,7 +88,7 @@ typedef integer_t cpu_threadtype_t;
  *	Machine types known by all.
  */
 
-#define CPU_TYPE_ANY ((cpu_type_t)-1)
+#define CPU_TYPE_ANY ((cpu_type_t) - 1)
 
 #define CPU_TYPE_VAX ((cpu_type_t)1)
 /* skip				((cpu_type_t) 2)	*/
@@ -132,7 +132,7 @@ typedef integer_t cpu_threadtype_t;
  *      grading for the selected cpu_type_t, unlike the "ALL" subtypes,
  *      which are the slices that can run on any hardware for that cpu type.
  */
-#define CPU_SUBTYPE_ANY ((cpu_subtype_t)-1)
+#define CPU_SUBTYPE_ANY ((cpu_subtype_t) - 1)
 /*
  *	Object files that are hand-crafted to run on any
  *	implementation of an architecture are tagged with
@@ -144,7 +144,7 @@ typedef integer_t cpu_threadtype_t;
  *	It is the responsibility of the implementor to make sure the
  *	software handles unsupported implementations elegantly.
  */
-#define CPU_SUBTYPE_MULTIPLE ((cpu_subtype_t)-1)
+#define CPU_SUBTYPE_MULTIPLE ((cpu_subtype_t) - 1)
 #define CPU_SUBTYPE_LITTLE_ENDIAN ((cpu_subtype_t)0)
 #define CPU_SUBTYPE_BIG_ENDIAN ((cpu_subtype_t)1)
 
@@ -223,7 +223,7 @@ typedef integer_t cpu_threadtype_t;
 #define CPU_SUBTYPE_XEON CPU_SUBTYPE_INTEL(12, 0)
 #define CPU_SUBTYPE_XEON_MP CPU_SUBTYPE_INTEL(12, 1)
 
-#define CPU_SUBTYPE_INTEL_FAMILY(x) ((x)&15)
+#define CPU_SUBTYPE_INTEL_FAMILY(x) ((x) & 15)
 #define CPU_SUBTYPE_INTEL_FAMILY_MAX 15
 
 #define CPU_SUBTYPE_INTEL_MODEL(x) ((x) >> 4)
@@ -316,10 +316,13 @@ typedef integer_t cpu_threadtype_t;
 #define CPU_SUBTYPE_ARM_V7S ((cpu_subtype_t)11) /* Swift */
 #define CPU_SUBTYPE_ARM_V7K ((cpu_subtype_t)12)
 #define CPU_SUBTYPE_ARM_V8 ((cpu_subtype_t)13)
-#define CPU_SUBTYPE_ARM_V6M ((cpu_subtype_t)14)  /* Not meant to be run under xnu */
-#define CPU_SUBTYPE_ARM_V7M ((cpu_subtype_t)15)  /* Not meant to be run under xnu */
-#define CPU_SUBTYPE_ARM_V7EM ((cpu_subtype_t)16) /* Not meant to be run under xnu */
-#define CPU_SUBTYPE_ARM_V8M ((cpu_subtype_t)17)  /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V6M ((cpu_subtype_t)14)        /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7M ((cpu_subtype_t)15)        /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V7EM ((cpu_subtype_t)16)       /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V8M ((cpu_subtype_t)17)        /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V8M_MAIN CPU_SUBTYPE_ARM_V8M   /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V8M_BASE ((cpu_subtype_t)18)   /* Not meant to be run under xnu */
+#define CPU_SUBTYPE_ARM_V8_1M_MAIN ((cpu_subtype_t)19) /* Not meant to be run under xnu */
 
 /*
  *  ARM64 subtypes
@@ -330,7 +333,7 @@ typedef integer_t cpu_threadtype_t;
 
 /* CPU subtype feature flags for ptrauth on arm64e platforms */
 #define CPU_SUBTYPE_ARM64_PTR_AUTH_MASK 0x0f000000
-#define CPU_SUBTYPE_ARM64_PTR_AUTH_VERSION(x) (((x)&CPU_SUBTYPE_ARM64_PTR_AUTH_MASK) >> 24)
+#define CPU_SUBTYPE_ARM64_PTR_AUTH_VERSION(x) (((x) & CPU_SUBTYPE_ARM64_PTR_AUTH_MASK) >> 24)
 #define CPU_SUBTYPE_ARM64_PTR_AUTH_CURRENT_VERSION 0
 
 /*
@@ -365,6 +368,7 @@ typedef integer_t cpu_threadtype_t;
 #define CPUFAMILY_INTEL_SKYLAKE 0x37fc219f
 #define CPUFAMILY_INTEL_KABYLAKE 0x0f817246
 #define CPUFAMILY_INTEL_ICELAKE 0x38435547
+#define CPUFAMILY_INTEL_COMETLAKE 0x1cf8a03e
 #define CPUFAMILY_ARM_9 0xe73283ae
 #define CPUFAMILY_ARM_11 0x8ff620d8
 #define CPUFAMILY_ARM_XSCALE 0x53b005f5
@@ -380,18 +384,24 @@ typedef integer_t cpu_threadtype_t;
 #define CPUFAMILY_ARM_MONSOON_MISTRAL 0xe81e7ef6
 #define CPUFAMILY_ARM_VORTEX_TEMPEST 0x07d34b9f
 #define CPUFAMILY_ARM_LIGHTNING_THUNDER 0x462504d2
-#ifndef RC_HIDE_XNU_FIRESTORM
 #define CPUFAMILY_ARM_FIRESTORM_ICESTORM 0x1b588bb3
-#endif /* !RC_HIDE_XNU_FIRESTORM */
+#define CPUFAMILY_ARM_BLIZZARD_AVALANCHE 0xda33d83d
+#define CPUFAMILY_ARM_EVEREST_SAWTOOTH 0x8765edea
+#define CPUFAMILY_ARM_IBIZA 0xfa33415e
+#define CPUFAMILY_ARM_PALMA 0x72015832
+#define CPUFAMILY_ARM_COLL 0x2876f5b5
+#define CPUFAMILY_ARM_LOBOS 0x5f4dea93
+#define CPUFAMILY_ARM_DONAN 0x6f5129ac
+#define CPUFAMILY_ARM_BRAVA 0x17d5b93a
 
+/* Described in rdar://64125549 */
 #define CPUSUBFAMILY_UNKNOWN 0
 #define CPUSUBFAMILY_ARM_HP 1
 #define CPUSUBFAMILY_ARM_HG 2
 #define CPUSUBFAMILY_ARM_M 3
-#ifndef RC_HIDE_XNU_FIRESTORM
 #define CPUSUBFAMILY_ARM_HS 4
 #define CPUSUBFAMILY_ARM_HC_HD 5
-#endif /* !RC_HIDE_XNU_FIRESTORM */
+#define CPUSUBFAMILY_ARM_HA 6
 
 /* The following synonyms are deprecated: */
 #define CPUFAMILY_INTEL_6_23 CPUFAMILY_INTEL_PENRYN
