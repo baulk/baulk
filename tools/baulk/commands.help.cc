@@ -29,9 +29,9 @@ Command:
   search           Search in package descriptions
   info             Show package information
   install          Install specific packages. upgrade if already installed. (alias: i)
-  uninstall        Uninstall specific packages. (alias: r)
+  remove           Remove specific packages. (alias: r, uninstall)
   update           Update bucket metadata
-  upgrade          Upgrade all upgradeable packages
+  upgrade          Upgrade packages
   freeze           Freeze specific package
   unfreeze         UnFreeze specific package
   b3sum            Calculate the BLAKE3 checksum of a file
@@ -46,7 +46,7 @@ Command:
 Alias:
   h  help
   i  install
-  r  uninstall
+  r  remove
   l  list
   s  search
   u  update and upgrade
@@ -82,8 +82,9 @@ int cmd_help(const baulk::commands::argv_t &argv) {
       {.name = L"i", .usage = baulk::commands::usage_install},             // install
       {.name = L"list", .usage = baulk::commands::usage_list},             // list installed
       {.name = L"search", .usage = baulk::commands::usage_search},         // search from bucket
-      {.name = L"uninstall", .usage = baulk::commands::usage_uninstall},   // uninstall
-      {.name = L"r", .usage = baulk::commands::usage_uninstall},           // uninstall
+      {.name = L"remove", .usage = baulk::commands::usage_remove},         // remove
+      {.name = L"r", .usage = baulk::commands::usage_remove},              // remove
+      {.name = L"uninstall", .usage = baulk::commands::usage_remove},      // remove
       {.name = L"update", .usage = baulk::commands::usage_update},         // update bucket
       {.name = L"upgrade", .usage = baulk::commands::usage_upgrade},       // upgrade
       {.name = L"u", .usage = baulk::commands::usage_update_and_upgrade},  // update and upgrade

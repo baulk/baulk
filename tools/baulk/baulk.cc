@@ -16,15 +16,18 @@ int cmd_uninitialized(const baulk::commands::argv_t & /*unused*/) {
   bela::FPrintF(stderr, L"baulk uninitialized command\n");
   return 1;
 }
+
+using command_callback_t = decltype(cmd_uninitialized);
+
 struct command_t {
   commands::argv_t argv;
-  decltype(cmd_uninitialized) *cmd_entry{baulk::cmd_uninitialized};
+  command_callback_t *cmd_entry{baulk::cmd_uninitialized};
   int operator()() const { return this->cmd_entry(this->argv); }
 };
 
 struct command_map_t {
   const std::wstring_view name;
-  decltype(baulk::cmd_uninitialized) *cmd_entry;
+  command_callback_t *cmd_entry;
   bool require_context{false};
 };
 
@@ -112,22 +115,21 @@ std::optional<command_t> ParseArgv(int argc, wchar_t **argv) {
       {.name = L"help", .cmd_entry = baulk::commands::cmd_help, .require_context = false},
       {.name = L"h", .cmd_entry = baulk::commands::cmd_help, .require_context = false}, // help alias
       {.name = L"version", .cmd_entry = baulk::commands::cmd_version, .require_context = true},
-      {.name = L"info", .cmd_entry = baulk::commands::cmd_info, .require_context = true},       // info
-      {.name = L"install", .cmd_entry = baulk::commands::cmd_install, .require_context = true}, // install
-      {.name = L"i", .cmd_entry = baulk::commands::cmd_install, .require_context = true},       // install
-      {.name = L"list", .cmd_entry = baulk::commands::cmd_list, .require_context = true},       // list installed
-      {.name = L"l", .cmd_entry = baulk::commands::cmd_list, .require_context = true},          // list installed alias
-      {.name = L"search", .cmd_entry = baulk::commands::cmd_search, .require_context = true},   // search from bucket
-      {.name = L"s", .cmd_entry = baulk::commands::cmd_search, .require_context = true},        // search alias
-      {.name = L"uninstall", .cmd_entry = baulk::commands::cmd_uninstall, .require_context = true}, // uninstall
-      {.name = L"r", .cmd_entry = baulk::commands::cmd_uninstall, .require_context = true},         // uninstall
-      {.name = L"update", .cmd_entry = baulk::commands::cmd_update, .require_context = true},       // update bucket
-      {.name = L"upgrade", .cmd_entry = baulk::commands::cmd_upgrade, .require_context = true},     // upgrade
-      {.name = L"u",
-       .cmd_entry = baulk::commands::cmd_update_and_upgrade,
-       .require_context = true},                                                                  // update and upgrade
-      {.name = L"freeze", .cmd_entry = baulk::commands::cmd_freeze, .require_context = true},     // freeze
-      {.name = L"unfreeze", .cmd_entry = baulk::commands::cmd_unfreeze, .require_context = true}, // unfreeze
+      {.name = L"info", .cmd_entry = baulk::commands::cmd_info, .require_context = true},        // info
+      {.name = L"install", .cmd_entry = baulk::commands::cmd_install, .require_context = true},  // install
+      {.name = L"i", .cmd_entry = baulk::commands::cmd_install, .require_context = true},        // install
+      {.name = L"list", .cmd_entry = baulk::commands::cmd_list, .require_context = true},        // list installed
+      {.name = L"l", .cmd_entry = baulk::commands::cmd_list, .require_context = true},           // list installed alias
+      {.name = L"search", .cmd_entry = baulk::commands::cmd_search, .require_context = true},    // search from bucket
+      {.name = L"s", .cmd_entry = baulk::commands::cmd_search, .require_context = true},         // search alias
+      {.name = L"remove", .cmd_entry = baulk::commands::cmd_remove, .require_context = true},    // remove
+      {.name = L"r", .cmd_entry = baulk::commands::cmd_remove, .require_context = true},         // remove alias
+      {.name = L"uninstall", .cmd_entry = baulk::commands::cmd_remove, .require_context = true}, // remove alias 'uninstall'
+      {.name = L"update", .cmd_entry = baulk::commands::cmd_update, .require_context = true},    // update bucket
+      {.name = L"upgrade", .cmd_entry = baulk::commands::cmd_upgrade, .require_context = true},  // upgrade
+      {.name = L"u", .cmd_entry = baulk::commands::cmd_uu, .require_context = true},             // update and upgrade
+      {.name = L"freeze", .cmd_entry = baulk::commands::cmd_freeze, .require_context = true},    // freeze
+      {.name = L"unfreeze", .cmd_entry = baulk::commands::cmd_unfreeze, .require_context = true},     // unfreeze
       {.name = L"cleancache", .cmd_entry = baulk::commands::cmd_cleancache, .require_context = true}, // cleancache
       {.name = L"bucket", .cmd_entry = baulk::commands::cmd_bucket, .require_context = true},         // bucket command
       {.name = L"b3sum", .cmd_entry = baulk::commands::cmd_b3sum, .require_context = false},          // b3sum

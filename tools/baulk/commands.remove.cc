@@ -9,7 +9,7 @@
 #include "commands.hpp"
 
 namespace baulk::commands {
-int uninstall_package(std::wstring_view pkgName) {
+int remove_package(std::wstring_view pkgName) {
   auto metaLock = bela::StringCat(vfs::AppLocks(), L"\\", pkgName, L".json");
   bela::error_code ec;
   if (!bela::PathExists(metaLock) && !baulk::IsForceMode) {
@@ -18,46 +18,46 @@ int uninstall_package(std::wstring_view pkgName) {
   }
   if (baulk::IsForceDelete) {
     if (!baulk::package::Drop(pkgName, ec)) {
-      bela::FPrintF(stderr, L"baulk uninstall '%s' force-delete: \x1b[31m%s\x1b[0m\n", pkgName, ec);
+      bela::FPrintF(stderr, L"baulk remove '%s' force-delete: \x1b[31m%s\x1b[0m\n", pkgName, ec);
     }
   }
   if (!baulk::DropLinks(pkgName, ec)) {
-    bela::FPrintF(stderr, L"baulk uninstall '%s' links: \x1b[31m%s\x1b[0m\n", pkgName, ec);
+    bela::FPrintF(stderr, L"baulk remove '%s' links: \x1b[31m%s\x1b[0m\n", pkgName, ec);
   }
   bela::fs::ForceDeleteFolders(metaLock, ec);
   auto packageRoot = vfs::AppPackageFolder(pkgName);
   if (!bela::fs::ForceDeleteFolders(packageRoot, ec)) {
-    bela::FPrintF(stderr, L"baulk uninstall '%s' error: \x1b[31m%s\x1b[0m\n", pkgName, ec);
+    bela::FPrintF(stderr, L"baulk remove '%s' error: \x1b[31m%s\x1b[0m\n", pkgName, ec);
     return 1;
   }
-  bela::FPrintF(stderr, L"baulk uninstall \x1b[34m%s\x1b[0m done.\n", pkgName);
+  bela::FPrintF(stderr, L"baulk remove \x1b[34m%s\x1b[0m done.\n", pkgName);
   return 0;
 }
 
-void usage_uninstall() {
-  bela::FPrintF(stderr, LR"(Usage: baulk uninstall [package]...
-Uninstall specific packages. (alias: r)
+void usage_remove() {
+  bela::FPrintF(stderr, LR"(Usage: baulk remove [package]...
+Remove specific packages. (alias: uninstall, r)
 
 Example:
-  baulk uninstall wget
+  baulk remove wget
   baulk r wget
 
 )");
 }
 
-int cmd_uninstall(const argv_t &argv) {
+int cmd_remove(const argv_t &argv) {
   if (argv.empty()) {
-    bela::FPrintF(stderr, L"usage: baulk uninstall package\n");
+    bela::FPrintF(stderr, L"usage: baulk remove package-name\n");
     return 1;
   }
   bela::error_code ec;
   auto mtx = MakeFsMutex(vfs::AppFsMutexPath(), ec);
   if (!mtx) {
-    bela::FPrintF(stderr, L"baulk uninstall: \x1b[31mbaulk %s\x1b[0m\n", ec);
+    bela::FPrintF(stderr, L"baulk remove: \x1b[31mbaulk %s\x1b[0m\n", ec);
     return 1;
   }
   for (auto a : argv) {
-    uninstall_package(a);
+    remove_package(a);
   }
   return 0;
 }
