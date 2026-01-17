@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------------
-Copyright (c) 2018-2021, Microsoft Research, Daan Leijen
+Copyright (c) 2018-2025, Microsoft Research, Daan Leijen
 This is free software; you can redistribute it and/or modify it under the
 terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
@@ -43,10 +43,6 @@ int mi_version(void) mi_attr_noexcept {
 #define MI_DEFAULT_VERBOSE 0
 #endif
 
-#ifndef MI_DEFAULT_EAGER_COMMIT
-#define MI_DEFAULT_EAGER_COMMIT 1
-#endif
-
 #ifndef MI_DEFAULT_ARENA_EAGER_COMMIT
 #define MI_DEFAULT_ARENA_EAGER_COMMIT 2
 #endif
@@ -60,16 +56,16 @@ int mi_version(void) mi_attr_noexcept {
  #endif
 #endif
 
+#ifndef MI_DEFAULT_ARENA_MAX_OBJECT_SIZE
+#define MI_DEFAULT_ARENA_MAX_OBJECT_SIZE   ((MI_SIZE_BITS * MI_ARENA_MAX_CHUNK_OBJ_SIZE)/MI_KiB)  /* 2 GiB (or 256 MiB on 32-bit), larger than this is alloc'd by the OS */
+#endif
+
 #ifndef MI_DEFAULT_DISALLOW_ARENA_ALLOC
 #define MI_DEFAULT_DISALLOW_ARENA_ALLOC 0
 #endif
 
 #ifndef MI_DEFAULT_ALLOW_LARGE_OS_PAGES
-#if defined(__linux__) && !defined(__ANDROID__)
-#define MI_DEFAULT_ALLOW_LARGE_OS_PAGES 2    // enabled, but only use transparent huge pages through madvise
-#else
 #define MI_DEFAULT_ALLOW_LARGE_OS_PAGES 0
-#endif
 #endif
 
 #ifndef MI_DEFAULT_RESERVE_HUGE_OS_PAGES
@@ -104,6 +100,14 @@ int mi_version(void) mi_attr_noexcept {
 #define MI_DEFAULT_PAGE_CROSS_THREAD_MAX_RECLAIM  32
 #endif
 
+#ifndef MI_DEFAULT_ALLOW_THP
+#if defined(__ANDROID__)
+#define MI_DEFAULT_ALLOW_THP  0
+#else
+#define MI_DEFAULT_ALLOW_THP  1
+#endif
+#endif
+
 // Static options
 static mi_option_desc_t mi_options[_mi_option_last] =
 {
@@ -117,8 +121,7 @@ static mi_option_desc_t mi_options[_mi_option_last] =
   { MI_DEFAULT_VERBOSE, MI_OPTION_UNINIT, MI_OPTION(verbose) },
 
   // some of the following options are experimental and not all combinations are allowed.
-  { MI_DEFAULT_EAGER_COMMIT,
-       MI_OPTION_UNINIT, MI_OPTION(eager_commit) },               // commit per segment directly (4MiB)  (but see also `eager_commit_delay`)
+  { 1, MI_OPTION_UNINIT, MI_OPTION(deprecated_eager_commit) },  
   { MI_DEFAULT_ARENA_EAGER_COMMIT,
        MI_OPTION_UNINIT, MI_OPTION_LEGACY(arena_eager_commit,eager_region_commit) }, // eager commit arena's? 2 is used to enable this only on an OS that has overcommit (i.e. linux)
   { 1, MI_OPTION_UNINIT, MI_OPTION_LEGACY(purge_decommits,reset_decommits) },        // purge decommits memory (instead of reset) (note: on linux this uses MADV_DONTNEED for decommit)
@@ -131,12 +134,12 @@ static mi_option_desc_t mi_options[_mi_option_last] =
        MI_OPTION_UNINIT, MI_OPTION(reserve_os_memory)     },      // reserve N KiB OS memory in advance (use `option_get_size`)
   { 0, MI_OPTION_UNINIT, MI_OPTION(deprecated_segment_cache) },   // cache N segments per thread
   { 0, MI_OPTION_UNINIT, MI_OPTION(deprecated_page_reset) },      // reset page memory on free
-  { 0, MI_OPTION_UNINIT, MI_OPTION(abandoned_page_purge) },       // purge free page memory when a thread terminates
+  { 0, MI_OPTION_UNINIT, MI_OPTION(deprecated_abandoned_page_purge) }, 
   { 0, MI_OPTION_UNINIT, MI_OPTION(deprecated_segment_reset) },   // reset segment memory on free (needs eager commit)
 #if defined(__NetBSD__)
   { 0, MI_OPTION_UNINIT, MI_OPTION(eager_commit_delay) },         // the first N segments per thread are not eagerly committed
 #else
-  { 1, MI_OPTION_UNINIT, MI_OPTION(eager_commit_delay) },         // the first N segments per thread are not eagerly committed (but per page in the segment on demand)
+  { 1, MI_OPTION_UNINIT, MI_OPTION(deprecated_eager_commit_delay) },  
 #endif
   { 1000,MI_OPTION_UNINIT, MI_OPTION_LEGACY(purge_delay,reset_delay) },  // purge delay in milli-seconds
   { 0,   MI_OPTION_UNINIT, MI_OPTION(use_numa_nodes) },           // 0 = use available numa nodes, otherwise use at most N nodes.
@@ -152,7 +155,7 @@ static mi_option_desc_t mi_options[_mi_option_last] =
   { MI_DEFAULT_DISALLOW_ARENA_ALLOC,   MI_OPTION_UNINIT, MI_OPTION(disallow_arena_alloc) }, // 1 = do not use arena's for allocation (except if using specific arena id's)
   { 400, MI_OPTION_UNINIT, MI_OPTION(retry_on_oom) },             // windows only: retry on out-of-memory for N milli seconds (=400), set to 0 to disable retries.
 #if defined(MI_VISIT_ABANDONED)
-  { 1,   MI_OPTION_INITIALIZED, MI_OPTION(visit_abandoned) },     // allow visiting heap blocks in abandoned segments; requires taking locks during reclaim.
+  { 1,   MI_OPTION_INITIALIZED, MI_OPTION(visit_abandoned) },     // allow visiting theap blocks in abandoned segments; requires taking locks during reclaim.
 #else
   { 0,   MI_OPTION_UNINIT, MI_OPTION(visit_abandoned) },
 #endif
@@ -162,8 +165,8 @@ static mi_option_desc_t mi_options[_mi_option_last] =
   { MI_DEFAULT_GUARDED_SAMPLE_RATE,
          MI_OPTION_UNINIT, MI_OPTION(guarded_sample_rate)},       // 1 out of N allocations in the min/max range will be guarded (=4000)
   { 0,   MI_OPTION_UNINIT, MI_OPTION(guarded_sample_seed)},
-  { 10000, MI_OPTION_UNINIT, MI_OPTION(generic_collect) },        // collect heaps every N (=10000) generic allocation calls
-  { 0,   MI_OPTION_UNINIT, MI_OPTION_LEGACY(page_reclaim_on_free, abandoned_reclaim_on_free) },// reclaim abandoned (small) pages on a free: -1 = disable completely, 0 = only reclaim into the originating heap, 1 = reclaim on free across heaps
+  { 10000, MI_OPTION_UNINIT, MI_OPTION(generic_collect) },        // collect theaps every N (=10000) generic allocation calls
+  { 0,   MI_OPTION_UNINIT, MI_OPTION_LEGACY(page_reclaim_on_free, abandoned_reclaim_on_free) },// reclaim abandoned (small) pages on a free: -1 = disable completely, 0 = only reclaim into the originating theap, 1 = reclaim on free across theaps
   { 2,   MI_OPTION_UNINIT, MI_OPTION(page_full_retain) },         // number of (small) pages to retain in the free page queues
   { 4,   MI_OPTION_UNINIT, MI_OPTION(page_max_candidates) },      // max search to find a best page candidate
   { 0,   MI_OPTION_UNINIT, MI_OPTION(max_vabits) },               // max virtual address space bits
@@ -171,20 +174,25 @@ static mi_option_desc_t mi_options[_mi_option_last] =
          MI_OPTION_UNINIT, MI_OPTION(pagemap_commit) },           // commit the full pagemap upfront?
   { 0,   MI_OPTION_UNINIT, MI_OPTION(page_commit_on_demand) },    // commit pages on-demand (2 disables this only on overcommit systems (like Linux))
   { MI_DEFAULT_PAGE_MAX_RECLAIM,
-         MI_OPTION_UNINIT, MI_OPTION(page_max_reclaim) },         // don't reclaim (small) pages of the same originating heap if we already own N pages in that size class
+         MI_OPTION_UNINIT, MI_OPTION(page_max_reclaim) },         // don't reclaim (small) pages of the same originating theap if we already own N pages in that size class
   { MI_DEFAULT_PAGE_CROSS_THREAD_MAX_RECLAIM,
          MI_OPTION_UNINIT, MI_OPTION(page_cross_thread_max_reclaim) }, // don't reclaim (small) pages across threads if we already own N pages in that size class
+  { MI_DEFAULT_ALLOW_THP,
+         MI_OPTION_UNINIT, MI_OPTION(allow_thp) },                // allow transparent huge pages? (=1) (on Android =0 by default). Set to 0 to disable THP for the process.
+  { 0,   MI_OPTION_UNINIT, MI_OPTION(minimal_purge_size) },       // set minimal purge size (in KiB) (=0). By default set to either 64 or 2048 if THP is enabled.
+  { MI_DEFAULT_ARENA_MAX_OBJECT_SIZE,   
+         MI_OPTION_UNINIT, MI_OPTION(arena_max_object_size) },    // set maximal object size that can be allocated in an arena (in KiB) (=2GiB on 64-bit). 
 };
 
 static void mi_option_init(mi_option_desc_t* desc);
 
 static bool mi_option_has_size_in_kib(mi_option_t option) {
-  return (option == mi_option_reserve_os_memory || option == mi_option_arena_reserve);
+  return (option == mi_option_reserve_os_memory || option == mi_option_arena_reserve || 
+          option == mi_option_minimal_purge_size || option == mi_option_arena_max_object_size);
 }
 
 void _mi_options_init(void) {
   // called on process load
-  mi_add_stderr_output(); // now it safe to use stderr for output
   for(int i = 0; i < _mi_option_last; i++ ) {
     mi_option_t option = (mi_option_t)i;
     long l = mi_option_get(option); MI_UNUSED(l); // initialize
@@ -198,20 +206,25 @@ void _mi_options_init(void) {
       _mi_warning_message("option 'allow_large_os_pages' is disabled to allow for guarded objects\n");
     }
   }
-  #endif
+  #endif  
+}
+
+// called at actual process load, it should be safe to print now
+void _mi_options_post_init(void) {
+  mi_add_stderr_output(); // now it safe to use stderr for output
   if (mi_option_is_enabled(mi_option_verbose)) { mi_options_print(); }
 }
 
 #define mi_stringifyx(str)  #str                // and stringify
 #define mi_stringify(str)   mi_stringifyx(str)  // expand
 
-void mi_options_print(void) mi_attr_noexcept
+mi_decl_export void mi_options_print_out(mi_output_fun* out, void* arg) mi_attr_noexcept
 {
   // show version
-  const int vermajor = MI_MALLOC_VERSION/100;
-  const int verminor = (MI_MALLOC_VERSION%100)/10;
-  const int verpatch = (MI_MALLOC_VERSION%10);
-  _mi_message("v%i.%i.%i%s%s (built on %s, %s)\n", vermajor, verminor, verpatch,
+  const int vermajor = MI_MALLOC_VERSION/1000;
+  const int verminor = (MI_MALLOC_VERSION%1000)/100;
+  const int verpatch = (MI_MALLOC_VERSION%100);
+  _mi_fprintf(out, arg, "v%i.%i.%i%s%s (built on %s, %s)\n", vermajor, verminor, verpatch,
       #if defined(MI_CMAKE_BUILD_TYPE)
       ", " mi_stringify(MI_CMAKE_BUILD_TYPE)
       #else
@@ -230,19 +243,23 @@ void mi_options_print(void) mi_attr_noexcept
     mi_option_t option = (mi_option_t)i;
     long l = mi_option_get(option); MI_UNUSED(l); // possibly initialize
     mi_option_desc_t* desc = &mi_options[option];
-    _mi_message("option '%s': %ld %s\n", desc->name, desc->value, (mi_option_has_size_in_kib(option) ? "KiB" : ""));
+    _mi_fprintf(out, arg, "option '%s': %ld %s\n", desc->name, desc->value, (mi_option_has_size_in_kib(option) ? "KiB" : ""));
   }
 
   // show build configuration
-  _mi_message("debug level : %d\n", MI_DEBUG );
-  _mi_message("secure level: %d\n", MI_SECURE );
-  _mi_message("mem tracking: %s\n", MI_TRACK_TOOL);
+  _mi_fprintf(out, arg, "debug level : %d\n", MI_DEBUG );
+  _mi_fprintf(out, arg, "secure level: %d\n", MI_SECURE );
+  _mi_fprintf(out, arg, "mem tracking: %s\n", MI_TRACK_TOOL);
   #if MI_GUARDED
-  _mi_message("guarded build: %s\n", mi_option_get(mi_option_guarded_sample_rate) != 0 ? "enabled" : "disabled");
+  _mi_fprintf(out, arg, "guarded build: %s\n", mi_option_get(mi_option_guarded_sample_rate) != 0 ? "enabled" : "disabled");
   #endif
   #if MI_TSAN
-  _mi_message("thread santizer enabled\n");
+  _mi_fprintf(out, arg, "thread santizer enabled\n");
   #endif
+}
+
+mi_decl_export void mi_options_print(void) mi_attr_noexcept {
+  mi_options_print_out(NULL, NULL);
 }
 
 long _mi_option_get_fast(mi_option_t option) {

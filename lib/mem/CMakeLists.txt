@@ -15,6 +15,8 @@ set(mi_sources
     mimalloc/src/page-map.c
     mimalloc/src/random.c
     mimalloc/src/stats.c
+    mimalloc/src/theap.c
+    mimalloc/src/threadlocal.c
     mimalloc/src/prim/prim.c)
 
 
