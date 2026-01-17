@@ -201,7 +201,7 @@ bool Builder::Compile(const baulk::Package &pkg, std::wstring_view source, std::
     string_overwrite(version.SpecialBuild, vi->SpecialBuild);
   }
   DbgPrint(L"compile %s [%s]", cxxSourceName, buildPath.native());
-  if (LinkExecutor().Execute(buildPath.native(), L"cl", L"-c", L"-std:c++23", L"-nologo", L"-Os", cxxSourceName) != 0) {
+  if (LinkExecutor().Execute(buildPath.native(), L"cl", L"-c", L"-std:c++20", L"-nologo", L"-Os", cxxSourceName) != 0) {
     ec = LinkExecutor().LastErrorCode();
     return false;
   }
