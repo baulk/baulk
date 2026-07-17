@@ -496,10 +496,10 @@ static inline void mi_lock_release(mi_lock_t* lock) {
   lock->mutex.unlock();
 }
 static inline void mi_lock_init(mi_lock_t* lock) {
-  new(&lock->mutex) std::mutex();
+  new(&lock->mutex) std::mutex();  // in-place constructor
 }
 static inline void mi_lock_done(mi_lock_t* lock) {
-  (void)(lock);
+  lock->mutex.~mutex(); // in-place destructor
 }
 
 #else
@@ -524,6 +524,7 @@ static inline bool mi_lock_try_acquire(mi_lock_t* lock) {
   return mi_atomic_cas_strong_acq_rel(&lock->mutex, &expected, (uintptr_t)1);
 }
 static inline void mi_lock_acquire(mi_lock_t* lock) {
+  size_t ticks = 0;
   for (int i = 0; i < 10000; i++) {  // for at most 10000 tries?
     if (mi_lock_try_acquire(lock)) return;
     _mi_prim_thread_yield();
