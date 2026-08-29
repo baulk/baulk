@@ -4,7 +4,6 @@ set(mi_sources
     mimalloc/src/alloc-aligned.c
     mimalloc/src/alloc-posix.c
     mimalloc/src/arena.c
-    mimalloc/src/arena-meta.c
     mimalloc/src/bitmap.c
     mimalloc/src/heap.c
     mimalloc/src/init.c
@@ -17,6 +16,8 @@ set(mi_sources
     mimalloc/src/stats.c
     mimalloc/src/theap.c
     mimalloc/src/threadlocal.c
+    mimalloc/src/subproc.c
+    mimalloc/src/prim/prim-tls.c
     mimalloc/src/prim/prim.c)
 
 
